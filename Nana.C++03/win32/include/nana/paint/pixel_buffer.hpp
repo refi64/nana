@@ -1,0 +1,68 @@
+/*
+ *	Pixel Buffer Implementation
+ *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *
+ *	Distributed under the Nana Software License, Version 1.0. 
+ *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	http://stdex.sourceforge.net/LICENSE_1_0.txt)
+ *
+ *	@file: nana/paint/pixel_buffer.hpp
+ */
+
+#ifndef NANA_PAINT_PIXEL_BUFFER_HPP
+#define NANA_PAINT_PIXEL_BUFFER_HPP
+
+#include <nana/paint/graphics.hpp>
+
+namespace nana{	namespace paint
+{
+	class pixel_buffer
+	{
+		struct pixel_buffer_storage;
+	public:
+		pixel_buffer();
+		pixel_buffer(drawable_type, const nana::rectangle& want_rectangle);
+		pixel_buffer(drawable_type, size_t top, size_t lines);
+		pixel_buffer(size_t width, size_t height);
+
+		~pixel_buffer();
+
+		bool open(drawable_type, const nana::rectangle& want_rectangle);
+		bool open(size_t width, size_t height);
+
+		void close();
+
+		bool empty() const;
+
+		operator const void*() const;
+
+		size_t bytes() const;
+		nana::size size() const;
+		
+		pixel_rgb_t * raw_ptr() const;
+		pixel_rgb_t * raw_ptr(size_t row) const;
+		void put(const unsigned char* rawbits, size_t width, size_t height, size_t bits_per_pixel, size_t bytes_per_line, bool is_negative);
+		
+		void line(const std::string& name);
+		void line(const nana::point& pos_beg, const nana::point& pos_end, nana::color_t color, double fade_rate);
+
+		void rectangle(const nana::rectangle& r, nana::color_t, double fade_rate, bool solid);
+		
+		pixel_rgb_t pixel(int x, int y) const;
+		void pixel(int x, int y, pixel_rgb_t);
+
+		void paste(drawable_type, int x, int y) const;
+		void paste(const nana::rectangle& src_r, drawable_type, int x, int y) const;
+		void paste(nana::gui::native_window_type, int x, int y) const;
+		void stretch(const std::string& name);
+		void stretch(const nana::rectangle& src_r, drawable_type, const nana::rectangle& r) const;
+		void blend(const std::string& name);
+		void blend(const nana::point& s_pos, drawable_type dw_dst, const nana::rectangle& d_r, double fade_rate) const;
+
+	private:
+		nana::refer<pixel_buffer_storage*> storage_ref_;
+	};
+}//end namespace paint
+}//end namespace nana
+
+#endif

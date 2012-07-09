@@ -119,8 +119,8 @@ namespace detail
 
 		void write_off_bind(event_handle);
 
-		size_t size() const;
-		size_t the_number_of_handles(window, unsigned event_id, bool is_for_drawer);
+		std::size_t size() const;
+		std::size_t the_number_of_handles(window, unsigned event_id, bool is_for_drawer);
 	private:
 		template<typename Functor>
 		class handler_factory

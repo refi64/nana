@@ -23,16 +23,6 @@ namespace gui
 		{
 			class trigger: public nana::gui::drawer_trigger
 			{
-				struct style
-				{
-					enum
-					{
-						begin,
-						known,	//It is a style that knows the progress
-						unknown,//It is a style that does not know the progress
-						end
-					};
-				};
 			public:
 				trigger();
 				void bind_window(nana::gui::widget&);
@@ -42,7 +32,8 @@ namespace gui
 				unsigned inc();
 				unsigned Max() const;
 				unsigned Max(unsigned);
-				void Style(bool);
+				void unknown(bool);
+				bool unknown() const;
 			private:
 				void refresh(graph_reference);
 			private:
@@ -56,7 +47,7 @@ namespace gui
 				nana::paint::graphics* graph_;
 				unsigned draw_width_;
 				bool has_value_;
-				int style_;
+				bool unknown_;
 				unsigned max_;
 				unsigned value_;
 			}; //end class drawer
@@ -77,7 +68,8 @@ namespace gui
 		unsigned inc();
 		unsigned amount() const;
 		unsigned amount(unsigned value);
-		void style(bool known);
+		void unknown(bool);
+		bool unknown() const;
 	};
 }//end namespace gui
 }//end namespace nana

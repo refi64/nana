@@ -345,17 +345,17 @@ namespace paint
 			return text_extent_size(text.c_str(), static_cast<unsigned>(text.length()));
 		}
 
-		nana::size	graphics::text_extent_size(const nana::char_t* str, size_t len)	const
+		nana::size	graphics::text_extent_size(const nana::char_t* str, std::size_t len)	const
 		{
 			return detail::text_extent_size(handle_, str, len);
 		}
 
-		nana::size	graphics::text_extent_size(const nana::string& str, size_t len)	const
+		nana::size	graphics::text_extent_size(const nana::string& str, std::size_t len)	const
 		{
 			return detail::text_extent_size(handle_, str.c_str(), len);
 		}
 
-		nana::size graphics::glyph_extent_size(const nana::char_t * str, size_t len, size_t begin, size_t end) const
+		nana::size graphics::glyph_extent_size(const nana::char_t * str, std::size_t len, std::size_t begin, std::size_t end) const
 		{
 			if(len < end) end = len;
 			if(0 == handle_ || 0 == str || 0 == len || begin >= end) return nana::size();
@@ -381,12 +381,12 @@ namespace paint
 			return sz;
 		}
 
-		nana::size graphics::glyph_extent_size(const nana::string& str, size_t len, size_t begin, size_t end) const
+		nana::size graphics::glyph_extent_size(const nana::string& str, std::size_t len, std::size_t begin, std::size_t end) const
 		{
 			return glyph_extent_size(str.c_str(), len, begin, end);
 		}
 
-		bool graphics::glyph_pixels(const nana::char_t * str, size_t len, unsigned* pxbuf) const
+		bool graphics::glyph_pixels(const nana::char_t * str, std::size_t len, unsigned* pxbuf) const
 		{
 			if(handle_ == 0 || handle_->context == 0 || str == 0 || pxbuf == 0) return false;
 			if(len == 0) return true;
@@ -399,7 +399,7 @@ namespace paint
 
 			pxbuf[0] = (str[0] == '\t' ? tab_pixels  : dx[0]);
 
-			for(size_t i = 1; i < len; ++i)
+			for(std::size_t i = 1; i < len; ++i)
 			{
 				pxbuf[i] = (str[i] == '\t' ? tab_pixels : dx[i] - dx[i - 1]);
 			}
@@ -409,7 +409,7 @@ namespace paint
 			XftFont * xft = handle_->font.handle()->handle;
 
 			XGlyphInfo extents;
-			for(size_t i = 0; i < len; ++i)
+			for(std::size_t i = 0; i < len; ++i)
 			{
 				if(str[i] != '\t')
 				{
@@ -488,7 +488,7 @@ namespace paint
 			return false;
 		}
 
-		unsigned graphics::bidi_string(int x, int y, color_t col, const nana::char_t* str, size_t len)
+		unsigned graphics::bidi_string(int x, int y, color_t col, const nana::char_t* str, std::size_t len)
 		{
 			int origin_x = x;
 			unicode_bidi bidi;
@@ -502,7 +502,7 @@ namespace paint
 			return static_cast<unsigned>(x - origin_x);
 		}
 
-		void graphics::string(int x, int y, color_t color, const nana::string& str, size_t len)
+		void graphics::string(int x, int y, color_t color, const nana::string& str, std::size_t len)
 		{
 			this->string(x, y, color, str.c_str(), len);
 		}
@@ -512,7 +512,7 @@ namespace paint
 			this->string(x, y, color, str.c_str(), str.size());
 		}
 
-		void graphics::string(int x, int y, color_t color, const nana::char_t* str, size_t len)
+		void graphics::string(int x, int y, color_t color, const nana::char_t* str, std::size_t len)
 		{
 			if(handle_ && str && len)
 			{
@@ -521,7 +521,7 @@ namespace paint
 				const nana::char_t * i = std::find(str, end, '\t');
 				if(i != end)
 				{
-					size_t tab_pixels = handle_->string.tab_length * handle_->string.tab_pixels;
+					std::size_t tab_pixels = handle_->string.tab_length * handle_->string.tab_pixels;
 					while(true)
 					{
 						len = i - str;
@@ -565,7 +565,7 @@ namespace paint
 				::SetPixel(handle_->context, x, y, NANA_RGB(color));
 #elif defined(NANA_X11)
 				Display* disp = nana::detail::platform_spec::instance().open_display();
-				handle_->set_foreground(disp, color);
+				handle_->fgcolor(color);
 				::XDrawPoint(disp, handle_->pixmap, handle_->context,x, y);
 #endif
 				if(changed_ == false) changed_ = true;
@@ -582,7 +582,7 @@ namespace paint
 				(solid ? ::FillRect : ::FrameRect)(handle_->context, &r, handle_->brush.handle);
 #elif defined(NANA_X11)
 				Display* disp = nana::detail::platform_spec::instance().open_display();
-				handle_->set_foreground(disp, color);
+				handle_->fgcolor(color);
 				if(solid)
 					::XFillRectangle(disp, handle_->pixmap, handle_->context, x, y, width, height);
 				else
@@ -704,7 +704,7 @@ namespace paint
 			unsigned last_color =  (int(r) << 16) | (int(g) << 8) | int(b);
 
 			Display * disp = nana::detail::platform_spec::instance().open_display();
-			handle_->set_foreground(disp, last_color);
+			handle_->fgcolor(last_color);
 			const int endpos = deltapx + (vertical ? y : x);
 			if(endpos > 0)
 			{
@@ -718,7 +718,7 @@ namespace paint
 						if(new_color != last_color)
 						{
 							last_color = new_color;
-							handle_->set_foreground(disp, last_color);
+							handle_->fgcolor(last_color);
 						}
 					}
 				}
@@ -732,7 +732,7 @@ namespace paint
 						if(new_color != last_color)
 						{
 							last_color = new_color;
-							handle_->set_foreground(disp, last_color);
+							handle_->fgcolor(last_color);
 						}
 					}
 				}
@@ -759,7 +759,7 @@ namespace paint
 			}
 #elif defined(NANA_X11)
 			Display* disp = nana::detail::platform_spec::instance().open_display();
-			handle_->set_foreground(disp, color);
+			handle_->fgcolor(color);
 			::XDrawLine(disp, handle_->pixmap, handle_->context, x1, y1, x2, y2);
 #endif
 			if(changed_ == false) changed_ = true;

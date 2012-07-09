@@ -19,14 +19,16 @@ namespace nana{namespace gui{
 	{
 		namespace button
 		{
-			/*
-			 * button_drawer
-			 *		draw the button
-			 */
+			//button_drawer
+			//@brief:	Draw the button
 			class trigger: public nana::gui::drawer_trigger
 			{
 			public:
 				struct bgimage_tag;
+				enum class state
+				{
+					normal, focused, highlight, pressed, disabled
+				};
 				
 				trigger();
 				~trigger();
@@ -65,7 +67,7 @@ namespace nana{namespace gui{
 					bool omitted;
 					bool focused;
 					bool pressed;
-					std::size_t state;
+					state act_state;
 					bool enable_pushed;
 					bool focus_color;
 					paint::image * icon;
@@ -79,27 +81,23 @@ namespace nana{namespace gui{
 	}//end namespace drawerbase
 
 		//button
-		//@brief: defaine a button widget and it provides the interfaces to be operational
+		//@brief: define a button widget and it provides the interfaces to be operational
 		class button
 			: public widget_object<category::widget_tag, drawerbase::button::trigger>
 		{
-			typedef button self_type;
 			typedef widget_object<category::widget_tag, drawerbase::button::trigger> base_type;
 		public:
-			struct state
-			{
-				enum t{normal, focused, highlight, pressed, disabled};
-			};
+			typedef drawerbase::button::trigger::state state;
 
 			button();
-			button(nana::gui::window wd);
-			button(nana::gui::window wd, const nana::rectangle& r);
-			button(nana::gui::window wd, int x, int y, unsigned width, unsigned height);
+			button(nana::gui::window);
+			button(nana::gui::window, const nana::rectangle&);
+			button(nana::gui::window, int x, int y, unsigned width, unsigned height);
 			void icon(const nana::paint::image&);
 			void image(const char_t * filename);
 			void image(const nana::paint::image&);
-			void image_enable(state::t, bool);
-			void image_join(state::t target, state::t from);
+			void image_enable(state, bool);
+			void image_join(state target, state from);
 			void image_stretch(nana::arrange, int beg, int end);
 			void image_valid_area(nana::arrange, const nana::rectangle&);
 			void enable_pushed(bool);

@@ -37,8 +37,8 @@ namespace gui
 			{
 				typedef NodeType node_type;
 
-				nana::functor_group<void(nana::gui::window, node_type, bool)> expand;
-				nana::functor_group<void(nana::gui::window, node_type, bool)> selected;
+				nana::fn_group<void(nana::gui::window, node_type, bool)> expand;
+				nana::fn_group<void(nana::gui::window, node_type, bool)> selected;
 			};
 
 			struct node_image_tag
@@ -205,7 +205,7 @@ namespace gui
 					attribute_type();
 
 					mutable ext_event_type ext_event;
-					size_t mutable visual_item_size;
+					std::size_t mutable visual_item_size;
 					uint32_t	button_width;
 					tree_cont_type tree_cont;
 				}attr_;

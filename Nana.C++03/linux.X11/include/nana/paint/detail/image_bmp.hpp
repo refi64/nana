@@ -91,8 +91,8 @@ namespace nana{	namespace paint
 							bitmap_info * info = reinterpret_cast<bitmap_info *>(header + 1);
 
 							//Bitmap file is 4byte-aligned for each line.
-							size_t bytes_per_line;
-							const size_t height_pixels = abs(info->bmiHeader.biHeight);
+							std::size_t bytes_per_line;
+							const std::size_t height_pixels = abs(info->bmiHeader.biHeight);
 							if(0 == info->bmiHeader.biSizeImage)
 								bytes_per_line = (((info->bmiHeader.biWidth * info->bmiHeader.biBitCount + 31) & ~31) >> 3);
 							else

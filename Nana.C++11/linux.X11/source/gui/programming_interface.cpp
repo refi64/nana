@@ -610,9 +610,9 @@ namespace API
 
 	//update_window
 	//@brief: it displays a window immediately without refreshing.
-	void update_window(window wnd)
+	void update_window(window wd)
 	{
-		restrict::window_manager.update(reinterpret_cast<restrict::core_window_t*>(wnd), false, true);
+		restrict::window_manager.update(reinterpret_cast<restrict::core_window_t*>(wd), false, true);
 	}
 
 	void window_caption(window wd, const nana::string& title)

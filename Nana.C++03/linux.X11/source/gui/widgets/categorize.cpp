@@ -83,7 +83,7 @@ namespace nana{	namespace gui{
 						style_.fgcolor, 3, nana::paint::gadget::directions::to_west);
 				}
 
-				void item(graph_reference graph, const nana::rectangle& r, size_t index, const nana::string& name, unsigned txtheight, bool has_child, mouse_action_t state)
+				void item(graph_reference graph, const nana::rectangle& r, std::size_t index, const nana::string& name, unsigned txtheight, bool has_child, mouse_action_t state)
 				{
 					nana::point strpos(r.x + 5, r.y + static_cast<int>(r.height - txtheight) / 2);
 
@@ -200,7 +200,7 @@ namespace nana{	namespace gui{
 					:splitstr_(STR("\\")), cur_(0)
 				{}
 
-				bool seq(size_t index, std::vector<node_handle> & seqv) const
+				bool seq(std::size_t index, std::vector<node_handle> & seqv) const
 				{
 					node_handle i = cur_;
 					node_handle root = tree_.get_root();
@@ -258,7 +258,7 @@ namespace nana{	namespace gui{
 					cur_ = tree_.ref(key);
 				}
 
-				node_handle at(size_t index) const
+				node_handle at(std::size_t index) const
 				{
 					std::vector<node_handle> seqv;
 					node_handle i = cur_;
@@ -272,7 +272,7 @@ namespace nana{	namespace gui{
 					return (index < seqv.size() ? seqv[index] : 0);
 				}
 
-				node_handle tail(size_t index)
+				node_handle tail(std::size_t index)
 				{
 					node_handle i = at(index);
 					if(i)	cur_ = i;
@@ -455,7 +455,7 @@ namespace nana{	namespace gui{
 								if(nana::gui::is_hit_the_rectangle(r, x, y))
 								{
 									style_.active_item_rectangle = r;
-									size_t index = static_cast<size_t>(std::distance(seq.begin(), seqi)) + head_;
+									std::size_t index = static_cast<size_t>(std::distance(seq.begin(), seqi)) + head_;
 
 									ui_element::t what;
 									if(i->child && (r.x + static_cast<int>(r.width) - 16 < x))
@@ -531,7 +531,7 @@ namespace nana{	namespace gui{
 					return ext_event_;
 				}
 			private:
-				void _m_selected(size_t index)
+				void _m_selected(std::size_t index)
 				{
 					node_handle i = treebase_.tail(index);
 					if(i)
@@ -639,7 +639,7 @@ namespace nana{	namespace gui{
 					//Test whether the all of items can be displayed.
 					bool all = true;
 					unsigned px = r.width;
-					size_t lines = item_lines_;
+					std::size_t lines = item_lines_;
 					std::vector<node_handle> v;
 					treebase_.seq(0, v);
 					for(std::vector<node_handle>::iterator vi = v.begin(); vi != v.end(); ++vi)
@@ -701,7 +701,7 @@ namespace nana{	namespace gui{
 
 				void _m_calc_pixels(const nana::rectangle& r)
 				{
-					size_t lines = item_lines_;
+					std::size_t lines = item_lines_;
 
 					unsigned px = 0;
 					head_ = 0;
@@ -745,7 +745,7 @@ namespace nana{	namespace gui{
 					renderer & rd = proto_.ui_renderer->refer();
 					nana::rectangle item_r = r;
 					item_r.height = item_height_;
-					size_t index = head_;
+					std::size_t index = head_;
 					const int xend = static_cast<int>(r.width) + r.x;
 					std::vector<node_handle> v;
 					treebase_.seq(0, v);
@@ -775,7 +775,7 @@ namespace nana{	namespace gui{
 				struct style_tag
 				{
 					ui_element::t list_trigger;
-					size_t active;	//It indicates the item corresponding listbox.
+					std::size_t active;	//It indicates the item corresponding listbox.
 					mutable nana::rectangle active_item_rectangle;
 					nana::gui::float_listbox::module_type module;
 					nana::gui::float_listbox * listbox;

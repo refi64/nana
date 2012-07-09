@@ -624,7 +624,7 @@ namespace nana
 		{
 		}
 
-		void unicode_bidi::linestr(const char_type* str, size_t len, std::vector<entity> & reordered)
+		void unicode_bidi::linestr(const char_type* str, std::size_t len, std::vector<entity> & reordered)
 		{
 			levels_.clear();
 			const char_type * end = str + len;
@@ -1066,8 +1066,8 @@ namespace nana
 							++end;
 
 						//Reverse this run.
-						size_t p = beg - levels_.begin();
-						size_t plast = (end - levels_.begin() - 1);
+						std::size_t p = beg - levels_.begin();
+						std::size_t plast = (end - levels_.begin() - 1);
 						for(; p < plast; ++p, --plast)
 						{
 							entity tmp = reordered[p];

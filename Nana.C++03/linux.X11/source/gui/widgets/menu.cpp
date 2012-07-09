@@ -142,7 +142,7 @@ namespace nana{ namespace gui{
 						append(text, f);
 				}
 
-				void menu_builder::answerer(size_t index, const menu_builder::functor_type& fn)
+				void menu_builder::answerer(std::size_t index, const menu_builder::functor_type& fn)
 				{
 					if(index < root_.items.size())
 						root_.items[index].functor = fn;
@@ -167,7 +167,7 @@ namespace nana{ namespace gui{
 						root_.items.erase(root_.items.begin() + index);
 				}
 
-				void menu_builder::image(size_t index, const paint::image& img)
+				void menu_builder::image(std::size_t index, const paint::image& img)
 				{
 					if(index < root_.items.size())
 						root_.items[index].image = img;
@@ -1084,7 +1084,7 @@ namespace nana{ namespace gui{
 			mbuilder_.erase(index);
 		}
 
-		void menu::image(size_t index, const paint::image& img)
+		void menu::image(std::size_t index, const paint::image& img)
 		{
 			mbuilder_.image(index, img);
 		}
@@ -1162,7 +1162,7 @@ namespace nana{ namespace gui{
 			return mbuilder_.checked(index);
 		}
 
-		void menu::answerer(size_t index, const menu::functor_type& fn)
+		void menu::answerer(std::size_t index, const menu::functor_type& fn)
 		{
 			mbuilder_.answerer(index, fn);
 		}

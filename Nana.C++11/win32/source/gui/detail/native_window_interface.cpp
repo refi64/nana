@@ -222,7 +222,7 @@ namespace nana{
 			win_attr.event_mask = ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | ExposureMask | StructureNotifyMask | LeaveWindowMask | FocusChangeMask;
 
 			Window handle = ::XCreateWindow(disp, parent,
-							pos.x, pos.y, width, height, 0,
+							pos.x, pos.y, (width ? width : 1), (height ? height : 1), 0,
 							restrict::spec.screen_depth(), InputOutput, restrict::spec.screen_visual(),
 							attr_mask, &win_attr);
 			if(handle)

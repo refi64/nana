@@ -30,7 +30,7 @@ namespace nana{ namespace gui{
 			{
 				enum{TypeButton, TypeContainer};
 
-				typedef size_t size_type;
+				typedef std::size_t size_type;
 
 				nana::string text;
 				nana::paint::image image;
@@ -459,7 +459,7 @@ namespace nana{ namespace gui{
 	//	: public nana::gui::widget_object<category::widget_tag, drawerbase::toolbar::drawer>
 	//{
 	//public:
-	//	typedef size_t size_type;
+	//	typedef std::size_t size_type;
 	//	typedef nana::functor<void(size_type)> functor;
 
 		toolbar::toolbar()

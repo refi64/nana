@@ -59,7 +59,7 @@ namespace nana{	namespace gui{	namespace widgets
 				//retain the first line and remove the extra lines
 				if(textbase_.lines() > 1)
 				{
-					for(size_t i = textbase_.lines() - 1; i > 0; --i)
+					for(std::size_t i = textbase_.lines() - 1; i > 0; --i)
 						textbase_.erase(i);
 					this->_m_reset();
 				}
@@ -216,12 +216,12 @@ namespace nana{	namespace gui{	namespace widgets
 			return do_draw;
 		}
 
-		size_t text_editor::text_lines() const
+		std::size_t text_editor::text_lines() const
 		{
 			return textbase_.lines();
 		}
 
-		bool text_editor::getline(size_t n, nana::string& text) const
+		bool text_editor::getline(std::size_t n, nana::string& text) const
 		{
 			if(n < textbase_.lines())
 			{
@@ -231,7 +231,7 @@ namespace nana{	namespace gui{	namespace widgets
 			return false;
 		}
 
-		void text_editor::setline(size_t n, const nana::string& text)
+		void text_editor::setline(std::size_t n, const nana::string& text)
 		{
 			bool mkdraw = false;
 			textbase_.cover(n, text.c_str());
@@ -259,11 +259,11 @@ namespace nana{	namespace gui{	namespace widgets
 		nana::string text_editor::text() const
 		{
 			nana::string str;
-			size_t lines = textbase_.lines();
+			std::size_t lines = textbase_.lines();
 			if(lines > 0)
 			{
 				str += textbase_.getline(0);
-				for(size_t i = 1; i < lines; ++i)
+				for(std::size_t i = 1; i < lines; ++i)
 				{
 					str += STR("\n\r");
 					str += textbase_.getline(i);
@@ -966,7 +966,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 		nana::upoint text_editor::_m_put(nana::string text)
 		{
-			size_t lines = _m_make_simple_nl(text);
+			std::size_t lines = _m_make_simple_nl(text);
 
 			nana::upoint caret = points_.caret;
 			if(lines > 1)
@@ -982,7 +982,7 @@ namespace nana{	namespace gui{	namespace widgets
 					else
 						textbase_.cover(caret.y, (orig_str.substr(0, orig_x) + text.substr(beg, end - beg)).c_str());
 
-					size_t n = 2;
+					std::size_t n = 2;
 					++caret.y;
 					beg = end + 1;
 
@@ -1071,9 +1071,9 @@ namespace nana{	namespace gui{	namespace widgets
 
 		//_m_make_simple_nl
 		//@brief: transform a string if it contains "0xD\0xA" or "0xA\0xD"
-		size_t text_editor::_m_make_simple_nl(nana::string& text)
+		std::size_t text_editor::_m_make_simple_nl(nana::string& text)
 		{
-			size_t lines = 1;
+			std::size_t lines = 1;
 			nana::string::size_type beg = 0;
 
 			while(true)
@@ -1231,14 +1231,14 @@ namespace nana{	namespace gui{	namespace widgets
 			graph_.string(text_area_.area.x - points_.offset.x, text_area_.area.y, 0x787878, attributes_.tip_string);
 		}
 
-		void text_editor::_m_update_line(size_t textline) const
+		void text_editor::_m_update_line(std::size_t textline) const
 		{
 			int top = text_area_.area.y + line_height() * textline;
 			graph_.rectangle(text_area_.area.x, top, text_area_.area.width, line_height(), API::background(window_), true);
 			_m_draw_string(top, API::foreground(window_), textline, true);
 		}
 
-		void text_editor::_m_draw_string(int top, unsigned color, size_t textline, bool if_mask) const
+		void text_editor::_m_draw_string(int top, unsigned color, std::size_t textline, bool if_mask) const
 		{
 			const string_type& linestr = textbase_.getline(textline);
 			unicode_bidi bidi;
@@ -1250,7 +1250,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 			if(if_mask && mask_char_)
 			{
-				size_t n = 0;
+				std::size_t n = 0;
 				for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
 					n += (i->end - i->begin);
 
@@ -1274,7 +1274,7 @@ namespace nana{	namespace gui{	namespace widgets
 				bool selected = (a.y < textline && textline < b.y);
 				for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
 				{
-					size_t len = i->end - i->begin;
+					std::size_t len = i->end - i->begin;
 					unsigned str_w = graph_.text_extent_size(i->begin, len).width;
 
 					if((x + static_cast<int>(str_w) > text_area_.area.x) && (x < xend))
@@ -1299,11 +1299,11 @@ namespace nana{	namespace gui{	namespace widgets
 				{
 					for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
 					{
-						size_t len = i->end - i->begin;
+						std::size_t len = i->end - i->begin;
 						unsigned str_w = graph_.text_extent_size(i->begin, len).width;
 						if((x + static_cast<int>(str_w) > text_area_.area.x) && (x < xend))
 						{
-							size_t pos = i->begin - strbeg;
+							std::size_t pos = i->begin - strbeg;
 
 							if(pos + len <= a.x || pos >= b.x)
 							{
@@ -1323,11 +1323,11 @@ namespace nana{	namespace gui{	namespace widgets
 								if(graph_.glyph_pixels(i->begin, len, pxbuf))
 								{
 									unsigned head_w = 0;
-									for(size_t u = 0; u < a.x - pos; ++u)
+									for(std::size_t u = 0; u < a.x - pos; ++u)
 										head_w += pxbuf[u];
 
 									unsigned sel_w = 0;
-									for(size_t u = a.x - pos; u < endpos - pos; ++u)
+									for(std::size_t u = a.x - pos; u < endpos - pos; ++u)
 										sel_w += pxbuf[u];
 
 									if(_m_is_right_text(*i))
@@ -1383,11 +1383,11 @@ namespace nana{	namespace gui{	namespace widgets
 				{
 					for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
 					{
-						size_t len = i->end - i->begin;
+						std::size_t len = i->end - i->begin;
 						unsigned str_w = graph_.text_extent_size(i->begin, len).width;
 						if((x + static_cast<int>(str_w) > text_area_.area.x) && (x < xend))
 						{
-							size_t pos = i->begin - strbeg;
+							std::size_t pos = i->begin - strbeg;
 							if(pos + len <= a.x)
 							{
 								graph_.string(x, top, color, i->begin, len);
@@ -1427,11 +1427,11 @@ namespace nana{	namespace gui{	namespace widgets
 				{
 					for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
 					{
-						size_t len = i->end - i->begin;
+						std::size_t len = i->end - i->begin;
 						unsigned str_w = graph_.text_extent_size(i->begin, len).width;
 						if((x + static_cast<int>(str_w) > text_area_.area.x) && (x < xend))
 						{
-							size_t pos = i->begin - strbeg;
+							std::size_t pos = i->begin - strbeg;
 
 							if(pos + len <= b.x)
 							{
@@ -1598,7 +1598,7 @@ namespace nana{	namespace gui{	namespace widgets
 					int xbeg = 0;
 					for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
 					{
-						size_t len = i->end - i->begin;
+						std::size_t len = i->end - i->begin;
 						unsigned str_w = _m_text_extent_size(i->begin, len).width;
 						if(xbeg <= x && x < xbeg + static_cast<int>(str_w))
 						{
@@ -1608,7 +1608,7 @@ namespace nana{	namespace gui{	namespace widgets
 								x -= xbeg;
 								if(_m_is_right_text(*i))
 								{	//RTL
-									for(size_t u = 0; u < len; ++u)
+									for(std::size_t u = 0; u < len; ++u)
 									{
 										int chbeg = (str_w - pxbuf[u]);
 										if(chbeg <= x && x < static_cast<int>(str_w))
@@ -1625,7 +1625,7 @@ namespace nana{	namespace gui{	namespace widgets
 								else
 								{
 									//LTR
-									for(size_t u = 0; u < len; ++u)
+									for(std::size_t u = 0; u < len; ++u)
 									{
 										if(x < static_cast<int>(pxbuf[u]))
 										{
@@ -1653,7 +1653,7 @@ namespace nana{	namespace gui{	namespace widgets
 			return res;
 		}
 
-		unsigned text_editor::_m_pixels_by_char(size_t textline, size_t pos) const
+		unsigned text_editor::_m_pixels_by_char(std::size_t textline, std::size_t pos) const
 		{
 			unicode_bidi bidi;
 			std::vector<unicode_bidi::entity> reordered;
@@ -1665,7 +1665,7 @@ namespace nana{	namespace gui{	namespace widgets
 			unsigned text_w = 0;
 			for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
 			{
-				size_t len = i->end - i->begin;
+				std::size_t len = i->end - i->begin;
 				if(i->begin <= ch && ch <= i->end)
 				{
 					if(_m_is_right_text(*i))

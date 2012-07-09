@@ -90,8 +90,8 @@ namespace detail
 		drawable_impl_type();
 		~drawable_impl_type();
 
-		void set_background(Display*, unsigned color);
-		void set_foreground(Display*, unsigned color);
+		void fgcolor(nana::color_t);
+		void bgcolor(nana::color_t);
 
 		Pixmap	pixmap;
 		GC	context;
@@ -101,6 +101,7 @@ namespace detail
 		{
 			unsigned tab_length;
 			unsigned tab_pixels;
+			unsigned whitespace_pixels;
 		}string;
 #if defined(NANA_UNICODE)
 		XftDraw * xftdraw;
@@ -109,8 +110,8 @@ namespace detail
 		const std::string charset(const nana::string& str, const std::string& strcode);
 #endif
 	private:
-		unsigned background_;
-		unsigned foreground_;
+		unsigned bgcolor_;
+		unsigned fgcolor_;
 #if defined(NANA_UNICODE)
 		struct conv_tag
 		{
@@ -136,7 +137,7 @@ namespace detail
 		Atom net_wm_window_type_utility;
 		Atom net_wm_window_type_dialog;
 		Atom motif_wm_hints;
-		
+
 		Atom clipboard;
 		Atom text;
 		Atom text_uri_list;
@@ -201,7 +202,7 @@ namespace detail
 		Visual* screen_visual();
 
 		Colormap& colormap();
-		
+
 		static self_type& instance();
 		const atombase_tag & atombase() const;
 

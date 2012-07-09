@@ -69,7 +69,7 @@ namespace nana
 
 								//The following codes may longjmp while image_read error.
 								png_bytep * row_ptrs = new png_bytep[png_height];
-								const size_t png_rowbytes = ::png_get_rowbytes(png_ptr, info_ptr);
+								const std::size_t png_rowbytes = ::png_get_rowbytes(png_ptr, info_ptr);
 
 								png_byte * png_pixbuf = new png_byte[png_height * png_rowbytes];
 
@@ -81,7 +81,7 @@ namespace nana
 
 								paint::pixel_buffer pixbuf(png_width, png_height);
 
-								size_t png_pixel_bytes = png_rowbytes / png_width;
+								std::size_t png_pixel_bytes = png_rowbytes / png_width;
 
 								pixel_rgb_t * rgb_row_ptr = pixbuf.raw_ptr();
 								for(int y = 0; y < png_height; ++y)

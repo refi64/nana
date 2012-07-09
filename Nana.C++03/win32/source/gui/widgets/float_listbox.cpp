@@ -158,7 +158,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				size_t index() const
+				std::size_t index() const
 				{
 					return state_.index;
 				}
@@ -187,8 +187,8 @@ namespace nana{ namespace gui{
 				{
 					if(module_)
 					{
-						size_t items = (module_->max_items <= module_->strings.size() ? module_->max_items : module_->strings.size());
-						size_t h = items * state_.renderer->item_pixels(*graph_);
+						std::size_t items = (module_->max_items <= module_->strings.size() ? module_->max_items : module_->strings.size());
+						std::size_t h = items * state_.renderer->item_pixels(*graph_);
 						widget_->size(widget_->size().width, static_cast<unsigned>(h + 4));
 					}
 				}
@@ -420,7 +420,7 @@ namespace nana{ namespace gui{
 			get_drawer_trigger().get_drawer_impl().resize();
 		}
 
-		size_t float_listbox::index() const
+		std::size_t float_listbox::index() const
 		{
 			return get_drawer_trigger().get_drawer_impl().index();
 		}

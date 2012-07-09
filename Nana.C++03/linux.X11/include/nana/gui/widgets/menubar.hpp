@@ -29,13 +29,13 @@ namespace gui
 			{
 				class itembase;
 			public:
-				static const size_t npos = static_cast<size_t>(-1);
+				static const std::size_t npos = static_cast<size_t>(-1);
 
 				trigger();
 				~trigger();
 				nana::gui::menu* push_back(const nana::string&);
 				nana::gui::menu* at(size_t) const;
-				size_t size() const;
+				std::size_t size() const;
 			private:
 				void bind_window(widget_reference widget);
 				void attached(graph_reference graph);
@@ -55,7 +55,7 @@ namespace gui
 				void _m_total_close();
 				bool _m_close_menu();
 				void _m_unload_menu_window();
-				size_t _m_item_by_pos(int x, int y);
+				std::size_t _m_item_by_pos(int x, int y);
 				bool _m_track_mouse(int x, int y);
 				void _m_draw();
 			private:
@@ -73,7 +73,7 @@ namespace gui
 
 					state_type();
 
-					size_t active;
+					std::size_t active;
 					behavior_t behavior;
 
 					bool menu_active;
@@ -97,7 +97,7 @@ namespace gui
 		void create(window);
 		nana::gui::menu& push_back(const nana::string&);
 		nana::gui::menu& at(size_t) const;
-		size_t length() const;
+		std::size_t length() const;
 	};//end class menubar
 }//end namespace gui
 }//end namespace nana

@@ -178,8 +178,11 @@ namespace nana{ namespace gui{
 						state_.lister = & nana::gui::form_loader<nana::gui::float_listbox>()(widget_->handle(), 0, widget_->size().height, widget_->size().width, 10);
 						state_.lister->renderer(item_renderer_);
 						state_.lister->set_module(module_);
-						//The lister window closes by itself. I just take care about the unload event.
-						state_.lister->make_event<nana::gui::events::unload>(*this, &drawer_impl::_m_lister_close_sig);
+						state_.item_index_before_selection = module_.index;
+						//The lister window closes by itself. I just take care about the destroy event.
+						//The event should be destroy rather than unload. Because the unload event is invoked while
+						//the lister is not closed, if popuping a message box, the lister will cover the message box.
+						state_.lister->make_event<events::destroy>(*this, &drawer_impl::_m_lister_close_sig);
 					}
 				}
 
@@ -283,11 +286,17 @@ namespace nana{ namespace gui{
 						return module_.strings[i];
 					return nana::string();
 				}
+
+				void text(const nana::string& str)
+				{
+					if(editor_)
+						editor_->text(str);
+				}
 			private:
 				void _m_lister_close_sig()
 				{
 					state_.lister = 0;	//The lister closes by itself.
-					if(module_.index != module_.npos)
+					if(module_.index != module_.npos && module_.index != state_.item_index_before_selection)
 					{
 						set_text(module_.strings[module_.index]);
 						API::update_window(*widget_);
@@ -366,11 +375,12 @@ namespace nana{ namespace gui{
 
 				struct state_type
 				{
-					bool focused;
+					bool	focused;
 					int		state;
-					int	 pointer_where;
+					int		pointer_where;
 
 					nana::gui::float_listbox * lister;
+					std::size_t	item_index_before_selection;
 
 					state_type()
 						:   focused(false),
@@ -663,6 +673,13 @@ namespace nana{ namespace gui{
 		void combox::renderer(combox::item_renderer* ir)
 		{
 			get_drawer_trigger().get_drawer_impl().renderer(ir);
+		}
+
+		void combox::_m_caption(const nana::string& str)
+		{
+			internal_scope_guard isg;
+			get_drawer_trigger().get_drawer_impl().text(str);
+			API::refresh_window(this->handle());
 		}
 	//end class combox
 }//end namespace gui

@@ -249,7 +249,7 @@ namespace detail
 	};
 
 	drawable_impl_type::drawable_impl_type()
-		:	background_(0xFFFFFFFF), foreground_(0xFFFFFFFF)
+		:	bgcolor_(0xFFFFFFFF), fgcolor_(0xFFFFFFFF)
 	{
 		string.tab_length = 4;
 		string.tab_pixels = 0;
@@ -267,12 +267,12 @@ namespace detail
 #endif
 	}
 
-	void drawable_impl_type::set_background(Display* display, unsigned color)
+	void drawable_impl_type::bgcolor(nana::color_t color)
 	{
-		if(color != background_)
+		if(color != bgcolor_)
 		{
 			platform_scope_guard psg;
-			background_ = color;
+			bgcolor_ = color;
 			::XSetBackground(nana::detail::platform_spec::instance().open_display(), context, color);
 			xft_bgcolor.color.red = ((0xFF0000 & color) >> 16) * 0x101;
 			xft_bgcolor.color.green = ((0xFF00 & color) >> 8) * 0x101;
@@ -281,19 +281,19 @@ namespace detail
 		}
 	}
 
-	void drawable_impl_type::set_foreground(Display* display, unsigned color)
+	void drawable_impl_type::fgcolor(nana::color_t color)
 	{
-		if(color != foreground_)
+		if(color != fgcolor_)
 		{
 			platform_scope_guard psg;
-			foreground_ = color;
+			fgcolor_ = color;
 			::XSetForeground(nana::detail::platform_spec::instance().open_display(), context, color);
 			::XSetBackground(nana::detail::platform_spec::instance().open_display(), context, color);
+
 			xft_fgcolor.color.red = ((0xFF0000 & color) >> 16) * 0x101;
 			xft_fgcolor.color.green = ((0xFF00 & color) >> 8) * 0x101;
 			xft_fgcolor.color.blue = (0xFF & color) * 0x101;
 			xft_fgcolor.color.alpha = 0xFFFF;
-
 		}
 	}
 
@@ -437,7 +437,7 @@ namespace detail
 #if defined(NANA_UNICODE)
 		if(0 == name || *name == 0)
 			name = STR("*");
-		
+
 		std::string nmstr;
 		nana::stringset_cast(nmstr, name);
 
@@ -1073,7 +1073,7 @@ namespace detail
 								im->bufsize = len;
 							}
 						}
-				
+
 						self.selection_.items.erase(self.selection_.items.begin());
 
 						while(im->cond.try_lock())
@@ -1114,7 +1114,7 @@ namespace detail
 								msg.u.mouse_drop.y = self.xdnd_.pos.y;
 								msg.u.mouse_drop.files = files;
 							}
-							
+
 							accepted = true;
 							::XFree(data);
 						}
@@ -1162,7 +1162,7 @@ namespace detail
 				std::string str;
 				if(self.selection_.content.utf8_string)
 					str = *self.selection_.content.utf8_string;
-				
+
 				::XChangeProperty(self.display_, evt.xselectionrequest.requestor, evt.xselectionrequest.property, evt.xselectionrequest.target, 8, 0,
 									reinterpret_cast<unsigned char*>(str.size() ? const_cast<std::string::value_type*>(str.c_str()) : 0), static_cast<int>(str.size()));
 			}
@@ -1264,7 +1264,7 @@ namespace detail
 				respond.xclient.data.l[2] = 0;
 				respond.xclient.data.l[3] = 0;
 				respond.xclient.data.l[4] = self.atombase_.xdnd_action_copy;
-				
+
 				::XSendEvent(self.display_, wd_src, True, NoEventMask, &respond);
 				return 2;
 			}

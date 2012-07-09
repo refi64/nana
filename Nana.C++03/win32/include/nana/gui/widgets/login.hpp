@@ -19,9 +19,9 @@ namespace nana{ namespace gui{
 					bool remember_password;
 				};
 
-				nana::functor_group<void(nana::gui::login&, const nana::string& user)> forget;
-				nana::functor_group<bool(nana::gui::login&, const nana::string& user, const nana::string& password, const flags_t&)> verify;
-				nana::functor_group<void(nana::gui::login&, const nana::string& user)> remove;
+				nana::fn_group<void(nana::gui::login&, const nana::string& user)> forget;
+				nana::fn_group<bool(nana::gui::login&, const nana::string& user, const nana::string& password, const flags_t&)> verify;
+				nana::fn_group<void(nana::gui::login&, const nana::string& user)> remove;
 			};
 
 			class trigger

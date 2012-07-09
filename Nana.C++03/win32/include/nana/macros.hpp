@@ -64,7 +64,7 @@
 
 namespace nana
 {
-	size_t strlen(const char_t* str);
+	std::size_t strlen(const char_t* str);
 	char_t* strcpy(char_t* dest, const char_t* source);
 
 #if defined(NANA_WINDOWS)

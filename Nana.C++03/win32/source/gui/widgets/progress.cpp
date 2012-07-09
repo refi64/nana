@@ -22,7 +22,7 @@ namespace gui
 			//class trigger
 			trigger::trigger()
 				:   graph_(0), draw_width_(static_cast<unsigned>(-1)), has_value_(true),
-                    style_(style::known), max_(100), value_(0)
+                    unknown_(false), max_(100), value_(0)
 			{}
 
 			void trigger::bind_window(trigger::widget_reference wd)
@@ -43,12 +43,12 @@ namespace gui
 			unsigned trigger::value(unsigned v)
 			{
 				nana::gui::internal_scope_guard isg;
-				if(style_ == style::known)
+				if(false == unknown_)
 				{
 					if(value_ != v)
 						value_ = v > max_?max_:v;
 				}
-				else if(style_ == style::unknown)
+				else
 					value_ += (v?10:v);
 
 				if(_m_check_changing(value_))
@@ -62,13 +62,13 @@ namespace gui
 			unsigned trigger::inc()
 			{
 				nana::gui::internal_scope_guard isg;
-				if(style_ == style::known)
+				if(false == unknown_)
 				{
 					if(value_ < max_)
 						++value_;
 				}
-				else if(style_ == style::unknown)
-					value_ += 10;
+				else
+					value_ += 5;
 
 				if(_m_check_changing(value_))
 					nana::gui::API::refresh_window(widget_->handle());
@@ -89,15 +89,16 @@ namespace gui
 				return max_;
 			}
 
-			void trigger::Style(bool known)
+			void trigger::unknown(bool enb)
 			{
-				if(false == known)
-				{
-					style_ = style::unknown;
-					draw_width_ = static_cast<unsigned int>(-1);
-				}
-				else
-					style_ = style::known;
+				unknown_ = enb;
+				if(enb)
+					draw_width_ = static_cast<unsigned>(-1);
+			}
+
+			bool trigger::unknown() const
+			{
+				return unknown_;
 			}
 
 			void trigger::refresh(trigger::graph_reference)
@@ -107,7 +108,7 @@ namespace gui
 
 			void trigger::_m_draw()
 			{
-				if(style_ == style::known)
+				if(false == unknown_)
 					draw_width_ = static_cast<unsigned>((graph_->width() - border * 2) * (double(value_) / max_));
 
 				_m_draw_box(*graph_);
@@ -133,12 +134,12 @@ namespace gui
 				unsigned width = graph.width() - border * 2;
 				unsigned height = graph.height() - border * 2;
 
-				if(style_ == style::known)
+				if(false == unknown_)
 				{
 					if(draw_width_)
 						graph.shadow_rectangle(border, border, draw_width_, height, 0x6FFFA8, 0x107515, true);
 				}
-				else if(style_ == style::unknown)
+				else
 				{
 					unsigned block = width / 3;
 
@@ -208,9 +209,14 @@ namespace gui
 			return get_drawer_trigger().Max(value);
 		}
 
-		void progress::style(bool known)
+		void progress::unknown(bool enb)
 		{
-			get_drawer_trigger().Style(known);
+			get_drawer_trigger().unknown(enb);
+		}
+
+		bool progress::unknown() const
+		{
+			return get_drawer_trigger().unknown();
 		}
 	//end class progress
 }//end namespace gui

@@ -44,7 +44,7 @@ namespace dynamic_drawing
 		{
 			if(text)
 			{
-				size_t len = nana::strlen(text);
+				std::size_t len = nana::strlen(text);
 				text_ = new nana::char_t[len + 1];
 				nana::strcpy(text_, text);
 			}

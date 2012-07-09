@@ -15,6 +15,7 @@
 #if defined(NANA_WINDOWS)
 	#include <windows.h>
 #elif defined(NANA_LINUX)
+	#include <unistd.h>
 	#include <time.h>
 	#include <errno.h>
 	#include <sys/time.h>

@@ -16,7 +16,7 @@ namespace nana
 			:myptr_(0), size_(0)
 		{}
 
-		explicit auto_buf(size_t count)
+		explicit auto_buf(std::size_t count)
 			:myptr_(0), size_(0)
 		{
 			alloc(count);
@@ -32,7 +32,7 @@ namespace nana
 			myptr_ = 0;			
 		}
 
-		void alloc(size_t count)
+		void alloc(std::size_t count)
 		{
 			if(size_ > 2)
 				delete [] myptr_;
@@ -64,7 +64,7 @@ namespace nana
 			return ret;
 		}
 
-		size_t size() const
+		std::size_t size() const
 		{
 			return size_;
 		}

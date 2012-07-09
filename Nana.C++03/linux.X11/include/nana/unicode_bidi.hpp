@@ -48,7 +48,7 @@ namespace nana
 		};
 
 		unicode_bidi();
-		void linestr(const char_type* str, size_t len, std::vector<entity> & reordered);
+		void linestr(const char_type* str, std::size_t len, std::vector<entity> & reordered);
 	private:
 		static unsigned _m_paragraph_level(const char_type * begin, const char_type * end);
 

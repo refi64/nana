@@ -65,7 +65,7 @@ namespace nana{namespace gui{
 					bool omitted;
 					bool focused;
 					bool pressed;
-					size_t state;
+					std::size_t state;
 					bool enable_pushed;
 					bool focus_color;
 					paint::image * icon;

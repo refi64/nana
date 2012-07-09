@@ -40,17 +40,17 @@ namespace gui
 					cont_.push_back(new item_type(text, shortkey));
 				}
 
-				nana::gui::menu* get_menu(size_t index) const
+				nana::gui::menu* get_menu(std::size_t index) const
 				{
 					return (index < cont_.size() ? &(cont_[index]->menu_obj) : 0);
 				}
 
-				const item_type& at(size_t index) const
+				const item_type& at(std::size_t index) const
 				{
 					return *cont_.at(index);
 				}
 
-				size_t find(unsigned long shortkey) const
+				std::size_t find(unsigned long shortkey) const
 				{
 					if(shortkey)
 					{
@@ -66,7 +66,7 @@ namespace gui
 					return npos;
 				}
 
-				size_t size() const
+				std::size_t size() const
 				{
 					return cont_.size();
 				}
@@ -140,18 +140,18 @@ namespace gui
 					if(shkey)
 						nana::gui::API::register_shortkey(widget_->handle(), shkey);
 
-					size_t i = items_->size();
+					std::size_t i = items_->size();
 					items_->append(text, shkey);
 					_m_draw();
 					return items_->get_menu(i);
 				}
 
-				nana::gui::menu* trigger::at(size_t index) const
+				nana::gui::menu* trigger::at(std::size_t index) const
 				{
 					return items_->get_menu(index);
 				}
 
-				size_t trigger::size() const
+				std::size_t trigger::size() const
 				{
 					return items_->size();
 				}
@@ -195,7 +195,7 @@ namespace gui
 					bool popup = false;
 					if(state_.behavior == state_type::behavior_focus)
 					{
-						size_t index = _m_item_by_pos(ei.mouse.x, ei.mouse.y);
+						std::size_t index = _m_item_by_pos(ei.mouse.x, ei.mouse.y);
 						if(index != npos && state_.active != index)
 						{
 							state_.active = index;
@@ -375,7 +375,7 @@ namespace gui
 				{
 					nana::gui::API::focus_window(widget_->handle());
 
-					size_t index = items_->find(ei.keyboard.key);
+					std::size_t index = items_->find(ei.keyboard.key);
 					if(index != npos && (index != state_.active || state_.menu == 0))
 					{
 						_m_close_menu();
@@ -396,7 +396,7 @@ namespace gui
 				{
 					if(items_->size() == 0) return;
 
-					size_t index = state_.active;
+					std::size_t index = state_.active;
 					if(to_left)
 					{
 						if(index > 0)
@@ -427,7 +427,7 @@ namespace gui
 				{
 					if(state_.menu_active && (state_.menu != items_->get_menu(state_.active)))
 					{
-						size_t index = state_.active;
+						std::size_t index = state_.active;
 						_m_close_menu();
 						state_.active = index;
 
@@ -482,12 +482,12 @@ namespace gui
 					}
 				}
 
-				size_t trigger::_m_item_by_pos(int x, int y)
+				std::size_t trigger::_m_item_by_pos(int x, int y)
 				{
 					if((2 <= x) && (2 <= y) && (y < 25))
 					{
 						int item_x = 2;
-						size_t index = 0;
+						std::size_t index = 0;
 						for(itembase::container::iterator i = items_->begin(); i != items_->end(); ++i, ++index)
 						{
 							if(item_x <= x && x < item_x + static_cast<int>((*i)->size.width))
@@ -504,7 +504,7 @@ namespace gui
 				{
 					if(state_.nullify_mouse == false)
 					{
-						size_t which = _m_item_by_pos(x, y);
+						std::size_t which = _m_item_by_pos(x, y);
 
 						if(which != state_.active)
 						{
@@ -599,7 +599,7 @@ namespace gui
 			return *(get_drawer_trigger().push_back(text));
 		}
 
-		nana::gui::menu& menubar::at(size_t index) const
+		nana::gui::menu& menubar::at(std::size_t index) const
 		{
 			nana::gui::menu* p = get_drawer_trigger().at(index);
 			if(0 == p)
@@ -607,7 +607,7 @@ namespace gui
 			return *p;
 		}
 
-		size_t menubar::length() const
+		std::size_t menubar::length() const
 		{
 			return get_drawer_trigger().size();
 		}

@@ -58,10 +58,10 @@ namespace nana{	namespace gui{	namespace widgets
 
 			unsigned line_height() const;
 			unsigned screen_lines() const;
-			size_t text_lines() const;
+			std::size_t text_lines() const;
 
-			bool getline(size_t n, nana::string&) const;
-			void setline(size_t n, const nana::string&);
+			bool getline(std::size_t n, nana::string&) const;
+			void setline(std::size_t n, const nana::string&);
 			void text(const nana::string&);
 			nana::string text() const;
 
@@ -121,7 +121,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 			//_m_make_simple_nl
 			//@brief: Transfers a string if it contains "0xD\0xA" or "0xA\0xD"
-			static size_t _m_make_simple_nl(nana::string&);
+			static std::size_t _m_make_simple_nl(nana::string&);
 
 			bool _m_cancel_select(int align);
 			unsigned _m_tabs_pixels(size_type tabs) const;
@@ -143,10 +143,10 @@ namespace nana{	namespace gui{	namespace widgets
 			int _m_endy() const;
 
 			void _m_draw_tip_string() const;
-			void _m_update_line(size_t textline) const;
+			void _m_update_line(std::size_t textline) const;
 			//_m_draw_string
 			//@brief: Draw a line of string
-			void _m_draw_string(int top, unsigned color, size_t textline, bool if_mask) const;
+			void _m_draw_string(int top, unsigned color, std::size_t textline, bool if_mask) const;
 			//_m_draw
 			//@brief: Draw a character at a position specified by caret pos. 
 			//@return: true if beyond the border
@@ -164,7 +164,7 @@ namespace nana{	namespace gui{	namespace widgets
 			//@brief: Set the caret position from the screen point specified by (x, y)
 			//@param x, y: screen point
 			nana::upoint _m_screen_to_caret(int x, int y) const;
-			unsigned _m_pixels_by_char(size_t textline, size_t pos) const;
+			unsigned _m_pixels_by_char(std::size_t textline, std::size_t pos) const;
 			static bool _m_is_right_text(const unicode_bidi::entity&);
 		private:
 			nana::gui::window window_;

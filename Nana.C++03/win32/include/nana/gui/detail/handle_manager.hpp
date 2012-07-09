@@ -32,7 +32,7 @@ namespace gui
 			typedef Key	key_type;
 			typedef Value value_type;
 			typedef std::pair<key_type, value_type> pair_type;
-			typedef size_t size_type;
+			typedef std::size_t size_type;
 			
 			static const size_type npos = -1;
 			
@@ -243,7 +243,7 @@ namespace gui
 				return handle_type();
 			}
 
-			size_t size() const
+			std::size_t size() const
 			{
 				return holder_.size();
 			}

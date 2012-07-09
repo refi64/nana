@@ -400,7 +400,7 @@ namespace drawerbase
 			attr_.fgcolor = API::foreground(wd);
 			if(bgimage_)
 			{
-				size_t which = (eb ? attr_.state : nana::gui::button::state::disabled);
+				std::size_t which = (eb ? attr_.state : nana::gui::button::state::disabled);
 				image_block & block = bgimage_->block[bgimage_->block[which].who];
 				if(block.enable)
 				{

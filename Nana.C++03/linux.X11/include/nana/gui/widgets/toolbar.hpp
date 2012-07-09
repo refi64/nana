@@ -26,9 +26,9 @@ namespace nana{ namespace gui{
 
 			struct ext_event_tag
 			{
-				nana::functor_group<void(nana::gui::toolbar&, size_t)> selected;
-				nana::functor_group<void(nana::gui::toolbar&, size_t)> enter;
-				nana::functor_group<void(nana::gui::toolbar&, size_t)> leave;
+				nana::fn_group<void(nana::gui::toolbar&, size_t)> selected;
+				nana::fn_group<void(nana::gui::toolbar&, size_t)> enter;
+				nana::fn_group<void(nana::gui::toolbar&, size_t)> leave;
 			};
 
 			class drawer
@@ -37,7 +37,7 @@ namespace nana{ namespace gui{
 				struct drawer_impl_type;
 
 			public:
-				typedef size_t size_type;
+				typedef std::size_t size_type;
 				const static size_type npos = static_cast<size_type>(-1);
 
 				mutable ext_event_tag ext_event;
@@ -79,7 +79,7 @@ namespace nana{ namespace gui{
 		: public nana::gui::widget_object<category::widget_tag, drawerbase::toolbar::drawer>
 	{
 	public:
-		typedef size_t size_type;
+		typedef std::size_t size_type;
 		typedef drawerbase::toolbar::ext_event_tag ext_event_type;
 
 		toolbar();

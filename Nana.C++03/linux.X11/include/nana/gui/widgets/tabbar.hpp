@@ -28,18 +28,18 @@ namespace nana{ namespace gui{
 				typedef Tabbar tabbar;
 				typedef typename tabbar::value_type value_type;
 
-				nana::functor_group<void(tabbar&, value_type&)> add_tab;
-				nana::functor_group<void(tabbar&, value_type&)> active;
-				nana::functor_group<bool(tabbar&, value_type&)> remove;
+				nana::fn_group<void(tabbar&, value_type&)> add_tab;
+				nana::fn_group<void(tabbar&, value_type&)> active;
+				nana::fn_group<bool(tabbar&, value_type&)> remove;
 			};
 
 			class internal_event_trigger
 			{
 			public:
 				virtual ~internal_event_trigger() = 0;
-				virtual void add_tab(size_t i) = 0;
-				virtual void active(size_t i) = 0;
-				virtual bool remove(size_t i) = 0;
+				virtual void add_tab(std::size_t i) = 0;
+				virtual void active(std::size_t i) = 0;
+				virtual bool remove(std::size_t i) = 0;
 			};
 
 			class item_renderer
@@ -77,7 +77,7 @@ namespace nana{ namespace gui{
 				typedef DrawerTrigger drawer_trigger;
 				typedef typename tabbar::value_type value_type;
 
-				const static size_t npos = static_cast<size_t>(-1);
+				const static std::size_t npos = static_cast<size_t>(-1);
 
 				mutable ext_event_tag<tabbar> ext_event;
 
@@ -85,7 +85,7 @@ namespace nana{ namespace gui{
 					: tabbar_(tb), drawer_trigger_(dtr)
 				{}
 
-				void add_tab(size_t pos)
+				void add_tab(std::size_t pos)
 				{
 					if((ext_event.add_tab.empty() == false) && (pos != npos))
 					{
@@ -94,13 +94,13 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void active(size_t pos)
+				void active(std::size_t pos)
 				{
 					if(pos != npos)
 						ext_event.active(tabbar_, tabbar_[pos]);
 				}
 
-				bool remove(size_t pos)
+				bool remove(std::size_t pos)
 				{
 					return ((ext_event.remove.empty() == false) && (pos != npos) ? ext_event.remove(tabbar_, tabbar_[pos]) : true);
 				}
@@ -118,22 +118,22 @@ namespace nana{ namespace gui{
 				enum toolbox_button_t{ButtonAdd, ButtonScroll, ButtonList, ButtonClose};
 				trigger();
 				~trigger();
-				void active(size_t i);
-				size_t active() const;
-				nana::any& at(size_t i) const;
-				nana::any& at_no_bound_check(size_t i) const;
+				void active(std::size_t i);
+				std::size_t active() const;
+				nana::any& at(std::size_t i) const;
+				nana::any& at_no_bound_check(std::size_t i) const;
 				pat::cloneable_interface<item_renderer> & ext_renderer() const;
 				void ext_renderer(const pat::cloneable_interface<item_renderer>&);
 				void event_adapter(internal_event_trigger*);
 				void push_back(const nana::string&, const nana::any&);
 				layouter& layouter_object();
-				size_t length() const;
+				std::size_t length() const;
 				bool close_fly(bool);
 				void relate(size_t, nana::gui::window);
-				void tab_color(size_t i, bool is_bgcolor, nana::color_t);
+				void tab_color(std::size_t i, bool is_bgcolor, nana::color_t);
 				void tab_image(size_t, const nana::paint::image&);
-				void text(size_t i, const nana::string&);
-				nana::string text(size_t i) const;
+				void text(std::size_t i, const nana::string&);
+				nana::string text(std::size_t i) const;
 				bool toolbox_button(toolbox_button_t, bool);
 			private:
 				void bind_window(widget_reference);
@@ -185,7 +185,7 @@ namespace nana{ namespace gui{
 			{}
 		};
 
-		static const size_t npos = static_cast<size_t>(-1);
+		static const std::size_t npos = static_cast<size_t>(-1);
 
 		template<typename ButtonAdd = nana::null_type, typename ButtonScroll = nana::null_type, typename ButtonList = nana::null_type, typename ButtonClose = nana::null_type>
 		struct button_container
@@ -222,23 +222,23 @@ namespace nana{ namespace gui{
 			delete event_adapter_;
 		}
 
-		value_type & operator[](size_t i) const
+		value_type & operator[](std::size_t i) const
 		{
 			nana::any & value = get_drawer_trigger().at_no_bound_check(i);
 			return static_cast<value_type&>(value);
 		}
 
-		void active(size_t i)
+		void active(std::size_t i)
 		{
 			get_drawer_trigger().active(i);
 		}
 
-		size_t active() const
+		std::size_t active() const
 		{
 			return get_drawer_trigger().active();
 		}
 
-		value_type & at(size_t i) const
+		value_type & at(std::size_t i) const
 		{
 			nana::any & value = get_drawer_trigger().at(i);
 			return static_cast<value_type&>(value);
@@ -265,7 +265,7 @@ namespace nana{ namespace gui{
 			return event_adapter_->ext_event;
 		}
 
-		size_t length() const
+		std::size_t length() const
 		{
 			return get_drawer_trigger().length();
 		}
@@ -277,22 +277,22 @@ namespace nana{ namespace gui{
 			nana::gui::API::update_window(*this);
 		}
 
-		void relate(size_t pos, nana::gui::window wd)
+		void relate(std::size_t pos, nana::gui::window wd)
 		{
 			get_drawer_trigger().relate(pos, wd);
 		}
 
-		void tab_bgcolor(size_t i, nana::color_t color)
+		void tab_bgcolor(std::size_t i, nana::color_t color)
 		{
 			get_drawer_trigger().tab_color(i, true, color);
 		}
 
-		void tab_fgcolor(size_t i, nana::color_t color)
+		void tab_fgcolor(std::size_t i, nana::color_t color)
 		{
 			get_drawer_trigger().tab_color(i, false, color);
 		}
 
-		void tab_image(size_t i, const nana::paint::image& img)
+		void tab_image(std::size_t i, const nana::paint::image& img)
 		{
 			get_drawer_trigger().tab_image(i, img);
 		}
@@ -320,12 +320,12 @@ namespace nana{ namespace gui{
 				nana::gui::API::refresh_window(this->handle());
 		}
 
-		void text(size_t pos, const nana::string& str)
+		void text(std::size_t pos, const nana::string& str)
 		{
 			get_drawer_trigger().text(pos, str);
 		}
 
-		nana::string text(size_t pos) const
+		nana::string text(std::size_t pos) const
 		{
 			return get_drawer_trigger().text(pos);
 		}

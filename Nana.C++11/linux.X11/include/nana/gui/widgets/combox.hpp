@@ -81,6 +81,8 @@ namespace nana{ namespace gui
 
 		ext_event_type& ext_event() const;
 		void renderer(item_renderer*);
+	private:
+		void _m_caption(const nana::string&);
 	};
 }//end namespace gui
 }

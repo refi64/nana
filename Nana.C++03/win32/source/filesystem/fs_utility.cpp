@@ -220,7 +220,7 @@ namespace filesystem
 
 	nana::string root(const nana::string& path)
 	{
-		size_t index = path.size();
+		std::size_t index = path.size();
 
 		if(index)
 		{

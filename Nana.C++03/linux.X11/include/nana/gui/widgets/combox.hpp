@@ -23,7 +23,7 @@ namespace nana{ namespace gui
 		{
 			struct ext_event_tag
 			{
-				nana::functor_group<void(nana::gui::combox&)> selected;
+				nana::fn_group<void(nana::gui::combox&)> selected;
 			};
 
 			class drawer_impl;
@@ -81,6 +81,8 @@ namespace nana{ namespace gui
 
 		ext_event_type& ext_event() const;
 		void renderer(item_renderer*);
+	private:
+		void _m_caption(const nana::string&);
 	};
 }//end namespace gui
 }

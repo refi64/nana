@@ -13,11 +13,11 @@ namespace nana
 			
 			text_renderer(graph_reference graph);
 
-			void render(int x, int y, nana::color_t, const nana::char_t*, size_t len);
-			void render(int x, int y, nana::color_t, const nana::char_t*, size_t len, unsigned restricted_pixels, bool omitted);
+			void render(int x, int y, nana::color_t, const nana::char_t*, std::size_t len);
+			void render(int x, int y, nana::color_t, const nana::char_t*, std::size_t len, unsigned restricted_pixels, bool omitted);
 
-			void render(int x, int y, nana::color_t, const nana::char_t*, size_t len, unsigned restricted_pixels);
-			nana::size extent_size(int x, int y, const nana::char_t*, size_t len, unsigned restricted_pixels) const;
+			void render(int x, int y, nana::color_t, const nana::char_t*, std::size_t len, unsigned restricted_pixels);
+			nana::size extent_size(int x, int y, const nana::char_t*, std::size_t len, unsigned restricted_pixels) const;
 		private:
 			graph_reference graph_;
 		};

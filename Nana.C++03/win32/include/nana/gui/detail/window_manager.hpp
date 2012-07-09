@@ -249,7 +249,7 @@ namespace detail
 			return (wd && wd->other.category == category::root_tag::value);
 		}
 
-		size_t number_of_core_window() const
+		std::size_t number_of_core_window() const
 		{
 			return this->handle_manager_.size();
 		}

@@ -63,7 +63,7 @@ namespace detail
 			void copy(Container& container)
 			{
 				typename Container::iterator iter = container.begin();
-				size_t size = container.size();
+				std::size_t size = container.size();
 				abstract_handler * *i = queue_ + size_;
 				abstract_handler * * const end = i + size;
 				allocate(size);
@@ -71,7 +71,7 @@ namespace detail
 					*i++ = *iter++;
 			}
 
-			void allocate(size_t size)
+			void allocate(std::size_t size)
 			{
 				if(capacity_ - size_ < size)
 				{
@@ -90,12 +90,12 @@ namespace detail
 				if(size_ != 0)
 					std::for_each(queue_, queue_ + size_, inner_handler_invoker(handle_manager, ei));
 			}
-			size_t size() const {return size_;}
+			std::size_t size() const {return size_;}
 		private:
 			abstract_handler * fixed_buffer_[10];
 			abstract_handler** queue_;
-			size_t size_;
-			size_t capacity_;
+			std::size_t size_;
+			std::size_t capacity_;
 		};
 	}//end namespace inner_event_manager
 
@@ -323,12 +323,12 @@ namespace detail
 			}
 		}
 
-		size_t event_manager::size() const
+		std::size_t event_manager::size() const
 		{
 			return handle_manager_.size();
 		}
 
-		size_t event_manager::the_number_of_handles(window wd, unsigned eventid, bool is_for_drawer)
+		std::size_t event_manager::the_number_of_handles(window wd, unsigned eventid, bool is_for_drawer)
 		{
 			if(eventid < event_tag::count)
 			{

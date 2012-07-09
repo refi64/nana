@@ -1051,7 +1051,7 @@ namespace nana{
 			nid.hWnd = reinterpret_cast<HWND>(wd);
 			nid.uID = 0;
 			nid.uFlags = NIF_TIP;
-			size_t len = nana::strlen(text);
+			std::size_t len = nana::strlen(text);
 			if(len >= 64) len = 63;
 			memcpy(nid.szTip, text, sizeof(char_t) * len);
 			nid.szTip[len] = 0;

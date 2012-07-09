@@ -22,7 +22,7 @@ namespace nana{ namespace gui{
 		{
 			struct metrics_type
 			{
-				typedef size_t size_type;
+				typedef std::size_t size_type;
 
 				size_type peak;
 				size_type range;
@@ -288,7 +288,7 @@ namespace nana{ namespace gui{
 	{
 		typedef widget_object<category::widget_tag, drawerbase::scroll::trigger<Vertical> > base_type;
 	public:
-		typedef size_t size_type;
+		typedef std::size_t size_type;
 
 		scroll(){}
 
@@ -350,7 +350,7 @@ namespace nana{ namespace gui{
 
 		size_type make_step(bool forward)
 		{
-			size_t v = value();
+			std::size_t v = value();
 			if(v != this->get_drawer_trigger().make_step(forward))
 			{
 				API::refresh_window(this->handle()); //need this-> because of two-stage name lookup
@@ -361,7 +361,7 @@ namespace nana{ namespace gui{
 
 		size_type make_scroll(bool forward)
 		{
-			size_t v = value();
+			std::size_t v = value();
 			this->get_drawer_trigger().make_step(forward);
 			this->get_drawer_trigger().make_step(forward);
 

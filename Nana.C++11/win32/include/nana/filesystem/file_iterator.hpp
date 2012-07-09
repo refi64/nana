@@ -87,6 +87,14 @@ namespace filesystem
 			return (value_.name == x.value_.name);
 		}
 	private:
+		template<typename Char>
+		static bool _m_ignore(const Char * p)
+		{
+			while(*p == '.')
+				++p;
+			return (*p == 0);
+		}
+
 		void _m_prepare(const nana::string& file_path)
 		{
 		#if defined(NANA_WINDOWS)
@@ -99,17 +107,15 @@ namespace filesystem
 				return;
 			}
 
-			if(* wfd_.cFileName == '.')
+			while(_m_ignore(wfd_.cFileName))
 			{
-				::FindNextFile(handle, &wfd_);
-				if(::FindNextFile(handle, &wfd_) ==0 )
+				if(::FindNextFile(handle, &wfd_) == 0)
 				{
 					end_ = true;
 					::FindClose(handle);
 					return;
 				}
 			}
-
 			value_ = value_type(wfd_);
 		#elif defined(NANA_LINUX)
 			nana::stringset_cast(path_, file_path);
@@ -122,9 +128,8 @@ namespace filesystem
 				struct dirent * dnt = readdir(handle);
 				if(dnt)
 				{
-					if(*dnt->d_name == '.')
+					while(_m_ignore(dnt->d_name))
 					{
-						readdir(handle);
 						dnt = readdir(handle);
 						if(dnt == 0)
 						{
@@ -135,9 +140,15 @@ namespace filesystem
 
 					struct stat fst;
 					if(stat((path_ + dnt->d_name).c_str(), &fst) == 0)
+					{
 						value_ = value_type(nana::stringset_cast(dnt->d_name), fst);
+					}
 					else
+					{
 						value_.name = nana::stringset_cast(dnt->d_name);
+						value_.size = 0;
+						value_.directory = false;
+					}
 					end_ = false;
 				}
 			}
@@ -155,13 +166,32 @@ namespace filesystem
 			{
 			#if defined(NANA_WINDOWS)
 				if(::FindNextFile(handle_, &wfd_) != 0)
+				{
+					while(_m_ignore(wfd_.cFileName))
+					{
+						if(::FindNextFile(handle_, &wfd_) == 0)
+						{
+							end_ = true;
+							return;
+						}
+					}
 					value_ = value_type(wfd_);
+				}
 				else
 					end_ = true;
 			#elif defined(NANA_LINUX)
 				struct dirent * dnt = readdir(handle_);
 				if(dnt)
 				{
+					while(_m_ignore(dnt->d_name))
+					{
+						dnt = readdir(handle_);
+						if(dnt == 0)
+						{
+							end_ = true;
+							return;
+						}
+					}
 					struct stat fst;
 					if(stat((path_ + "/" + dnt->d_name).c_str(), &fst) == 0)
 						value_ = value_type(nana::stringset_cast(dnt->d_name), fst);
@@ -195,7 +225,7 @@ namespace filesystem
 		WIN32_FIND_DATA		wfd_;
 		nana::string	path_;
 #elif defined(NANA_LINUX)
-		std::string path_;
+		std::string	path_;
 #endif
 		nana::refer<find_handle_t, inner_handle_deleter>	refer_;
 		find_handle_t	handle_;

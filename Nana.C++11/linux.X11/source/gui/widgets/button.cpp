@@ -20,18 +20,18 @@ namespace drawerbase
 		struct image_block
 		{
 			bool enable;
-			nana::gui::button::state::t who;
+			nana::gui::button::state who;
 			nana::point pos;
 		};
 
 		struct trigger::bgimage_tag
 		{
-			typedef nana::gui::button::state state;
 			nana::paint::image image;
 			nana::rectangle valid_area;
 			nana::arrange	arrange;
 			nana::size		block_size;
-			image_block		block[nana::gui::button::state::disabled + 1];
+			static const int state_number = static_cast<int>(state::disabled) + 1;
+			image_block		block[state_number];
 
 			struct stretch_tag
 			{
@@ -42,10 +42,10 @@ namespace drawerbase
 
 			bgimage_tag()
 			{
-				for(int i = 0; i < nana::gui::button::state::disabled + 1; ++i)
+				for(int i = 0; i < state_number; ++i)
 				{
 					block[i].enable = true;
-					block[i].who = static_cast<nana::gui::button::state::t>(i);
+					block[i].who = static_cast<state>(i);
 				}
 
 				stretch.arrange = nana::arrange::unkown;
@@ -58,13 +58,13 @@ namespace drawerbase
 				valid_area = r;
 			}
 
-			bool enable(state::t sta, bool eb)
+			bool enable(state sta, bool eb)
 			{
 				if(state::normal <= sta && sta <= state::disabled)
 				{
-					if(block[sta].enable != eb)
+					if(block[static_cast<int>(sta)].enable != eb)
 					{
-						block[sta].enable = eb;
+						block[static_cast<int>(sta)].enable = eb;
 						this->update_blocks();
 						return true;
 					}
@@ -72,15 +72,15 @@ namespace drawerbase
 				return false;
 			}
 
-			bool join(state::t to, state::t from)
+			bool join(state to, state from)
 			{
 				if(to != from)
 				{
 					if(state::normal <= to && to <= state::disabled && state::normal <= from && from <= state::disabled)
 					{
-						if(block[from].who != block[to].who)
+						if(block[static_cast<int>(from)].who != block[static_cast<int>(to)].who)
 						{
-							block[from].who = block[to].who;
+							block[static_cast<int>(from)].who = block[static_cast<int>(to)].who;
 							update_blocks();
 							return true;
 						}
@@ -100,9 +100,9 @@ namespace drawerbase
 			void update_blocks()
 			{
 				int blocks = 0;
-				for(int i = 0; i < nana::gui::button::state::disabled + 1; ++i)
+				for(int i = 0; i < state_number; ++i)
 				{
-					if(block[i].enable && (block[i].who == i))
+					if(block[i].enable && (block[i].who == static_cast<state>(i)))
 						++blocks;
 				}
 
@@ -123,9 +123,9 @@ namespace drawerbase
 				}
 
 				int pos = 0;
-				for(int i = 0; i < nana::gui::button::state::disabled + 1; ++i)
+				for(int i = 0; i < state_number; ++i)
 				{
-					if(block[i].enable && (block[i].who == i))
+					if(block[i].enable && (block[i].who == static_cast<state>(i)))
 					{
 						if(arrange.value == arrange::horizontal)
 						{
@@ -144,7 +144,7 @@ namespace drawerbase
 		};
 
 		trigger::attr_tag::attr_tag()
-			:	omitted(false), focused(false), pressed(false), state(nana::gui::button::state::normal),
+			:	omitted(false), focused(false), pressed(false), act_state(state::normal),
                 enable_pushed(false), focus_color(true), icon(nullptr)
 		{}
 
@@ -165,9 +165,9 @@ namespace drawerbase
 			delete bgimage_;
 		}
 
-		void trigger::bind_window(nana::gui::widget& wdg)
+		void trigger::bind_window(nana::gui::widget& wd)
 		{
-			widget_ = &wdg;
+			widget_ = &wd;
 		}
 
 		void trigger::attached(graph_reference graph)
@@ -208,15 +208,15 @@ namespace drawerbase
 				attr_.pressed = pshd;
 				if(pshd)
 				{
-					attr_.state = nana::gui::button::state::pressed;
+					attr_.act_state = state::pressed;
 				}
 				else
 				{
 					window wd = API::find_window(API::cursor_position());
 					if(wd == this->widget_->handle())
-						attr_.state = nana::gui::button::state::highlight;
+						attr_.act_state = state::highlight;
 					else
-						attr_.state = (attr_.focused ? nana::gui::button::state::focused : nana::gui::button::state::normal);
+						attr_.act_state = (attr_.focused ? state::focused : state::normal);
 				}
 				return true;
 			}
@@ -250,39 +250,45 @@ namespace drawerbase
 
 		void trigger::mouse_enter(graph_reference graph, const eventinfo&)
 		{
-			attr_.state = (attr_.pressed ?  nana::gui::button::state::pressed : nana::gui::button::state::highlight);
+			attr_.act_state = (attr_.pressed ?  state::pressed : state::highlight);
 			_m_draw(graph);
 			API::lazy_refresh();
 		}
 
 		void trigger::mouse_leave(graph_reference graph, const eventinfo&)
 		{
-			attr_.state = (attr_.focused ? nana::gui::button::state::focused : nana::gui::button::state::normal);
-			_m_draw(graph);
-			API::lazy_refresh();
+			if(false == attr_.enable_pushed)
+			{
+				attr_.act_state = (attr_.focused ? state::focused : state::normal);
+				_m_draw(graph);
+				API::lazy_refresh();
+			}
 		}
 
 		void trigger::mouse_down(graph_reference graph, const eventinfo&)
 		{
-			attr_.pressed = true;
-			attr_.state = nana::gui::button::state::pressed;
+			attr_.act_state = state::pressed;
 			_m_draw(graph);
 			API::lazy_refresh();
 		}
 
 		void trigger::mouse_up(graph_reference graph, const eventinfo&)
 		{
-			if(attr_.enable_pushed)
-				return;
-
-			if(attr_.state == nana::gui::button::state::pressed)
-				attr_.state = nana::gui::button::state::highlight;
+			if(attr_.enable_pushed && (false == attr_.pressed))
+			{
+				attr_.pressed = true;
+			}
 			else
-				attr_.state = (attr_.focused ? nana::gui::button::state::focused : nana::gui::button::state::normal);
+			{
+				if(attr_.act_state == state::pressed)
+					attr_.act_state = state::highlight;
+				else
+					attr_.act_state = (attr_.focused ? state::focused : state::normal);
 
-			attr_.pressed = false;
-			_m_draw(graph);
-			API::lazy_refresh();
+				attr_.pressed = false;
+				_m_draw(graph);
+				API::lazy_refresh();
+			}
 		}
 
 		void trigger::key_char(graph_reference, const eventinfo& ei)
@@ -352,7 +358,7 @@ namespace drawerbase
 				nana::paint::text_renderer tr(graph);
 				if(enabled)
 				{
-					if(attr_.state == nana::gui::button::state::pressed)
+					if(attr_.act_state == state::pressed)
 					{
 						++x;
 						++y;
@@ -400,8 +406,8 @@ namespace drawerbase
 			attr_.fgcolor = API::foreground(wd);
 			if(bgimage_)
 			{
-				std::size_t which = (eb ? attr_.state : nana::gui::button::state::disabled);
-				image_block & block = bgimage_->block[bgimage_->block[which].who];
+				int which = static_cast<int>(eb ? attr_.act_state : state::disabled);
+				image_block & block = bgimage_->block[static_cast<int>(bgimage_->block[which].who)];
 				if(block.enable)
 				{
 					def_bground = false;
@@ -447,7 +453,7 @@ namespace drawerbase
 		{
 			int x = 1, y = 1;
 			unsigned color_start = color::button_face_shadow_start, color_end = gui::color::button_face_shadow_end;
-			if(attr_.state == nana::gui::button::state::pressed)
+			if(attr_.act_state == state::pressed)
 			{
 				x = 2;
 				y = 2;
@@ -478,7 +484,7 @@ namespace drawerbase
 			graph.set_pixel(right, bottom, gui::color::button_face);
 
 
-			if(attr_.state == nana::gui::button::state::pressed)
+			if(attr_.act_state == state::pressed)
 				graph.rectangle(1, 1, graph.width() - 2, graph.height() - 2, 0xC3C3C3, false);
 		}
 
@@ -558,7 +564,7 @@ namespace drawerbase
 				API::refresh_window(this->handle());
 			}
 
-			void button::image_enable(button::state::t sta, bool eb)
+			void button::image_enable(state sta, bool eb)
 			{
 				internal_scope_guard isg;
 				drawerbase::button::trigger::bgimage_tag * bgi = get_drawer_trigger().ref_bgimage();
@@ -578,7 +584,7 @@ namespace drawerbase
 				}
 			}
 
-			void button::image_join(button::state::t target, button::state::t from)
+			void button::image_join(state target, state from)
 			{
 				internal_scope_guard isg;
 				drawerbase::button::trigger::bgimage_tag * bgi = get_drawer_trigger().ref_bgimage();
@@ -638,7 +644,7 @@ namespace drawerbase
 
 			void button::_m_complete_creation()
 			{
-				this->make_event<events::shortkey>(*this, &self_type::_m_shortkey);
+				this->make_event<events::shortkey>(*this, &button::_m_shortkey);
 			}
 
 			void button::_m_caption(const nana::string& text)

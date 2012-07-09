@@ -23,7 +23,7 @@
 
 namespace nana
 {
-	size_t strlen(const char_t* str)
+	std::size_t strlen(const char_t* str)
 	{
 #if defined(NANA_UNICODE)
 		return ::wcslen(str);

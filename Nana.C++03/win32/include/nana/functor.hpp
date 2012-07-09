@@ -20,7 +20,7 @@
 #include "detail/functor_invoker_3.hpp"
 #include "detail/functor_invoker_4.hpp"
 #include "detail/functor_invoker_5.hpp"
-#include <deque>
+#include <vector>
 
 namespace nana
 {
@@ -89,20 +89,20 @@ namespace nana
 		
 		void assign(signature faddr)
 		{
-			assign_invoker(new (std::nothrow) detail::invoker<signature>(faddr));
+			this->assign_invoker(new (std::nothrow) detail::invoker<signature>(faddr));
 		}
 				
 		template<typename T>
 		void assign(T& obj, typename traits::make_mf<signature, T, typename traits::cv_specifier<T>::value_type>::type mf)
 		{
 			typedef typename traits::make_mf<signature, T, typename traits::cv_specifier<T>::value_type>::type mfptr;
-			assign_invoker(new (std::nothrow) detail::invoker<mfptr>(obj, mf));
+			this->assign_invoker(new (std::nothrow) detail::invoker<mfptr>(obj, mf));
 		}
 	
 		template<typename FO>
 		void assign(FO fo)
 		{
-			assign_invoker(new (std::nothrow) detail::fo_invoker<FO, signature>(fo));
+			this->assign_invoker(new (std::nothrow) detail::fo_invoker<FO, signature>(fo));
 		}
 	};
 
@@ -118,22 +118,36 @@ namespace nana
 
 	namespace detail
 	{
-		template<typename Ft>
+		template<typename Ft, typename FnGroup>
 		class functors_holder
 		{
 		public:
 			typedef Ft function_type;
-			typedef std::deque<functor<function_type> > container;
+			typedef FnGroup fn_group_type;
+			typedef std::vector<functor<function_type> > container;
 
-			void append(const functor<function_type> & rhs)
+			fn_group_type & operator=(const functor<function_type> & f)
 			{
-				fobjs_.push_back(rhs);
+				this->clear();
+				this->append(f);
+				return *static_cast<fn_group_type*>(this);
 			}
 
-			void assign(const functor<function_type>& fobj)
+			fn_group_type & operator+=(const functor<function_type> & f)
+			{
+				this->append(f);
+				return *static_cast<fn_group_type*>(this);
+			}
+
+			void append(const functor<function_type> & f)
+			{
+				fobjs_.push_back(f);
+			}
+
+			void assign(const functor<function_type> & f)
 			{
 				clear();
-				fobjs_.push_back(fobj);
+				fobjs_.push_back(f);
 			}
 
 			void clear()
@@ -161,29 +175,17 @@ namespace nana
 	}//end namespace detail
 
 	template<typename Ft>
-	class functor_group;
+	class fn_group;
 
 	template<typename R>
-	class functor_group<R()>
-		: public detail::functors_holder<R()>
+	class fn_group<R()>
+		: public detail::functors_holder<R(), fn_group<R()> >
 	{
 	public:
 		typedef R function_type();
-		typedef typename detail::functors_holder<R()>::container container;
-		using detail::functors_holder<function_type>::assign;
-		
-		functor_group & operator=(const functor<function_type>& f)
-		{
-			this->clear();
-			this->append(f);
-			return *this;
-		}
-
-		functor_group & operator+=(const functor<function_type> & f)
-		{
-			this->append(f);
-			return *this;
-		}
+		typedef typename detail::functors_holder<function_type, fn_group>::container container;
+		using detail::functors_holder<function_type, fn_group>::assign;
+		using detail::functors_holder<function_type, fn_group>::operator=;
 
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)())
@@ -206,26 +208,14 @@ namespace nana
 	};
 
 	template<typename R, typename P0>
-	class functor_group<R(P0)>
-		: public detail::functors_holder<R(P0)>
+	class fn_group<R(P0)>
+		: public detail::functors_holder<R(P0), fn_group<R(P0)> >
 	{
 	public:
 		typedef R function_type(P0);
-		typedef typename detail::functors_holder<R(P0)>::container container;
-		using detail::functors_holder<function_type>::assign;
-		
-		functor_group & operator=(const functor<function_type>& f)
-		{
-			this->clear();
-			this->append(f);
-			return *this;
-		}
-
-		functor_group & operator+=(const functor<function_type> & f)
-		{
-			this->append(f);
-			return *this;
-		}
+		typedef typename detail::functors_holder<function_type, fn_group>::container container;
+		using detail::functors_holder<function_type, fn_group>::assign;
+		using detail::functors_holder<function_type, fn_group>::operator=;
 
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)(P0))
@@ -248,26 +238,14 @@ namespace nana
 	};
 
 	template<typename R, typename P0, typename P1>
-	class functor_group<R(P0, P1)>
-		: public detail::functors_holder<R(P0, P1)>
+	class fn_group<R(P0, P1)>
+		: public detail::functors_holder<R(P0, P1), fn_group<R(P0, P1)> >
 	{
 	public:
 		typedef R function_type(P0, P1);
-		typedef typename detail::functors_holder<R(P0, P1)>::container container;
-		using detail::functors_holder<function_type>::assign;
-		
-		functor_group & operator=(const functor<function_type>& f)
-		{
-			this->clear();
-			this->append(f);
-			return *this;
-		}
-
-		functor_group & operator+=(const functor<function_type> & f)
-		{
-			this->append(f);
-			return *this;
-		}
+		typedef typename detail::functors_holder<function_type, fn_group>::container container;
+		using detail::functors_holder<function_type, fn_group>::assign;
+		using detail::functors_holder<function_type, fn_group>::operator=;
 
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)(P0, P1))
@@ -290,26 +268,14 @@ namespace nana
 	};
 
 	template<typename R, typename P0, typename P1, typename P2>
-	class functor_group<R(P0, P1, P2)>
-		: public detail::functors_holder<R(P0, P1, P2)>
+	class fn_group<R(P0, P1, P2)>
+		: public detail::functors_holder<R(P0, P1, P2), fn_group<R(P0, P1, P2)> >
 	{
 	public:
 		typedef R function_type(P0, P1, P2);
-		typedef typename detail::functors_holder<R(P0, P1, P2)>::container container;
-		using detail::functors_holder<function_type>::assign;
-		
-		functor_group & operator=(const functor<function_type>& f)
-		{
-			this->clear();
-			this->append(f);
-			return *this;
-		}
-
-		functor_group & operator+=(const functor<function_type> & f)
-		{
-			this->append(f);
-			return *this;
-		}
+		typedef typename detail::functors_holder<function_type, fn_group>::container container;
+		using detail::functors_holder<function_type, fn_group>::assign;
+		using detail::functors_holder<function_type, fn_group>::operator=;
 
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)(P0, P1, P2))
@@ -332,26 +298,14 @@ namespace nana
 	};
 
 	template<typename R, typename P0, typename P1, typename P2, typename P3>
-	class functor_group<R(P0, P1, P2, P3)>
-		: public detail::functors_holder<R(P0, P1, P2, P3)>
+	class fn_group<R(P0, P1, P2, P3)>
+		: public detail::functors_holder<R(P0, P1, P2, P3), fn_group<R(P0, P1, P2, P3)> >
 	{
 	public:
 		typedef R function_type(P0, P1, P2, P3);
-		typedef typename detail::functors_holder<R(P0, P1, P2, P3)>::container container;
-		using detail::functors_holder<function_type>::assign;
-		
-		functor_group & operator=(const functor<function_type>& f)
-		{
-			this->clear();
-			this->append(f);
-			return *this;
-		}
-
-		functor_group & operator+=(const functor<function_type> & f)
-		{
-			this->append(f);
-			return *this;
-		}
+		typedef typename detail::functors_holder<function_type, fn_group>::container container;
+		using detail::functors_holder<function_type, fn_group>::assign;
+		using detail::functors_holder<function_type, fn_group>::operator=;
 
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)(P0, P1, P2, P3))
@@ -374,26 +328,14 @@ namespace nana
 	};
 
 	template<typename R, typename P0, typename P1, typename P2, typename P3, typename P4>
-	class functor_group<R(P0, P1, P2, P3, P4)>
-		: public detail::functors_holder<R(P0, P1, P2, P3, P4)>
+	class fn_group<R(P0, P1, P2, P3, P4)>
+		: public detail::functors_holder<R(P0, P1, P2, P3, P4), fn_group<R(P0, P1, P2, P3, P4)> >
 	{
 	public:
 		typedef R function_type(P0, P1, P2, P3, P4);
-		typedef typename detail::functors_holder<R(P0, P1, P2, P3, P4)>::container container;
-		using detail::functors_holder<function_type>::assign;
-		
-		functor_group & operator=(const functor<function_type>& f)
-		{
-			this->clear();
-			this->append(f);
-			return *this;
-		}
-
-		functor_group & operator+=(const functor<function_type> & f)
-		{
-			this->append(f);
-			return *this;
-		}
+		typedef typename detail::functors_holder<function_type, fn_group>::container container;
+		using detail::functors_holder<function_type, fn_group>::assign;
+		using detail::functors_holder<function_type, fn_group>::operator=;
 
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)(P0, P1, P2, P3, P4))

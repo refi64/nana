@@ -189,7 +189,7 @@ namespace skeletons
 			}
 		}
 	private:
-		void _m_make_max(size_t line)
+		void _m_make_max(std::size_t line)
 		{
 			const string_type& str = text_cont_[line];
 			if(str.size() > attr_max_.size)
@@ -203,7 +203,7 @@ namespace skeletons
 		{
 			attr_max_.size = 0;
 			typename std::deque<string_type>::iterator it = text_cont_.begin(), end = text_cont_.end();
-			size_t n = 0;
+			std::size_t n = 0;
 			for(; it != end; ++it, ++n)
 			{
 				if(it->size() > attr_max_.size)
@@ -222,8 +222,8 @@ namespace skeletons
 				:line(0), size(0)
 			{}
 
-			size_t line;
-			size_t size;
+			std::size_t line;
+			std::size_t size;
 
 			void reset()
 			{

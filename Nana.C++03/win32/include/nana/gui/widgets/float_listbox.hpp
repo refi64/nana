@@ -80,7 +80,7 @@ namespace nana{ namespace gui{
 		void scroll_items(bool upwards);
 		void move_items(bool upwards, bool recycle);
 		void renderer(item_renderer*);
-		size_t index() const;
+		std::size_t index() const;
 	};
 }//end namespace gui
 }

@@ -32,9 +32,9 @@ namespace detail
 
 	void blend(drawable_type dw, int x, int y, unsigned width, unsigned height, nana::color_t, double fade_rate);
 
-	nana::size raw_text_extent_size(drawable_type, const nana::char_t*, size_t len);
-	nana::size text_extent_size(drawable_type, const nana::char_t*, size_t len);
-	void draw_string(drawable_type, int x, int y, const nana::char_t *, size_t len);
+	nana::size raw_text_extent_size(drawable_type, const nana::char_t*, std::size_t len);
+	nana::size text_extent_size(drawable_type, const nana::char_t*, std::size_t len);
+	void draw_string(drawable_type, int x, int y, const nana::char_t *, std::size_t len);
 }//end namespace detail
 }//end namespace paint
 }//end namespace nana

@@ -83,20 +83,20 @@ namespace nana
 			font typeface() const;
 			nana::size	text_extent_size(const nana::char_t*) const;
 			nana::size	text_extent_size(const nana::string&) const;
-			nana::size	text_extent_size(const nana::char_t*, size_t length) const;
-			nana::size	text_extent_size(const nana::string&, size_t length) const;
-			nana::size	glyph_extent_size(const nana::char_t*, size_t length, size_t begin, size_t end) const;
-			nana::size	glyph_extent_size(const nana::string&, size_t length, size_t begin, size_t end) const;
-			bool glyph_pixels(const nana::char_t *, size_t length, unsigned* pxbuf) const;
+			nana::size	text_extent_size(const nana::char_t*, std::size_t length) const;
+			nana::size	text_extent_size(const nana::string&, std::size_t length) const;
+			nana::size	glyph_extent_size(const nana::char_t*, std::size_t length, std::size_t begin, std::size_t end) const;
+			nana::size	glyph_extent_size(const nana::string&, std::size_t length, std::size_t begin, std::size_t end) const;
+			bool glyph_pixels(const nana::char_t *, std::size_t length, unsigned* pxbuf) const;
 			nana::size	bidi_extent_size(const nana::string&) const;
 
 			bool text_metrics(unsigned & ascent, unsigned& descent, unsigned& internal_leading) const;
 
 
-			unsigned bidi_string(int x, int y, color_t, const nana::char_t *, size_t len);
-			void string(int x, int y, color_t, const nana::string&, size_t len);
+			unsigned bidi_string(int x, int y, color_t, const nana::char_t *, std::size_t len);
+			void string(int x, int y, color_t, const nana::string&, std::size_t len);
 			void string(int x, int y, color_t, const nana::string&);
-			void string(int x, int y, color_t, const nana::char_t*, size_t len);
+			void string(int x, int y, color_t, const nana::char_t*, std::size_t len);
 			void string(int x, int y, color_t, const nana::char_t*);
 
 			void set_pixel(int x, int y, color_t);

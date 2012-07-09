@@ -28,7 +28,7 @@ namespace nana{ namespace system{
 		void set(const nana::string& text);
 		void get(nana::string& str);
 	private:
-		bool _m_set(unsigned type, const void* buf, size_t size);
+		bool _m_set(unsigned type, const void* buf, std::size_t size);
 		void* _m_get(unsigned type, size_t& size);
 	};
 

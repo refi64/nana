@@ -904,7 +904,7 @@ namespace detail
 						gui::detail::tag_dropinfo di;
 
 						nana::char_t * tmpbuf = 0;
-						size_t bufsize = 0;
+						std::size_t bufsize = 0;
 
 						unsigned size = ::DragQueryFile(drop, 0xFFFFFFFF, 0, 0);
 						for(unsigned i = 0; i < size; ++i)

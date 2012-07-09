@@ -204,12 +204,12 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 	class trigger::drawer
 	{
 	public:
-		static const size_t npos = static_cast<size_t>(-1);
+		static const std::size_t npos = static_cast<size_t>(-1);
 		struct component
 		{
 			enum type{none, item, up, down};
 			type which;
-			size_t item_index;
+			std::size_t item_index;
 			bool is_close;
 
 			component()
@@ -566,7 +566,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			return container_[item_state_.select];
 		}
 
-		void _m_draw_item(item_renderer& renderer, item_t* m, size_t index, nana::rectangle& login_rectangle, int top, const nana::size& gsize)
+		void _m_draw_item(item_renderer& renderer, item_t* m, std::size_t index, nana::rectangle& login_rectangle, int top, const nana::size& gsize)
 		{
 			nana::rectangle r;
 			item_renderer::state_flags flag;
@@ -821,8 +821,8 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 
 		struct item_state_tag
 		{
-			size_t index;	//determine the first item wound be displayed.
-			size_t select;
+			std::size_t index;	//determine the first item wound be displayed.
+			std::size_t select;
 			component active;
 
 			item_state_tag()

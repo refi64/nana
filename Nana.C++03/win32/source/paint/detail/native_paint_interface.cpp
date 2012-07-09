@@ -140,7 +140,7 @@ namespace detail
 		double lrate = 1 - fade_rate;
 		pixel_buffer pixbuf(dw, r.y, r.height);
 
-		for(size_t row = 0; row < r.height; ++row)
+		for(std::size_t row = 0; row < r.height; ++row)
 		{
 			nana::pixel_rgb_t * i = pixbuf.raw_ptr(row) + r.x;
 			const nana::pixel_rgb_t * const end = i + r.width;
@@ -155,7 +155,7 @@ namespace detail
 		pixbuf.paste(nana::rectangle(r.x, 0, r.width, r.height), dw, r.x, r.y);
 	}
 
-	nana::size raw_text_extent_size(drawable_type dw, const nana::char_t* text, size_t len)
+	nana::size raw_text_extent_size(drawable_type dw, const nana::char_t* text, std::size_t len)
 	{
 		if(0 == dw || 0 == text || 0 == len) return nana::size(0, 0);
 #if defined(NANA_WINDOWS)
@@ -181,7 +181,7 @@ namespace detail
 #endif
 	}
 
-	nana::size text_extent_size(drawable_type dw, const nana::char_t * text, size_t len)
+	nana::size text_extent_size(drawable_type dw, const nana::char_t * text, std::size_t len)
 	{
 		if(0 == dw || 0 == text || 0 == len) return nana::size(0, 0);
 		nana::size extents;
@@ -222,14 +222,14 @@ namespace detail
 		return extents;
 	}
 
-	void draw_string(drawable_type dw, int x, int y, const nana::char_t * str, size_t len)
+	void draw_string(drawable_type dw, int x, int y, const nana::char_t * str, std::size_t len)
 	{
 #if defined(NANA_WINDOWS)
 		::TextOut(dw->context, x, y, str, static_cast<int>(len));
 #elif defined(NANA_X11)
 	#if defined(NANA_UNICODE)
 		std::string utf8str;
-		nana::string wbstr = buf;
+		nana::string wbstr = str;
 		if(wbstr.size() == len)
 			nana::stringset_cast(utf8str, wbstr);
 		else

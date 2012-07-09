@@ -236,7 +236,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			create(wd, x, y, width, height);
 		}
 
-		bool textbox::getline(size_t n, nana::string& text) const
+		bool textbox::getline(std::size_t n, nana::string& text) const
 		{
 			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
 			return (editor ? editor->getline(n, text) : false);

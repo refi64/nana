@@ -8,7 +8,7 @@
  *
  *	@file: nana/gui/cursor.hpp
  *	@patchs:
- *		Jan 03 2012, unsigned to size_t conversion fail for x64, Hiroshi Seki
+ *		Jan 03 2012, unsigned to std::size_t conversion fail for x64, Hiroshi Seki
  */
 
 #include <nana/gui/cursor.hpp>

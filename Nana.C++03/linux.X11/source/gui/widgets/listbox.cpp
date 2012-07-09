@@ -8,7 +8,7 @@
  *
  *	@file: nana/gui/widgets/listbox.cpp
  *	@patchs:
- *		Jan 03 2012, unsigned to size_t conversion fail for x64, Hiroshi Seki
+ *		Jan 03 2012, unsigned to std::size_t conversion fail for x64, Hiroshi Seki
  */
 
 #include <nana/gui/widgets/listbox.hpp>
@@ -24,12 +24,12 @@ namespace nana{ namespace gui{
 	{
 		namespace listbox
 		{
-			const size_t npos = static_cast<size_t>(-1);
+			const std::size_t npos = static_cast<size_t>(-1);
 
 			class es_header
 			{
 			public:
-				typedef size_t size_type;
+				typedef std::size_t size_type;
 				struct item_t
 				{
 					nana::string text;
@@ -312,7 +312,7 @@ namespace nana{ namespace gui{
 					}
 				};
 			public:
-				typedef size_t size_type;
+				typedef std::size_t size_type;
 				typedef std::list<category> container;
 
 				es_lister()
@@ -844,7 +844,7 @@ namespace nana{ namespace gui{
 					else
 					{
 						bool good = false;
-						for(size_t i = 0; i < list_.size(); ++i)
+						for(std::size_t i = 0; i < list_.size(); ++i)
 						{
 							if(this->size_item(i))
 							{
@@ -1230,7 +1230,7 @@ namespace nana{ namespace gui{
 			//			the state of the struct does not effect on member funcions, therefore all data members are public.
 			struct essence_t
 			{
-				typedef size_t size_type;
+				typedef std::size_t size_type;
 
 				enum state_t{StateNormal, StateHighlight, StateGrab, StateFloat};
 				enum where_t{WhereUnknown = -1, WhereHeader, WhereLister, WhereChecker};

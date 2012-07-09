@@ -92,7 +92,7 @@ namespace nana{ namespace gui{
 				bool checked(unsigned index) const;
 				menu_type& get_root();
 				void insert(unsigned long index, const nana::string&, const functor_type&);
-				void answerer(size_t index, const functor_type&);
+				void answerer(std::size_t index, const functor_type&);
 				void enabled(unsigned long index, bool enable);
 				bool enabled(unsigned long index) const;
 				void erase(unsigned long index);
@@ -269,7 +269,7 @@ namespace nana{ namespace gui{
 		void append_splitter();
 		void clear();
 		void close();
-		void image(size_t index, const paint::image&);
+		void image(std::size_t index, const paint::image&);
 		void check_style(unsigned index, check_t style);
 		void checked(unsigned index, bool check);
 		bool checked(unsigned index) const;
@@ -280,7 +280,7 @@ namespace nana{ namespace gui{
 		menu * link(unsigned long index);
 		menu *create_sub_menu(unsigned long index);
 		void popup(window, int x, int y, bool owner_menubar);
-		void answerer(size_t index, const functor_type&);
+		void answerer(std::size_t index, const functor_type&);
 		void destroy_answer(const nana::functor<void()>&);
 		void goto_next(bool forward);
 		bool goto_submen();

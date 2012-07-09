@@ -35,7 +35,7 @@ namespace nana{ namespace system{
 
 		void dataexch::get(nana::string& str)
 		{
-			size_t size;
+			std::size_t size;
 			void* res = _m_get(nana::traits::same_type<char, nana::char_t>::value ? format::text : format::unicode, size);
 			if(res)
 			{
@@ -58,7 +58,7 @@ namespace nana{ namespace system{
 			}
 		}
 	//private:
-		bool dataexch::_m_set(unsigned type, const void* buf, size_t size)
+		bool dataexch::_m_set(unsigned type, const void* buf, std::size_t size)
 		{
 			bool res = false;
 #if defined(NANA_WINDOWS)

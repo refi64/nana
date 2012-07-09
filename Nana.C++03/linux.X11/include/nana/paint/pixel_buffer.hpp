@@ -22,13 +22,13 @@ namespace nana{	namespace paint
 	public:
 		pixel_buffer();
 		pixel_buffer(drawable_type, const nana::rectangle& want_rectangle);
-		pixel_buffer(drawable_type, size_t top, size_t lines);
-		pixel_buffer(size_t width, size_t height);
+		pixel_buffer(drawable_type, std::size_t top, std::size_t lines);
+		pixel_buffer(std::size_t width, std::size_t height);
 
 		~pixel_buffer();
 
 		bool open(drawable_type, const nana::rectangle& want_rectangle);
-		bool open(size_t width, size_t height);
+		bool open(std::size_t width, std::size_t height);
 
 		void close();
 
@@ -36,12 +36,12 @@ namespace nana{	namespace paint
 
 		operator const void*() const;
 
-		size_t bytes() const;
+		std::size_t bytes() const;
 		nana::size size() const;
 		
 		pixel_rgb_t * raw_ptr() const;
-		pixel_rgb_t * raw_ptr(size_t row) const;
-		void put(const unsigned char* rawbits, size_t width, size_t height, size_t bits_per_pixel, size_t bytes_per_line, bool is_negative);
+		pixel_rgb_t * raw_ptr(std::size_t row) const;
+		void put(const unsigned char* rawbits, std::size_t width, std::size_t height, std::size_t bits_per_pixel, std::size_t bytes_per_line, bool is_negative);
 		
 		void line(const std::string& name);
 		void line(const nana::point& pos_beg, const nana::point& pos_end, nana::color_t color, double fade_rate);

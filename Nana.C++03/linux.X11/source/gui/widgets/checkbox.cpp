@@ -270,7 +270,7 @@ namespace xcheckbox
 			ui_container_.push_back(el);
 		}
 
-		size_t radio_group::checked() const
+		std::size_t radio_group::checked() const
 		{
 			for(std::vector<element_tag>::const_iterator i = ui_container_.begin(); i != ui_container_.end(); ++i)
 			{

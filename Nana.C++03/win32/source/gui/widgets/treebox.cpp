@@ -581,12 +581,12 @@ namespace gui
 					return graph_->height() / _m_node_height();
 				}
 
-				bool no_sensitive_compare(const nana::string& text, const nana::char_t *pattern, size_t len)
+				bool no_sensitive_compare(const nana::string& text, const nana::char_t *pattern, std::size_t len)
 				{
 					if(len <= text.length())
 					{
 						const nana::char_t * s = text.c_str();
-						for(size_t i = 0; i < len; ++i)
+						for(std::size_t i = 0; i < len; ++i)
 						{
 							if('a' <= s[i] && s[i] <= 'z')
 							{
@@ -601,7 +601,7 @@ namespace gui
 					return false;
 				}
 
-				const trigger::node_type* find_track_child_node(const trigger::node_type* node, const trigger::node_type * end, const nana::char_t* pattern, size_t len, bool &finish)
+				const trigger::node_type* find_track_child_node(const trigger::node_type* node, const trigger::node_type * end, const nana::char_t* pattern, std::size_t len, bool &finish)
 				{
 					if(node->value.second.expanded)
 					{

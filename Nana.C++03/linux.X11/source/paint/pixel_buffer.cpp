@@ -34,7 +34,7 @@ namespace nana{	namespace paint
 			{}
 		}img_pro;
 
-		pixel_buffer_storage(size_t width, size_t height)
+		pixel_buffer_storage(std::size_t width, std::size_t height)
 			:	raw_pixel_buffer(new pixel_rgb_t[width * height]),
 				pixel_size(static_cast<unsigned>(width), static_cast<unsigned>(height))
 		{}
@@ -53,12 +53,12 @@ namespace nana{	namespace paint
 		open(drawable, want_rectangle);
 	}
 
-	pixel_buffer::pixel_buffer(drawable_type drawable, size_t top, size_t lines)
+	pixel_buffer::pixel_buffer(drawable_type drawable, std::size_t top, std::size_t lines)
 	{
 		open(drawable, nana::rectangle(0, static_cast<int>(top), 0, static_cast<unsigned>(lines)));
 	}
 
-	pixel_buffer::pixel_buffer(size_t width, size_t height)
+	pixel_buffer::pixel_buffer(std::size_t width, std::size_t height)
 	{
 		open(width, height);
 	}
@@ -107,7 +107,7 @@ namespace nana{	namespace paint
 		}
 
 		storage_ref_ = new pixel_buffer_storage(want_r.width, want_r.height);
-		size_t read_lines = ::GetDIBits(context, pixmap, 0, static_cast<UINT>(want_r.height), storage_ref_.handle()->raw_pixel_buffer, &bmpinfo, DIB_RGB_COLORS);
+		std::size_t read_lines = ::GetDIBits(context, pixmap, 0, static_cast<UINT>(want_r.height), storage_ref_.handle()->raw_pixel_buffer, &bmpinfo, DIB_RGB_COLORS);
 
 		if(need_dup)
 		{
@@ -158,7 +158,7 @@ namespace nana{	namespace paint
         return true;
 	}
 
-	bool pixel_buffer::open(size_t width, size_t height)
+	bool pixel_buffer::open(std::size_t width, std::size_t height)
 	{
 		if(width && height)
 		{
@@ -183,7 +183,7 @@ namespace nana{	namespace paint
 		return (storage_ref_.empty() ? 0 : this);
 	}
 
-	size_t pixel_buffer::bytes() const
+	std::size_t pixel_buffer::bytes() const
 	{
 		if(storage_ref_.empty() == false)
 		{
@@ -203,7 +203,7 @@ namespace nana{	namespace paint
 		return (storage_ref_.empty() ? 0 : storage_ref_.handle()->raw_pixel_buffer);
 	}
 
-	pixel_rgb_t * pixel_buffer::raw_ptr(size_t row) const
+	pixel_rgb_t * pixel_buffer::raw_ptr(std::size_t row) const
 	{
 		if(!storage_ref_.empty())
 		{
@@ -214,7 +214,7 @@ namespace nana{	namespace paint
 		return 0;
 	}
 
-	void pixel_buffer::put(const unsigned char* rawbits, size_t width, size_t height, size_t bits_per_pixel, size_t bytes_per_line, bool is_negative)
+	void pixel_buffer::put(const unsigned char* rawbits, std::size_t width, std::size_t height, std::size_t bits_per_pixel, std::size_t bytes_per_line, bool is_negative)
 	{
 		pixel_rgb_t* rawptr = (storage_ref_.empty() ? 0 : storage_ref_.handle()->raw_pixel_buffer);
 		if(rawptr)
@@ -229,7 +229,7 @@ namespace nana{	namespace paint
 				}
 				else
 				{
-					size_t line_bytes = (sp->pixel_size.width < width ? sp->pixel_size.width : width) * sizeof(pixel_rgb_t);
+					std::size_t line_bytes = (sp->pixel_size.width < width ? sp->pixel_size.width : width) * sizeof(pixel_rgb_t);
 
 					if(sp->pixel_size.height < height)
 						height = sp->pixel_size.height;
@@ -238,7 +238,7 @@ namespace nana{	namespace paint
 					if(is_negative)
 					{
 						const unsigned char* s = rawbits;
-						for(size_t i = 0; i < height; ++i)
+						for(std::size_t i = 0; i < height; ++i)
 						{
 							memcpy(d, s, line_bytes);
 							d += sp->pixel_size.width;
@@ -248,7 +248,7 @@ namespace nana{	namespace paint
 					else
 					{
 						const unsigned char* s = rawbits + bytes_per_line * (height - 1);
-						for(size_t i = 0; i < height; ++i)
+						for(std::size_t i = 0; i < height; ++i)
 						{
 							memcpy(d, s, line_bytes);
 							d += sp->pixel_size.width;
@@ -269,11 +269,11 @@ namespace nana{	namespace paint
 				if(is_negative)
 				{
 					const unsigned char* s = rawbits;
-					for(size_t i = 0; i < height; ++i)
+					for(std::size_t i = 0; i < height; ++i)
 					{
 						pixel_rgb_t * p = d;
 						pixel_rgb_t * end = p + width;
-						size_t s_index = 0;
+						std::size_t s_index = 0;
 						for(; p < end; ++p)
 						{
 							const unsigned char * s_p = s + s_index;
@@ -289,7 +289,7 @@ namespace nana{	namespace paint
 				else
 				{
 					const unsigned char* s = rawbits + bytes_per_line * (height - 1);
-					for(size_t i = 0; i < height; ++i)
+					for(std::size_t i = 0; i < height; ++i)
 					{
 						pixel_rgb_t * p = d;
 						pixel_rgb_t * end = p + width;
@@ -318,7 +318,7 @@ namespace nana{	namespace paint
 
 				unsigned char * rgb_table = new unsigned char[32];
 				unsigned char * table_block = rgb_table;
-				for(size_t i = 0; i < 8; i += 4)
+				for(std::size_t i = 0; i < 8; i += 4)
 				{
 					table_block[0] = static_cast<unsigned char>(i << 3);
 					table_block[1] = static_cast<unsigned char>((i + 1) << 3);
@@ -330,7 +330,7 @@ namespace nana{	namespace paint
 				if(is_negative)
 				{
 					const unsigned char* s = rawbits;
-					for(size_t i = 0; i < height; ++i)
+					for(std::size_t i = 0; i < height; ++i)
 					{
 						pixel_rgb_t * p = d;
 						const pixel_rgb_t * const end = p + width;
@@ -349,7 +349,7 @@ namespace nana{	namespace paint
 				else
 				{
 					const unsigned char* s = rawbits + bytes_per_line * (height - 1);
-					for(size_t i = 0; i < height; ++i)
+					for(std::size_t i = 0; i < height; ++i)
 					{
 						pixel_rgb_t * p = d;
 						const pixel_rgb_t * const end = p + width;

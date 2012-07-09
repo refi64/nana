@@ -27,7 +27,7 @@ namespace nana{	namespace gui
 			{
 				typedef CategObj categorize_type;
 				typedef typename categorize_type::value_type value_type;
-				nana::functor_group<void(categorize_type&, value_type&)> selected;
+				nana::fn_group<void(categorize_type&, value_type&)> selected;
 			};
 
 			class ext_event_adapter_if
@@ -81,9 +81,9 @@ namespace nana{	namespace gui
 						somewhere, item_root, item_name, item_arrow
 					};
 
-					static const size_t npos = static_cast<size_t>(-1);
+					static const std::size_t npos = static_cast<std::size_t>(-1);
 					t what;
-					size_t index;
+					std::size_t index;
 
 					ui_element();
 				};
@@ -91,7 +91,7 @@ namespace nana{	namespace gui
 				virtual ~renderer() = 0;
 				virtual void background(graph_reference, window wd, const nana::rectangle&, const ui_element&) = 0;
 				virtual void root_arrow(graph_reference, const nana::rectangle&, mouse_action_t) = 0;
-				virtual void item(graph_reference, const nana::rectangle&, size_t index, const nana::string& name, unsigned textheight, bool has_child, mouse_action_t) = 0;
+				virtual void item(graph_reference, const nana::rectangle&, std::size_t index, const nana::string& name, unsigned textheight, bool has_child, mouse_action_t) = 0;
 				virtual void border(graph_reference) = 0;
 			};
 

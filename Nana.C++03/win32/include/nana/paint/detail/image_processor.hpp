@@ -31,7 +31,7 @@ namespace detail
 		{
 			void process(const paint::pixel_buffer& s_pixbuf, const nana::rectangle& r_src, drawable_type dw_dst, const nana::rectangle& r_dst) const
 			{
-				const size_t s_pixbuf_width = s_pixbuf.size().width;
+				const std::size_t s_pixbuf_width = s_pixbuf.size().width;
 
 				pixel_buffer pixbuf(r_dst.width, r_dst.height);
 				double rate_x = double(r_src.width) / r_dst.width;
@@ -40,14 +40,14 @@ namespace detail
 				pixel_rgb_t * s_raw_pixbuf = s_pixbuf.raw_ptr();
 				pixel_rgb_t * d_line = pixbuf.raw_ptr();
 
-				for(size_t row = 0; row < r_dst.height; ++row)
+				for(std::size_t row = 0; row < r_dst.height; ++row)
 				{
 					const pixel_rgb_t * s_line = s_raw_pixbuf + (static_cast<int>(row * rate_y) + r_src.y) * s_pixbuf_width;
 
 					pixel_rgb_t * i = d_line;
 					d_line += r_dst.width;
 
-					for(size_t x = 0; x < r_dst.width; ++x, ++i)
+					for(std::size_t x = 0; x < r_dst.width; ++x, ++i)
 						*i = s_line[static_cast<int>(x * rate_x) + r_src.x];
 				}
 
@@ -67,10 +67,10 @@ namespace detail
 
 			void process(const paint::pixel_buffer & s_pixbuf, const nana::rectangle& r_src, drawable_type dw_dst, const nana::rectangle& r_dst) const
 			{
-				const size_t s_pixbuf_width = s_pixbuf.size().width;
+				const std::size_t s_pixbuf_width = s_pixbuf.size().width;
 
 				const int shift_size = 8;
-				const size_t coef = 1 << shift_size;
+				const std::size_t coef = 1 << shift_size;
 				const int double_shift_size = shift_size << 1;
 
 				nana::paint::pixel_buffer pixbuf(r_dst.width, r_dst.height);
@@ -89,7 +89,7 @@ namespace detail
 
 				nana::pixel_rgb_t * i = pixbuf.raw_ptr();
 
-				for(size_t x = 0; x < r_dst.width; ++x)
+				for(std::size_t x = 0; x < r_dst.width; ++x)
 				{
 					double u = (int(x) + 0.5) * rate_x - 0.5;
 					x_u_table_tag el;
@@ -109,7 +109,7 @@ namespace detail
 					x_u_table[x] = el;
 				}
 				
-				for(size_t row = 0; row < r_dst.height; ++row)
+				for(std::size_t row = 0; row < r_dst.height; ++row)
 				{
 					double v = (int(row) + 0.5) * rate_y - 0.5;
 					int sy = r_src.y;
@@ -124,8 +124,8 @@ namespace detail
 						v -= ipart;
 					}
 
-					size_t iv = static_cast<size_t>(v * coef);
-					const size_t iv_minus_coef = coef - iv;
+					std::size_t iv = static_cast<size_t>(v * coef);
+					const std::size_t iv_minus_coef = coef - iv;
 
 					const nana::pixel_rgb_t * s_line = s_raw_pixel_buffer + sy * s_pixbuf_width;
 					const nana::pixel_rgb_t * next_s_line = s_line + ((sy < bottom) ? s_pixbuf_width : 0);
@@ -135,7 +135,7 @@ namespace detail
 					nana::pixel_rgb_t col2;
 					nana::pixel_rgb_t col3;
 
-					for(size_t x = 0; x < r_dst.width; ++x, ++i)
+					for(std::size_t x = 0; x < r_dst.width; ++x, ++i)
 					{
 						x_u_table_tag el = x_u_table[x];
 						
@@ -153,10 +153,10 @@ namespace detail
 							col3 = col1;
 						}
 						
-						size_t coef0 = el.iu_minus_coef * iv_minus_coef;
-						size_t coef1 = el.iu_minus_coef * iv;
-						size_t coef2 = el.iu * iv_minus_coef;
-						size_t coef3 = el.iu * iv;			
+						std::size_t coef0 = el.iu_minus_coef * iv_minus_coef;
+						std::size_t coef1 = el.iu_minus_coef * iv;
+						std::size_t coef2 = el.iu * iv_minus_coef;
+						std::size_t coef3 = el.iu * iv;			
 
 						i->u.element.red = static_cast<unsigned>((coef0 * col0.u.element.red + coef1 * col1.u.element.red + (coef2 * col2.u.element.red + coef3 * col3.u.element.red)) >> double_shift_size);
 						i->u.element.green = static_cast<unsigned>((coef0 * col0.u.element.green + coef1 * col1.u.element.green + (coef2 * col2.u.element.green + coef3 * col3.u.element.green)) >> double_shift_size);

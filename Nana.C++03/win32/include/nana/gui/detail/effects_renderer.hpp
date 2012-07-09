@@ -30,7 +30,7 @@ namespace nana{	namespace gui{
 				return object;
 			}
 
-			size_t weight() const
+			std::size_t weight() const
 			{
 				return 2;
 			}
@@ -43,7 +43,7 @@ namespace nana{	namespace gui{
 				{
 					core_window_t * focused = root_wd->other.attribute.root->focus;
 					native_window_type native = root_wd->root;
-					size_t pixels = weight();
+					std::size_t pixels = weight();
 
 					nana::paint::graphics * graph = root_wd->root_graph;
 

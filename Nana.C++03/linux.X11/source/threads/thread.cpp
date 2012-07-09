@@ -15,6 +15,7 @@
 	#include <windows.h>
 	#include <process.h>
 #elif defined(NANA_LINUX)
+	#include <unistd.h>
 	#include <pthread.h>
 	#include <sys/syscall.h>
 #endif

@@ -20,7 +20,7 @@ namespace nana{ namespace gui{
 	{
 		namespace listbox
 		{
-			typedef size_t size_type;
+			typedef std::size_t size_type;
 			//struct essence_t
 			//@brief:	this struct gives many data for listbox,
 			//			the state of the struct does not effect on member funcions, therefore all data members are public.
@@ -31,7 +31,7 @@ namespace nana{ namespace gui{
 			class trigger: public nana::gui::drawer_trigger
 			{
 			public:
-				typedef size_t size_type;
+				typedef std::size_t size_type;
 
 				trigger();
 				essence_t& essence();

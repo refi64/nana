@@ -338,7 +338,7 @@ namespace nana{ namespace gui{
 			class layouter
 			{
 			public:
-				static const size_t npos = static_cast<size_t>(-1);
+				static const std::size_t npos = static_cast<size_t>(-1);
 
 				typedef std::list<item_t>::iterator iterator;
 				typedef std::list<item_t>::const_iterator const_iterator;
@@ -348,28 +348,28 @@ namespace nana{ namespace gui{
 				{}
 
 
-				nana::any& at(size_t i)
+				nana::any& at(std::size_t i)
 				{
 					if(i < list_.size())
 						return at_no_bound_check(i);
 					throw std::out_of_range("Nana.GUI.tabbar::at() is out of range");
 				}
 
-				nana::any& at_no_bound_check(size_t i)
+				nana::any& at_no_bound_check(std::size_t i)
 				{
 					iterator it = list_.begin();
 					std::advance(it, i);
 					return it->value;
 				}
 
-				const nana::any& at(size_t i) const
+				const nana::any& at(std::size_t i) const
 				{
 					if(i < list_.size())
 						return at_no_bound_check(i);
 					throw std::out_of_range("Nana.GUI.tabbar::at() const is out of range");
 				}
 
-				const nana::any& at_no_bound_check(size_t i) const
+				const nana::any& at_no_bound_check(std::size_t i) const
 				{
 					const_iterator it = list_.begin();
 					std::advance(it, i);
@@ -437,12 +437,12 @@ namespace nana{ namespace gui{
 					render();
 				}
 
-				size_t length() const
+				std::size_t length() const
 				{
 					return list_.size();
 				}
 
-				bool erase(size_t pos)
+				bool erase(std::size_t pos)
 				{
 					if(pos < list_.size())
 					{
@@ -536,7 +536,7 @@ namespace nana{ namespace gui{
 
 					int ibar_end = _m_itembar_right();
 					trace_tag::item_t item_part = trace_.item_part;
-					size_t index = _m_where_itembar(x, y, ibar_end);
+					std::size_t index = _m_where_itembar(x, y, ibar_end);
 					if(index != npos)
 					{
 						if((trace_.what != trace_.item) || (trace_.u.index != index) || (item_part != trace_.item_part))
@@ -584,7 +584,7 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				bool active(size_t i)
+				bool active(std::size_t i)
 				{
 					if(i < list_.size() && (i != basis_.active))
 					{
@@ -608,12 +608,12 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				size_t active() const
+				std::size_t active() const
 				{
 					return basis_.active;
 				}
 
-				void relate(size_t i, nana::gui::window wd)
+				void relate(std::size_t i, nana::gui::window wd)
 				{
 					if(i < list_.size())
 					{
@@ -624,7 +624,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				bool tab_color(size_t i, bool is_bgcolor, nana::color_t color)
+				bool tab_color(std::size_t i, bool is_bgcolor, nana::color_t color)
 				{
 					if(i < list_.size())
 					{
@@ -650,7 +650,7 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				bool tab_image(size_t i, const nana::paint::image& img)
+				bool tab_image(std::size_t i, const nana::paint::image& img)
 				{
 					if(i > list_.size()) return false;
 
@@ -663,7 +663,7 @@ namespace nana{ namespace gui{
 					return true;
 				}
 
-				bool text(size_t i, const nana::string& str)
+				bool text(std::size_t i, const nana::string& str)
 				{
 					if(i < list_.size())
 					{
@@ -678,7 +678,7 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				nana::string text(size_t i) const
+				nana::string text(std::size_t i) const
 				{
 					if(i < list_.size())
 					{
@@ -749,7 +749,7 @@ namespace nana{ namespace gui{
 					return (basis_.scroll_pixels + _m_itembar_right() < basis_.item_pixels * list_.size());
 				}
 
-				bool _m_add_tab(size_t i)
+				bool _m_add_tab(std::size_t i)
 				{
 					item_t m;
 					if((i == npos) || (i >= list_.size()))
@@ -852,7 +852,7 @@ namespace nana{ namespace gui{
 					return nana::rectangle(x + basis_.item_pixels - 18, (basis_.graph->height() - 14) / 2, 14, 14);
 				}
 
-				bool _m_item_pos(size_t index, int &left, int &right) const
+				bool _m_item_pos(std::size_t index, int &left, int &right) const
 				{
 					if(index < list_.size())
 					{
@@ -864,12 +864,12 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				size_t _m_where_itembar(int x, int y, int end)
+				std::size_t _m_where_itembar(int x, int y, int end)
 				{
 					if(x < 0 || x >= end) return npos;
 
 					int left = -static_cast<int>(basis_.scroll_pixels);
-					size_t index = 0;
+					std::size_t index = 0;
 
 					for(const_iterator i = list_.begin(); i != list_.end(); ++i, ++index)
 					{
@@ -1122,7 +1122,7 @@ namespace nana{ namespace gui{
 					item_renderer::state_t state;
 					union
 					{
-						size_t index;
+						std::size_t index;
 						toolbox::button_t button;
 					}u;
 
@@ -1141,7 +1141,7 @@ namespace nana{ namespace gui{
 					unsigned min_pixels;
 					unsigned item_pixels;
 					unsigned scroll_pixels;
-					size_t active;
+					std::size_t active;
 
 					basis_tag()
 						:	wd(0), graph(0), renderer(0),
@@ -1170,23 +1170,23 @@ namespace nana{ namespace gui{
 					delete layouter_;
 				}
 
-				void trigger::active(size_t i)
+				void trigger::active(std::size_t i)
 				{
 					if(layouter_->active(i))
 						API::refresh_window(layouter_->widget());
 				}
 
-				size_t trigger::active() const
+				std::size_t trigger::active() const
 				{
 					return layouter_->active();
 				}
 
-				nana::any& trigger::at(size_t i) const
+				nana::any& trigger::at(std::size_t i) const
 				{
 					return layouter_->at(i);
 				}
 
-				nana::any& trigger::at_no_bound_check(size_t i) const
+				nana::any& trigger::at_no_bound_check(std::size_t i) const
 				{
 					return layouter_->at_no_bound_check(i);
 				}
@@ -1216,7 +1216,7 @@ namespace nana{ namespace gui{
 					return *layouter_;
 				}
 
-				size_t trigger::length() const
+				std::size_t trigger::length() const
 				{
 					return layouter_->length();
 				}
@@ -1226,30 +1226,30 @@ namespace nana{ namespace gui{
 					return layouter_->toolbox_object().close_fly(fly);
 				}
 
-				void trigger::relate(size_t i, nana::gui::window wd)
+				void trigger::relate(std::size_t i, nana::gui::window wd)
 				{
 					layouter_->relate(i, wd);
 				}
 
-				void trigger::tab_color(size_t i, bool is_bgcolor, nana::color_t color)
+				void trigger::tab_color(std::size_t i, bool is_bgcolor, nana::color_t color)
 				{
 					if(layouter_->tab_color(i, is_bgcolor, color))
 						API::refresh_window(layouter_->widget());
 				}
 
-				void trigger::tab_image(size_t i, const nana::paint::image& img)
+				void trigger::tab_image(std::size_t i, const nana::paint::image& img)
 				{
 					if(layouter_->tab_image(i, img))
 						API::refresh_window(layouter_->widget());
 				}
 
-				void trigger::text(size_t i, const nana::string& str)
+				void trigger::text(std::size_t i, const nana::string& str)
 				{
 					if(layouter_->text(i, str))
 						API::refresh_window(layouter_->widget());
 				}
 
-				nana::string trigger::text(size_t i) const
+				nana::string trigger::text(std::size_t i) const
 				{
 					return layouter_->text(i);
 				}

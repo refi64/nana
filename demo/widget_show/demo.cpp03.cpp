@@ -1,7 +1,7 @@
 /*
  *	This is a demo of Nana C++ Library
  *	Author: Jinhao
- *	The demo requires Nana 0.2.5 and C++11 compiler
+ *	The demo requires Nana 0.2.5
  *	Screenshot at http://sourceforge.net/projects/stdex
  */
 #include <nana/gui/wvl.hpp>
@@ -81,6 +81,7 @@ namespace demo
 			node_type node = treebox_.insert(STR("C:"), STR("Local Drive(C:)"), 0);
 			nana::filesystem::file_iterator i(STR("C:\\")), end;
 #elif defined(NANA_LINUX)
+			//Use a whitespace for the root key string under Linux
 			node_type node = treebox_.insert(STR(" "), STR("Root"), 0);
 			nana::filesystem::file_iterator i(STR("/")), end;
 #endif
@@ -269,7 +270,7 @@ namespace demo
 			{
 				progresses_[i].create(*this);
 				gd->add(progresses_[i], 10, 0);
-				progresses_[i].unknown(i == 0);	//The first progress is known style, the second is unknown.
+				progresses_[i].unknown(i == 0);	//The first progress is unknown mode, the second is known mode.
 				tooltip_.set(progresses_[i], tipstr[i]);
 			}
 			gd->add(0, 10);
@@ -282,13 +283,14 @@ namespace demo
 		{
 			for(int i = 0; i < 2; ++i)
 			{
-				progress * p = &(progresses_[i]);
-				if(false == p->unknown())
+				//Resets the known mode progress if its value reaches the amount value.
+				progress & prog = progresses_[i];
+				if(false == prog.unknown())
 				{
-					if(p->value() == p->amount())
-						p->value(0);
+					if(prog.value() == prog.amount())
+						prog.value(0);
 				}
-				p->inc();				
+				prog.inc();				
 			}
 		}
 

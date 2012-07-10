@@ -187,7 +187,7 @@ namespace demo
 				p->make_event<events::click>(mb);
 			}
 			gdbutton->add(0, 10);
-
+			
 			auto ptr = buttons_[0];
 			ptr->caption(STR("Normal Button"));
 
@@ -228,6 +228,8 @@ namespace demo
 			{
 				mb<<STR("The item ")<<cmb.option()<<STR(" is selected in editable combox");
 				mb();
+				//Clear the buffer, otherwise the mb shows the text generated in
+				//the last selected event.
 				mb.clear();
 			};
 
@@ -237,6 +239,8 @@ namespace demo
 			{
 				mb<<STR("The item ")<<cmb.option()<<STR(" is selected in uneditable combox");
 				mb();
+				//Clear the buffer, otherwise the mb shows the text generated in
+				//the last selected event.
 				mb.clear();
 			};
 		}
@@ -268,7 +272,7 @@ namespace demo
 				auto p = std::make_shared<progress>(*this);
 				progresses_.push_back(p);
 				gd->add(*p, 10, 0);
-				p->unknown(i == 0);	//The first progress is known style, the second is unknown.
+				p->unknown(i == 0);	//The first progress is unknown mode, the second is known mode.
 				tooltip_.set(*p, tipstr[i]);
 			}
 			gd->add(0, 10);
@@ -277,6 +281,7 @@ namespace demo
 			{
 				for(auto & p : this->progresses_)
 				{
+					//Resets the known mode progress if its value reaches the amount value.
 					if(false == p->unknown())
 					{
 						if(p->value() == p->amount())
@@ -302,6 +307,8 @@ namespace demo
 			std::shared_ptr<panel<false>> p = std::make_shared<tab_page_listbox>(*this);
 			tabbar_.relate(0, *p);
 			tabpages_.push_back(p);
+			
+			//fasten the widget
 			gd_tabpage->fasten(*p);
 
 			p = std::make_shared<tab_page_treebox>(*this);

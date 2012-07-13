@@ -590,7 +590,7 @@ namespace gui
 		void menubar::create(window wd)
 		{
 			typedef widget_object<category::widget_tag, drawerbase::menubar::trigger> base;
-			base::create(wd, 0, 0, API::window_size(wd).width, 28);
+			base::create(wd, nana::size(API::window_size(wd).width, 28));
 			API::attach_menubar(this->handle());
 		}
 

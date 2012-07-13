@@ -512,25 +512,18 @@ namespace drawerbase
 	}//end namespace button
 }//end namespace drawerbase
 
-		/*
-		 *	button
-		 *		defaine a button widget and it provides the interfaces to be operational
-		 */
+		//button
+		//@brief:Defaine a button widget and it provides the interfaces to be operational
 			button::button(){}
 
-			button::button(window wd)
+			button::button(window wd, bool visible)
 			{
-				create(wd, 0, 0, 0, 0);
+				create(wd, rectangle(), visible);
 			}
 
-			button::button(window wd, const nana::rectangle& r)
+			button::button(window wd, const rectangle& r, bool visible)
 			{
-				create(wd, r.x, r.y, r.width, r.height);
-			}
-
-			button::button(window wd, int x, int y, unsigned w, unsigned h)
-			{
-				create(wd, x, y, w, h);
+				create(wd, r, visible);
 			}
 
 			void button::icon(const nana::paint::image& img)

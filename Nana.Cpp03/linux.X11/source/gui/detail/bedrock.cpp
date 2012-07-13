@@ -480,7 +480,7 @@ namespace detail
 				if(bedrock.wd_manager.available(mousemove_window) && mousemove_window->flags.enabled)
 				{
 					ei.mouse.x = ei.mouse.y = 0;
-					mousemove_window->flags.mouse_action = mouse_action_normal;
+					mousemove_window->flags.action = mouse_action_normal;
 					ei.window = reinterpret_cast<nana::gui::window>(mousemove_window);
 					bedrock.raise_event(event_tag::mouse_leave, mousemove_window, ei, true);
 				}
@@ -555,14 +555,14 @@ namespace detail
 					context.event_window = msgwnd;
 
 					make_eventinfo(ei, msgwnd, message, xevent);
-					msgwnd->flags.mouse_action = mouse_action_pressed;
+					msgwnd->flags.action = mouse_action_pressed;
 					if(bedrock.raise_event(dbl_click ? event_tag::dbl_click : event_tag::mouse_down, msgwnd, ei, true))
 					{
 						//If a root window is created during the mouse_down event, Nana.GUI will ignore the mouse_up event.
 						if(msgwnd->root_widget->other.attribute.root->context.focus_changed)
 						{
 							//call the drawer mouse up event for restoring the surface graphics
-							msgwnd->flags.mouse_action = mouse_action_normal;
+							msgwnd->flags.action = mouse_action_normal;
 							bedrock.fire_event_for_drawer(event_tag::mouse_up, msgwnd, ei, &context);
 							bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
 						}
@@ -588,14 +588,14 @@ namespace detail
 					core_window_t* click_window = 0;
 					if(msgwnd == mouse_window)
 					{
-						mouse_window->flags.mouse_action = mouse_action_over;
+						mouse_window->flags.action = mouse_action_over;
 						click_window = mouse_window;
 						context.event_window = msgwnd;
 						bedrock.fire_event_for_drawer(event_tag::click, msgwnd, ei, &context);
 					}
 					else
 					{
-						mouse_window->flags.mouse_action = mouse_action_normal;
+						mouse_window->flags.action = mouse_action_normal;
 						msgwnd = mouse_window;
 					}
 					context.event_window = msgwnd;
@@ -645,7 +645,7 @@ namespace detail
 				{
 					//if current window is not the previous mouse event window.
 					make_eventinfo(ei, mousemove_window, message, xevent);
-					mousemove_window->flags.mouse_action = mouse_action_normal;
+					mousemove_window->flags.action = mouse_action_normal;
 					bedrock.raise_event(event_tag::mouse_leave, mousemove_window, ei, true);
 
 					//if msgwnd is neither captured window nor the child of captured window,
@@ -664,12 +664,12 @@ namespace detail
 						if(prev_captured_inside)
 						{
 							eid = event_tag::mouse_leave;
-							msgwnd->flags.mouse_action = mouse_action_normal;
+							msgwnd->flags.action = mouse_action_normal;
 						}
 						else
 						{
 							eid = event_tag::mouse_enter;
-							msgwnd->flags.mouse_action = mouse_action_over;
+							msgwnd->flags.action = mouse_action_over;
 						}
 						bedrock.raise_event(eid, msgwnd, ei, false);
 					}
@@ -678,7 +678,7 @@ namespace detail
 				if(msgwnd)
 				{
 					make_eventinfo(ei, msgwnd, message, xevent);
-					msgwnd->flags.mouse_action = mouse_action_over;
+					msgwnd->flags.action = mouse_action_over;
 					if(mousemove_window != msgwnd)
 						bedrock.raise_event(event_tag::mouse_enter, msgwnd, ei, true);
 					bedrock.raise_event(event_tag::mouse_move, msgwnd, ei, true);

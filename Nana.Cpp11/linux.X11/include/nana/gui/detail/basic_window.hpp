@@ -95,12 +95,12 @@ namespace detail
 		basic_window(basic_window* owner, gui::category::root_tag**);
 
 		template<typename Category>
-		basic_window(basic_window* parent, int x, int y, unsigned width, unsigned height, Category**)
+		basic_window(basic_window* parent, const rectangle& r, Category**)
 			: other(Category::value)
 		{
 			if(parent)
 			{
-				_m_init_pos_and_size(parent, x, y, width, height);
+				_m_init_pos_and_size(parent, r);
 				this->_m_initialize(parent);
 			}
 		}
@@ -113,7 +113,7 @@ namespace detail
 
 		void frame_window(native_window_type);
 	private:
-		void _m_init_pos_and_size(basic_window* parent, int x, int y, unsigned width, unsigned height);
+		void _m_init_pos_and_size(basic_window* parent, const rectangle&);
 		void _m_initialize(basic_window* parent);
 	public:
 		typedef nana::color_t color_t;
@@ -152,7 +152,7 @@ namespace detail
 			bool fullscreen	:1;	//When the window is maximizing whether it fit for fullscreen.
 			unsigned Reserved: 22;
 			unsigned char tab;		//indicate a window that can receive the keyboard TAB
-			mouse_action_t	mouse_action;
+			mouse_action	action;
 		}flags;
 
 		struct

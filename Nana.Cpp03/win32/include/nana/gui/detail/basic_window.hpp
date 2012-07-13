@@ -287,18 +287,18 @@ namespace detail
 		basic_window(basic_window* owner, gui::category::root_tag**)
 			: other(category::root_tag::value)
 		{
-			_m_init_pos_and_size(0, 0, 0, 0, 0);
+			_m_init_pos_and_size(0, rectangle());
 			this->other.category = category::root_tag::value;
 			this->_m_initialize(owner);
 		}
 
 		template<typename Category>
-		basic_window(basic_window* parent, int x, int y, unsigned width, unsigned height, Category**)
+		basic_window(basic_window* parent, const rectangle& r, Category**)
 			: other(Category::value)
 		{
 			if(parent)
 			{
-				_m_init_pos_and_size(parent, x, y, width, height);
+				_m_init_pos_and_size(parent, r);
 				this->_m_initialize(parent);
 			}
 		}
@@ -331,12 +331,12 @@ namespace detail
 				other.attribute.frame->container = wd;
 		}
 	private:
-		void _m_init_pos_and_size(basic_window* parent, int x, int y, unsigned width, unsigned height)
+		void _m_init_pos_and_size(basic_window* parent, const rectangle& r)
 		{
-			this->rect.width = width;
-			this->rect.height = height;
-			this->rect.x = this->root_x = x;
-			this->rect.y = this->root_y = y;
+			this->rect.width = r.width;
+			this->rect.height = r.height;
+			this->rect.x = this->root_x = r.x;
+			this->rect.y = this->root_y = r.y;
 
 			if(parent)
 			{
@@ -379,7 +379,7 @@ namespace detail
 			this->flags.dropable = false;
 			this->flags.fullscreen = false;
 			this->flags.tab = nana::gui::detail::tab_type::none;
-			this->flags.mouse_action = mouse_action_normal;
+			this->flags.action = mouse_action_normal;
 			
 			this->visible = false;
 
@@ -439,7 +439,7 @@ namespace detail
 			bool fullscreen	:1;	//When the window is maximizing whether it fit for fullscreen.
 			unsigned Reserved: 22;
 			unsigned char tab;		//indicate a window that can receive the keyboard TAB
-			mouse_action_t	mouse_action;
+			mouse_action_t	action;
 		}flags;
 
 		struct

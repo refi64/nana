@@ -67,9 +67,8 @@ namespace nana{ namespace gui
 		typedef drawerbase::combox::ext_event_tag ext_event_type;
 
 		combox();
-		combox(window);
-		combox(window, const nana::rectangle& r);
-		combox(window, int x, int y, unsigned width, unsigned height);
+		combox(window, bool visible);
+		combox(window, const rectangle& r = rectangle(), bool visible = true);
 		
 		void clear();
 		void editable(bool);

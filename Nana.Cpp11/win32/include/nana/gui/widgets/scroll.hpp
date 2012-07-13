@@ -292,20 +292,14 @@ namespace nana{ namespace gui{
 
 		scroll(){}
 
-		scroll(window wd)
+		scroll(window wd, bool visible)
 		{
-			//create is an unqualified name.
-			this->create(wd, 0, 0, 0, 0);
+			this->create(wd, rectangle(), visible);
 		}
 
-		scroll(window wd, const nana::rectangle& r)
+		scroll(window wd, const rectangle& r, bool visible)
 		{
-			this->create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		scroll(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			this->create(wd, x, y, width, height);
+			this->create(wd, r, visible);
 		}
 
 		size_type amount() const

@@ -224,7 +224,7 @@ namespace detail
 			return false;
 		}
 
-		window_manager::core_window_t* window_manager::create_root(core_window_t* owner, bool nested, int x, int y, unsigned width, unsigned height, const appearance& app)
+		window_manager::core_window_t* window_manager::create_root(core_window_t* owner, bool nested, rectangle r, const appearance& app)
 		{
 			nana::gui::native_window_type ownerWnd = nullptr;
 
@@ -237,14 +237,14 @@ namespace detail
 				{
 					ownerWnd = (owner->other.category == category::frame_tag::value ?
 										owner->other.attribute.frame->container : owner->root_widget->root);
-					x += owner->root_x;
-					y += owner->root_y;
+					r.x += owner->root_x;
+					r.y += owner->root_y;
 				}
 				else
 					owner = nullptr;
 			}
 
-			native_interface::window_result result = native_interface::create_window(ownerWnd, nested, x, y, width, height, app);
+			native_interface::window_result result = native_interface::create_window(ownerWnd, nested, r, app);
 			if(result.handle)
 			{
 				core_window_t* wd = new core_window_t(owner, (nana::gui::category::root_tag**)0);
@@ -277,7 +277,7 @@ namespace detail
 			return nullptr;
 		}
 
-		window_manager::core_window_t* window_manager::create_frame(core_window_t* parent, int x, int y, unsigned width, unsigned height)
+		window_manager::core_window_t* window_manager::create_frame(core_window_t* parent, const rectangle& r)
 		{
 			if(parent == nullptr) return nullptr;
 			//Thread-Safe Required!
@@ -285,8 +285,8 @@ namespace detail
 
 			if(handle_manager_.available(parent) == false)	return nullptr;
 
-			core_window_t * wd = new core_window_t(parent, x, y, width, height, (nana::gui::category::frame_tag**)nullptr);
-			wd->frame_window(native_interface::create_child_window(parent->root, wd->root_x, wd->root_y, width, height));
+			core_window_t * wd = new core_window_t(parent, r, (nana::gui::category::frame_tag**)nullptr);
+			wd->frame_window(native_interface::create_child_window(parent->root, rectangle(wd->root_x, wd->root_y, r.width, r.height)));
 			handle_manager_.insert(wd, wd->thread_id);
 
 			//Insert the frame_widget into its root frames container.
@@ -325,24 +325,24 @@ namespace detail
 			return false;
 		}
 
-		window_manager::core_window_t* window_manager::create_widget(core_window_t* parent, int x, int y, unsigned width, unsigned height)
+		window_manager::core_window_t* window_manager::create_widget(core_window_t* parent, const rectangle& r)
 		{
 			if(parent == nullptr)	return nullptr;
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 			if(handle_manager_.available(parent) == false)	return nullptr;
-			core_window_t * wd = new core_window_t(parent, x, y, width, height, (nana::gui::category::widget_tag**)nullptr);
+			core_window_t * wd = new core_window_t(parent, r, (nana::gui::category::widget_tag**)nullptr);
 			handle_manager_.insert(wd, wd->thread_id);
 			return wd;
 		}
 
-		window_manager::core_window_t* window_manager::create_lite_widget(core_window_t* parent, int x, int y, unsigned width, unsigned height)
+		window_manager::core_window_t* window_manager::create_lite_widget(core_window_t* parent, const rectangle& r)
 		{
 			if(parent == nullptr)	return nullptr;
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 			if(handle_manager_.available(parent) == false)	return nullptr;
-			core_window_t * wd = new core_window_t(parent, x, y, width, height, (nana::gui::category::lite_widget_tag**)nullptr);
+			core_window_t * wd = new core_window_t(parent, r, (nana::gui::category::lite_widget_tag**)nullptr);
 			handle_manager_.insert(wd, wd->thread_id);
 			return wd;
 		}

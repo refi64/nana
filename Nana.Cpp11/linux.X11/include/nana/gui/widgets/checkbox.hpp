@@ -77,9 +77,9 @@ namespace gui
 		enum checker_t{clasp, blocker};
 
 		checkbox();
-		checkbox(window);
-		checkbox(window, const nana::rectangle& r);
-		checkbox(window, int x, int y, unsigned w, unsigned h);
+		checkbox(window, bool visible);
+		checkbox(window, const rectangle& = rectangle(), bool visible = true);
+
 		void react(bool want);
 		bool checked() const;
 		void check(bool chk);
@@ -89,7 +89,7 @@ namespace gui
 		void transparent(bool value);
 		bool transparent() const;
 		void open_check_image(const nana::paint::image&);
-		void set_check_image(mouse_action_t, checker_t, bool checked, const nana::rectangle& r);
+		void set_check_image(mouse_action, checker_t, bool checked, const nana::rectangle& r);
 	};//end class checkbox
 
 	class radio_group

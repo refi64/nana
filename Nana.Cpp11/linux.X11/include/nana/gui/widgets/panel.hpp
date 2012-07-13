@@ -37,25 +37,19 @@ namespace xpanel
 	template<bool HasBackground>
 	class panel
 		: public gui::widget_object<typename metacomp::static_if<HasBackground,
-																gui::category::widget_tag, gui::category::lite_widget_tag>::value_type,
-									xpanel::drawer>
+									gui::category::widget_tag, gui::category::lite_widget_tag>::value_type, xpanel::drawer>
 	{
 	public:
 		panel(){}
 
-		panel(window wd)
+		panel(window wd, bool visible)
 		{
-			this->create(wd, 0, 0, 0, 0);
+			this->create(wd, rectangle(), visible);
 		}
 
-		panel(window wd, const nana::rectangle& r)
+		panel(window wd, const nana::rectangle& r = rectangle(), bool visible = true)
 		{
-			this->create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		panel(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			this->create(wd, x, y, width, height);
+			this->create(wd, r, visible);
 		}
 
 		bool transparent() const

@@ -22,7 +22,7 @@ namespace nana
 		{
 		public:
 			msgbox_window(window wd, const nana::string& title, msgbox::button_t btn, msgbox::icon_t ico)
-				:	form(wd, 1, 1, 1, 1, appear::decorate<>()),
+				:	form(wd, nana::rectangle(1, 1, 1, 1), appear::decorate<>()),
 					owner_(wd), pick_(msgbox::pick_yes)
 			{
 				this->caption(title);
@@ -80,7 +80,7 @@ namespace nana
 				{
 					const unsigned ico_pixels = (ico_.empty() ? 0 : 44);
 					const unsigned text_pixels = 500 - ico_pixels;
-					text_.create(*this, 12 + ico_pixels, 25, 1, 1);
+					text_.create(*this, nana::rectangle(12 + ico_pixels, 25, 1, 1));
 
 					text_.background(0xFFFFFF);
 					text_.caption(text);

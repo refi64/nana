@@ -59,10 +59,10 @@ namespace API
 		void umake_drawer_event(window);
 		void window_caption(window, const nana::string& str);
 
-		window create_window(window, bool nested, int x, int y, unsigned width, unsigned height, const appearance&);
-		window create_widget(window, int x, int y, unsigned width, unsigned height);
-		window create_lite_widget(window, int x, int y, unsigned width, unsigned height);
-		window create_frame(window, int x, int y, unsigned width, unsigned height);
+		window create_window(window, bool nested, const rectangle&, const appearance&);
+		window create_widget(window, const rectangle&);
+		window create_lite_widget(window, const rectangle&);
+		window create_frame(window, const rectangle&);
 	}//end namespace dev
 
 	void exit();

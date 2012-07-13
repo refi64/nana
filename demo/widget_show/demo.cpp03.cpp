@@ -1,7 +1,7 @@
 /*
  *	This is a demo of Nana C++ Library
  *	Author: Jinhao
- *	The demo requires Nana 0.2.5
+ *	The demo requires Nana 0.2.5 and C++11 compiler
  *	Screenshot at http://sourceforge.net/projects/stdex
  */
 #include <nana/gui/wvl.hpp>
@@ -140,13 +140,100 @@ namespace demo
 		tab_page_datechooser(window wd)
 			: panel<false>(wd)
 		{
-			date_.create(*this, 10, 10, 260, 200);
-			textbox_.create(*this, 280, 10, 170, 23);
+			date_.create(*this, nana::rectangle(10, 10, 260, 200));
+			textbox_.create(*this, nana::rectangle(280, 10, 170, 23));
 			textbox_.tip_string(STR("Input a date:"));
 		}
 	private:
 		date_chooser date_;
 		textbox	textbox_;
+	};
+
+	class tab_page_radiogroup
+		: public panel<false>
+	{
+	public:
+		tab_page_radiogroup(window wd)
+			:	panel<false>(wd)
+		{
+			gird_.bind(*this);
+			gird * gdcontext = gird_.add(10, 0);
+			gird * gdbox = gdcontext->push(0, 0);
+			const nana::string str[6] = {
+					STR("Airbus"), STR("§¡§ß§ä§à§ß§à§Ó"),
+					STR("Boeing"), STR("Bombardier"),
+					STR("Cessna"), STR("EMBRAER")};
+					
+			for(int i = 0; i < 6; ++i)
+			{
+				box_[i].create(*this);
+
+				//Add the checkbox to the radio group. The radio group does not
+				//manage the life of checkboxs.
+				group_.add(box_[i]);
+				gdbox->push(box_[i], 5, 20);
+				box_[i].caption(str[i]);
+				box_[i].make_event<events::click>(nana::make_fun(*this, &tab_page_radiogroup::_m_selected));	
+			}
+			gird_.add(0, 10);
+			
+			label_.create(*this);
+			label_.caption(STR("Select an airplane manufacturer"));
+			gdcontext->push(label_, 10, 20);
+
+			categorize_.create(*this);
+			gdcontext->push(categorize_, 10, 22);
+			gdcontext->push(0, 10);
+
+			std::map<nana::string, std::vector<nana::string>> map;
+			std::vector<nana::string>* p = &(map[str[0]]);
+			p->push_back(STR("320"));
+			p->push_back(STR("330"));
+			p = &(map[str[1]]);
+			p->push_back(STR("An-124"));
+			p->push_back(STR("An-225"));
+			p = &(map[str[2]]);
+			p->push_back(STR("737"));
+			p->push_back(STR("747"));
+			p->push_back(STR("757"));
+			p->push_back(STR("767"));
+			p->push_back(STR("777"));
+			p->push_back(STR("787"));
+			p = &(map[str[3]]);
+			p->push_back(STR("CRJ"));
+			p->push_back(STR("Dash 8"));
+			p = &(map[str[4]]);
+			p->push_back(STR("C-170"));
+			p->push_back(STR("C-172"));
+
+			p = &(map[str[5]]);
+			p->push_back(STR("ERJ-145"));
+			p->push_back(STR("E-195"));
+
+			for(int i = 0; i < 6; ++i)
+			{
+				categorize_.caption(STR("Manufacturer"));
+				categorize_.insert(str[i], 0);
+				std::vector<nana::string> & v = map[str[i]];
+				for(std::vector<nana::string>::iterator i = v.begin(); i != v.end(); ++i)
+					categorize_.childset(*i, 0);
+			}
+		}
+	private:
+		void _m_selected()
+		{
+			std::size_t index = group_.checked();
+			nana::string str = box_[index].caption();
+
+			label_.caption(STR("You have selected ") + str);
+			categorize_.caption(STR("Manufacturer\\" + str));		
+		}
+	private:
+		gird gird_;
+		radio_group group_;
+		checkbox box_[6];
+		label label_;
+		categorize<int> categorize_;
 	};
 
 	class widget_show
@@ -201,12 +288,7 @@ namespace demo
 			ptr->caption(STR("Normal Button"));
 
 			ptr = &(buttons_[1]);
-			//Nana does not support ICON under Linux now
-#if defined(NANA_WINDOWS)
 			ptr->icon(STR("image.ico"));
-#else
-			ptr->icom(STR("image.bmp"));
-#endif
 			ptr->caption(STR("Button with An Image"));
 
 			ptr = &(buttons_[2]);
@@ -270,7 +352,7 @@ namespace demo
 			{
 				progresses_[i].create(*this);
 				gd->add(progresses_[i], 10, 0);
-				progresses_[i].unknown(i == 0);	//The first progress is unknown mode, the second is known mode.
+				progresses_[i].unknown(i == 0);	//The first progress is known style, the second is unknown.
 				tooltip_.set(progresses_[i], tipstr[i]);
 			}
 			gd->add(0, 10);
@@ -283,14 +365,13 @@ namespace demo
 		{
 			for(int i = 0; i < 2; ++i)
 			{
-				//Resets the known mode progress if its value reaches the amount value.
-				progress & prog = progresses_[i];
-				if(false == prog.unknown())
+				progress * p = &(progresses_[i]);
+				if(false == p->unknown())
 				{
-					if(prog.value() == prog.amount())
-						prog.value(0);
+					if(p->value() == p->amount())
+						p->value(0);
 				}
-				prog.inc();				
+				p->inc();				
 			}
 		}
 
@@ -298,26 +379,22 @@ namespace demo
 		{
 			tabbar_.create(*this);
 			gird_.push(tabbar_, 10, 24);
-			tabbar_.push_back(STR("Listbox"));
-			tabbar_.push_back(STR("Treebox"));
-			tabbar_.push_back(STR("DateChooser"));
+			tabbar_.push_back(STR("listbox"));
+			tabpages_.push_back(new tab_page_listbox(*this));
+			tabbar_.push_back(STR("treebox"));
+			tabpages_.push_back(new tab_page_treebox(*this));
+			tabbar_.push_back(STR("date_chooser"));
+			tabpages_.push_back(new tab_page_datechooser(*this));
+			tabbar_.push_back(STR("radio_group"));
+			tabpages_.push_back(new tab_page_radiogroup(*this));
 
 			gird * gd_tabpage = gird_.push(0, 0);
-
-			panel<false> * p = new tab_page_listbox(*this);
-			tabbar_.relate(0, *p);
-			tabpages_.push_back(p);
-			gd_tabpage->fasten(*p);
-
-			p = new tab_page_treebox(*this);
-			tabbar_.relate(1, *p);
-			tabpages_.push_back(p);
-			gd_tabpage->fasten(*p);
-
-			p = new tab_page_datechooser(*this);
-			tabbar_.relate(2, *p);
-			tabpages_.push_back(p);
-			gd_tabpage->fasten(*p);
+			std::size_t index = 0;
+			for(std::vector<panel<false>*>::iterator i = tabpages_.begin(); i != tabpages_.end(); ++i)
+			{
+				tabbar_.relate(index++, (*i)->handle());
+				gd_tabpage->fasten((*i)->handle());
+			}
 		}
 	private:
 		//A gird layout management
@@ -331,7 +408,7 @@ namespace demo
 		tabbar<nana::string> tabbar_;
 		std::vector<panel<false>*> tabpages_;
 		
-	};//end class widget_show
+	};//end class nana_demo
 	
 	void go()
 	{

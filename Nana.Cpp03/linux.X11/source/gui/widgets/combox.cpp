@@ -175,7 +175,7 @@ namespace nana{ namespace gui{
 				{
 					if(state_.lister == 0)
 					{
-						state_.lister = & nana::gui::form_loader<nana::gui::float_listbox>()(widget_->handle(), 0, widget_->size().height, widget_->size().width, 10);
+						state_.lister = & nana::gui::form_loader<nana::gui::float_listbox>()(widget_->handle(), rectangle(0, widget_->size().height, widget_->size().width, 10));
 						state_.lister->renderer(item_renderer_);
 						state_.lister->set_module(module_);
 						state_.item_index_before_selection = module_.index;
@@ -612,19 +612,14 @@ namespace nana{ namespace gui{
 	//class combox
 		combox::combox(){}
 
-		combox::combox(window wd)
+		combox::combox(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		combox::combox(window wd, const nana::rectangle& r)
+		combox::combox(window wd, const rectangle& r, bool visible)
 		{
-			this->create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		combox::combox(window wd, int x, int y, unsigned w, unsigned h)
-		{
-			this->create(wd, x, y, w, h);
+			this->create(wd, r, visible);
 		}
 
 		void combox::clear()

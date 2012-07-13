@@ -710,20 +710,8 @@ namespace nana{ namespace gui{
 			//end class menu_drawer
 
 			//class menu_window
-				menu_window::menu_window(nana::gui::widget& widget, int x, int y)
-					:	base_type(widget, false, x, y, 2, 2, nana::gui::appear::bald<nana::gui::appear::floating>())
-				{
-					_m_make_mouse_event();
-				}
-
-				menu_window::menu_window(nana::gui::window wnd, int x, int y)
-					:	base_type(wnd, false, x, y, 2, 2, nana::gui::appear::bald<nana::gui::appear::floating>())
-				{
-					_m_make_mouse_event();
-				}
-
-				menu_window::menu_window(int x, int y)
-					:	base_type(x, y, 2, 2, nana::gui::appear::bald<nana::gui::appear::floating>())
+				menu_window::menu_window(window wd, const point& pos)
+					:	base_type(wd, false, rectangle(pos, nana::size(2, 2)), nana::gui::appear::bald<nana::gui::appear::floating>())
 				{
 					_m_make_mouse_event();
 				}
@@ -991,7 +979,7 @@ namespace nana{ namespace gui{
 
 						if((submenu_.object == 0) && sbm && (forced || root->state_.auto_popup_submenu))
 						{
-							menu_window & mwnd = nana::gui::form_loader<menu_window>()(this->handle(), pos.x, pos.y);
+							menu_window & mwnd = nana::gui::form_loader<menu_window>()(this->handle(), pos);
 							mwnd.state_.self_submenu = true;
 							submenu_.child = & mwnd;
 							submenu_.child->submenu_.parent = this;
@@ -1132,7 +1120,7 @@ namespace nana{ namespace gui{
 				close();
 
 				typedef drawerbase::menu::menu_window menu_window;
-				window_ = &(nana::gui::form_loader<menu_window>()(wd, x, y));
+				window_ = &(nana::gui::form_loader<menu_window>()(wd, point(x, y)));
 				window_->make_event<nana::gui::events::destroy>(*this, &self_type::_m_destroy_menu_window);
 				window_->popup(mbuilder_.get_root(), owner_menubar);
 			}
@@ -1219,24 +1207,28 @@ namespace nana{ namespace gui{
 		}
 	//end class menu
 
-	//class menu_popuper
-		menu_popuper::menu_popuper(menu& mobj)
-			: mobj_(mobj), owner_(nullptr), take_mouse_pos_(true), mouse_(mouse_right)
-		{}
+	detail::popuper menu_popuper(menu& mobj, mouse::t ms)
+	{
+		return detail::popuper(mobj, ms);
+	}
 
-		menu_popuper::menu_popuper(menu& mobj, mouse_t mouse)
+	detail::popuper menu_popuper(menu& mobj, window owner, const point& pos, mouse::t ms)
+	{
+		return detail::popuper(mobj, owner, pos, ms);
+	}
+
+	namespace detail
+	{
+	//class popuper
+		popuper::popuper(menu& mobj, mouse::t mouse)
 			: mobj_(mobj), owner_(nullptr), take_mouse_pos_(true), mouse_(mouse)
 		{}
 
-		menu_popuper::menu_popuper(menu& mobj, window owner, int x, int y)
-			: mobj_(mobj), owner_(owner), take_mouse_pos_(false), pos_(x, y), mouse_(mouse_right)
+		popuper::popuper(menu& mobj, window owner, const point& pos, mouse::t mouse)
+			: mobj_(mobj), owner_(owner), take_mouse_pos_(false), pos_(pos), mouse_(mouse)
 		{}
 
-		menu_popuper::menu_popuper(menu& mobj, window owner, int x, int y, mouse_t mouse)
-			: mobj_(mobj), owner_(owner), take_mouse_pos_(false), pos_(x, y), mouse_(mouse)
-		{}
-
-		void menu_popuper::operator()(const eventinfo& ei)
+		void popuper::operator()(const eventinfo& ei)
 		{
 			if(take_mouse_pos_)
 			{
@@ -1256,22 +1248,22 @@ namespace nana{ namespace gui{
 			bool popup = false;
 			switch(mouse_)
 			{
-			case mouse_left:
-				popup = (ei.mouse.left_button);
+			case mouse::left_button:
+				popup = ei.mouse.left_button;
 				break;
-			case mouse_middle:
+			case mouse::middle_button:
 				popup = ei.mouse.mid_button;
 				break;
-			case mouse_right:
+			case mouse::right_button:
 				popup = ei.mouse.right_button;
 				break;
-			case mouse_all:
+			case mouse::any_button:
 				popup = true;
 			}
-
 			if(popup)
 				mobj_.popup(owner_, pos_.x, pos_.y, false);
 		}
 	//end class
+	}//end namespace detail
 }//end namespace gui
 }//end namespace nana

@@ -18,6 +18,7 @@
 #include <nana/filesystem/file_iterator.hpp>
 #include <nana/gui/widgets/date_chooser.hpp>
 #include <nana/gui/widgets/textbox.hpp>
+#include <nana/gui/widgets/categorize.hpp>
 #include <nana/gui/timer.hpp>
 #include <nana/gui/tooltip.hpp>
 #include <memory>
@@ -138,13 +139,98 @@ namespace demo
 		tab_page_datechooser(window wd)
 			: panel<false>(wd)
 		{
-			date_.create(*this, 10, 10, 260, 200);
-			textbox_.create(*this, 280, 10, 170, 23);
+			date_.create(*this, nana::rectangle(10, 10, 260, 200));
+			textbox_.create(*this, nana::rectangle(280, 10, 170, 23));
 			textbox_.tip_string(STR("Input a date:"));
 		}
 	private:
 		date_chooser date_;
 		textbox	textbox_;
+	};
+	
+	class tab_page_radiogroup
+		: public panel<false>
+	{
+	public:
+		tab_page_radiogroup(window wd)
+			:	panel<false>(wd)
+		{
+			gird_.bind(*this);
+			gird * gdcontext = gird_.add(10, 0);
+			gird * gdbox = gdcontext->push(0, 0);
+			const nana::string str[6] = {
+					STR("Airbus"), STR("§¡§ß§ä§à§ß§à§Ó"),
+					STR("Boeing"), STR("Bombardier"),
+					STR("Cessna"), STR("EMBRAER")};
+					
+			for(int i = 0; i < 6; ++i)
+			{
+				auto p = std::make_shared<checkbox>(*this);
+				box_.push_back(p);
+
+				//Add the checkbox to the radio group. The radio group does not
+				//manage the life of checkboxs.
+				group_.add(*p);
+				gdbox->push(*p, 5, 20);
+				p->caption(str[i]);
+				p->make_event<events::click>([this]()
+					{
+						std::size_t index = this->group_.checked();
+						nana::string str = this->box_[index]->caption();
+
+						this->label_.caption(STR("You have selected ") + str);
+						this->categorize_.caption(STR("Manufacturer\\" + str));
+					});	
+			}
+			gird_.add(0, 10);
+			
+			label_.create(*this);
+			label_.caption(STR("Select an airplane manufacturer"));
+			gdcontext->push(label_, 10, 20);
+
+			categorize_.create(*this);
+			gdcontext->push(categorize_, 10, 22);
+			gdcontext->push(0, 10);
+
+			std::map<nana::string, std::vector<nana::string>> map;
+			auto p = &(map[str[0]]);
+			p->push_back(STR("320"));
+			p->push_back(STR("330"));
+			p = &(map[str[1]]);
+			p->push_back(STR("An-124"));
+			p->push_back(STR("An-225"));
+			p = &(map[str[2]]);
+			p->push_back(STR("737"));
+			p->push_back(STR("747"));
+			p->push_back(STR("757"));
+			p->push_back(STR("767"));
+			p->push_back(STR("777"));
+			p->push_back(STR("787"));
+			p = &(map[str[3]]);
+			p->push_back(STR("CRJ"));
+			p->push_back(STR("Dash 8"));
+			p = &(map[str[4]]);
+			p->push_back(STR("C-170"));
+			p->push_back(STR("C-172"));
+
+			p = &(map[str[5]]);
+			p->push_back(STR("ERJ-145"));
+			p->push_back(STR("E-195"));
+
+			for(auto & mstr: str)
+			{
+				categorize_.caption(STR("Manufacturer"));
+				categorize_.insert(mstr, 0);
+				for(auto & astr : map[mstr])
+					categorize_.childset(astr, 0);
+			}
+		}
+	private:
+		gird gird_;
+		radio_group group_;
+		std::vector<std::shared_ptr<checkbox>> box_;
+		label label_;
+		categorize<int> categorize_;
 	};
 
 	class widget_show
@@ -298,28 +384,22 @@ namespace demo
 		{
 			tabbar_.create(*this);
 			gird_.push(tabbar_, 10, 24);
-			tabbar_.push_back(STR("Listbox"));
-			tabbar_.push_back(STR("Treebox"));
-			tabbar_.push_back(STR("DateChooser"));
+			tabbar_.push_back(STR("listbox"));
+			tabpages_.push_back(std::make_shared<tab_page_listbox>(*this));
+			tabbar_.push_back(STR("treebox"));
+			tabpages_.push_back(std::make_shared<tab_page_treebox>(*this));
+			tabbar_.push_back(STR("date_chooser"));
+			tabpages_.push_back(std::make_shared<tab_page_datechooser>(*this));
+			tabbar_.push_back(STR("radio_group"));
+			tabpages_.push_back(std::make_shared<tab_page_radiogroup>(*this));
 
 			gird * gd_tabpage = gird_.push(0, 0);
-
-			std::shared_ptr<panel<false>> p = std::make_shared<tab_page_listbox>(*this);
-			tabbar_.relate(0, *p);
-			tabpages_.push_back(p);
-			
-			//fasten the widget
-			gd_tabpage->fasten(*p);
-
-			p = std::make_shared<tab_page_treebox>(*this);
-			tabbar_.relate(1, *p);
-			tabpages_.push_back(p);
-			gd_tabpage->fasten(*p);
-
-			p = std::make_shared<tab_page_datechooser>(*this);
-			tabbar_.relate(2, *p);
-			tabpages_.push_back(p);
-			gd_tabpage->fasten(*p);
+			std::size_t index = 0;
+			for(auto & i : tabpages_)
+			{
+				tabbar_.relate(index++, *i);
+				gd_tabpage->fasten(*i);	//Fasten the tab pages
+			}
 		}
 	private:
 		//A gird layout management

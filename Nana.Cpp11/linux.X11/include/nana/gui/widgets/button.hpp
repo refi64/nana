@@ -90,9 +90,8 @@ namespace nana{namespace gui{
 			typedef drawerbase::button::trigger::state state;
 
 			button();
-			button(nana::gui::window);
-			button(nana::gui::window, const nana::rectangle&);
-			button(nana::gui::window, int x, int y, unsigned width, unsigned height);
+			button(nana::gui::window, bool visible);
+			button(nana::gui::window, const nana::rectangle& = rectangle(), bool visible = true);
 			void icon(const nana::paint::image&);
 			void image(const char_t * filename);
 			void image(const nana::paint::image&);

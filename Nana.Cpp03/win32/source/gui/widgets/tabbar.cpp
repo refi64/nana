@@ -810,7 +810,7 @@ namespace nana{ namespace gui{
 				{
 					menulister_.clear();
 
-					nana::gui::menu::functor_type f(*this, &layouter::_m_click_menulister);
+					nana::gui::menu::event_fn_t f(*this, &layouter::_m_click_menulister);
 					for(iterator i = list_.begin(); i != list_.end(); ++i)
 						menulister_.append(i->text, f);
 

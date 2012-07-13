@@ -24,7 +24,7 @@ namespace gui
 		//class picture_drawer:: public nana::gui::drawer_trigger
 			picture_drawer::picture_drawer():graph_(nullptr)
 			{
-				backimg_.arg = nana::arrange::unkown;
+				backimg_.arg = nana::arrange::unknown;
 				backimg_.beg = backimg_.end = 0;
 			}
 
@@ -98,7 +98,7 @@ namespace gui
 					return true;
 				}
 				
-				backimg_.arg = nana::arrange::unkown;
+				backimg_.arg = nana::arrange::unknown;
 				return false;
 			}
 
@@ -114,7 +114,7 @@ namespace gui
 
 						switch(backimg_.arg)
 						{
-						case nana::arrange::unkown:
+						case nana::arrange::unknown:
 							backimg_.image.paste(graph, 0, 0);
 							break;
 						case nana::arrange::horizontal:
@@ -266,25 +266,14 @@ namespace gui
 	//class picture
 		picture::picture(){}
 
-		picture::picture(window wd)
+		picture::picture(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		picture::picture(window wd, const nana::rectangle& r)
+		picture::picture(window wd, const nana::rectangle& r, bool visible)
 		{
-			create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		picture::picture(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			create(wd, x, y, width, height);
-		}
-
-		void picture::load(const nana::char_t* file)
-		{
-			get_drawer_trigger().load(file);
-			API::refresh_window( this->handle());
+			create(wd, r, visible);
 		}
 
 		void picture::load(const nana::paint::image& img)

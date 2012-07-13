@@ -51,9 +51,9 @@ namespace nana{ namespace gui{
 	{
 	public:
 		label();
-		label(window);
-		label(window, const nana::rectangle& r);
-		label(window, int x, int y, unsigned width, unsigned height);
+		label(window, bool visible);
+		label(window, const rectangle& = rectangle(), bool visible = true);
+
 		void transparent(bool);
 		bool transparent() const;
 		void format(bool);

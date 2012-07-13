@@ -59,11 +59,6 @@ namespace nana{ namespace gui{
 			}
 		}
 
-		void tray::bind(widget& wd)
-		{
-			bind(wd.handle());
-		}
-
 		void tray::unbind()
 		{
 			if(impl_->wd)
@@ -95,7 +90,7 @@ namespace nana{ namespace gui{
 			return *this;
 		}
 
-		tray & tray::icon(const char_t * ico)
+		tray & tray::icon(const nana::char_t * ico)
 		{
 			if(impl_->wd)
 				API::tray_icon(impl_->wd, ico);

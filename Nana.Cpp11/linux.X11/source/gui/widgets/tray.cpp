@@ -47,21 +47,11 @@ namespace nana{ namespace gui{
 		{
 			if(0 == impl_->wd)
 			{
+				//The wd may not be the root category widget.
+				//The destroy event needs the root category widget
 				impl_->wd = API::root(wd);
-				
-				//The parameter wd may not be the real root window.
-				window root = API::root(impl_->wd); //the handle is guaranteed a root window.
-
-				if(root)
-				{
-					impl_->closed = API::make_event<events::destroy>(root, std::bind(&tray_impl::closed_helper, impl_, std::placeholders::_1));
-				}
+				impl_->closed = API::make_event<events::destroy>(API::root(impl_->wd), std::bind(&tray_impl::closed_helper, impl_, std::placeholders::_1));
 			}
-		}
-
-		void tray::bind(widget& wd)
-		{
-			bind(wd.handle());
 		}
 
 		void tray::unbind()

@@ -125,7 +125,7 @@ namespace nana{
 		}
 
 		//platform-dependent
-		native_interface::window_result native_interface::create_window(native_window_type owner, bool nested, int x, int y, unsigned width, unsigned height, const appearance& app)
+		native_interface::window_result native_interface::create_window(native_window_type owner, bool nested, const rectangle& r, const appearance& app)
 		{
 #if defined(NANA_WINDOWS)
 			DWORD style = WS_SYSMENU | WS_CLIPCHILDREN;
@@ -144,7 +144,7 @@ namespace nana{
 
 			if(app.floating)	style_ex |= WS_EX_TOPMOST;
 
-			POINT pt = {x, y};
+			POINT pt = {r.x, r.y};
 
 			if(owner && (nested == false))
 				::ClientToScreen(reinterpret_cast<HWND>(owner), &pt);
@@ -167,8 +167,8 @@ namespace nana{
 				wd_area.top = pt.y;
 			}
 
-			int delta_w = static_cast<int>(width) - client.right;
-			int delta_h = static_cast<int>(height) - client.bottom;
+			int delta_w = static_cast<int>(r.width) - client.right;
+			int delta_h = static_cast<int>(r.height) - client.bottom;
 
 			::MoveWindow(wnd, wd_area.left, wd_area.top, wd_area.right + delta_w, wd_area.bottom + delta_h, true);
 
@@ -210,7 +210,7 @@ namespace nana{
 			}
 
 			Window parent = (owner ? reinterpret_cast<Window>(owner) : restrict::spec.root_window());
-			nana::point pos(x, y);
+			nana::point pos(r.x, r.y);
 			if((false == nested) && owner)
 			{
 				win_attr.save_under = True;
@@ -222,7 +222,7 @@ namespace nana{
 			win_attr.event_mask = ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | ExposureMask | StructureNotifyMask | LeaveWindowMask | FocusChangeMask;
 
 			Window handle = ::XCreateWindow(disp, parent,
-							pos.x, pos.y, (width ? width : 1), (height ? height : 1), 0,
+							pos.x, pos.y, (r.width ? r.width : 1), (r.height ? r.height : 1), 0,
 							restrict::spec.screen_depth(), InputOutput, restrict::spec.screen_visual(),
 							attr_mask, &win_attr);
 			if(handle)
@@ -266,8 +266,8 @@ namespace nana{
 				}
 				else
 				{
-					hints.min_width = hints.max_width = width;
-					hints.min_height = hints.max_height = height;
+					hints.min_width = hints.max_width = r.width;
+					hints.min_height = hints.max_height = r.height;
 					hints.flags |= (PMinSize | PMaxSize);
 				}
 				::XSetWMNormalHints(disp, handle, &hints);
@@ -312,20 +312,20 @@ namespace nana{
 										reinterpret_cast<unsigned char*>(const_cast<Atom*>(&ab.net_wm_state_skip_taskbar)), 1);
 				}
 			}
-			window_result result = {reinterpret_cast<native_window_type>(handle), width, height, 0, 0};
+			window_result result = {reinterpret_cast<native_window_type>(handle), r.width, r.height, 0, 0};
 			restrict::spec.msg_insert(reinterpret_cast<native_window_type>(handle));
 #endif
 			return result;
 		}
 
-		native_window_type native_interface::create_child_window(native_window_type parent, int x, int y, unsigned width, unsigned height)
+		native_window_type native_interface::create_child_window(native_window_type parent, const rectangle& r)
 		{
 #if defined(NANA_WINDOWS)
 			HWND wd = ::CreateWindowEx(WS_EX_CONTROLPARENT,		// Extended possibilites for variation
 										STR("NanaWindowInternal"),
 										STR("Nana Child Window"),	// Title Text
 										WS_CHILD | WS_VISIBLE | WS_TABSTOP  | WS_CLIPSIBLINGS,
-										x, y, width, height,
+										r.x, r.y, r.width, r.height,
 										reinterpret_cast<HWND>(parent),	// The window is a child-window to desktop
 										0, ::GetModuleHandle(0), 0);
 #elif defined(NANA_X11)

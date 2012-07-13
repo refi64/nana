@@ -856,7 +856,7 @@ namespace nana{	namespace gui{	namespace widgets
 				{
 					using namespace nana::gui;
 					scroll = new nana::gui::scroll<true>;
-					scroll->create(window_, x, text_area_.area.y, text_area_.vscroll, _m_get_text_area_height());
+					scroll->create(window_, nana::rectangle(x, text_area_.area.y, text_area_.vscroll, _m_get_text_area_height()));
 					scroll->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
 					scroll->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
 					scroll->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);
@@ -892,7 +892,7 @@ namespace nana{	namespace gui{	namespace widgets
 				{
 					using namespace nana::gui;
 					scroll = new nana::gui::scroll<false>;
-					scroll->create(window_, text_area_.area.x, y, text_area_width, this->text_area_.hscroll);
+					scroll->create(window_, nana::rectangle(text_area_.area.x, y, text_area_width, this->text_area_.hscroll));
 					scroll->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
 					scroll->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
 					scroll->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);

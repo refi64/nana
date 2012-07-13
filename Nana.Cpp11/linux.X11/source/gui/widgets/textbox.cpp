@@ -218,22 +218,16 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 	//class textbox
 		textbox::textbox()
+		{}
+
+		textbox::textbox(window wd, bool visible)
 		{
+			create(wd, rectangle(), visible);
 		}
 
-		textbox::textbox(window wd)
+		textbox::textbox(window wd, const rectangle& r, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
-		}
-
-		textbox::textbox(window wd, const nana::rectangle& r)
-		{
-			create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		textbox::textbox(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			create(wd, x, y, width, height);
+			create(wd, r, visible);
 		}
 
 		bool textbox::getline(std::size_t n, nana::string& text) const

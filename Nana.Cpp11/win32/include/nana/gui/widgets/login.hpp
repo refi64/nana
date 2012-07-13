@@ -69,9 +69,8 @@ namespace nana{ namespace gui{
 		typedef drawerbase::login::ext_event_tag ext_event_type;
 
 		login();
-		login(window);
-		login(window, const nana::rectangle& r);
-		login(window, int x, int y, unsigned width, unsigned height);
+		login(window, bool visible);
+		login(window, const rectangle& = rectangle(), bool visible = true);
 
 		bool transparent() const;
 		void transparent(bool);

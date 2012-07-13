@@ -70,9 +70,8 @@ namespace nana{ namespace gui{
 		typedef std::pair<size_type, size_type>	index_pair_t;
 
 		listbox();
-		listbox(window);
-		listbox(window, const nana::rectangle& r);
-		listbox(window, int x, int y, unsigned width, unsigned height);
+		listbox(window, bool visible);
+		listbox(window, const rectangle& = rectangle(), bool visible = true);
 
 		template<typename T>
 		void anyobj(size_type categ, size_type index, const T& t)

@@ -710,20 +710,8 @@ namespace nana{ namespace gui{
 			//end class menu_drawer
 
 			//class menu_window
-				menu_window::menu_window(nana::gui::widget& widget, int x, int y)
-					:	base_type(widget, false, x, y, 2, 2, nana::gui::appear::bald<nana::gui::appear::floating>())
-				{
-					_m_make_mouse_event();
-				}
-
-				menu_window::menu_window(nana::gui::window wnd, int x, int y)
-					:	base_type(wnd, false, x, y, 2, 2, nana::gui::appear::bald<nana::gui::appear::floating>())
-				{
-					_m_make_mouse_event();
-				}
-
-				menu_window::menu_window(int x, int y)
-					:	base_type(x, y, 2, 2, nana::gui::appear::bald<nana::gui::appear::floating>())
+				menu_window::menu_window(window wd, const point& pos)
+					:	base_type(wd, false, rectangle(pos, nana::size(2, 2)), appear::bald<appear::floating>())
 				{
 					_m_make_mouse_event();
 				}
@@ -991,7 +979,7 @@ namespace nana{ namespace gui{
 
 						if((submenu_.object == 0) && sbm && (forced || root->state_.auto_popup_submenu))
 						{
-							menu_window & mwnd = nana::gui::form_loader<menu_window>()(this->handle(), pos.x, pos.y);
+							menu_window & mwnd = nana::gui::form_loader<menu_window>()(this->handle(), pos);
 							mwnd.state_.self_submenu = true;
 							submenu_.child = & mwnd;
 							submenu_.child->submenu_.parent = this;
@@ -1054,7 +1042,7 @@ namespace nana{ namespace gui{
 			}
 		}
 
-		void menu::append(const nana::string& text, const menu::functor_type& f)
+		void menu::append(const nana::string& text, const menu::event_fn_t& f)
 		{
 			mbuilder_.append(text, f);
 		}
@@ -1132,7 +1120,7 @@ namespace nana{ namespace gui{
 				close();
 
 				typedef drawerbase::menu::menu_window menu_window;
-				window_ = &(nana::gui::form_loader<menu_window>()(wd, x, y));
+				window_ = &(nana::gui::form_loader<menu_window>()(wd, point(x, y)));
 				window_->make_event<nana::gui::events::destroy>(*this, &self_type::_m_destroy_menu_window);
 				window_->popup(mbuilder_.get_root(), owner_menubar);
 			}
@@ -1162,7 +1150,7 @@ namespace nana{ namespace gui{
 			return mbuilder_.checked(index);
 		}
 
-		void menu::answerer(std::size_t index, const menu::functor_type& fn)
+		void menu::answerer(std::size_t index, const menu::event_fn_t& fn)
 		{
 			mbuilder_.answerer(index, fn);
 		}

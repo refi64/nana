@@ -1054,19 +1054,14 @@ namespace gui
 	//class label
 		label::label(){}
 
-		label::label(window wd)
+		label::label(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		label::label(window wd, const nana::rectangle& r)
+		label::label(window wd, const rectangle& r, bool visible)
 		{
-			create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		label::label(window wd, int x, int y, unsigned w, unsigned h)
-		{
-			create(wd, x, y, w, h);
+			create(wd, r, visible);
 		}
 
 		void label::transparent(bool value)

@@ -724,19 +724,14 @@ namespace nana{ namespace gui{
 	//class slider
 		slider::slider(){}
 		
-		slider::slider(window wd)
+		slider::slider(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		slider::slider(window wd, const rectangle& r)
+		slider::slider(window wd, const rectangle& r, bool visible)
 		{
-			create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		slider::slider(window wd, int x, int y, unsigned w, unsigned h)
-		{
-			create(wd, x, y, w, h);
+			create(wd, r, visible);
 		}
 
 		void slider::seek(slider::seekdir::t sd)

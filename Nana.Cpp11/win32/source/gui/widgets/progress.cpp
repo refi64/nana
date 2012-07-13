@@ -165,19 +165,14 @@ namespace gui
 	//class progress
 		progress::progress(){}
 
-		progress::progress(window wd)
+		progress::progress(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		progress::progress(window wd, const nana::rectangle & r)
+		progress::progress(window wd, const rectangle & r, bool visible)
 		{
-			create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		progress::progress(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			create(wd, x, y, width, height);
+			create(wd, r, visible);
 		}
 
 		unsigned progress::value() const

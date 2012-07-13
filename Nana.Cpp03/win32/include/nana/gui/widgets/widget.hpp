@@ -133,6 +133,8 @@ namespace gui
 		virtual nana::color_t _m_background() const;
 	};
 
+	//class widget_object
+	//@brief: defaultly a widget_tag
 	template<typename Category, typename DrawerTrigger>
 	class widget_object: public widget
 	{
@@ -149,26 +151,16 @@ namespace gui
 				API::close_window(handle_);
 		}
 
-		bool create(window wd)
-		{
-			return create(wd, 0, 0, 0, 0, true);
-		}
-
 		bool create(window wd, bool visible)
 		{
-			return create(wd, 0, 0, 0, 0, visible);
+			return create(wd, rectangle(), visible);
 		}
 
-		bool create(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			return create(wd, x, y, width, height, true);
-		}
-
-		bool create(window wd, int x, int y, unsigned width, unsigned height, bool visible)
+		bool create(window wd, const rectangle & r = rectangle(), bool visible = true)
 		{
 			if(wd && this->empty())
 			{
-				handle_ = API::dev::create_widget(wd, x, y, width,height);
+				handle_ = API::dev::create_widget(wd, r);
 				
 				API::dev::attach_signal(handle_, *this, &widget_object::signal);
 
@@ -219,7 +211,6 @@ namespace gui
 	protected:
 		typedef DrawerTrigger drawer_trigger_t;
 	public:
-
 		widget_object()
 			:handle_(0)
 		{}
@@ -230,26 +221,16 @@ namespace gui
 				API::close_window(handle_);
 		}
 
-		bool create(window wd)
-		{
-			return create(wd, 0, 0, 0, 0, true);
-		}
-
 		bool create(window wd, bool visible)
 		{
-			return create(wd, 0, 0, 0, 0, visible);
+			return create(wd, rectangle(), visible);
 		}
 
-		bool create(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			return create(wd, x, y, width, height, true);
-		}
-
-		bool create(window wd, int x, int y, unsigned width, unsigned height, bool visible)
+		bool create(window wd, const rectangle& r = rectangle(), bool visible = false)
 		{
 			if(wd && this->empty())
 			{
-				handle_ = API::dev::create_lite_widget(wd, x, y, width, height);
+				handle_ = API::dev::create_lite_widget(wd, r);
 				if(visible)
 					API::show_window(handle_, true);
 				this->_m_complete_creation();
@@ -283,27 +264,20 @@ namespace gui
 	protected:
 		typedef DrawerTrigger drawer_trigger_t;
 	public:
-
 		widget_object()
-			:handle_(API::dev::create_window(0, false, 0, 0, 300, 150, appearance()))
+			:handle_(API::dev::create_window(0, false, API::make_center(300, 150), appearance()))
 		{
 			_m_bind_and_attach();
 		}
 
-		widget_object(int x, int y, unsigned width, unsigned height, const appearance& apr)
-			:	handle_(API::dev::create_window(0, false, x, y, width, height, apr))
+		widget_object(const rectangle& r, const appearance& apr = appearance())
+			:	handle_(API::dev::create_window(0, false, r, apr))
 		{
 			_m_bind_and_attach();
 		}
 
-		widget_object(window owner, bool nested)
-			: handle_(API::dev::create_window(owner, nested, 0, 0, 300, 150, appearance()))
-		{
-			_m_bind_and_attach();
-		}
-
-		widget_object(window owner, bool nested, int x, int y, unsigned width, unsigned height, const appearance& apr)
-			:	handle_(API::dev::create_window(owner, nested, x, y, width, height, apr))
+		widget_object(window owner, bool nested, const rectangle& r = rectangle(), const appearance& apr = appearance())
+			:	handle_(API::dev::create_window(owner, nested, r, apr))
 		{
 			_m_bind_and_attach();
 		}
@@ -381,26 +355,16 @@ namespace gui
 				API::close_window(handle_);
 		}
 
-		bool create(window wd)
-		{
-			return create(wd, 0, 0, 0, 0, true);
-		}
-
 		bool create(window wd, bool visible)
 		{
-			return create(wd, 0, 0, 0, 0, visible);
+			return create(wd, rectangle(), visible);
 		}
 
-		bool create(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			return create(wd, x, y, width, height, true);
-		}
-
-		bool create(window wd, int x, int y, unsigned width, unsigned height, bool visible)
+		bool create(window wd, const rectangle& r = rectangle(), bool visible = true)
 		{
 			if(wd && this->empty())
 			{
-				handle_ = API::dev::create_frame(wd, x, y, width,height);
+				handle_ = API::dev::create_frame(wd, r);
 				API::dev::attach_signal(handle_, *this, &widget_object::signal);
 				API::show_window(handle_, visible);
 				this->_m_complete_creation();

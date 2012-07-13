@@ -85,14 +85,14 @@ namespace nana{ namespace gui{
 			};
 
 			class window
-				: public nana::gui::widget_object<nana::gui::category::root_tag, drawer>
+				: public widget_object<category::root_tag, drawer>
 			{
-				typedef nana::gui::widget_object<nana::gui::category::root_tag, drawer> base_type;
+				typedef widget_object<category::root_tag, drawer> base_type;
 			public:
 				window()
-					:base_type(0, 0, 0, 0, nana::gui::appear::bald<nana::gui::appear::floating>())
+					:base_type(rectangle(), appear::bald<appear::floating>())
 				{
-					nana::gui::API::take_active(this->handle(), false, 0);
+					API::take_active(this->handle(), false, 0);
 					timer_.interval(500);
 					timer_.make_tick(nana::functor<void()>(*this, &window::_m_tick));
 				}

@@ -196,6 +196,8 @@ namespace nana{ namespace gui{
 				void set_module(const module_def& md)
 				{
 					module_ = &md;
+					if(md.index >= md.strings.size())
+						md.index = md.npos;
 				}
 
 				void set_result()
@@ -269,7 +271,7 @@ namespace nana{ namespace gui{
 					{
 						if(scrollbar_.empty() && module_)
 						{
-							scrollbar_.create(wd, wd.size().width - 18, 2, 16, wd.size().height - 4);
+							scrollbar_.create(wd, rectangle(static_cast<int>(wd.size().width - 18), 2, 16, wd.size().height - 4));
 							scrollbar_.amount(module_->strings.size());
 							scrollbar_.range(module_->max_items);
 							scrollbar_.value(state_.offset_y);
@@ -388,8 +390,8 @@ namespace nana{ namespace gui{
 	//class float_listbox
 		float_listbox::float_listbox(){}
 
-		float_listbox::float_listbox(nana::gui::window wd, int x, int y, unsigned width, unsigned height)
-			:base_type(wd, false, x, y, width, height, appear::bald<appear::floating, appear::no_activate>())
+		float_listbox::float_listbox(window wd, const rectangle & r)
+			:base_type(wd, false, r, appear::bald<appear::floating, appear::no_activate>())
 		{
 			API::capture_window(handle(), true);
 			API::capture_ignore_children(false);

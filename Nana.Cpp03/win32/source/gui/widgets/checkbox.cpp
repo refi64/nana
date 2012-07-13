@@ -171,19 +171,14 @@ namespace xcheckbox
 
 		checkbox::checkbox(){}
 
-		checkbox::checkbox(window wd)
+		checkbox::checkbox(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		checkbox::checkbox(window wd, const nana::rectangle& r)
+		checkbox::checkbox(window wd, const rectangle& r, bool visible)
 		{
-			this->create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		checkbox::checkbox(window wd, int x, int y, unsigned w, unsigned h)
-		{
-			this->create(wd, x, y, w, h);
+			this->create(wd, r, visible);
 		}
 
 		void checkbox::react(bool want)

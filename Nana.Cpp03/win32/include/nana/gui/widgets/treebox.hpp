@@ -269,19 +269,14 @@ namespace gui
 
 		treebox(){}
 
-		treebox(window wd)
+		treebox(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		treebox(window wd, const nana::rectangle& r)
+		treebox(window wd, const rectangle& r = rectangle(), bool visible = true)
 		{
-			create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		treebox(nana::gui::window wd, int x, int y, unsigned width, unsigned height)
-		{
-			create(wd, x, y, width, height);
+			create(wd, r, visible);
 		}
 
 		ext_event_type& ext_event() const

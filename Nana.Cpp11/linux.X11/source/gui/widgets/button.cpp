@@ -48,7 +48,7 @@ namespace drawerbase
 					block[i].who = static_cast<state>(i);
 				}
 
-				stretch.arrange = nana::arrange::unkown;
+				stretch.arrange = nana::arrange::unknown;
 				stretch.beg = stretch.end = 0;
 			}
 
@@ -108,8 +108,8 @@ namespace drawerbase
 
 				if(blocks == 0) return;
 
-				unsigned each_pixels = (arrange.value == arrange::horizontal ? valid_area.width : valid_area.height) / blocks;
-				if(arrange.value == arrange::horizontal)
+				unsigned each_pixels = (arrange == nana::arrange::horizontal ? valid_area.width : valid_area.height) / blocks;
+				if(arrange == nana::arrange::horizontal)
 				{
 					each_pixels = valid_area.width / blocks;
 					block_size.width = each_pixels;
@@ -127,7 +127,7 @@ namespace drawerbase
 				{
 					if(block[i].enable && (block[i].who == static_cast<state>(i)))
 					{
-						if(arrange.value == arrange::horizontal)
+						if(arrange == nana::arrange::horizontal)
 						{
 							block[i].pos.x = valid_area.x + pos;
 							block[i].pos.y = valid_area.y;
@@ -518,25 +518,18 @@ namespace drawerbase
 	}//end namespace button
 }//end namespace drawerbase
 
-		/*
-		 *	button
-		 *		defaine a button widget and it provides the interfaces to be operational
-		 */
+		//button
+		//@brief: Defaine a button widget and it provides the interfaces to be operational
 			button::button(){}
 
-			button::button(window wd)
+			button::button(window wd, bool visible)
 			{
-				create(wd, 0, 0, 0, 0);
+				create(wd, rectangle(), visible);
 			}
 
-			button::button(window wd, const nana::rectangle& r)
+			button::button(window wd, const rectangle& r, bool visible)
 			{
-				create(wd, r.x, r.y, r.width, r.height);
-			}
-
-			button::button(window wd, int x, int y, unsigned w, unsigned h)
-			{
-				create(wd, x, y, w, h);
+				create(wd, r, visible);
 			}
 
 			void button::icon(const nana::paint::image& img)

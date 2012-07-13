@@ -198,22 +198,16 @@ namespace nana{ namespace gui{
 			_m_init();
 		}
 
-		tabbar(window wd)
+		tabbar(window wd, bool visible)
 		{
 			_m_init();
-			create(wd, 0, 0, 0, 0);
+			this->create(wd, rectangle(), visible);
 		}
 
-		tabbar(window wd, const nana::rectangle& r)
+		tabbar(window wd, const rectangle& r = rectangle(), bool visible = true)
 		{
 			_m_init();
-			create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		tabbar(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			_m_init();
-			create(wd, x, y, width, height);
+			this->create(wd, r, visible);
 		}
 
 		~tabbar()

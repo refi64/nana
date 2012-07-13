@@ -83,9 +83,8 @@ namespace nana{ namespace gui{
 		typedef drawerbase::toolbar::ext_event_tag ext_event_type;
 
 		toolbar();
-		toolbar(window);
-		toolbar(window, const nana::rectangle& r);
-		toolbar(window, int x, int y, unsigned width, unsigned height);
+		toolbar(window, bool visible);
+		toolbar(window, const rectangle& = rectangle(), bool visible = true);
 
 		ext_event_type& ext_event() const;
 		void append();

@@ -266,19 +266,14 @@ namespace gui
 	//class picture
 		picture::picture(){}
 
-		picture::picture(window wd)
+		picture::picture(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		picture::picture(window wd, const nana::rectangle& r)
+		picture::picture(window wd, const rectangle& r, bool visible)
 		{
-			create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		picture::picture(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			create(wd, x, y, width, height);
+			create(wd, r, visible);
 		}
 
 		void picture::load(const nana::char_t* file)

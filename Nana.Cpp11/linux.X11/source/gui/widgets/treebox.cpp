@@ -79,7 +79,7 @@ namespace gui
 			{
 			public:
 				tooltip_window(window wd, const nana::point& pos, const nana::size& size)
-					: widget_object<category::root_tag, tlwnd_drawer>(wd, false, pos.x, pos.y, size.width, size.height, nana::gui::appear::bald<nana::gui::appear::floating>())
+					: widget_object<category::root_tag, tlwnd_drawer>(wd, false, rectangle(pos, size), nana::gui::appear::bald<nana::gui::appear::floating>())
 				{
 					API::take_active(this->handle(), false, 0);
 				}
@@ -895,7 +895,7 @@ namespace gui
 						{
 							using namespace nana::gui;
 							shape_.prev_first_value = 0;
-							shape_.scrollbar.create(*widget_, graph_->width() - 16, 0, 16, graph_->height());
+							shape_.scrollbar.create(*widget_, nana::rectangle(graph_->width() - 16, 0, 16, graph_->height()));
 							shape_.scrollbar.make_event<events::mouse_down>(*this, &trigger::_m_event_scrollbar);
 							shape_.scrollbar.make_event<events::mouse_move>(*this, &trigger::_m_event_scrollbar);
 							shape_.scrollbar.make_event<events::mouse_wheel>(*this, &trigger::_m_event_scrollbar);

@@ -27,7 +27,6 @@ namespace nana{ namespace gui{
 		~tray();
 
 		void bind(window);
-		void bind(widget&);
 		void unbind();
 
 		bool add(const nana::char_t* tip, const nana::char_t* image) const;

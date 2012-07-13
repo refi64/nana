@@ -28,7 +28,10 @@ namespace nana
 
 	namespace gui
 	{
-		enum mouse_action_t{mouse_action_normal, mouse_action_over, mouse_action_pressed, mouse_action_end};
+		enum class mouse_action
+		{
+			begin, normal = begin, over, pressed, end
+		};
 	}
 
 	typedef unsigned scalar_t;
@@ -104,10 +107,13 @@ namespace nana
 		rectangle();
 		rectangle(int x, int y, unsigned width, unsigned height);
 		rectangle(const size &);
-		rectangle(const point&, const size&);
+		rectangle(const point&, const size& = size());
 
 		bool operator==(const rectangle& rhs) const;
 		bool operator!=(const rectangle& rhs) const;
+
+		rectangle & operator=(const point&);
+		rectangle & operator=(const size&);
 
 		int x;
 		int y;
@@ -115,17 +121,9 @@ namespace nana
 		unsigned height;
 	};
 
-	struct arrange
+	enum class arrange
 	{
-		enum t{unkown, horizontal, vertical, horizontal_vertical};
-		t value;
-
-		arrange();
-		arrange(t);
-		operator t() const;
-		arrange& operator=(t);
-		bool operator==(t) const;
-		bool operator!=(t) const;
+		unknown, horizontal, vertical, horizontal_vertical
 	};
 }//end namespace nana
 

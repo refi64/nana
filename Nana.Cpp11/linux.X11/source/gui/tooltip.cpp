@@ -90,7 +90,7 @@ namespace nana{ namespace gui{
 				typedef nana::gui::widget_object<nana::gui::category::root_tag, drawer> base_type;
 			public:
 				window()
-					:base_type(0, 0, 0, 0, nana::gui::appear::bald<nana::gui::appear::floating>())
+					:base_type(nana::rectangle(), nana::gui::appear::bald<nana::gui::appear::floating>())
 				{
 					nana::gui::API::take_active(this->handle(), false, 0);
 					timer_.interval(500);

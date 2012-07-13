@@ -116,9 +116,8 @@ namespace nana{ namespace gui{
 		};
 
 		slider();
-		slider(window);
-		slider(window, const rectangle& r);
-		slider(window, int x, int y, unsigned width, unsigned height);
+		slider(window, bool visible);
+		slider(window, const rectangle& = rectangle(), bool visible = true);
 		void seek(seekdir::t);
 		void vertical(bool);
 		bool vertical() const;

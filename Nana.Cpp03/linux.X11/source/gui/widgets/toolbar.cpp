@@ -465,19 +465,14 @@ namespace nana{ namespace gui{
 		toolbar::toolbar()
 		{}
 
-		toolbar::toolbar(window wd)
+		toolbar::toolbar(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		toolbar::toolbar(window wd, const nana::rectangle& r)
+		toolbar::toolbar(window wd, const rectangle& r, bool visible)
 		{
-			create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		toolbar::toolbar(window wd, int x, int y, unsigned w, unsigned h)
-		{
-			create(wd, x, y, w, h);
+			create(wd, r, visible);
 		}
 
 		toolbar::ext_event_type& toolbar::ext_event() const

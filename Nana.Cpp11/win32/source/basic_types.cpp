@@ -113,36 +113,19 @@ namespace nana
 		{
 			return (width != rhs.width) || (height != rhs.height) || (x != rhs.x) || (y != rhs.y);
 		}
-	//end struct rectangle
 
-	//struct arrange
-		arrange::arrange()
-			: value(horizontal)
-		{}
-
-		arrange::arrange(arrange::t x)
-			: value(x)
-		{}
-
-		arrange::operator arrange::t() const
+		rectangle & rectangle::operator=(const point& pos)
 		{
-			return value;
-		}
-
-		arrange& arrange::operator=(arrange::t x)
-		{
-			value = x;
+			x = pos.x;
+			y = pos.y;
 			return *this;
 		}
 
-		bool arrange::operator==(arrange::t x) const
+		rectangle & rectangle::operator=(const size & sz)
 		{
-			return (value == x);
+			width = sz.width;
+			height = sz.height;
+			return *this;
 		}
-
-		bool arrange::operator!=(arrange::t x) const
-		{
-			return (value != x);
-		}
-	//end struct arrange
+	//end struct rectangle
 }

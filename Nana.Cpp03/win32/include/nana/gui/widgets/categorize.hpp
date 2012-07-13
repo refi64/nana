@@ -171,19 +171,14 @@ namespace nana{	namespace gui
 		categorize()
 		{}
 
-		categorize(window wd)
+		categorize(window wd, bool visible)
 		{
-			this->create(wd);
+			this->create(wd, rectangle(), visible);
 		}
 
-		categorize(window wd, const nana::rectangle& r)
+		categorize(window wd, const rectangle& r = rectangle(), bool visible = true)
 		{
-			this->create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		categorize(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			this->create(wd, x, y, width, height);
+			this->create(wd, r, visible);
 		}
 
 		ext_event_type& ext_event() const

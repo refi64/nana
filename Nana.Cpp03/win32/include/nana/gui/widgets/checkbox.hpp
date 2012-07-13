@@ -77,9 +77,9 @@ namespace gui
 		enum checker_t{clasp, blocker};
 
 		checkbox();
-		checkbox(window);
-		checkbox(window, const nana::rectangle& r);
-		checkbox(window, int x, int y, unsigned w, unsigned h);
+		checkbox(window, bool visible);
+		checkbox(window, const rectangle& = rectangle(), bool visible = true);
+
 		void react(bool want);
 		bool checked() const;
 		void check(bool chk);

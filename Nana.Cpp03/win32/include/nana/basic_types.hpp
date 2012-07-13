@@ -108,6 +108,8 @@ namespace nana
 
 		bool operator==(const rectangle& rhs) const;
 		bool operator!=(const rectangle& rhs) const;
+		rectangle & operator=(const point&);
+		rectangle & operator=(const size&);
 
 		int x;
 		int y;

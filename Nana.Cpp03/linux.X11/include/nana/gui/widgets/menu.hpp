@@ -201,9 +201,7 @@ namespace nana{ namespace gui{
 				static const unsigned long npos = drawer_type::npos;
 				typedef menu_builder::item_type item_type;
 
-				menu_window(widget&, int x, int y);
-				menu_window(window, int x, int y);
-				menu_window(int x, int y);
+				menu_window(window, const point&);
 				void popup(menu_type&, bool owner_menubar);
 				void goto_next(bool forward);
 				bool goto_submenu();
@@ -261,11 +259,11 @@ namespace nana{ namespace gui{
 
 		typedef drawerbase::menu::menu_builder::item_type item_type;
 		typedef item_type::item_proxy item_proxy;
-		typedef item_type::functor_type functor_type;
+		typedef item_type::functor_type event_fn_t;
 		
 		menu();
 		~menu();
-		void append(const nana::string& text, const functor_type& = functor_type());
+		void append(const nana::string& text, const event_fn_t& = event_fn_t());
 		void append_splitter();
 		void clear();
 		void close();
@@ -280,7 +278,7 @@ namespace nana{ namespace gui{
 		menu * link(unsigned long index);
 		menu *create_sub_menu(unsigned long index);
 		void popup(window, int x, int y, bool owner_menubar);
-		void answerer(std::size_t index, const functor_type&);
+		void answerer(std::size_t index, const event_fn_t&);
 		void destroy_answer(const nana::functor<void()>&);
 		void goto_next(bool forward);
 		bool goto_submen();

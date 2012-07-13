@@ -24,9 +24,9 @@ namespace gui
 		typedef widget_object<category::frame_tag, int> base_type;
 	public:
 		frame();
-		frame(window);
-		frame(window, const nana::rectangle& r);
-		frame(window, int x, int y, unsigned width, unsigned height);
+		frame(window, bool visible);
+		frame(window, const rectangle& = rectangle(), bool visible = true);
+
 		bool insert(native_window_type);
 		native_window_type element(unsigned index);
 		native_window_type container() const;

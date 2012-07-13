@@ -59,9 +59,8 @@ namespace gui
 	{
 	public:
 		progress();
-		progress(window);
-		progress(window, const nana::rectangle & r);
-		progress(window, int x, int y, unsigned width, unsigned height);
+		progress(window, bool visible);
+		progress(window, const rectangle & = rectangle(), bool visible = true);
 
 		unsigned value() const;
 		unsigned value(unsigned val);

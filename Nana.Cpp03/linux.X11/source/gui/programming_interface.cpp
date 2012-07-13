@@ -131,24 +131,24 @@ namespace API
 			}
 		}
 
-		window create_window(window owner, bool nested, int x, int y, unsigned width, unsigned height, const appearance& ap)
+		window create_window(window owner, bool nested, const rectangle& r, const appearance& ap)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_root(reinterpret_cast<restrict::core_window_t*>(owner), nested, x, y, width, height, ap));
+			return reinterpret_cast<window>(restrict::window_manager.create_root(reinterpret_cast<restrict::core_window_t*>(owner), nested, r, ap));
 		}
 
-		window create_widget(window parent, int x, int y, unsigned width, unsigned height)
+		window create_widget(window parent, const rectangle& r)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), x, y, width, height));
+			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), r));
 		}
 
-		window create_lite_widget(window parent, int x, int y, unsigned width, unsigned height)
+		window create_lite_widget(window parent, const rectangle& r)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_lite_widget(reinterpret_cast<restrict::core_window_t*>(parent), x, y, width, height));
+			return reinterpret_cast<window>(restrict::window_manager.create_lite_widget(reinterpret_cast<restrict::core_window_t*>(parent), r));
 		}
 
-		window create_frame(window parent, int x, int y, unsigned width, unsigned height)
+		window create_frame(window parent, const rectangle& r)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_frame(reinterpret_cast<restrict::core_window_t*>(parent), x, y, width, height));
+			return reinterpret_cast<window>(restrict::window_manager.create_frame(reinterpret_cast<restrict::core_window_t*>(parent), r));
 		}
 	}//end namespace dev
 
@@ -1178,7 +1178,7 @@ namespace API
 		nana::gui::internal_scope_guard isg;
 		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 		if(restrict::window_manager.available(iwd))
-			return iwd->flags.mouse_action;
+			return iwd->flags.action;
 		return mouse_action_normal;
 	}
 }//end namespace API

@@ -90,8 +90,8 @@ namespace nana{	namespace gui
 
 				virtual ~renderer() = 0;
 				virtual void background(graph_reference, window wd, const nana::rectangle&, const ui_element&) = 0;
-				virtual void root_arrow(graph_reference, const nana::rectangle&, mouse_action_t) = 0;
-				virtual void item(graph_reference, const nana::rectangle&, std::size_t index, const nana::string& name, unsigned textheight, bool has_child, mouse_action_t) = 0;
+				virtual void root_arrow(graph_reference, const nana::rectangle&, mouse_action) = 0;
+				virtual void item(graph_reference, const nana::rectangle&, std::size_t index, const nana::string& name, unsigned textheight, bool has_child, mouse_action) = 0;
 				virtual void border(graph_reference) = 0;
 			};
 
@@ -171,19 +171,14 @@ namespace nana{	namespace gui
 		categorize()
 		{}
 
-		categorize(window wd)
+		categorize(window wd, bool visible)
 		{
-			this->create(wd);
+			this->create(wd, rectangle(), visible);
 		}
 
-		categorize(window wd, const nana::rectangle& r)
+		categorize(window wd, const rectangle& r = rectangle(), bool visible = true)
 		{
-			this->create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		categorize(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			this->create(wd, x, y, width, height);
+			this->create(wd, r, visible);
 		}
 
 		ext_event_type& ext_event() const

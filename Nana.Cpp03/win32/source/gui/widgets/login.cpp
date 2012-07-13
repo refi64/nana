@@ -751,11 +751,11 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 				this->_m_init_widget(mode_.item);
 				mode_.valid = container_.empty();
 
-				btn_login_.create(wd, 0, 0, 0, 0);
+				btn_login_.create(wd);
 				btn_login_.caption(lbstrings_.login);
 				btn_login_.make_event<events::click>(*this, &drawer::_m_verify);
 
-				lb_login_other_.create(wd, 0, 0, wd.size().width, 20);
+				lb_login_other_.create(wd, nana::size(wd.size().width, 20));
 				lb_login_other_.transparent(true);
 				lb_login_other_.caption(lbstrings_.other_user);
 				lb_login_other_.make_event<events::click>(*this, &drawer::_m_login_for_other_user);
@@ -771,7 +771,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 
 			nana::gui::widget& wd = *other_.wd;
 			m->pixels = 0;
-			m->user.create(wd, 0, 0, 0, 0);
+			m->user.create(wd);
 			m->user.multi_lines(false);
 			m->user.caption(m->init_user_string);
 			m->user.tip_string(lbstrings_.user);
@@ -779,7 +779,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			m->user.make_event<events::key_char>(*this, &drawer::_m_do_verify);
 
 
-			m->password.create(wd, 0, 0, 0, 0);
+			m->password.create(wd);
 			m->password.multi_lines(false);
 			m->password.caption(m->init_pswd_string);
 			m->password.tip_string(lbstrings_.password);
@@ -788,19 +788,19 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			m->password.make_event<events::key_char>(*this, &drawer::_m_do_verify);
 
 
-			m->forget.create(wd, 0, 0, 0, 0);
+			m->forget.create(wd);
 			m->forget.caption(lbstrings_.forget);
 			m->forget.foreground(0x66CC);
 			m->forget.transparent(true);
 			m->forget.make_event<events::click>(*this, &drawer::_m_forget);
 
-			m->remember_user.create(wd, 0, 0, 0, 0);
+			m->remember_user.create(wd);
 			m->remember_user.caption(lbstrings_.remember_user);
 			m->remember_user.transparent(true);
 			m->remember_user.check(m->have_user);
 			m->remember_user.make_event<events::click>(*this, &drawer::_m_take_check);
 
-			m->remember_password.create(wd, 0, 0, 0, 0);
+			m->remember_password.create(wd);
 			m->remember_password.caption(lbstrings_.remember_password);
 			m->remember_password.transparent(true);
 			m->remember_password.check(m->init_pswd_string.size() != 0);
@@ -926,22 +926,16 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 		this->get_drawer_trigger().get_drawer()->bind_login_object(*this);
 	}
 
-	login::login(window wd)
+	login::login(window wd, bool visible)
 	{
 		get_drawer_trigger().get_drawer()->bind_login_object(*this);
-		this->create(wd, 0, 0, 0, 0);
+		this->create(wd, rectangle(), visible);
 	}
 
-	login::login(window wd, const nana::rectangle& r)
+	login::login(window wd, const rectangle& r, bool visible)
 	{
 		this->get_drawer_trigger().get_drawer()->bind_login_object(*this);
-		this->create(wd, r.x, r.y, r.width, r.height);
-	}
-
-	login::login(window wd, int x, int y, unsigned w, unsigned h)
-	{
-		this->get_drawer_trigger().get_drawer()->bind_login_object(*this);
-		this->create(wd, x, y , w, h);
+		this->create(wd, r, visible);
 	}
 
 	void login::selection(bool sl)

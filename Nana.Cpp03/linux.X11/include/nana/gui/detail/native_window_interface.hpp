@@ -37,8 +37,8 @@ namespace detail
 		};
 
 		static nana::size	screen_size();
-		static window_result create_window(native_window_type, bool nested, int x, int y, unsigned width, unsigned height, const appearance&);
-		static nana::gui::native_window_type create_child_window(native_window_type, int x, int y, unsigned width, unsigned height);
+		static window_result create_window(native_window_type, bool nested, const rectangle&, const appearance&);
+		static nana::gui::native_window_type create_child_window(native_window_type, const rectangle&);
 
 		static bool window_icon(native_window_type, const paint::image&);
 		static void	active_owner(native_window_type);

@@ -16,10 +16,7 @@ namespace nana{ namespace gui{
 	{
 		namespace form
 		{
-		/*
-		 * class trigger
-		 */
-
+		//class trigger
 			trigger::trigger():graph_(nullptr){}
 
 			void trigger::bind_window(nana::gui::widget& widget)
@@ -51,71 +48,35 @@ namespace nana{ namespace gui{
 		}//end namespace form
 	}//end namespace drawerbase
 
-	/*
-	 * class form
-	 */
+	//class form
 	typedef widget_object<category::root_tag, drawerbase::form::trigger> form_base_t;
 
-		form::form()
-		{
-			get_drawer_trigger();
-		}
 
-		form::form(int x, int y, unsigned width, unsigned height)
-			:form_base_t(0, false, x, y, width, height, appearance())
+		form::form(const rectangle& r, const appearance& apr)
+			: form_base_t(0, false, r, apr)
 		{}
 
-		form::form(int x, int y, unsigned width, unsigned height, const nana::gui::appearance& app)
-			:form_base_t(0, false, x, y, width, height, app)
+		form::form(window owner, const appearance& apr)
+			: form_base_t(owner, false, API::make_center(owner, 300, 150), apr)
 		{}
 
-		form::form(const nana::rectangle& r)
-			:form_base_t(0, false, r.x, r.y, r.width, r.height, appearance())
+		form::form(window owner, const rectangle& r, const appearance& apr)
+			: form_base_t(owner, false, r, apr)
 		{}
+	//end class form
 
-		form::form(const nana::rectangle& r, const nana::gui::appearance& app)
-			:form_base_t(0, false, r.x, r.y, r.width, r.height, app)
-		{}
-
-		form::form(window wd)
-			: form_base_t(wd, false)
-		{}
-
-		form::form(window owner, int x, int y, unsigned width, unsigned height)
-			:form_base_t(owner, false, x, y, width, height, appearance())
-		{}
-
-		form::form(window owner, int x, int y, unsigned width, unsigned height, const nana::gui::appearance& app)
-			:form_base_t(owner, false, x, y, width, height, app)
-		{}
-
-		form::form(window owner, const nana::rectangle& r)
-			:form_base_t(owner, false, r.x, r.y, r.width, r.height, appearance())
-		{}
-
-		form::form(window owner, const nana::rectangle& r, const nana::gui::appearance& app)
-			:form_base_t(owner, false, r.x, r.y, r.width, r.height, app)
-		{}
-
-
+	//class nested_form
 		nested_form::nested_form(window owner)
-			: form_base_t(owner, true)
+			: form_base_t(0, true, rectangle(), appearance())
 		{}
 
-		nested_form::nested_form(window owner, int x, int y, unsigned width, unsigned height)
-			: form_base_t(owner, true, x, y, width, height, gui::appearance())
+		nested_form::nested_form(window owner, const appearance& apr)
+			: form_base_t(owner, true, rectangle(), apr)
 		{}
 
-		nested_form::nested_form(window owner, int x, int y, unsigned width, unsigned height, const nana::gui::appearance& app)
-			: form_base_t(owner, true, x, y, width, height, app)
+		nested_form::nested_form(window owner, const rectangle& r, const appearance& apr)
+			: form_base_t(owner, true, r, apr)
 		{}
-
-		nested_form::nested_form(window owner, const nana::rectangle& r)
-			: form_base_t(owner, true, r.x, r.y, r.width, r.height, appearance())
-		{}
-
-		nested_form::nested_form(window owner, const nana::rectangle& r, const nana::gui::appearance& app)
-			: form_base_t(owner, true, r.x, r.y, r.width, r.height, app)
-		{}
+	//end nested_form
 }//end namespace gui
 }//end namespace nana

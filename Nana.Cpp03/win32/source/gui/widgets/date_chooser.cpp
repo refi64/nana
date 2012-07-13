@@ -654,19 +654,14 @@ namespace nana{ namespace gui{
 		date_chooser::date_chooser()
 		{}
 
-		date_chooser::date_chooser(window wd)
+		date_chooser::date_chooser(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		date_chooser::date_chooser(window wd, const nana::rectangle& r)
+		date_chooser::date_chooser(window wd, const rectangle& r, bool visible)
 		{
-			this->create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		date_chooser::date_chooser(window wd, int x, int y, unsigned width, unsigned height)
-		{
-			this->create(wd, x, y, width, height);
+			this->create(wd, r, visible);
 		}
 
 		bool date_chooser::chose() const

@@ -22,19 +22,14 @@ namespace gui
 	//class frame:: public widget_object<category::frame_tag>
 		frame::frame(){}
 
-		frame::frame(window wd)
+		frame::frame(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		frame::frame(window wd, const nana::rectangle& r)
+		frame::frame(window wd, const nana::rectangle& r, bool visible)
 		{
-			this->create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		frame::frame(window wd, int x, int y, unsigned w, unsigned h)
-		{
-			this->create(wd, x, y, w, h);
+			create(wd, r, visible);
 		}
 
 		bool frame::insert(native_window_type wd)

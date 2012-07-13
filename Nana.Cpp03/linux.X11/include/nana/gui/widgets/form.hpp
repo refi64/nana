@@ -42,17 +42,9 @@ namespace nana{namespace gui{
 	public:
 		typedef nana::gui::appear appear;
 
-		form();
-		form(int x, int y, unsigned width, unsigned height);
-		form(int x, int y, unsigned width, unsigned height, const nana::gui::appearance&);
-		form(const nana::rectangle&);
-		form(const nana::rectangle& rect, const nana::gui::appearance&);
-
-		form(window);
-		form(window, int x, int y, unsigned width, unsigned height);
-		form(window, int x, int y, unsigned width, unsigned height, const nana::gui::appearance&);
-		form(window, const nana::rectangle&);
-		form(window, const nana::rectangle& rect, const nana::gui::appearance&);
+		form(const rectangle& = API::make_center(300, 150), const appearance& = appearance());
+		form(window, const appearance& = appearance());
+		form(window, const rectangle&, const appearance& = appearance());
 	};
 
 	class nested_form: public widget_object<category::root_tag, drawerbase::form::trigger>
@@ -61,10 +53,8 @@ namespace nana{namespace gui{
 		typedef nana::gui::appear appear;
 
 		nested_form(window);
-		nested_form(window, int x, int y, unsigned width, unsigned height);
-		nested_form(window, int x, int y, unsigned width, unsigned height, const nana::gui::appearance&);
-		nested_form(window, const nana::rectangle&);
-		nested_form(window, const nana::rectangle& rect, const nana::gui::appearance&);
+		nested_form(window, const appearance&);
+		nested_form(window, const rectangle& = rectangle(), const appearance& = appearance());
 	};
 }//end namespace gui
 }//end namespace nana

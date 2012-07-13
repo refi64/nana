@@ -74,7 +74,7 @@ namespace nana{ namespace gui{
 		typedef drawerbase::float_listbox::module_def module_type;
 
 		float_listbox();
-		float_listbox(window, int x, int y, unsigned width, unsigned height);
+		float_listbox(window, const rectangle&);
 
 		void set_module(const module_type&);
 		void scroll_items(bool upwards);

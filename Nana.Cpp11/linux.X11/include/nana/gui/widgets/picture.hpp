@@ -63,11 +63,9 @@ namespace gui
 	{
 	public:
 		picture();
-		picture(window);
-		picture(window, const nana::rectangle& r);
-		picture(window, int x, int y, unsigned width, unsigned height);
+		picture(window, bool visible);
+		picture(window, const rectangle& = rectangle(), bool visible = true);
 
-		void load(const nana::char_t* file);
 		void load(const nana::paint::image&);
 		void bgstyle(bool stretchable, nana::arrange arg, int beg, int end);
 		void bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& source, int src_x, int src_y);

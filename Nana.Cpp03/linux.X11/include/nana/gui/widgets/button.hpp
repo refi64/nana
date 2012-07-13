@@ -19,10 +19,8 @@ namespace nana{namespace gui{
 	{
 		namespace button
 		{
-			/*
-			 * button_drawer
-			 *		draw the button
-			 */
+			//button_drawer
+			//@brief: Draw the button
 			class trigger: public nana::gui::drawer_trigger
 			{
 			public:
@@ -92,9 +90,9 @@ namespace nana{namespace gui{
 			};
 
 			button();
-			button(nana::gui::window wd);
-			button(nana::gui::window wd, const nana::rectangle& r);
-			button(nana::gui::window wd, int x, int y, unsigned width, unsigned height);
+			button(window, bool visible);
+			button(window, const rectangle& = rectangle(), bool visible = true);
+
 			void icon(const nana::paint::image&);
 			void image(const char_t * filename);
 			void image(const nana::paint::image&);

@@ -1394,7 +1394,7 @@ namespace nana{ namespace gui{
 						}
 						else
 						{
-							scroll.h.create(window->handle(), 1, graph->height() - scroll.scale - 1, width, scroll.scale);
+							scroll.h.create(window->handle(), nana::rectangle(1, graph->height() - scroll.scale - 1, width, scroll.scale));
 							nana::gui::API::take_active(scroll.h.handle(), false, window->handle());
 							scroll.h.make_event<nana::gui::events::mouse_move>(*this, &essence_t::_m_answer_scroll);
 							scroll.h.make_event<nana::gui::events::mouse_up>(*this, &essence_t::_m_answer_scroll);
@@ -1413,7 +1413,7 @@ namespace nana{ namespace gui{
 						}
 						else
 						{
-							scroll.v.create(window->handle(), graph->width() - 1 - scroll.scale, 1, scroll.scale, height);
+							scroll.v.create(window->handle(), nana::rectangle(graph->width() - 1 - scroll.scale, 1, scroll.scale, height));
 							nana::gui::API::take_active(scroll.v.handle(), false, window->handle());
 							scroll.v.make_event<nana::gui::events::mouse_move>(*this, &essence_t::_m_answer_scroll);
 							scroll.v.make_event<nana::gui::events::mouse_up>(*this, &essence_t::_m_answer_scroll);
@@ -2353,19 +2353,14 @@ namespace nana{ namespace gui{
 	//class listbox
 		listbox::listbox(){}
 
-		listbox::listbox(window wd)
+		listbox::listbox(window wd, bool visible)
 		{
-			create(wd, 0, 0, 0, 0);
+			create(wd, rectangle(), visible);
 		}
 
-		listbox::listbox(window wd, const nana::rectangle& r)
+		listbox::listbox(window wd, const rectangle& r, bool visible)
 		{
-			create(wd, r.x, r.y, r.width, r.height);
-		}
-
-		listbox::listbox(window wd, int x, int y, unsigned w, unsigned h)
-		{
-			create(wd, x, y, w, h);
+			create(wd, r, visible);
 		}
 
 		void listbox::auto_draw(bool ad)

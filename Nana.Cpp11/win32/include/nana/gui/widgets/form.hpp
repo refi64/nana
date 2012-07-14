@@ -52,7 +52,6 @@ namespace nana{namespace gui{
 	public:
 		typedef nana::gui::appear appear;
 
-		nested_form(window);
 		nested_form(window, const appearance&);
 		nested_form(window, const rectangle& = rectangle(), const appearance& = appearance());
 	};

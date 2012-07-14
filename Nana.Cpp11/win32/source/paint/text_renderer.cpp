@@ -251,6 +251,7 @@ namespace nana
 					}
 					else
 					{
+						int xpos = x;
 						std::vector<nana::size>::iterator i_ts_keeper = ts_keeper.begin(); 
 						for(auto & i : reordered)
 						{
@@ -258,10 +259,10 @@ namespace nana
 							nana::size & ts = *i_ts_keeper;
 							if(ts.height > pixels) pixels = ts.height;
 
-							if(x + static_cast<int>(ts.width) > 0)
-								detail::draw_string(dw, x, top, i.begin, len);
+							if(xpos + static_cast<int>(ts.width) > 0)
+								detail::draw_string(dw, xpos, top, i.begin, len);
 
-							x += static_cast<int>(ts.width);
+							xpos += static_cast<int>(ts.width);
 							++i_ts_keeper;
 						}
 					}
@@ -438,15 +439,10 @@ namespace nana
 					}
 					else
 					{
-						for(auto & i : reordered)
+						while(i_ts_keeper != ts_keeper.end())
 						{
-							std::size_t len = i.end - i.begin;
-							nana::size & ts = *i_ts_keeper;
+							nana::size & ts = *(i_ts_keeper++);
 							if(ts.height > pixels) pixels = ts.height;
-
-							x += static_cast<int>(ts.width);
-
-							++i_ts_keeper;
 						}
 					}
 					extents += pixels;

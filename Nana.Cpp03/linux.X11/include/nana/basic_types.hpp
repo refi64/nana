@@ -36,6 +36,11 @@ namespace nana
 	typedef unsigned long	uint32_t;
 	typedef unsigned		uint_t;
 	typedef unsigned		color_t;
+#if defined(NANA_WINDOWS)
+	typedef __int64	long_long_t;
+#elif defined(NANA_LINUX)
+	typedef long long long_long_t;
+#endif
 
 	const color_t null_color = 0xFFFFFFFF;
 

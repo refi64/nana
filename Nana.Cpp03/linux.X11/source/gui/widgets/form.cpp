@@ -65,10 +65,6 @@ namespace nana{ namespace gui{
 	//end class form
 
 	//class nested_form
-		nested_form::nested_form(window owner)
-			: form_base_t(0, true, rectangle(), appearance())
-		{}
-
 		nested_form::nested_form(window owner, const appearance& apr)
 			: form_base_t(owner, true, rectangle(), apr)
 		{}

@@ -66,12 +66,6 @@ namespace nana
 {
 	std::size_t strlen(const char_t* str);
 	char_t* strcpy(char_t* dest, const char_t* source);
-
-#if defined(NANA_WINDOWS)
-	typedef __int64 wint_t;
-#elif defined(NANA_LINUX)
-	typedef long long wint_t;
-#endif
 }
 
 #if defined(NANA_WINDOWS)

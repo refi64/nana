@@ -250,6 +250,7 @@ namespace nana
 					}
 					else
 					{
+						int xpos = x;
 						std::vector<nana::size>::iterator i_ts_keeper = ts_keeper.begin(); 
 						for(std::vector<nana::unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i, ++i_ts_keeper)
 						{
@@ -257,10 +258,10 @@ namespace nana
 							nana::size & ts = *i_ts_keeper;
 							if(ts.height > pixels) pixels = ts.height;
 
-							if(x + static_cast<int>(ts.width) > 0)
-								detail::draw_string(dw, x, top, i->begin, len);
+							if(xpos + static_cast<int>(ts.width) > 0)
+								detail::draw_string(dw, xpos, top, i->begin, len);
 
-							x += static_cast<int>(ts.width);
+							xpos += static_cast<int>(ts.width);
 						}
 					}
 					return pixels;
@@ -434,13 +435,10 @@ namespace nana
 					}
 					else
 					{
-						for(std::vector<nana::unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i, ++i_ts_keeper)
+						while(i_ts_keeper != ts_keeper.end())
 						{
-							std::size_t len = i->end - i->begin;
-							nana::size & ts = *i_ts_keeper;
+							nana::size & ts = *(i_ts_keeper++);
 							if(ts.height > pixels) pixels = ts.height;
-
-							x += static_cast<int>(ts.width);
 						}
 					}
 					extents += pixels;

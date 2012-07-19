@@ -425,10 +425,33 @@ namespace nana{
 		{
 #if defined(NANA_WINDOWS)
 			int cmd = (show ? (active ? SW_SHOW : SW_SHOWNA) : SW_HIDE);
-			if(::GetCurrentThreadId() == ::GetWindowThreadProcessId(reinterpret_cast<HWND>(wd), 0))
-				::ShowWindow(reinterpret_cast<HWND>(wd), cmd);
-			else
+			bool async = true;
+			const DWORD tid = ::GetCurrentThreadId();
+			if(tid == ::GetWindowThreadProcessId(reinterpret_cast<HWND>(wd), 0))
+			{
+				HWND owner = ::GetWindow(reinterpret_cast<HWND>(wd), GW_OWNER);
+				if((0 == owner) || (tid == ::GetWindowThreadProcessId(owner, 0)))
+				{
+					async = false;
+					HWND owned = ::GetWindow(reinterpret_cast<HWND>(wd), GW_HWNDPREV);
+					while(owned)
+					{
+						if(::GetWindow(owned, GW_OWNER) == reinterpret_cast<HWND>(wd))
+						{
+							if(tid != ::GetWindowThreadProcessId(owned, 0))
+							{
+								async = true;
+								break;
+							}
+						}
+						owned = ::GetWindow(owned, GW_HWNDPREV);
+					}
+				}
+			}
+			if(async)
 				::ShowWindowAsync(reinterpret_cast<HWND>(wd), cmd);
+			else
+				::ShowWindow(reinterpret_cast<HWND>(wd), cmd);
 #elif defined(NANA_X11)
 			if(wd)
 			{

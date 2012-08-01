@@ -165,8 +165,7 @@ namespace detail
 		return nana::size();
 #elif defined(NANA_X11)
 	#if defined(NANA_UNICODE)
-		std::string utf8str;
-		nana::stringset_cast(utf8str, nana::string(text, len));
+		std::string utf8str = nana::charset(nana::string(text, len));
 		XGlyphInfo ext;
 		XftFont * fs = reinterpret_cast<XftFont*>(dw->font.handle()->handle);
 		::XftTextExtentsUtf8(nana::detail::platform_spec::instance().open_display(), fs,
@@ -194,8 +193,7 @@ namespace detail
 		}
 #elif defined(NANA_X11)
 	#if defined(NANA_UNICODE)
-		std::string utf8str;
-		nana::stringset_cast(utf8str, nana::string(text, len));
+		std::string utf8str = nana::charset(nana::string(text, len));
 		XGlyphInfo ext;
 		XftFont * fs = reinterpret_cast<XftFont*>(dw->font.handle()->handle);
 		::XftTextExtentsUtf8(nana::detail::platform_spec::instance().open_display(), fs,
@@ -228,12 +226,7 @@ namespace detail
 		::TextOut(dw->context, x, y, str, static_cast<int>(len));
 #elif defined(NANA_X11)
 	#if defined(NANA_UNICODE)
-		std::string utf8str;
-		nana::string wbstr = str;
-		if(wbstr.size() == len)
-			nana::stringset_cast(utf8str, wbstr);
-		else
-			nana::stringset_cast(utf8str, wbstr.substr(0, len));
+		std::string utf8str = nana::charset(nana::string(str, len));
 		XftFont * fs = reinterpret_cast<XftFont*>(dw->font.handle()->handle);
 		::XftDrawStringUtf8(dw->xftdraw, &(dw->xft_fgcolor), fs, x, y + fs->ascent,
 							reinterpret_cast<XftChar8*>(const_cast<char*>(utf8str.c_str())), utf8str.size());

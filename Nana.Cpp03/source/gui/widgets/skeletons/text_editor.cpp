@@ -1183,35 +1183,6 @@ namespace nana{	namespace gui{	namespace widgets
 			return false;
 		}
 
-		//_m_move_offset_y_while_over_border
-		//@brief: Move the view window
-		bool text_editor::_m_move_offset_y_while_over_border(int many)
-		{
-			unsigned lines = this->screen_lines();
-
-			if(many < 0)
-			{
-				many = -many;
-				if(points_.caret.y)
-				{
-					if(points_.caret.y > static_cast<unsigned>(many))
-						_m_offset_y(points_.offset.y - many);
-					else
-						_m_offset_y(0);
-					return true;
-				}
-			}
-			else if(many)
-			{
-				if(points_.caret.y >= points_.offset.y + lines)
-				{
-					points_.offset.y += points_.caret.y - lines;
-					return true;
-				}
-			}
-			return false;
-		}
-
 		//_m_endx
 		//@brief: Get the right point of text area
 		int text_editor::_m_endx() const

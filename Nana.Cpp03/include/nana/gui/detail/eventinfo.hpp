@@ -14,7 +14,6 @@
 
 #ifndef NANA_GUI_DETAIL_EVENTINFO_HPP
 #define NANA_GUI_DETAIL_EVENTINFO_HPP
-#include <nana/macros.hpp>
 #include "../basis.hpp"
 #include <vector>
 

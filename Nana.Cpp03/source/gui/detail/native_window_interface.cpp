@@ -844,9 +844,8 @@ namespace nana{
 				wstr = new wchar_t[title.length() + 1];
 				wcscpy(wstr, title.c_str());
 #else
-				std::wstring str;
-				nana::stringset_cast(str, title);
-				wstr = new wchar_t[title.length() + 1];
+				std::wstring str = nana::charset(title);
+				wstr = new wchar_t[str.length() + 1];
 				wcscpy(wstr, str.c_str());
 #endif
 				::PostMessage(reinterpret_cast<HWND>(wd), nana::detail::messages::remote_thread_set_window_text, reinterpret_cast<WPARAM>(wstr), 0);
@@ -856,8 +855,7 @@ namespace nana{
 #elif defined(NANA_X11)
 			::XTextProperty name;
 	#if defined(NANA_UNICODE)
-			std::string mbstr;
-			nana::stringset_cast(mbstr, title);
+			std::string mbstr = nana::charset(title);
 			char* text = const_cast<char*>(mbstr.c_str());
 	#else
 			char* text = const_cast<char*>(title.c_str());
@@ -899,7 +897,7 @@ namespace nana{
 					if(size > 1)
 					{
 					#if defined(NANA_UNICODE)
-						nana::string str = nana::stringset_cast(*strlist);
+						nana::string str = nana::charset(*strlist);
 					#else
 						nana::string str = *strlist;
 					#endif

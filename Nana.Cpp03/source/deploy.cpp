@@ -6,7 +6,7 @@
  *	(See accompanying file LICENSE_1_0.txt or copy at 
  *	http://stdex.sourceforge.net/LICENSE_1_0.txt)
  *
- *	@file: nana/depoly.cpp
+ *	@file: nana/deploy.hpp
  *
  *	What follow are dependented on what defined in nana/config.hpp
  */
@@ -18,6 +18,7 @@
 	#include <windows.h>
 #elif defined(NANA_LINUX)
 	#include <string.h>
+	#include <nana/config.hpp>
 	#include PLATFORM_SPEC_HPP
 #endif
 

@@ -13,6 +13,7 @@
 
 #include "widget.hpp"
 #include <nana/paint/gadget.hpp>
+#include <nana/gui/timer.hpp>
 
 namespace nana{ namespace gui{
 
@@ -20,6 +21,11 @@ namespace nana{ namespace gui{
 	{
 		namespace scroll
 		{
+			enum class buttons
+			{
+				none, forward, backward, scroll, first, second
+			};
+
 			struct metrics_type
 			{
 				typedef std::size_t size_type;
@@ -29,11 +35,11 @@ namespace nana{ namespace gui{
 				size_type step;
 				size_type value;
 
-				int what;
+				buttons what;
+				bool pressed;
 				size_type	scroll_length;
 				int			scroll_pos;
-				int			trace;		//trace = 1, the mouse is pressed on the scrollbutton, 2: the mouse is pressed on scroll background
-				int			mouse_pos;
+				int			scroll_mouse_offset;
 
 				metrics_type();
 			};
@@ -46,33 +52,26 @@ namespace nana{ namespace gui{
 					enum{none, highlight, actived, selected};
 				};
 
-				struct buttons
-				{
-					enum{none, scroll, first, second};
-				};
-
 				typedef nana::paint::graphics& graph_reference;
 				const static unsigned fixedsize = 16;
 
 				drawer(metrics_type& m);
-				void set_vertical(bool v);
-				int what(graph_reference graph, int x, int y);
-			public:
-				void draw(graph_reference graph, int what, bool moused, int delta_pos = 0);
+				void set_vertical(bool);
+				buttons what(graph_reference, int x, int y);
+				void scroll_delta_pos(graph_reference, int);
+				void auto_scroll();
+				void draw(graph_reference, buttons);
 			private:
 				bool _m_check() const;
-				bool _m_auto_scroll(graph_reference graph);
-				void _m_background(graph_reference graph, bool normal);
-				void _m_button_frame(graph_reference graph, int x, int y, unsigned width, unsigned height, int state);
-				void _m_adjust_scroll(graph_reference graph, int delta_pos);
-				void _m_draw_scroll(graph_reference graph, int state, int delta_pos);
-				void _m_draw_button(graph_reference graph, int x, int y, unsigned width, unsigned height, int what, int state);
+				void _m_adjust_scroll(graph_reference);
+				void _m_background(graph_reference);
+				void _m_button_frame(graph_reference, int x, int y, unsigned width, unsigned height, int state);
+				void _m_draw_scroll(graph_reference, int state);
+				void _m_draw_button(graph_reference, int x, int y, unsigned width, unsigned height, buttons what, int state);
 			private:
 				metrics_type &metrics_;
 				bool	vertical_;
 			};
-
-
 
 			template<bool Vertical>
 			class trigger
@@ -124,36 +123,35 @@ namespace nana{ namespace gui{
 					metrics_.step = s;
 				}
 
-				size_type make_step(bool forward)
+				bool make_step(bool forward, unsigned multiple)
 				{
 					if(graph_)
 					{
-						bool changed = false;
+						size_type step = (multiple > 1 ? metrics_.step * multiple : metrics_.step);
+						size_type value = metrics_.value;
 						if(forward)
 						{
 							size_type maxv = metrics_.peak - metrics_.range;
-
-							if(metrics_.peak > metrics_.range && metrics_.value < maxv)
+							if(metrics_.peak > metrics_.range && value < maxv)
 							{
-								if(maxv - metrics_.value >= metrics_.step)
-									metrics_.value += metrics_.step;
+								if(maxv - value >= step)
+									value += step;
 								else
-									metrics_.value = maxv;
-								changed = true;
+									value = maxv;
 							}
 						}
-						else if(metrics_.value)
+						else if(value)
 						{
-							if(metrics_.value > metrics_.step)
-								metrics_.value -= metrics_.step;
+							if(value > step)
+								value -= step;
 							else
-								metrics_.value = 0;
-
-							changed = true;
+								value = 0;
 						}
+						size_type cmpvalue = metrics_.value;
+						metrics_.value = value;
+						return (value != cmpvalue);
 					}
-
-					return metrics_.value;
+					return false;
 				}
 			private:
 				void bind_window(widget_reference widget)
@@ -170,6 +168,9 @@ namespace nana{ namespace gui{
 					make_drawer_event<events::mouse_leave>(wd);
 					make_drawer_event<events::mouse_wheel>(wd);
 					make_drawer_event<events::size>(wd);
+
+					timer_.make_tick(nana::make_fun(*this, &trigger::_m_tick));
+					timer_.enable(false);
 				}
 
 				void attached(graph_reference graph)
@@ -180,39 +181,47 @@ namespace nana{ namespace gui{
 				void detached()
 				{
 					API::dev::umake_drawer_event(widget_->handle());
-					graph_ = 0;
+					graph_ = nullptr;
 				}
 
 				void refresh(graph_reference graph)
 				{
-					drawer_.draw(graph, metrics_.what, false, 0);
+					drawer_.draw(graph, metrics_.what);
 				}
 
 				void resize(graph_reference graph, const nana::gui::eventinfo& ei)
 				{
-					drawer_.draw(graph, metrics_.what, false, 0);
+					drawer_.draw(graph, metrics_.what);
 					API::lazy_refresh();
 				}
 
 				void mouse_enter(graph_reference graph, const nana::gui::eventinfo& ei)
 				{
 					metrics_.what = drawer_.what(graph, ei.mouse.x, ei.mouse.y);
-					drawer_.draw(graph, metrics_.what, false);
+					drawer_.draw(graph, metrics_.what);
 					API::lazy_refresh();
 				}
 
 				void mouse_move(graph_reference graph, const nana::gui::eventinfo& ei)
 				{
-					int what = drawer_.what(graph, ei.mouse.x, ei.mouse.y);
-					if(metrics_.what != what || ei.mouse.left_button)
+					bool redraw = false;
+					if(metrics_.pressed && (metrics_.what == buttons::scroll))
 					{
-						if(ei.mouse.left_button == false)
+						redraw = true;
+						drawer_.scroll_delta_pos(graph, (Vertical ? ei.mouse.y : ei.mouse.x));
+					}
+					else
+					{
+						buttons what = drawer_.what(graph, ei.mouse.x, ei.mouse.y);
+						if(metrics_.what != what)
+						{
+							redraw = true;
 							metrics_.what = what;
-
-						//if metrics_.trace is 1, it indicates the mouse pressed on the scroll button. So the scroll button must trace the mouse
-						drawer_.draw(graph, metrics_.what, ei.mouse.left_button,
-							(ei.mouse.left_button && (1 == metrics_.trace) ? (Vertical ? ei.mouse.y : ei.mouse.x) - metrics_.mouse_pos : 0)
-							);
+						}
+					}
+					if(redraw)
+					{
+						drawer_.draw(graph, metrics_.what);
 						API::lazy_refresh();
 					}
 				}
@@ -221,63 +230,73 @@ namespace nana{ namespace gui{
 				{
 					if(ei.mouse.left_button)
 					{
+						metrics_.pressed = true;
 						metrics_.what = drawer_.what(graph, ei.mouse.x, ei.mouse.y);
 						switch(metrics_.what)
 						{
-						case drawer::buttons::first:
-						case drawer::buttons::second:
-							this->make_step(metrics_.what == drawer::buttons::second);
+						case buttons::first:
+						case buttons::second:
+							this->make_step(metrics_.what == buttons::second, 1);
+							timer_.interval(1000);
+							timer_.enable(true);
 							break;
-						case drawer::buttons::scroll:
-						case drawer::buttons::none:
-							metrics_.trace = (metrics_.what == drawer::buttons::none ? 2 : 1);
-							metrics_.mouse_pos = (Vertical ? ei.mouse.y : ei.mouse.x);
+						case buttons::scroll:
+							API::capture_window(widget_->handle(), true);
+							metrics_.scroll_mouse_offset = (Vertical ? ei.mouse.y : ei.mouse.x) - metrics_.scroll_pos;
+							break;
+						case buttons::forward:
+						case buttons::backward:
+							drawer_.auto_scroll();
 							break;
 						}
-						drawer_.draw(graph, metrics_.what, true);
+						drawer_.draw(graph, metrics_.what);
 						API::lazy_refresh();
-						API::capture_window(widget_->handle(), true);
 					}
 				}
 
 				void mouse_up(graph_reference graph, const nana::gui::eventinfo& ei)
 				{
-					if(ei.mouse.left_button)
-					{
-						metrics_.what = drawer_.what(graph, ei.mouse.x, ei.mouse.y);
-						metrics_.mouse_pos = 0;
-						metrics_.trace = 0;
-						drawer_.draw(graph, metrics_.what, false);
-						API::lazy_refresh();
-						API::capture_window(widget_->handle(), false);
-					}
+					timer_.enable(false);
+					
+					API::capture_window(widget_->handle(), false);
+
+					metrics_.pressed = false;
+
+					metrics_.what = drawer_.what(graph, ei.mouse.x, ei.mouse.y);
+					drawer_.draw(graph, metrics_.what);
+					API::lazy_refresh();
 				}
 
 				void mouse_leave(graph_reference graph, const nana::gui::eventinfo& ei)
 				{
-					metrics_.what = -1;
-					drawer_.draw(graph, -1, false);
+					if(metrics_.pressed) return;
+
+					metrics_.what = buttons::none;
+					drawer_.draw(graph, buttons::none);
 					API::lazy_refresh();
 				}
 
 				void mouse_wheel(graph_reference graph, const nana::gui::eventinfo& ei)
 				{
-					size_type value = metrics_.value;
-
-					this->make_step(ei.wheel.upwards == false);
-					this->make_step(ei.wheel.upwards == false);
-
-					if(value != this->make_step(ei.wheel.upwards == false))
+					if(this->make_step(ei.wheel.upwards == false, 3))
 					{
-						drawer_.draw(graph, metrics_.what, false);
+						drawer_.draw(graph, metrics_.what);
 						API::lazy_refresh();
 					}
+				}
+			private:
+				void _m_tick()
+				{
+					this->make_step(metrics_.what == buttons::second, 1);
+					API::refresh_window(widget_->handle());
+					timer_.interval(100);
 				}
 			private:
 				nana::gui::widget * widget_;
 				nana::paint::graphics * graph_;
 				metrics_type metrics_;
 				drawer	drawer_;
+				nana::gui::timer timer_;
 			};
 		}//end namespace scroll
 	}//end namespace drawerbase
@@ -297,7 +316,7 @@ namespace nana{ namespace gui{
 			this->create(wd, rectangle(), visible);
 		}
 
-		scroll(window wd, const rectangle& r, bool visible)
+		scroll(window wd, const rectangle& r, bool visible = true)
 		{
 			this->create(wd, r, visible);
 		}
@@ -342,29 +361,24 @@ namespace nana{ namespace gui{
 			return this->get_drawer_trigger().step(s);
 		}
 
-		size_type make_step(bool forward)
+		bool make_step(bool forward)
 		{
-			std::size_t v = value();
-			if(v != this->get_drawer_trigger().make_step(forward))
+			if(this->get_drawer_trigger().make_step(forward, 1))
 			{
-				API::refresh_window(this->handle()); //need this-> because of two-stage name lookup
-				return value();
+				API::refresh_window(this->handle());
+				return true;
 			}
-			return v;
+			return false;
 		}
 
-		size_type make_scroll(bool forward)
+		bool make_scroll(bool forward)
 		{
-			std::size_t v = value();
-			this->get_drawer_trigger().make_step(forward);
-			this->get_drawer_trigger().make_step(forward);
-
-			if(v != this->get_drawer_trigger().make_step(forward))
+			if(this->get_drawer_trigger().make_step(forward, 3))
 			{
-				API::refresh_window(this->handle()); //need this-> because of two-stage name lookup
-				return value();
+				API::refresh_window(this->handle());
+				return true;
 			}
-			return v;
+			return false;
 		}
 	};//end class scroll
 

@@ -10,7 +10,7 @@
  *	@description:
  *		this implements some API for platform-independent programming
  */
-#include <nana/macros.hpp>
+#include <nana/deploy.hpp>
 
 #if defined(NANA_WINDOWS)
 	#include <windows.h>

@@ -288,10 +288,7 @@ namespace gui
 				int _m_tokenstr_to_number()
 				{
 					std::stringstream ss;
-
-					std::string str;
-					nana::stringset_cast(str, data_.tokenstr);
-					ss<<str;
+					ss<<static_cast<std::string>(nana::charset(data_.tokenstr));
 					if(data_.tokenstr.size() > 2)
 					{
 						if(data_.tokenstr[0] == '0' && (data_.tokenstr[1] == 'x' || data_.tokenstr[1] == 'X'))

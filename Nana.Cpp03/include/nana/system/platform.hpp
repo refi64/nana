@@ -13,7 +13,7 @@
 
 #ifndef NANA_SYSTEM_PLATFORM_HPP
 #define NANA_SYSTEM_PLATFORM_HPP
-#include <nana/macros.hpp>
+#include <nana/deploy.hpp>
 
 namespace nana
 {

@@ -190,9 +190,7 @@ namespace paint
 				if(0 == helper)
 				{
 #if defined(NANA_UNICODE)
-					std::string file;
-					nana::stringset_cast(file, filename);
-					std::ifstream ifs(file.c_str(), std::ios::binary);
+					std::ifstream ifs(static_cast<std::string>(nana::charset(filename)).c_str(), std::ios::binary);
 #else
 					std::ifstream ifs(filename.c_str(), std::ios::binary);
 #endif

@@ -296,7 +296,6 @@ namespace paint
 #endif
 				if(dw)
 				{
-					dw->fgcolor_reset();
 					ref_ = dw;
 					handle_ = dw;
 					size_.width = width;

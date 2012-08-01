@@ -12,7 +12,7 @@
 #ifndef NANA_SYSTEM_SHARED_WRAPPER_HPP
 #define NANA_SYSTEM_SHARED_WRAPPER_HPP
 
-#include "../macros.hpp"
+#include "../deploy.hpp"
 #include "../traits.hpp"
 #include "../exceptions.hpp"
 

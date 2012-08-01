@@ -15,8 +15,7 @@
 #ifndef NANA_DETAIL_PLATFORM_SPEC_HPP
 #define NANA_DETAIL_PLATFORM_SPEC_HPP
 
-#include <nana/config.hpp>
-#include <nana/macros.hpp>
+#include <nana/deploy.hpp>
 #include <nana/gui/basis.hpp>
 #include <nana/paint/image.hpp>
 #include <nana/refer.hpp>

@@ -145,7 +145,7 @@ namespace nana{ namespace gui{
 							str += monthstr_[chmonth_.month - 1];
 							str += STR("  ");
 						}
-						str += nana::stringset_cast(ss.str());
+						str += nana::charset(ss.str());
 
 						nana::size txt_s = graph.text_extent_size(str);
 
@@ -230,7 +230,7 @@ namespace nana{ namespace gui{
 				{
 					std::stringstream ss;
 					ss<<number;
-					_m_draw_pos(dbasis, graph, x, y, nana::stringset_cast(ss.str()), primary, sel);
+					_m_draw_pos(dbasis, graph, x, y, nana::charset(ss.str()), primary, sel);
 				}
 
 				void trigger::_m_draw_ex_days(trigger::drawing_basis & dbasis, trigger::graph_reference graph, int begx, int begy, bool before)

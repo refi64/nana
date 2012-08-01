@@ -12,7 +12,6 @@
 #ifndef NANA_GUI_DETAIL_NATIVE_WINDOW_INTERFACE_HPP
 #define NANA_GUI_DETAIL_NATIVE_WINDOW_INTERFACE_HPP
 
-#include <nana/macros.hpp>
 #include "../basis.hpp"
 #include <nana/paint/image.hpp>
 

@@ -24,25 +24,6 @@ namespace detail
 {
 	namespace inner_event_manager
 	{
-		//struct inner_handler_invoker
-		//@brief: The definition of struct inner_handler_invoker
-		struct inner_handler_invoker
-		{
-		public:
-			inner_handler_invoker(event_manager::handle_manager_type& mgr, const eventinfo& ei)
-				:ei_(ei), mgr_(mgr)
-			{}
-
-			void operator()(abstract_handler* abs_handler)
-			{
-				if(mgr_.available(abs_handler))
-					abs_handler->exec(ei_);
-			}
-		private:
-			const eventinfo& ei_;
-			event_manager::handle_manager_type& mgr_;
-		};
-
 		struct handler_queue
 		{
 			handler_queue()
@@ -63,17 +44,9 @@ namespace detail
 			template<typename Container>
 			void copy(Container& container)
 			{
-				typename Container::iterator iter = container.begin();
 				std::size_t size = container.size();
-				abstract_handler * *i = queue_ + size_;
-				abstract_handler * * const end = i + size;
-				allocate(size);
-				while(i < end)
-					*i++ = *iter++;
-			}
 
-			void allocate(std::size_t size)
-			{
+				//Firstly check whether the capacity is enough for the size
 				if(capacity_ - size_ < size)
 				{
 					capacity_ = size_ + size;
@@ -83,13 +56,23 @@ namespace detail
 						delete [] queue_;
 					queue_ = newbuf;
 				}
+
+				typename Container::iterator iter = container.begin();
+				abstract_handler * *i = queue_ + size_;
+				abstract_handler * * const end = i + size;
+				while(i < end)
+					*i++ = *iter++;
+
 				size_ += size;
 			}
 
 			void invoke(event_manager::handle_manager_type& handle_manager, const eventinfo& ei)
 			{
-				if(size_ != 0)
-					std::for_each(queue_, queue_ + size_, inner_handler_invoker(handle_manager, ei));
+				for(abstract_handler ** i = queue_, ** end = queue_ + size_; i != end; ++i)
+				{
+					if(handle_manager.available(*i))
+						(*i)->exec(ei);
+				}
 			}
 			std::size_t size() const {return size_;}
 		private:

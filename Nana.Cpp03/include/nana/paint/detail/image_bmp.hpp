@@ -67,9 +67,7 @@ namespace nana{	namespace paint
 				if(filename == 0) return false;
 				std::ifstream ifs;
 #if defined(NANA_UNICODE)
-				std::string mbstr;
-				nana::stringset_cast(mbstr, filename);
-				ifs.open(mbstr.c_str(), std::ios::binary);
+				ifs.open(static_cast<std::string>(nana::charset(filename)).c_str(), std::ios::binary);
 #else
 				ifs.open(filename, std::ios::binary);
 #endif

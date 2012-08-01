@@ -1,21 +1,21 @@
 /*
- *	Marco Implementation
+ *	The Deploy Implementation
  *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Nana Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
  *	http://stdex.sourceforge.net/LICENSE_1_0.txt)
  *
- *	@file: nana/marcos.hpp
+ *	@file: nana/deploy.hpp
  *
  *	What follow are dependented on what defined in nana/config.hpp
  */
 
-#ifndef NANA_MACROS_HPP
-#define NANA_MACROS_HPP
+#ifndef NANA_DEPLOY_HPP
+#define NANA_DEPLOY_HPP
 
-#include "config.hpp"
-
+#include <nana/config.hpp>
+#include <nana/charset.hpp>
 #if defined(NANA_LINUX)
 #undef NANA_WINDOWS
 #endif
@@ -38,7 +38,7 @@
 		typedef wchar_t			char_t;
 		typedef std::wstring	string;
 	}
-	#define STR(string) L##string
+	#define STR(string)	L##string
 #endif
 
 #if defined(NANA_CONCURRENT)
@@ -76,21 +76,10 @@ namespace nana
 
 namespace nana
 {
-	nana::string stringset_cast(const std::wstring& text);
-	nana::string stringset_cast(const std::string& text);
-	
-	void stringset_cast(std::string& to, const nana::string& from);
-	void stringset_cast(std::wstring& to, const nana::string& from);
 	bool is_incomplete(const nana::string& str, unsigned pos);
 
 	struct state
 	{
-#if defined(NANA_CONCURRENT)
-		static const bool concurrent = true;
-#else
-		static const bool concurrent = false;
-#endif
-
 #if defined(NANA_UNICODE)
 		static const bool unicode = true;
 #else

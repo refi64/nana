@@ -247,7 +247,7 @@ namespace detail
 	};
 
 	drawable_impl_type::drawable_impl_type()
-		:	background_(0xFFFFFFFF)
+		:	fgcolor_(0xFFFFFFFF)
 	{
 		string.tab_length = 4;
 		string.tab_pixels = 0;
@@ -266,22 +266,6 @@ namespace detail
 #endif
 	}
 
-	void drawable_impl_type::set_background(Display* display, unsigned color)
-	{
-		if(color != background_)
-		{
-			platform_scope_guard psg;
-			background_ = color;
-			::XSetBackground(nana::detail::platform_spec::instance().open_display(), context, color);
-#if defined(NANA_UNICODE)
-			xft_bgcolor.color.red = ((0xFF0000 & color) >> 16) * 0x101;
-			xft_bgcolor.color.green = ((0xFF00 & color) >> 8) * 0x101;
-			xft_bgcolor.color.blue = (0xFF & color) * 0x101;
-			xft_bgcolor.color.alpha = 0xFFFF;
-#endif
-		}
-	}
-
 	void drawable_impl_type::fgcolor(unsigned color)
 	{
 		if(color != fgcolor_)
@@ -297,22 +281,6 @@ namespace detail
 			xft_fgcolor.color.alpha = 0xFFFF;
 #endif
 		}
-	}
-
-	void drawable_impl_type::fgcolor_reset()
-	{
-			platform_scope_guard psg;
-			fgcolor_ = 0;
-			Display * disp = detail::platform_spec::instance().open_display();
-			::XSetForeground(disp, context, 0);
-			::XSetBackground(disp, context, 0);
-#if defined(NANA_UNICODE)
-			xft_fgcolor.color.red = 0;
-			xft_fgcolor.color.green = 0;
-			xft_fgcolor.color.blue = 0;
-			xft_fgcolor.color.alpha = 0;
-#endif
-
 	}
 
 	//struct font_tag::deleter
@@ -456,9 +424,7 @@ namespace detail
 		if(0 == name || *name == 0)
 			name = STR("*");
 		
-		std::string nmstr;
-		nana::stringset_cast(nmstr, name);
-
+		std::string nmstr = nana::charset(name);
 		XftFont* handle = 0;
 		std::stringstream ss;
 		ss<<nmstr<<"-"<<(height ? height : 10);
@@ -1133,7 +1099,7 @@ namespace detail
 								if(0 == file.find("file://"))
 									file = file.substr(7);
 
-								files->push_back(nana::stringset_cast(file));
+								files->push_back(nana::charset(file));
 							}
 							if(files->size())
 							{

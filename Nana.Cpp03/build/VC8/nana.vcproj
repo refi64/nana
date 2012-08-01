@@ -160,15 +160,19 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\source\charset.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\source\datetime.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\source\exceptions.cpp"
+					RelativePath="..\..\source\deploy.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\source\macros.cpp"
+					RelativePath="..\..\source\exceptions.cpp"
 					>
 				</File>
 				<File

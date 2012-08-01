@@ -23,7 +23,6 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/Xos.h>
-#include <nana/deploy.hpp>
 #include <nana/gui/basis.hpp>
 #include <nana/refer.hpp>
 #include <nana/paint/image.hpp>
@@ -92,7 +91,6 @@ namespace detail
 		drawable_impl_type();
 		~drawable_impl_type();
 
-		void set_background(Display*, unsigned color);
 		void fgcolor(unsigned color);
 		void fgcolor_reset();
 
@@ -113,7 +111,6 @@ namespace detail
 		const std::string charset(const nana::string& str, const std::string& strcode);
 #endif
 	private:
-		unsigned background_;
 		unsigned fgcolor_;
 #if defined(NANA_UNICODE)
 		struct conv_tag

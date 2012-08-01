@@ -250,7 +250,7 @@ namespace detail
 	};
 
 	drawable_impl_type::drawable_impl_type()
-		:	bgcolor_(0xFFFFFFFF), fgcolor_(0xFFFFFFFF)
+		: fgcolor_(0xFFFFFFFF)
 	{
 		string.tab_length = 4;
 		string.tab_pixels = 0;
@@ -268,33 +268,21 @@ namespace detail
 #endif
 	}
 
-	void drawable_impl_type::bgcolor(nana::color_t color)
-	{
-		if(color != bgcolor_)
-		{
-			platform_scope_guard psg;
-			bgcolor_ = color;
-			::XSetBackground(nana::detail::platform_spec::instance().open_display(), context, color);
-			xft_bgcolor.color.red = ((0xFF0000 & color) >> 16) * 0x101;
-			xft_bgcolor.color.green = ((0xFF00 & color) >> 8) * 0x101;
-			xft_bgcolor.color.blue = (0xFF & color) * 0x101;
-			xft_bgcolor.color.alpha = 0xFFFF;
-		}
-	}
-
 	void drawable_impl_type::fgcolor(nana::color_t color)
 	{
 		if(color != fgcolor_)
 		{
+			Display * disp = nana::detail::platform_spec::instance().open_display();
 			platform_scope_guard psg;
 			fgcolor_ = color;
-			::XSetForeground(nana::detail::platform_spec::instance().open_display(), context, color);
-			::XSetBackground(nana::detail::platform_spec::instance().open_display(), context, color);
-
+			::XSetForeground(disp, context, color);
+			::XSetBackground(disp, context, color);
+#if defined(NANA_UNICODE)
 			xft_fgcolor.color.red = ((0xFF0000 & color) >> 16) * 0x101;
 			xft_fgcolor.color.green = ((0xFF00 & color) >> 8) * 0x101;
 			xft_fgcolor.color.blue = (0xFF & color) * 0x101;
 			xft_fgcolor.color.alpha = 0xFFFF;
+#endif
 		}
 	}
 
@@ -347,8 +335,6 @@ namespace detail
 		if(0 == langstr)
 		{
 			langstr = getenv("LC_ALL");
-		//	if(0 == langstr)
-		//		langstr = getenv("LANG");
 		}
 
 		std::string langstr_dup;
@@ -439,8 +425,7 @@ namespace detail
 		if(0 == name || *name == 0)
 			name = STR("*");
 
-		std::string nmstr;
-		nana::stringset_cast(nmstr, name);
+		std::string nmstr = nana::charset(name);
 
 		XftFont* handle = 0;
 		std::stringstream ss;
@@ -1106,7 +1091,7 @@ namespace detail
 								if(0 == file.find("file://"))
 									file = file.substr(7);
 
-								files->push_back(nana::stringset_cast(file));
+								files->push_back(static_cast<nana::string>(nana::charset(file)));
 							}
 							if(files->size())
 							{

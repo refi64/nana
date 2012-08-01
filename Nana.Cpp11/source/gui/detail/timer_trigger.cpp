@@ -66,14 +66,13 @@ namespace detail
 			timer_handle* ptr = _m_find_by_timer_object(timer);
 			if(ptr)
 			{
-				timer_handle handle = *ptr;
 #if defined(NANA_WINDOWS)
-				::KillTimer(0, UINT_PTR(handle));
+				::KillTimer(0, UINT_PTR(*ptr));
 #elif defined(NANA_LINUX)
-				nana::detail::platform_spec::instance().kill_timer(reinterpret_cast<int>(handle));
+				nana::detail::platform_spec::instance().kill_timer(reinterpret_cast<int>(*ptr));
 #endif
 				holder_timer_.erase(timer);
-				holder_handle_.erase(handle);
+				holder_handle_.erase(*ptr);
 			}
 		}
 
@@ -102,8 +101,10 @@ namespace detail
 		{
 			nana::gui::eventinfo ei;
 			ei.elapse.timer = object;
-			nana::gui::detail::bedrock& bedrock = nana::gui::detail::bedrock::instance();
-			bedrock.evt_manager.answer(detail::event_tag::elapse, reinterpret_cast<nana::gui::window>(object), ei, event_manager::event_kind::user);
+			nana::gui::detail::bedrock::instance().evt_manager.answer(
+				detail::event_tag::elapse,
+				reinterpret_cast<nana::gui::window>(object), ei,
+				event_manager::event_kind::user);
 		}
 
 		timer_trigger::timer_handle* timer_trigger::_m_find_by_timer_object(timer_trigger::timer_object t)

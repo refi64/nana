@@ -14,8 +14,8 @@
 #ifndef NANA_DEPLOY_HPP
 #define NANA_DEPLOY_HPP
 
-#include "config.hpp"
-
+#include <nana/config.hpp>
+#include <nana/charset.hpp>
 #if defined(NANA_LINUX)
 #undef NANA_WINDOWS
 #endif
@@ -27,8 +27,7 @@
 		typedef char		char_t;
 		typedef std::string string;
 	}
-
-	#define STR(string)	string
+	#define STR(string) string
 #else
 	#ifndef UNICODE
 		#define UNICODE
@@ -55,11 +54,6 @@ namespace nana
 
 namespace nana
 {
-	nana::string stringset_cast(const std::wstring& text);
-	nana::string stringset_cast(const std::string& text);
-	
-	void stringset_cast(std::string& to, const nana::string& from);
-	void stringset_cast(std::wstring& to, const nana::string& from);
 	bool is_incomplete(const nana::string& str, unsigned pos);
 
 	struct state

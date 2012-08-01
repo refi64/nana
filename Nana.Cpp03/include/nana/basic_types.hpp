@@ -12,7 +12,7 @@
 #ifndef NANA_BASIC_TYPES_HPP
 #define NANA_BASIC_TYPES_HPP
 
-#include "macros.hpp"
+#include "deploy.hpp"
 
 namespace nana
 {

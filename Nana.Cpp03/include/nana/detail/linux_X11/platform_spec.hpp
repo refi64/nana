@@ -19,8 +19,6 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/Xos.h>
-#include <nana/config.hpp>
-#include <nana/macros.hpp>
 #include <nana/gui/basis.hpp>
 #include <nana/refer.hpp>
 #include <nana/threads/thread.hpp>
@@ -91,7 +89,6 @@ namespace detail
 		~drawable_impl_type();
 
 		void fgcolor(nana::color_t);
-		void bgcolor(nana::color_t);
 
 		Pixmap	pixmap;
 		GC	context;
@@ -110,7 +107,6 @@ namespace detail
 		const std::string charset(const nana::string& str, const std::string& strcode);
 #endif
 	private:
-		unsigned bgcolor_;
 		unsigned fgcolor_;
 #if defined(NANA_UNICODE)
 		struct conv_tag

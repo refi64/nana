@@ -201,9 +201,6 @@
     <ClCompile Include="..\..\source\exceptions.cpp">
       <Filter>Source Files\nana</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\macros.cpp">
-      <Filter>Source Files\nana</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\traits.cpp">
       <Filter>Source Files\nana</Filter>
     </ClCompile>
@@ -263,6 +260,12 @@
     </ClCompile>
     <ClCompile Include="..\..\source\gui\detail\win32\bedrock.cpp">
       <Filter>Source Files\nana\gui\detail\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\charset.cpp">
+      <Filter>Source Files\nana</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\deploy.cpp">
+      <Filter>Source Files\nana</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

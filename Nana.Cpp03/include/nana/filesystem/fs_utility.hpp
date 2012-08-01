@@ -2,8 +2,8 @@
 #ifndef NANA_FILESYSTEM_FS_UTILITY_HPP
 #define NANA_FILESYSTEM_FS_UTILITY_HPP
 
-#include "../config.hpp"
-#include "../macros.hpp"
+#include <nana/deploy.hpp>
+
 namespace nana
 {
 namespace filesystem

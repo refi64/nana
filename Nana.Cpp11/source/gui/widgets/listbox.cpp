@@ -1948,7 +1948,7 @@ namespace nana{ namespace gui{
 
 					std::stringstream ss;
 					ss<<'('<<static_cast<unsigned>(categ.items.size())<<')';
-					nana::string str = nana::stringset_cast(ss.str());
+					nana::string str = nana::charset(ss.str());
 
 					unsigned str_w = essence_->graph->text_extent_size(str).width;
 

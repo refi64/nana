@@ -19,12 +19,12 @@ namespace nana{ namespace gui{
 		//class trigger
 			trigger::trigger():graph_(nullptr){}
 
-			void trigger::bind_window(nana::gui::widget& widget)
+			void trigger::bind_window(widget_reference widget)
 			{
 				widget_ = & widget;
 			}
 
-			void trigger::attached(nana::paint::graphics& graph)
+			void trigger::attached(graph_reference graph)
 			{
 				graph_ = &graph;
 				event_size_ = API::dev::make_drawer_event<events::size>(widget_->handle());
@@ -35,12 +35,12 @@ namespace nana{ namespace gui{
 				API::umake_event(widget_->handle());
 			}
 
-			void trigger::refresh(nana::paint::graphics& graph)
+			void trigger::refresh(graph_reference graph)
 			{
 				graph.rectangle(API::background(widget_->handle()), true);
 			}
 
-			void trigger::resize(nana::paint::graphics& graph, const nana::gui::eventinfo& ei)
+			void trigger::resize(graph_reference graph, const nana::gui::eventinfo& ei)
 			{
 				graph.rectangle(0, 0, ei.size.width, ei.size.height, API::background(widget_->handle()), true);
 				API::lazy_refresh();

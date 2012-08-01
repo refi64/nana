@@ -2,7 +2,7 @@
 #define NANA_DETAIL_MSG_PACKET_HPP
 #include <X11/Xlib.h>
 #include <vector>
-#include <nana/macros.hpp>
+#include <nana/deploy.hpp>
 
 namespace nana
 {

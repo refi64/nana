@@ -14,7 +14,6 @@
 
 #include <vector>
 #include <map>
-#include <nana/deploy.hpp>
 #include "../basis.hpp"
 #include "eventinfo.hpp"
 #include "handle_manager.hpp"

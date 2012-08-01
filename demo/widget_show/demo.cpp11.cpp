@@ -159,7 +159,7 @@ namespace demo
 			gird * gdcontext = gird_.add(10, 0);
 			gird * gdbox = gdcontext->push(0, 0);
 			const nana::string str[6] = {
-					STR("Airbus"), STR("§¡§ß§ä§à§ß§à§Ó"),
+					STR("Airbus"), STR("AHTOHOB"),
 					STR("Boeing"), STR("Bombardier"),
 					STR("Cessna"), STR("EMBRAER")};
 					
@@ -282,7 +282,7 @@ namespace demo
 #if defined(NANA_WINDOWS)
 			ptr->icon(STR("image.ico"));
 #else
-			ptr->icom(STR("image.bmp"));
+			ptr->icon(STR("image.bmp"));
 #endif
 			ptr->caption(STR("Button with An Image"));
 

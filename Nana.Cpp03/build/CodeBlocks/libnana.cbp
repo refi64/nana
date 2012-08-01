@@ -36,7 +36,9 @@
 		</Build>
 		<Unit filename="..\..\source\any.cpp" />
 		<Unit filename="..\..\source\basic_types.cpp" />
+		<Unit filename="..\..\source\charset.cpp" />
 		<Unit filename="..\..\source\datetime.cpp" />
+		<Unit filename="..\..\source\deploy.cpp" />
 		<Unit filename="..\..\source\detail\win32\platform_spec.cpp" />
 		<Unit filename="..\..\source\exceptions.cpp" />
 		<Unit filename="..\..\source\filesystem\file_iterator.cpp" />
@@ -85,7 +87,6 @@
 		<Unit filename="..\..\source\gui\widgets\treebox.cpp" />
 		<Unit filename="..\..\source\gui\widgets\widget.cpp" />
 		<Unit filename="..\..\source\gui\wvl.cpp" />
-		<Unit filename="..\..\source\macros.cpp" />
 		<Unit filename="..\..\source\paint\detail\image_process_provider.cpp" />
 		<Unit filename="..\..\source\paint\detail\native_paint_interface.cpp" />
 		<Unit filename="..\..\source\paint\gadget.cpp" />

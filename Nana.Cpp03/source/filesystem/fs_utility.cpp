@@ -45,8 +45,8 @@ namespace filesystem
 			:text_(text)
 		{
 #else
+			:text_(nana::charset(text))
 		{
-			nana::stringset_cast(text_, text);
 #endif
 			string_t::size_type pos = text_.find_last_of(splstr);
 			for(; pos != string_t::npos && (pos + 1 == text_.size()); pos = text_.find_last_of(splstr))
@@ -68,7 +68,7 @@ namespace filesystem
 		#if defined(NANA_WINDOWS)
 			return path(filesystem::root(text_));
 		#elif defined(NANA_LINUX)
-			return path(filesystem::root(nana::stringset_cast(text_)));
+			return path(filesystem::root(nana::charset(text_)));
 		#endif
 		}
 
@@ -104,7 +104,7 @@ namespace filesystem
 #if defined(NANA_WINDOWS)
 			return text_.substr(pos + 1);
 #else
-			return nana::stringset_cast(text_.substr(pos + 1));
+			return nana::charset(text_.substr(pos + 1));
 #endif
 		}
 	//private:
@@ -159,9 +159,7 @@ namespace filesystem
 		}
 		return 0;
 #elif defined(NANA_LINUX)
-		std::string mbstr;
-		nana::stringset_cast(mbstr, file);
-		FILE * stream = ::fopen(mbstr.c_str(), "rb");
+		FILE * stream = ::fopen(static_cast<std::string>(nana::charset(file)).c_str(), "rb");
 		long long size = 0;
 		if(stream)
 		{
@@ -186,9 +184,7 @@ namespace filesystem
 
 		return ret;
 #elif defined(NANA_LINUX)
-		std::string mbstr;
-		nana::stringset_cast(mbstr, file);
-		if(std::remove(mbstr.c_str()))
+		if(std::remove(static_cast<std::string>(nana::charset(file)).c_str()))
 			return (errno == ENOENT);
 		return true;
 #endif
@@ -204,9 +200,7 @@ namespace filesystem
 			if(!fails_if_not_empty && (::GetLastError() == ERROR_DIR_NOT_EMPTY))
 				ret = detail::rm_dir_recursive(dir);
 #elif defined(NANA_LINUX)
-			std::string mbstr;
-			nana::stringset_cast(mbstr, dir);
-			if(::rmdir(mbstr.c_str()))
+			if(::rmdir(static_cast<std::string>(nana::charset(dir)).c_str()))
 			{
 				if(!fails_if_not_empty && (errno == EEXIST || errno == ENOTEMPTY))
 					ret = detail::rm_dir_recursive(dir);

@@ -160,7 +160,7 @@ namespace detail
 
 		bool window_manager::is_queue(core_window_t* wd)
 		{
-			return (wd && wd->other.category == category::root_tag::value);
+			return (wd && (wd->other.category == category::root_tag::value));
 		}
 
 		std::size_t window_manager::number_of_core_window() const
@@ -760,10 +760,10 @@ namespace detail
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-			//It's not worthy to redraw if visible is false
 			if(handle_manager_.available(wd) == false)
 				return;
 
+			//It's not worthy to redraw if visible is false
 			if(wd->visible)
 			{
 				core_window_t* parent = wd->parent;
@@ -936,16 +936,16 @@ namespace detail
 			return prev_focus;
 		}
 
-		window_manager::core_window_t* window_manager::capture_redirect(core_window_t* msgwnd)
+		window_manager::core_window_t* window_manager::capture_redirect(core_window_t* wd)
 		{
-			if(attr_.capture.window && (attr_.capture.ignore_children == false) && (attr_.capture.window != msgwnd))
+			if(attr_.capture.window && (attr_.capture.ignore_children == false) && (attr_.capture.window != wd))
 			{
-				//Tests if the msgwnd is a child of captured window,
-				//and returns the msgwnd if it is.
-				for(core_window_t * child = msgwnd; child; child = child->parent)
+				//Tests if the wd is a child of captured window,
+				//and returns the wd if it is.
+				for(core_window_t * child = wd; child; child = child->parent)
 				{
 					if(child->parent == attr_.capture.window)
-						return msgwnd;
+						return wd;
 				}
 			}
 			return attr_.capture.window;
@@ -1039,7 +1039,6 @@ namespace detail
 
 				if(i != attr_.capture.history.end())
 					attr_.capture.history.erase(i);
-
 				wd = attr_.capture.window;
 			}
 			return wd;
@@ -1100,17 +1099,15 @@ namespace detail
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 			if(handle_manager_.available(wd) == false)	return nullptr;
 
-			core_window_t * root_wd = wd->root_widget;
+			auto root_attr = wd->root_widget->other.attribute.root;
 			if(nana::gui::detail::tab_type::none == wd->flags.tab)
 			{
-				if(root_wd->other.attribute.root->tabstop.size())
-					return (root_wd->other.attribute.root->tabstop[0]);
+				if(root_attr->tabstop.size())
+					return (root_attr->tabstop[0]);
 			}
 			else if(nana::gui::detail::tab_type::tabstop & wd->flags.tab)
 			{
-				typedef core_window_t::tabstop_container_type tabstop_cont_t;
-
-				tabstop_cont_t & container = root_wd->other.attribute.root->tabstop;
+				auto & container = root_attr->tabstop;
 				if(container.size())
 				{
 					auto end = container.end();
@@ -1247,12 +1244,12 @@ namespace detail
 			ei.window = reinterpret_cast<nana::gui::window>(wd);
 			bedrock::raise_event(event_tag::destroy, wd, ei, true);
 
-			core_window_t * root_wd = wd->root_widget;
-			if(root_wd->other.attribute.root->focus == wd)
-				root_wd->other.attribute.root->focus = 0;
+			auto * root_attr = wd->root_widget->other.attribute.root;
+			if(root_attr->focus == wd)
+				root_attr->focus = 0;
 
-			if(root_wd->other.attribute.root->menubar == wd)
-				root_wd->other.attribute.root->menubar = 0;
+			if(root_attr->menubar == wd)
+				root_attr->menubar = 0;
 
 			if(wd->flags.glass)
 				wndlayout_type::glass_window(wd, false);
@@ -1260,7 +1257,7 @@ namespace detail
 			//test if wd is a TABSTOP window
 			if(wd->flags.tab & nana::gui::detail::tab_type::tabstop)
 			{
-				auto & tabstop = root_wd->other.attribute.root->tabstop;
+				auto & tabstop = root_attr->tabstop;
 				auto i = std::find(tabstop.begin(), tabstop.end(), wd);
 				if(i != tabstop.end())
 					tabstop.erase(i);
@@ -1268,7 +1265,7 @@ namespace detail
 
 			if(wd->effect.edge_nimbus)
 			{
-				auto & container = root_wd->other.attribute.root->effects_edge_nimbus;
+				auto & container = root_attr->effects_edge_nimbus;
 				for(auto i = container.begin(); i != container.end(); ++i)
 				{
 					if(i->window == wd)
@@ -1301,7 +1298,7 @@ namespace detail
 			{
 				//remove the frame handle from the WM frames manager.
 				{
-					std::vector<core_window_t*> & frames = root_wd->other.attribute.root->frames;
+					std::vector<core_window_t*> & frames = root_attr->frames;
 					auto i = std::find(frames.begin(), frames.end(), wd);
 					if(i != frames.end())
 						frames.erase(i);

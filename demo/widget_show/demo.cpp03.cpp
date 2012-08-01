@@ -1,12 +1,13 @@
 /*
  *	This is a demo of Nana C++ Library
  *	Author: Jinhao
- *	The demo requires Nana 0.2.5 and C++11 compiler
+ *	The demo requires Nana 0.2.5 and C++03 compiler
  *	Screenshot at http://sourceforge.net/projects/stdex
  */
 #include <nana/gui/wvl.hpp>
 #include <nana/gui/layout.hpp>
 #include <nana/gui/widgets/button.hpp>
+#include <nana/gui/widgets/categorize.hpp>
 #include <nana/gui/widgets/combox.hpp>
 #include <nana/gui/widgets/label.hpp>
 #include <nana/gui/widgets/progress.hpp>
@@ -160,7 +161,7 @@ namespace demo
 			gird * gdcontext = gird_.add(10, 0);
 			gird * gdbox = gdcontext->push(0, 0);
 			const nana::string str[6] = {
-					STR("Airbus"), STR("§¡§ß§ä§à§ß§à§Ó"),
+					STR("Airbus"), STR("AHTOHOB"),
 					STR("Boeing"), STR("Bombardier"),
 					STR("Cessna"), STR("EMBRAER")};
 					
@@ -185,7 +186,7 @@ namespace demo
 			gdcontext->push(categorize_, 10, 22);
 			gdcontext->push(0, 10);
 
-			std::map<nana::string, std::vector<nana::string>> map;
+			std::map<nana::string, std::vector<nana::string> > map;
 			std::vector<nana::string>* p = &(map[str[0]]);
 			p->push_back(STR("320"));
 			p->push_back(STR("330"));
@@ -226,7 +227,7 @@ namespace demo
 			nana::string str = box_[index].caption();
 
 			label_.caption(STR("You have selected ") + str);
-			categorize_.caption(STR("Manufacturer\\" + str));		
+			categorize_.caption(STR("Manufacturer\\") + str);		
 		}
 	private:
 		gird gird_;

@@ -13,8 +13,6 @@
 #ifndef NANA_GUI_DETAIL_WINDOW_LAYOUT_HPP
 #define NANA_GUI_DETAIL_WINDOW_LAYOUT_HPP
 
-
-#include <nana/macros.hpp>
 #include <nana/gui/basis.hpp>
 
 #include "native_window_interface.hpp"

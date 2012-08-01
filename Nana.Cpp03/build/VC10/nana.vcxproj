@@ -152,7 +152,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\source\any.cpp" />
     <ClCompile Include="..\..\source\basic_types.cpp" />
+    <ClCompile Include="..\..\source\charset.cpp" />
     <ClCompile Include="..\..\source\datetime.cpp" />
+    <ClCompile Include="..\..\source\deploy.cpp" />
     <ClCompile Include="..\..\source\detail\win32\platform_spec.cpp" />
     <ClCompile Include="..\..\source\exceptions.cpp" />
     <ClCompile Include="..\..\source\filesystem\file_iterator.cpp" />
@@ -201,7 +203,6 @@
     <ClCompile Include="..\..\source\gui\widgets\treebox.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\widget.cpp" />
     <ClCompile Include="..\..\source\gui\wvl.cpp" />
-    <ClCompile Include="..\..\source\macros.cpp" />
     <ClCompile Include="..\..\source\paint\detail\image_process_provider.cpp" />
     <ClCompile Include="..\..\source\paint\detail\native_paint_interface.cpp" />
     <ClCompile Include="..\..\source\paint\gadget.cpp" />

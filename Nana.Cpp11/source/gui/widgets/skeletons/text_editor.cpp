@@ -170,10 +170,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 		bool text_editor::mouse_move(bool left_button, int screen_x, int screen_y)
 		{
-			if(false == hit_text_area(screen_x, screen_y))
-				text_area_.cursor.load(text_area_.captured ? cursor::predef::iterm : cursor::predef::arrow);
-			else
-				text_area_.cursor.load(cursor::predef::iterm);
+			text_area_.cursor.load((hit_text_area(screen_x, screen_y) || text_area_.captured) ? cursor::predef::iterm : cursor::predef::arrow);
 
 			if(left_button)
 			{
@@ -470,11 +467,6 @@ namespace nana{	namespace gui{	namespace widgets
 			if((false == textbase_.empty()) || has_focus)
 			{
 				const unsigned line_hg = this->line_height();
-
-				nana::upoint a, b;
-				_m_get_sort_select_points(a, b);
-				//unsigned whitespace_w = graph_.text_extent_size(STR(" ")).width;
-
 				for(unsigned ln = points_.offset.y; ln < textbase_.lines(); ++ln, y += line_hg)
 				{
 					_m_draw_string(y, fgcolor, ln, true);
@@ -814,7 +806,7 @@ namespace nana{	namespace gui{	namespace widgets
 			}
 			else if(attributes_.hscroll && (vertical == false))
 			{
-				if(attributes_.hscroll->value() != points_.offset.x)
+				if(static_cast<int>(attributes_.hscroll->value()) != points_.offset.x)
 				{
 					points_.offset.x = static_cast<int>(attributes_.hscroll->value());
 					return true;
@@ -825,7 +817,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::_m_on_scroll(const nana::gui::eventinfo& ei)
 		{
-			if(nana::gui::events::mouse_move::identifier == ei.identifier && (ei.mouse.left_button == false))
+			if((events::mouse_move::identifier == ei.identifier) && (ei.mouse.left_button == false))
 				return;
 
 			bool vertical;
@@ -1183,35 +1175,6 @@ namespace nana{	namespace gui{	namespace widgets
 			return false;
 		}
 
-		//_m_move_offset_y_while_over_border
-		//@brief: Move the view window
-		bool text_editor::_m_move_offset_y_while_over_border(int many)
-		{
-			unsigned lines = this->screen_lines();
-
-			if(many < 0)
-			{
-				many = -many;
-				if(points_.caret.y)
-				{
-					if(points_.caret.y > static_cast<unsigned>(many))
-						_m_offset_y(points_.offset.y - many);
-					else
-						_m_offset_y(0);
-					return true;
-				}
-			}
-			else if(many)
-			{
-				if(points_.caret.y >= points_.offset.y + lines)
-				{
-					points_.offset.y += points_.caret.y - lines;
-					return true;
-				}
-			}
-			return false;
-		}
-
 		//_m_endx
 		//@brief: Get the right point of text area
 		int text_editor::_m_endx() const
@@ -1279,13 +1242,12 @@ namespace nana{	namespace gui{	namespace widgets
 
 					if((x + static_cast<int>(str_w) > text_area_.area.x) && (x < xend))
 					{
+						nana::color_t txt_color = 0xFFFFFF;
 						if(selected)
-						{
 							graph_.rectangle(x, top, str_w, line_h_pixels, 0x3399FF, true);
-							graph_.string(x, top, 0xFFFFFF, i->begin, len);
-						}
 						else
-							graph_.string(x, top, color, i->begin, len);
+							txt_color = color;
+						graph_.string(x, top, txt_color, i->begin, len);
 					}
 					x += static_cast<int>(str_w);
 				}
@@ -1390,10 +1352,12 @@ namespace nana{	namespace gui{	namespace widgets
 							std::size_t pos = i->begin - strbeg;
 							if(pos + len <= a.x)
 							{
+								//Not selected
 								graph_.string(x, top, color, i->begin, len);
 							}
 							else if(a.x < pos)
 							{
+								//Whole selected
 								graph_.rectangle(x, top, str_w, line_h_pixels, 0x3399FF, true);
 								graph_.string(x, top, 0xFFFFFF, i->begin, len);
 							}
@@ -1461,7 +1425,6 @@ namespace nana{	namespace gui{	namespace widgets
 							else
 								graph_.string(x, top, color, i->begin, len);
 						}
-
 						x += static_cast<int>(str_w);
 					}
 				}
@@ -1526,10 +1489,7 @@ namespace nana{	namespace gui{	namespace widgets
 			bool adjusted = true;
 			if(static_cast<int>(text_w) < points_.offset.x)
 			{
-				if(text_w > delta_pixels)
-					points_.offset.x = text_w - delta_pixels;
-				else
-					points_.offset.x = 0;
+				points_.offset.x = (text_w > delta_pixels ? text_w - delta_pixels : 0);
 			}
 			else if(area_w && (text_w >= points_.offset.x + area_w))
 				points_.offset.x = text_w - area_w + 2;
@@ -1549,13 +1509,10 @@ namespace nana{	namespace gui{	namespace widgets
 					_m_offset_y(static_cast<int>(points_.offset.y - screen_lines));
 				adjusted = true;
 			}
-			else if(points_.offset.y)
+			else if(points_.offset.y && (textbase_.lines() <= screen_lines))
 			{
-				if(textbase_.lines() <= screen_lines)
-				{
-					_m_offset_y(0);
-					adjusted = true;
-				}
+				_m_offset_y(0);
+				adjusted = true;
 			}
 
 			_m_scrollbar();

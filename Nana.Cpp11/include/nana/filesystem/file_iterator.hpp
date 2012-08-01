@@ -118,7 +118,7 @@ namespace filesystem
 			}
 			value_ = value_type(wfd_);
 		#elif defined(NANA_LINUX)
-			nana::stringset_cast(path_, file_path);
+			path_ = nana::charset(file_path);
 			if(path_.size() && (path_[path_.size() - 1] != '/'))
 				path_ += '/';
 			find_handle_t handle = opendir(path_.c_str());
@@ -141,11 +141,11 @@ namespace filesystem
 					struct stat fst;
 					if(stat((path_ + dnt->d_name).c_str(), &fst) == 0)
 					{
-						value_ = value_type(nana::stringset_cast(dnt->d_name), fst);
+						value_ = value_type(nana::charset(dnt->d_name), fst);
 					}
 					else
 					{
-						value_.name = nana::stringset_cast(dnt->d_name);
+						value_.name = nana::charset(dnt->d_name);
 						value_.size = 0;
 						value_.directory = false;
 					}
@@ -194,9 +194,9 @@ namespace filesystem
 					}
 					struct stat fst;
 					if(stat((path_ + "/" + dnt->d_name).c_str(), &fst) == 0)
-						value_ = value_type(nana::stringset_cast(dnt->d_name), fst);
+						value_ = value_type(nana::charset(dnt->d_name), fst);
 					else
-						value_.name = nana::stringset_cast(dnt->d_name);
+						value_.name = nana::charset(dnt->d_name);
 				}
 				else
 					end_ = true;

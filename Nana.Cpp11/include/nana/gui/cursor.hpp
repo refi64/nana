@@ -11,7 +11,7 @@
 
 #ifndef NANA_GUI_CURSOR_HPP
 #define NANA_GUI_CURSOR_HPP
-#include <nana/deploy.hpp>
+
 #include <nana/gui/basis.hpp>
 
 namespace nana

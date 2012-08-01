@@ -29,9 +29,7 @@ namespace nana
 			bool open(const nana::char_t* png_file)
 			{
 #ifdef NANA_UNICODE
-				std::string mb_png_file;
-				nana::stringset_cast(mb_png_file, png_file);
-				FILE * fp = ::fopen(mb_png_file.c_str(), "rb");
+				FILE * fp = ::fopen(static_cast<std::string>(nana::charset(png_file)).c_str(), "rb");
 #else
 				FILE* fp = ::fopen(png_file, "rb");
 #endif

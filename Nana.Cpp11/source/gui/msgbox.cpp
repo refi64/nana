@@ -357,9 +357,7 @@ namespace nana
 		msgbox & msgbox::operator<<(const nana::string& str)
 		{
 #if defined(NANA_UNICODE)
-			std::string mbstr;
-			nana::stringset_cast(mbstr, str);
-			sstream_<<mbstr;
+			sstream_<<static_cast<std::string>(nana::charset(str));
 #else
 			sstream_<<str;
 #endif
@@ -369,9 +367,7 @@ namespace nana
 		msgbox & msgbox::operator<<(const nana::char_t* str)
 		{
 #if defined(NANA_UNICODE)
-			std::string mbstr;
-			nana::stringset_cast(mbstr, str);
-			sstream_<<mbstr;
+			sstream_<<static_cast<std::string>(nana::charset(str));;
 #else
 			sstream_<<str;
 #endif
@@ -418,7 +414,7 @@ namespace nana
 			}
 			
 		#if defined(NANA_UNICODE)
-			int bt = ::MessageBoxW(reinterpret_cast<HWND>(API::root(wd_)), nana::stringset_cast(sstream_.str()).c_str(), title_.c_str(), type);
+			int bt = ::MessageBoxW(reinterpret_cast<HWND>(API::root(wd_)), static_cast<std::wstring>(nana::charset(sstream_.str())).c_str(), title_.c_str(), type);
 		#else
 			int bt = ::MessageBoxA(reinterpret_cast<HWND>(API::root(wd_), sstream_.str().c_str(), title_.c_str(), type);
 		#endif
@@ -437,7 +433,7 @@ namespace nana
 			return pick_yes;
 #elif defined(NANA_X11)
 			msgbox_window box(wd_, title_, button_, icon_);
-			box.prompt(nana::stringset_cast(sstream_.str()));
+			box.prompt(nana::charset(sstream_.str()));
 			return box.pick();
 #endif
 			return pick_yes;

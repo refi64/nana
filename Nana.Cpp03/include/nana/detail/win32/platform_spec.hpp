@@ -89,7 +89,6 @@ namespace detail
 
 		HDC		context;
 		HBITMAP	pixmap;
-		unsigned text_color;
 		font_refer_t	font;
 
 		struct pen_spec
@@ -135,6 +134,8 @@ namespace detail
 		~drawable_impl_type();
 
 		void fgcolor(nana::color_t);
+	private:
+		nana::color_t fgcolor_;
 	};
 
 	class platform_spec

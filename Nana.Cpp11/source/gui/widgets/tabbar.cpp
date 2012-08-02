@@ -101,7 +101,7 @@ namespace nana{ namespace gui{
 				{
 					int x = r.x + (static_cast<int>(r.width) - 14) / 2;
 					int y = r.y + (static_cast<int>(r.height) - 14) / 2;
-					nana::color_t color = 0xF0F0F0;
+					nana::color_t color;
 
 					switch(sta)
 					{
@@ -111,6 +111,8 @@ namespace nana{ namespace gui{
 						color = 0xA0A0A0; break;
 					case item_renderer::disable:
 						color = 0x808080;
+					default:
+						color = 0xF0F0F0;
 					}
 					graph.rectangle(r, bgcolor_, true);
 					nana::paint::gadget::cross(graph, x, y, 14, 6, color);
@@ -726,6 +728,8 @@ namespace nana{ namespace gui{
 									}
 								}
 								break;
+							default:
+								break;
 							}
 						}
 					}
@@ -1103,6 +1107,8 @@ namespace nana{ namespace gui{
 							break;
 						case toolbox::ButtonAdd:
 							basis_.renderer->add(*basis_.graph, r, state);
+							break;
+						default:
 							break;
 						}
 					}

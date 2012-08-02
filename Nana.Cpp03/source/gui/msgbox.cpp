@@ -32,7 +32,7 @@ namespace nana
 				unsigned height_pixel = 110;
 
 				gird_.bind(*this);
-				gird * content_gird = gird_.push(0, 0);
+				gird_.push(0, 0);	//The area is used to place content
 				gird * button_gird = gird_.push(10, 25);
 
 				button_gird->add(0, 0);
@@ -251,7 +251,7 @@ namespace nana
 						0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xE9E9E9, 0xC7C6C6, 0xA9A8A8, 0x8F8E8E, 0x7C7B7B, 0x6F6E6E, 0x6F6E6E, 0x7C7B7B, 0x8F8E8E, 0xA9A8A8, 0xC7C6C6, 0xE9E9E9, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 
 					};
 
-					const unsigned * rawpx = 0;
+					const unsigned * rawpx;
 					switch(ico)
 					{
 					case msgbox::icon_information:
@@ -266,6 +266,8 @@ namespace nana
 					case msgbox::icon_question:
 						rawpx = pic_question;
 						break;
+					default:
+						rawpx = 0;
 					}
 					if(rawpx)
 					{

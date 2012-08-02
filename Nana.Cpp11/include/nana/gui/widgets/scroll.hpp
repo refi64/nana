@@ -248,6 +248,8 @@ namespace nana{ namespace gui{
 						case buttons::backward:
 							drawer_.auto_scroll();
 							break;
+						default:	//Ignore buttons::none
+							break;
 						}
 						drawer_.draw(graph, metrics_.what);
 						API::lazy_refresh();

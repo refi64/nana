@@ -131,10 +131,9 @@ namespace nana{	namespace paint
 		XImage * image = ::XGetImage(spec.open_display(), drawable->pixmap, r.x, r.y, r.width, r.height, AllPlanes, ZPixmap);
 		storage_ref_ = new pixel_buffer_storage(want_r.width, want_r.height);
 		pixel_rgb_t * pixbuf = storage_ref_.handle()->raw_pixel_buffer;
-		unsigned pixbuf_width = storage_ref_.handle()->pixel_size.width;
 		if(image->depth == 32 || (image->depth == 24 && image->bitmap_pad == 32))
 		{
-			if(want_r.width != image->width || want_r.height != image->height)
+			if(want_r.width != static_cast<unsigned>(image->width) || want_r.height != static_cast<unsigned>(image->height))
 			{
 				pixbuf += (r.x - want_r.x);
 				pixbuf += (r.y - want_r.y) * want_r.width;

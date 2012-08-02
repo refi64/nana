@@ -33,9 +33,9 @@ namespace detail
 {
 
 #if defined(NANA_WINDOWS)
-	void __stdcall TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+	void __stdcall timer_trigger_proc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 #elif defined(NANA_LINUX)
-	void timer_proc(int id);
+	void timer_trigger_proc(std::size_t id);
 #endif
 	//class timer_trigger
 		std::recursive_mutex timer_trigger::mutex_;
@@ -48,10 +48,10 @@ namespace detail
 			if(_m_find_by_timer_object(timer) == 0)
 			{
 #if defined(NANA_WINDOWS)
-				timer_handle handle = reinterpret_cast<timer_handle>(::SetTimer(0, 0, interval, TimerProc));
+				timer_handle handle = reinterpret_cast<timer_handle>(::SetTimer(0, 0, interval, timer_trigger_proc));
 #elif defined(NANA_LINUX)
 				timer_handle handle = reinterpret_cast<timer_handle>(timer);
-				nana::detail::platform_spec::instance().set_timer(reinterpret_cast<int>(timer), interval, timer_proc);
+				nana::detail::platform_spec::instance().set_timer(reinterpret_cast<std::size_t>(timer), interval, timer_trigger_proc);
 #endif
 				holder_timer_[timer] = handle;
 				holder_handle_[handle] = timer;
@@ -69,7 +69,7 @@ namespace detail
 #if defined(NANA_WINDOWS)
 				::KillTimer(0, UINT_PTR(*ptr));
 #elif defined(NANA_LINUX)
-				nana::detail::platform_spec::instance().kill_timer(reinterpret_cast<int>(*ptr));
+				nana::detail::platform_spec::instance().kill_timer(reinterpret_cast<std::size_t>(*ptr));
 #endif
 				holder_timer_.erase(timer);
 				holder_handle_.erase(*ptr);
@@ -87,10 +87,10 @@ namespace detail
 #if defined(NANA_WINDOWS)
 				::KillTimer(0, UINT_PTR(*old));
 				holder_handle_.erase(*old);
-				timer_handle handle = reinterpret_cast<timer_handle>(::SetTimer(0, 0, interval, TimerProc));
+				timer_handle handle = reinterpret_cast<timer_handle>(::SetTimer(0, 0, interval, timer_trigger_proc));
 #elif defined(NANA_LINUX)
 				timer_handle handle = reinterpret_cast<timer_handle>(timer);
-				nana::detail::platform_spec::instance().set_timer(reinterpret_cast<int>(timer), interval, timer_proc);
+				nana::detail::platform_spec::instance().set_timer(reinterpret_cast<std::size_t>(timer), interval, timer_trigger_proc);
 #endif
 				holder_timer_[timer] = handle;
 				holder_handle_[handle] = timer;
@@ -124,9 +124,9 @@ namespace detail
 	//end class timer_trigger
 
 #if defined(NANA_WINDOWS)
-	void __stdcall TimerProc(HWND hwnd, UINT uMsg, UINT_PTR id, DWORD dwTime)
+	void __stdcall timer_trigger_proc(HWND hwnd, UINT uMsg, UINT_PTR id, DWORD dwTime)
 #elif defined(NANA_LINUX)
-	void timer_proc(int id)
+	void timer_trigger_proc(std::size_t id)
 #endif
 	{
 		timer_trigger::timer_object* ptr = timer_trigger::find_by_timer_handle(reinterpret_cast<timer_trigger::timer_handle>(id));

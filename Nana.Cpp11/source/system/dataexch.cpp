@@ -85,7 +85,6 @@ namespace nana{ namespace system{
 			}
 #elif defined(NANA_X11)
 			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
-			Display * disp = spec.open_display();
 			nana::gui::native_window_type owner = 0;
 			{
 				nana::gui::internal_scope_guard isg;
@@ -95,11 +94,11 @@ namespace nana{ namespace system{
 
 			if(owner)
 			{
-				Atom type;
+				Atom atom_type;
 				switch(type)
 				{
-				case format::text:		type = XA_STRING;			break;
-				case format::unicode:	type = spec.atombase().utf8_string;	break;
+				case format::text:	atom_type = XA_STRING;			break;
+				case format::unicode:	atom_type = spec.atombase().utf8_string;	break;
 				default:
 					return false;
 				}
@@ -110,7 +109,7 @@ namespace nana{ namespace system{
 				buf = utf8str.c_str();
 				size = utf8str.size();
 	#endif
-				spec.write_selection(owner, type, buf, size);
+				spec.write_selection(owner, atom_type, buf, size);
 				return true;
 			}
 #endif
@@ -141,7 +140,6 @@ namespace nana{ namespace system{
 			}
 #elif defined(NANA_X11)
 			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
-			Display * disp = spec.open_display();
 			nana::gui::native_window_type requester = 0;
 			spec.lock_xlib();
 			

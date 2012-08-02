@@ -165,7 +165,6 @@ namespace nana
 
 									do
 									{
-										unsigned wd_px = 0;
 										idx_splitted = find_splitted(idx_head, len, xpos, endpos, pxbuf);
 										if(idx_splitted == len)
 										{

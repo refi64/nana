@@ -468,6 +468,8 @@ namespace detail
 						nv = wd->root; break;
 					case category::frame_tag::value:
 						nv = wd->other.attribute.frame->container; break;
+					default:	//category::widget_tag, category::lite_widget_tag
+						break;
 					}
 
 					//Don't set the visible attr of a window if it is a root.

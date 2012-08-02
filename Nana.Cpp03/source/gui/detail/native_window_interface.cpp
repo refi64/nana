@@ -756,6 +756,8 @@ namespace nana{
 				case z_order_action::topmost:
 					::XRaiseWindow(disp, reinterpret_cast<Window>(wd));
 					break;
+				default:	//z_order_action::none
+					break;
 				}
 			}
 			else

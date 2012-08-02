@@ -1266,7 +1266,7 @@ namespace nana{ namespace gui{
 				}scroll;
 
 				essence_t()
-					:	window(nullptr), graph(nullptr), auto_draw(true), if_image(false), checkable(false),
+					:	window(nullptr), graph(nullptr), auto_draw(true), checkable(false), if_image(false),
 						header_size(25), item_size(24), text_height(0), suspension_width(0),
 						ptr_state(StateNormal)
 				{
@@ -1311,10 +1311,10 @@ namespace nana{ namespace gui{
 
 					std::pair<size_type, size_type> & item = svec[0];
 					//Same with current scroll offset item.
-					if(item.second == npos && item.first == scroll.offset_y.x && scroll.offset_y.y == WhereUnknown)
+					if(item.second == npos && item.first == scroll.offset_y.x && static_cast<int>(scroll.offset_y.y) == WhereUnknown)
 						return;
 
-					if(item.first < scroll.offset_y.x || (item.first == scroll.offset_y.x && (scroll.offset_y.y != WhereUnknown) && (item.second == npos || item.second < scroll.offset_y.y)))
+					if(item.first < scroll.offset_y.x || ((item.first == scroll.offset_y.x) && (static_cast<int>(scroll.offset_y.y) != WhereUnknown) && (item.second == npos || item.second < scroll.offset_y.y)))
 					{
 						scroll.offset_y.x = static_cast<nana::upoint::value_type>(item.first);
 						scroll.offset_y.y = static_cast<nana::upoint::value_type>(item.second);
@@ -1600,7 +1600,7 @@ namespace nana{ namespace gui{
 					}
 					else if(ei.window == scroll.h.handle())
 					{
-						if(scroll.offset_x != scroll.h.value())
+						if(scroll.offset_x != static_cast<int>(scroll.h.value()))
 						{
 							scroll.offset_x = static_cast<int>(scroll.h.value());
 							update = true;
@@ -2010,14 +2010,13 @@ namespace nana{ namespace gui{
 								{
 									switch(state)
 									{
-									case essence_t::StateNormal:
-										break;
 									case essence_t::StateHighlight:
 										act = nana::gui::mouse_action::over;
 										break;
 									case essence_t::StateGrab:
 										act = nana::gui::mouse_action::pressed;
 										break;
+									default:	break;
 									}
 								}
 
@@ -2216,7 +2215,7 @@ namespace nana{ namespace gui{
 
 				void trigger::mouse_leave(trigger::graph_reference graph, const nana::gui::eventinfo&)
 				{
-					if(essence_->pointer_where.x != essence_->WhereUnknown || essence_->ptr_state != essence_->StateNormal)
+					if(static_cast<int>(essence_->pointer_where.x) != essence_->WhereUnknown || essence_->ptr_state != essence_->StateNormal)
 					{
 						essence_->pointer_where.x = essence_->WhereUnknown;
 						essence_->ptr_state = essence_->StateNormal;
@@ -2227,7 +2226,7 @@ namespace nana{ namespace gui{
 				void trigger::mouse_down(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
 				{
 					bool update = false;
-					if(essence_->pointer_where.x == essence_->WhereHeader && (essence_->pointer_where.y != essence_->WhereUnknown || (drawer_header_->item_spliter() != npos)))
+					if(essence_->pointer_where.x == essence_->WhereHeader && (static_cast<int>(essence_->pointer_where.y) != essence_->WhereUnknown || (drawer_header_->item_spliter() != npos)))
 					{
 						essence_->ptr_state = essence_->StateGrab;
 						nana::point pos(ei.mouse.x, ei.mouse.y);

@@ -71,7 +71,7 @@ namespace nana{ namespace gui{
 						return buttons::scroll;
 				}
 
-				if(fixedsize <= pos && pos < metrics_.scroll_pos)
+				if(static_cast<int>(fixedsize) <= pos && pos < metrics_.scroll_pos)
 					return buttons::forward;
 				else if(metrics_.scroll_pos + static_cast<int>(metrics_.scroll_length) <= pos && pos < static_cast<int>(scale - fixedsize))
 					return buttons::backward;

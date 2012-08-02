@@ -104,30 +104,28 @@ namespace detail
 				return "";
 
 			char * inbuf = const_cast<char*>(str.c_str());
-			size_t inleft = str.size();
-			size_t outlen = (inleft * 4 + 4);
+			std::size_t inleft = str.size();
+			std::size_t outlen = (inleft * 4 + 4);
 			char * strbuf = new char[outlen + 4];
 			char * outbuf = strbuf;
-			size_t outleft = outlen;
-			errno = 0;
-			int r = ::iconv(handle_, &inbuf, &inleft, &outbuf, &outleft);
+			std::size_t outleft = outlen;
+			::iconv(handle_, &inbuf, &inleft, &outbuf, &outleft);
 			std::string rstr(strbuf, outbuf);
 			delete [] strbuf;
 			return rstr;
 		}
 
-		std::string charset_conv::charset(const char* buf, size_t len) const
+		std::string charset_conv::charset(const char* buf, std::size_t len) const
 		{
 			if(reinterpret_cast<iconv_t>(-1) == handle_)
 				return "";
 
 			char * inbuf = const_cast<char*>(buf);
-			size_t outlen = (len * 4 + 4);
+			std::size_t outlen = (len * 4 + 4);
 			char * strbuf = new char[outlen + 4];
 			char * outbuf = strbuf;
-			size_t outleft = outlen;
-			errno = 0;
-			int r = ::iconv(handle_, &inbuf, &len, &outbuf, &outleft);
+			std::size_t outleft = outlen;
+			::iconv(handle_, &inbuf, &len, &outbuf, &outleft);
 			std::string rstr(strbuf, outbuf);
 			delete [] strbuf;
 			return rstr;
@@ -159,14 +157,14 @@ namespace detail
 
 	class timer_runner
 	{
-		typedef void (*timer_proc_t)(int id);
+		typedef void (*timer_proc_t)(std::size_t id);
 
 		struct timer_tag
 		{
-			int id;
+			std::size_t id;
 			unsigned tid;
-			size_t interval;
-			size_t timestamp;
+			std::size_t interval;
+			std::size_t timestamp;
 			timer_proc_t proc;
 		};
 	public:
@@ -174,7 +172,7 @@ namespace detail
 			: is_proc_handling_(false)
 		{}
 
-		void set(int id, size_t interval, timer_proc_t proc)
+		void set(std::size_t id, std::size_t interval, timer_proc_t proc)
 		{
 			unsigned tid = nana::system::this_thread_id();
 			threadmap_[tid].insert(id);
@@ -191,13 +189,13 @@ namespace detail
 			return is_proc_handling_;
 		}
 
-		void kill(int id)
+		void kill(std::size_t id)
 		{
-			std::map<int, timer_tag>::iterator i = holder_.find(id);
+			auto i = holder_.find(id);
 			if(i != holder_.end())
 			{
 				unsigned tid = i->second.tid;
-				std::set<int> & set = threadmap_[tid];
+				std::set<std::size_t> & set = threadmap_[tid];
 				set.erase(id);
 				if(set.size() == 0)
 				{
@@ -215,14 +213,13 @@ namespace detail
 		void timer_proc(unsigned tid)
 		{
 			is_proc_handling_ = true;
-			std::map<unsigned, std::set<int> >::iterator i = threadmap_.find(tid);
+			auto i = threadmap_.find(tid);
 			if(i != threadmap_.end())
 			{
 				unsigned ticks = nana::system::timestamp();
-				std::set<int> & set = i->second;
-				for(std::set<int>::iterator u = set.begin(); u != set.end();)
+				for(auto timer_id : i->second)
 				{
-					timer_tag & tag = holder_[*(u++)];
+					timer_tag & tag = holder_[timer_id];
 					if(tag.timestamp)
 					{
 						if(ticks >= tag.timestamp + tag.interval)
@@ -242,8 +239,8 @@ namespace detail
 		}
 	private:
 		bool is_proc_handling_;
-		std::map<unsigned, std::set<int> > threadmap_;
-		std::map<int, timer_tag> holder_;
+		std::map<unsigned, std::set<std::size_t> > threadmap_;
+		std::map<std::size_t, timer_tag> holder_;
 	};
 
 	drawable_impl_type::drawable_impl_type()
@@ -611,15 +608,11 @@ namespace detail
 			if(addr->input_method)
 			{
 				XIMStyles* imstyle;
-				::XGetIMValues(addr->input_method, XNQueryInputStyle, &imstyle, 0, 0);
+				::XGetIMValues(addr->input_method, XNQueryInputStyle, &imstyle, nullptr, nullptr);
 				if(imstyle)
 				{
 					if(imstyle->count_styles)
 					{
-						char ** missing_list;
-						int missing_count;
-						char* def_string;
-
 						addr->input_font = 0;
 						XVaNestedList preedit_attr = ::XVaCreateNestedList(0, XNSpotLocation, &(addr->input_spot), 0);
 						XVaNestedList status_attr = ::XVaCreateNestedList(0, XNAreaNeeded, &(addr->input_status_area), 0);
@@ -732,7 +725,6 @@ namespace detail
 					XWindowAttributes attr;
 					if(BadWindow != ::XGetWindowAttributes(display_, reinterpret_cast<Window>(wd), &attr))
 					{
-						XSetWindowAttributes new_attr;
 						if((attr.your_event_mask & addr->input_context_event_mask) == addr->input_context_event_mask)
 						{
 							XSetWindowAttributes new_attr;
@@ -908,7 +900,7 @@ namespace detail
 		return r;
 	}
 
-	void platform_spec::set_timer(int id, size_t interval, void (*timer_proc)(int))
+	void platform_spec::set_timer(std::size_t id, std::size_t interval, void (*timer_proc)(std::size_t))
 	{
 		std::lock_guard<decltype(timer_.mutex)> lock(timer_.mutex);
 		if(0 == timer_.runner)
@@ -917,7 +909,7 @@ namespace detail
 		timer_.delete_declared = false;
 	}
 
-	void platform_spec::kill_timer(int id)
+	void platform_spec::kill_timer(std::size_t id)
 	{
 		if(timer_.runner == 0) return;
 

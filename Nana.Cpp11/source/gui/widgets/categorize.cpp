@@ -504,6 +504,8 @@ namespace nana{	namespace gui{
 						_m_show_list();
 						style_.mode = mode::floatlist;
 						break;
+					default:	//Don't take care about other elements
+						break;
 					}
 				}
 
@@ -516,6 +518,8 @@ namespace nana{	namespace gui{
 						{
 						case ui_element::item_name:
 							_m_selected(ui_el_.index);
+							break;
+						default:
 							break;
 						}
 					}
@@ -611,6 +615,8 @@ namespace nana{	namespace gui{
 						case ui_element::item_root:
 							API::refresh_window(window_);
 							_m_selected(style_.module.index);
+							break;
+						default:	//Don't take care about other elements
 							break;
 						}
 					}

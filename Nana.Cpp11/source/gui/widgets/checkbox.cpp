@@ -108,11 +108,12 @@ namespace xcheckbox
 				{
 					switch(chk)
 					{
-					case checkbox::clasp:
-						checker_.type = paint::gadget::check_renderer::clasp;
-						break;
 					case checkbox::blocker:
 						checker_.type = paint::gadget::check_renderer::blocker;
+						break;
+					case checkbox::clasp:
+					default:
+						checker_.type = paint::gadget::check_renderer::clasp;
 						break;
 					}
 				}
@@ -230,13 +231,12 @@ namespace xcheckbox
 
 		void checkbox::set_check_image(mouse_action act, checkbox::checker_t chk, bool checked, const nana::rectangle& r)
 		{
-			drawer_trigger_t::check_renderer_t::checker_t ichk = nana::paint::gadget::check_renderer::clasp;
-			switch(chk)
-			{
-			case checkbox::blocker:
+			drawer_trigger_t::check_renderer_t::checker_t ichk;
+			if(checkbox::blocker == chk)
 				ichk = nana::paint::gadget::check_renderer::blocker;
-				break;
-			}
+			else
+				ichk = nana::paint::gadget::check_renderer::clasp;
+
 			this->get_drawer_trigger().check_renderer().set_image_state(act, ichk, checked, r);
 		}
 	//end class checkbox

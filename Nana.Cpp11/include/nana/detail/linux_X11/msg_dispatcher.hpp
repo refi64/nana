@@ -143,7 +143,7 @@ namespace detail
 			int qstate;
 			
 			//Test whether the thread is registered for window, and retrieve the queue state for event
-			while(qstate = _m_read_queue(tid, msg, modal))
+			while((qstate = _m_read_queue(tid, msg, modal)))
 			{
 				//the queue is empty
 				if(-1 == qstate)
@@ -222,6 +222,8 @@ namespace detail
 				return _m_event_window(pack.u.xevent);
 			case msg_packet_tag::kind_mouse_drop:
 				return pack.u.mouse_drop.window;
+			default:
+				break;
 			}
 			return 0;
 		}

@@ -460,6 +460,8 @@ namespace nana{ namespace gui{
 						if(pos > attr_.pos)
 							pos = attr_.pos;
 						break;
+					default:
+						break;
 					}
 					return pos;
 				}

@@ -83,7 +83,7 @@ namespace nana{	namespace paint
 					if(size == ifs.gcount())
 					{
 						bitmap_file_header * header = reinterpret_cast<bitmap_file_header*>(buffer.get());
-						if((header->bfType == 0x4D42) && (header->bfSize == size))
+						if((header->bfType == 0x4D42) && (static_cast<std::streamsize>(header->bfSize) == size))
 						{
 							unsigned char* bits = reinterpret_cast<unsigned char*>(buffer.get() + header->bfOffBits);
 							bitmap_info * info = reinterpret_cast<bitmap_info *>(header + 1);

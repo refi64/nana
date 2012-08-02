@@ -1046,9 +1046,9 @@ namespace paint
 		{
 			if(handle_)
 			{
+#if defined(NANA_WINDOWS)
 				int iWidth = static_cast<int>(size_.width);
 				int iHeight = static_cast<int>(size_.height);
-#if defined(NANA_WINDOWS)
 				BITMAPINFO bmpInfo = {0};
 				bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
 				bmpInfo.bmiHeader.biWidth = static_cast<int>(size_.width);

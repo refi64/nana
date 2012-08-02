@@ -17,8 +17,8 @@ namespace nana
 		struct bidi_char
 		{
 			enum t{	L, LRE, LRO, R, AL, RLE, RLO,
-					PDF, EN, ES, ET, AN, CS, NSM, BN,
-					B, S, WS, ON};	
+				PDF = 0x1000, EN, ES, ET, AN, CS, NSM, BN,
+				B = 0x2000, S, WS, ON};	
 		};
 
 		struct bidi_category

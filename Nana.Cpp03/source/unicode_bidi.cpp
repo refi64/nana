@@ -825,6 +825,7 @@ namespace nana
 					if(change_european_number)
 						change_european_number = false;
 					break;
+				default:	break;
 				}
 
 				prev = i->bidi_char_type;
@@ -902,6 +903,8 @@ namespace nana
 						etpos = levels_.end();
 					}
 					break;
+				default:
+					break;
 				}
 
 				//W6.
@@ -943,6 +946,8 @@ namespace nana
 					break;
 				case bidi_char::R:
 					change_european_number = false;
+					break;
+				default:
 					break;
 				}
 			}
@@ -1038,6 +1043,8 @@ namespace nana
 					else
 						i->level += 2;
 					break;
+				default:
+					break;
 				}
 			}
 		}
@@ -1082,43 +1089,11 @@ namespace nana
 
 		unicode_bidi::bidi_category::t unicode_bidi::_m_bidi_category(bidi_char::t bidi_char_type)
 		{
-			switch(bidi_char_type)
-			{
-			case bidi_char::L:
-			case bidi_char::LRE:
-			case bidi_char::LRO:
-			case bidi_char::R:
-			case bidi_char::AL:
-			case bidi_char::RLE:
-			case bidi_char::RLO:
-				return bidi_category::strong;
-			case bidi_char::B:
-			case bidi_char::S:
-			case bidi_char::WS:
-			case bidi_char::ON:
-				return bidi_category::neutral;
-			}
-			return bidi_category::weak;
+			return static_cast<unicode_bidi::bidi_category::t>((static_cast<int>(bidi_char_type) & 0xF000) >> 12);
 		}
 		
 		unicode_bidi::bidi_char::t unicode_bidi::_m_char_dir(char_type ch)
 		{
-			/*
-			if(('a' <= ch && ch <= 'z') || (0x4E00 <= ch && ch <= 0x9FCC))
-				return bidi_char::L;
-			else if('A' <= ch && ch <= 'Z')
-				return bidi_char::R;
-			else if(' ' == ch)
-				return bidi_char::WS;
-			else if(0x0021 == ch || 0x0022 == ch || (0x0026 <= ch && ch <= 0x002A))
-				return bidi_char::ON;
-			else if('0' <= ch && ch <= '9')
-				return bidi_char::EN;
-			else if(':' == ch || ',' == ch || '.' == ch)
-				return bidi_char::CS;
-
-			return bidi_char::ON;
-			*/
 			return static_cast<bidi_char::t>(bidi_charmap::bidi_char_type(ch));
 		}
 	//end class unicode_bidi

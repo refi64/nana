@@ -56,12 +56,6 @@ namespace detail
 		}
 	}
 
-	void drawable_impl_type::fgcolor_reset()
-	{
-		::SetTextColor(context, 0);
-		fgcolor_ = 0;
-	}
-
 	void drawable_impl_type::pen_spec::set(HDC context, int style, int width, nana::color_t color)
 	{
 		if(this->color != color || this->width != width || this->style != style)

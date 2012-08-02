@@ -220,6 +220,7 @@ namespace nana{	namespace gui{
 					case nana::gui::category::frame_tag::value:
 						delete attribute.frame;
 						break;
+					default: break;
 					}
 				}
 			//end struct basic_window::other_tag

@@ -739,6 +739,8 @@ namespace nana
 					return 1;
 				case bidi_char::L:
 					return 0;
+				default:
+					break;
 				}
 			}
 			return 0;
@@ -821,6 +823,7 @@ namespace nana
 					if(change_european_number)
 						change_european_number = false;
 					break;
+				default:	break;
 				}
 
 				prev = i->bidi_char_type;
@@ -898,6 +901,8 @@ namespace nana
 						etpos = levels_.end();
 					}
 					break;
+				default:
+					break;
 				}
 
 				//W6.
@@ -939,6 +944,8 @@ namespace nana
 					break;
 				case bidi_char::R:
 					change_european_number = false;
+					break;
+				default:
 					break;
 				}
 			}
@@ -1033,6 +1040,8 @@ namespace nana
 						++(i.level);
 					else
 						i.level += 2;
+					break;
+				default:
 					break;
 				}
 			}

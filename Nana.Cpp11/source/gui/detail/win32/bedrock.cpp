@@ -252,7 +252,6 @@ namespace detail
 		if(0 == tid) tid = nana::system::this_thread_id();
 
 		std::lock_guard<decltype(impl_->mutex)> lock(impl_->mutex);
-
 		if(impl_->cache.tcontext.tid == tid)
 			return impl_->cache.tcontext.object;
 

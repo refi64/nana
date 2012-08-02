@@ -15,6 +15,7 @@
 #include <nana/gui/detail/eventinfo.hpp>
 #include <nana/system/platform.hpp>
 #include <errno.h>
+#include <stdexcept>
 
 namespace nana
 {
@@ -90,7 +91,7 @@ namespace detail
 		struct keyboard_tracking_state
 		{
 			keyboard_tracking_state()
-				:alt(0), has_shortkey_occured(false), has_keyup(true)
+				:has_shortkey_occured(false), has_keyup(true), alt(0)
 			{}
 
 			bool has_shortkey_occured;
@@ -405,6 +406,7 @@ namespace detail
 		case nana::detail::msg_packet_tag::kind_mouse_drop:
 			window_proc_for_packet(display, msg);
 			break;
+		default:	break;
 		}
 	}
 
@@ -421,7 +423,6 @@ namespace detail
 		if(root_runtime)
 		{
 			core_window_t* msgwd = root_runtime->window;
-			bedrock::thread_context& context = *bedrock.get_thread_context(msgwd->thread_id);
 
 			eventinfo ei;
 			switch(msg.kind)
@@ -442,6 +443,8 @@ namespace detail
 					bedrock.wd_manager.refresh(msgwd);
 				}
 				break;
+			default:
+				throw std::runtime_error("Nana.GUI.Bedrock: Undefined message packet");
 			}
 		}		
 
@@ -517,7 +520,7 @@ namespace detail
 				}
 				break;
 			case ConfigureNotify:
-				if(msgwnd->rect.width != xevent.xconfigure.width || msgwnd->rect.height != xevent.xconfigure.height)
+				if(msgwnd->rect.width != static_cast<unsigned>(xevent.xconfigure.width) || msgwnd->rect.height != static_cast<unsigned>(xevent.xconfigure.height))
 				{
 					ei.size.width = xevent.xconfigure.width;
 					ei.size.height = xevent.xconfigure.height;
@@ -852,7 +855,7 @@ namespace detail
 					nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
 					if(spec.atombase().wm_protocols == xevent.xclient.message_type)
 					{
-						if(spec.atombase().wm_delete_window == xevent.xclient.data.l[0])
+						if(spec.atombase().wm_delete_window == static_cast<Atom>(xevent.xclient.data.l[0]))
 						{
 							ei.unload.cancel = false;
 							bedrock.raise_event(event_tag::unload, msgwnd, ei, true);

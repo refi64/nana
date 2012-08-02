@@ -41,6 +41,7 @@ namespace gui
 				case bedrock::core_window_t::update_state::none:
 				case bedrock::core_window_t::update_state::lazy:
 					thrd->event_window->other.upd_state = bedrock::core_window_t::update_state::refresh;
+				default: break;
 				}
 			}
 		}

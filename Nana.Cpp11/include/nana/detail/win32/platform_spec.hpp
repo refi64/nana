@@ -134,7 +134,6 @@ namespace detail
 		~drawable_impl_type();
 
 		void fgcolor(nana::color_t);
-		void fgcolor_reset();
 	private:
 		unsigned fgcolor_;
 	};

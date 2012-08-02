@@ -15,6 +15,7 @@
 #include <nana/system/platform.hpp>
 #include <nana/unicode_bidi.hpp>
 #include <nana/paint/text_renderer.hpp>
+#include <stdexcept>
 
 namespace nana
 {
@@ -281,6 +282,8 @@ namespace gui
 							break;
 						case tokens::eof:
 							return;
+						default:
+							throw std::runtime_error("Nana.GUI.Label: Bad format");
 						}
 					}
 				}
@@ -352,6 +355,8 @@ namespace gui
 								case tokens::_false:
 									sect.bold = false;
 									break;
+								default:
+									throw std::runtime_error("Nana.GUI.Label: The value of bool should be \"true\" or \"false\"");
 								}
 							}
 							else
@@ -664,7 +669,6 @@ namespace gui
 					nana::point pos;
 
 					const content::line_container * line = 0;
-					unsigned extsize = 0;
 					for(unsigned i = 0; (line = content_.getline(i)); ++i)
 					{
 						unsigned px = _m_line_pixels(graph, line);

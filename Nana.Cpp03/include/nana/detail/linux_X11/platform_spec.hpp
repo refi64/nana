@@ -224,8 +224,8 @@ namespace detail
 		//when native_interface::show a window that is registered as a grab
 		//window, the native_interface grabs the window.
 		Window grab(Window);
-		void set_timer(int id, size_t interval, void (*timer_proc)(int id));
-		void kill_timer(int id);
+		void set_timer(std::size_t id, std::size_t interval, void (*timer_proc)(std::size_t id));
+		void kill_timer(std::size_t id);
 		void timer_proc(unsigned tid);
 
 		//Message dispatcher

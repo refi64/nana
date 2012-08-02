@@ -814,7 +814,7 @@ namespace nana{	namespace gui{	namespace widgets
 			}
 			else if(attributes_.hscroll && (vertical == false))
 			{
-				if(attributes_.hscroll->value() != points_.offset.x)
+				if(static_cast<int>(attributes_.hscroll->value()) != points_.offset.x)
 				{
 					points_.offset.x = static_cast<int>(attributes_.hscroll->value());
 					return true;
@@ -908,7 +908,7 @@ namespace nana{	namespace gui{	namespace widgets
 					scroll->amount(text_size.width);
 
 				if(text_area_width != scroll->range())	scroll->range(text_area_width);
-				if(this->points_.offset.x != scroll->value())
+				if(this->points_.offset.x != static_cast<int>(scroll->value()))
 					scroll->value(this->points_.offset.x);
 
 				scroll->move(text_area_.area.x, y, text_area_width, text_area_.hscroll);
@@ -1631,7 +1631,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 			const nana::string& lnstr = textbase_.getline(textline);
 			bidi.linestr(lnstr.c_str(), lnstr.size(), reordered);
-			const nana::char_t * ch = (pos <= static_cast<int>(lnstr.size()) ? lnstr.c_str() + pos : 0);
+			const nana::char_t * ch = (pos <= lnstr.size() ? lnstr.c_str() + pos : 0);
 
 			unsigned text_w = 0;
 			for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)

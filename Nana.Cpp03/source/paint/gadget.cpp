@@ -201,6 +201,7 @@ namespace gadget
 				double_arrow_line(graph, x + 8, y + 5, color, false);
 				double_arrow_line(graph, x + 9, y + 6, color, false);
 				break;
+			default:	break;
 			}
 		}
 	}//end namespace detail
@@ -502,17 +503,22 @@ namespace gadget
 					case nana::gui::mouse_action_pressed:
 						colormap = &bmp_checked_press;
 						break;
+					default:
+						colormap = 0;
 					}
 
-					x += 2;
-					y += 2;
-
-					for(int top = 0; top < 12; ++top)
+					if(colormap)
 					{
-						for(int left = 0; left < 12; ++left)
+						x += 2;
+						y += 2;
+
+						for(int top = 0; top < 12; ++top)
 						{
-							if((*colormap)[top][left] != 0xFFFFFF)
-								graph.set_pixel(left + x, top + y, (*colormap)[top][left]);
+							for(int left = 0; left < 12; ++left)
+							{
+								if((*colormap)[top][left] != 0xFFFFFF)
+									graph.set_pixel(left + x, top + y, (*colormap)[top][left]);
+							}
 						}
 					}
 				}

@@ -597,6 +597,7 @@ namespace API
 			case restrict::core_window_t::update_state::none:
 			case restrict::core_window_t::update_state::lazy:
 				thrd->event_window->other.upd_state = restrict::core_window_t::update_state::refresh;
+			default: break;
 			}
 		}
 	}

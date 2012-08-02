@@ -479,6 +479,8 @@ namespace nana
 							return detail::utf8_to_utf16(data_, true);
 						case unicode::utf32:
 							return detail::utf8_to_utf32(data_, true);
+						default:
+							break;
 						}
 						break;
 					case unicode::utf16:
@@ -488,6 +490,8 @@ namespace nana
 							return detail::utf16_to_utf8(data_);
 						case unicode::utf32:
 							return detail::utf16_to_utf32(data_);
+						default:
+							break;
 						}
 						break;
 					case unicode::utf32:
@@ -497,6 +501,8 @@ namespace nana
 							return detail::utf32_to_utf8(data_);
 						case unicode::utf16:
 							return detail::utf32_to_utf16(data_);
+						default:
+							break;
 						}
 						break;
 					}

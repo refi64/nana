@@ -271,7 +271,6 @@ namespace paint
 
 					dw->context = cdc;
 					dw->pixmap = bmp;
-					dw->text_color = 0;
 					::SetTextColor(cdc, 0);
 					::SetBkMode(cdc, TRANSPARENT);
 					dw->brush.set(cdc, dw->brush.Solid, 0xFFFFFF);
@@ -1047,9 +1046,9 @@ namespace paint
 		{
 			if(handle_)
 			{
+#if defined(NANA_WINDOWS)
 				int iWidth = static_cast<int>(size_.width);
 				int iHeight = static_cast<int>(size_.height);
-#if defined(NANA_WINDOWS)
 				BITMAPINFO bmpInfo = {0};
 				bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
 				bmpInfo.bmiHeader.biWidth = static_cast<int>(size_.width);

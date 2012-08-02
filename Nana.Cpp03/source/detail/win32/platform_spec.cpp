@@ -20,6 +20,7 @@ namespace nana
 namespace detail
 {
 	drawable_impl_type::drawable_impl_type()
+		: fgcolor_(0xFFFFFF)
 	{
 		pen.handle = 0;
 		pen.color = nana::null_color;
@@ -49,10 +50,10 @@ namespace detail
 
 	void drawable_impl_type::fgcolor(nana::color_t col)
 	{
-		if(this->text_color != col)
+		if(fgcolor_ != col)
 		{
 			::SetTextColor(context, NANA_RGB(col));
-			text_color = col;
+			fgcolor_ = col;
 		}
 	}
 

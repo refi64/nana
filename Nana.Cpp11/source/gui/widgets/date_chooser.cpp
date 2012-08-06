@@ -379,7 +379,7 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				void trigger::_m_perf_transform(int tfid, nana::paint::graphics& graph,  nana::paint::graphics& dirtybuf, nana::paint::graphics& newbuf, const nana::point& refpos)
+				void trigger::_m_perf_transform(transform_action tfid, graph_reference graph, graph_reference dirtybuf, graph_reference newbuf, const nana::point& refpos)
 				{
 					const int sleep_time = 15;
 					const int count = 20;
@@ -387,7 +387,7 @@ namespace nana{ namespace gui{
 					double delta_h = dirtybuf.height() / double(count);
 					double fade = 1.0 / count;
 
-					if(tfid == TransformToRight)
+					if(tfid == transform_action::to_right)
 					{
 						for(int i = 1; i < count; ++i)
 						{
@@ -399,7 +399,7 @@ namespace nana{ namespace gui{
 							nana::system::sleep(sleep_time);
 						}
 					}
-					else if(tfid == TransformToLeft)
+					else if(tfid == transform_action::to_left)
 					{
 						double delta = dirtybuf.width() / double(count);
 
@@ -414,7 +414,7 @@ namespace nana{ namespace gui{
 							nana::system::sleep(sleep_time);
 						}
 					}
-					else if(tfid == TransformLeave)
+					else if(tfid == transform_action::to_leave)
 					{
 						nana::paint::graphics dzbuf(newbuf.width(), newbuf.height());
 						nana::paint::graphics nzbuf(newbuf.width(), newbuf.height());
@@ -443,7 +443,7 @@ namespace nana{ namespace gui{
 							nana::system::sleep(sleep_time);
 						}
 					}
-					else if(tfid == TransformEnter)
+					else if(tfid == transform_action::to_enter)
 					{
 						nana::paint::graphics dzbuf(newbuf.width(), newbuf.height());
 						nana::paint::graphics nzbuf(newbuf.width(), newbuf.height());
@@ -475,24 +475,24 @@ namespace nana{ namespace gui{
 					graph.bitblt(refpos.x, refpos.y, newbuf.width(), newbuf.height(), newbuf, 0, 0);
 				}
 
-				void trigger::refresh(trigger::graph_reference graph)
+				void trigger::refresh(graph_reference graph)
 				{
 					_m_draw(graph);
 				}
 
-				void trigger::bind_window(trigger::widget_reference wd)
+				void trigger::bind_window(widget_reference wd)
 				{
 					widget_ = &wd;
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
 					window wd = widget_->handle();
 					using namespace API::dev;
-					make_drawer_event<nana::gui::events::mouse_move>(wd);
-					make_drawer_event<nana::gui::events::mouse_leave>(wd);
-					make_drawer_event<nana::gui::events::mouse_down>(wd);
-					make_drawer_event<nana::gui::events::mouse_up>(wd);
+					make_drawer_event<events::mouse_move>(wd);
+					make_drawer_event<events::mouse_leave>(wd);
+					make_drawer_event<events::mouse_down>(wd);
+					make_drawer_event<events::mouse_up>(wd);
 				}
 
 				void trigger::detached()
@@ -500,28 +500,28 @@ namespace nana{ namespace gui{
 					API::dev::umake_drawer_event(widget_->handle());
 				}
 
-				void trigger::mouse_move(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
 				{
 					int pos = this->_m_pos_where(graph, ei.mouse.x, ei.mouse.y);
 					if(pos == pos_ && pos_ != WhereTextArea) return;
 					pos_ = pos;
 					_m_draw(graph);
-					nana::gui::API::lazy_refresh();
+					API::lazy_refresh();
 				}
 
-				void trigger::mouse_leave(trigger::graph_reference graph, const nana::gui::eventinfo&)
+				void trigger::mouse_leave(graph_reference graph, const eventinfo&)
 				{
 					if(WhereNone == pos_) return;
 					pos_ = WhereNone;
 					_m_draw(graph);
-					nana::gui::API::lazy_refresh();
+					API::lazy_refresh();
 				}
 
-				void trigger::mouse_up(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_up(graph_reference graph, const eventinfo& ei)
 				{
 					bool redraw = true;
 					int pos = this->_m_pos_where(graph, ei.mouse.x, ei.mouse.y);
-					int tfid = TransformNone;
+					transform_action tfid = transform_action::none;
 
 					if(pos == WhereTopbar)
 					{
@@ -529,7 +529,7 @@ namespace nana{ namespace gui{
 						{
 						case PageDate:
 							page_ = PageMonth;
-							tfid = TransformLeave;
+							tfid = transform_action::to_leave;
 							break;
 						default:
 							redraw = false;
@@ -550,7 +550,7 @@ namespace nana{ namespace gui{
 										--chmonth_.year;
 										chmonth_.month = 12;
 									}
-									tfid = TransformToRight;
+									tfid = transform_action::to_right;
 								}
 								else
 								{
@@ -562,7 +562,7 @@ namespace nana{ namespace gui{
 											++chmonth_.year;
 											chmonth_.month = 1;
 										}
-										tfid = TransformToLeft;
+										tfid = transform_action::to_left;
 									}
 									else //Selecting a day in this month
 									{
@@ -578,7 +578,7 @@ namespace nana{ namespace gui{
 							if(_m_get_trace(ei.mouse.x, ei.mouse.y, ret))
 								chmonth_.month = ret;
 							page_ = PageDate;
-							tfid = TransformEnter;
+							tfid = transform_action::to_enter;
 							break;
 						default:
 							redraw = false;
@@ -594,14 +594,14 @@ namespace nana{ namespace gui{
 							end_m = 1;
 							beg_m = 12;
 							step = -1;
-							tfid = TransformToRight;
+							tfid = transform_action::to_right;
 						}
 						else
 						{
 							end_m = 12;
 							beg_m = 1;
 							step = 1;
-							tfid = TransformToLeft;
+							tfid = transform_action::to_left;
 						}
 						switch(page_)
 						{
@@ -624,7 +624,7 @@ namespace nana{ namespace gui{
 
 					if(redraw)
 					{
-						if(tfid != TransformNone)
+						if(tfid != transform_action::none)
 						{
 							const unsigned width = graph.width() - 2;
 							nana::point refpos(1, static_cast<int>(topbar_height) + 1);

@@ -20,6 +20,20 @@ namespace nana
 {
 	namespace detail
 	{
+		class locale_initializer
+		{
+		public:
+			static void init()
+			{
+				static bool initialized = false;
+				if(false == initialized)
+				{
+					initialized = true;
+					std::locale::global(std::locale(""));
+				}
+			}
+		};
+
 		unsigned long utf8char(const unsigned char*& p, const unsigned char* end)
 		{
 			if(p != end)
@@ -31,7 +45,10 @@ namespace nana
 				unsigned ch = *p;
 				unsigned long code;
 				if(ch < 0xC0)
+				{
+					p = end;
 					return 0;
+				}
 				else if(ch < 0xE0 && (p + 1 <= end))
 				{
 					code = ((ch & 0x1F) << 6) | (p[1] & 0x3F);
@@ -453,14 +470,13 @@ namespace nana
 					std::string mbstr;
 					std::mbstate_t mbstate = std::mbstate_t();
 					const wchar_t * sp = reinterpret_cast<const wchar_t*>(strbuf.c_str());
-					std::locale loc = std::locale::global(std::locale(""));
+					locale_initializer::init();
 					std::size_t len = std::wcsrtombs(0, &sp, 0, &mbstate);
 					if(len != static_cast<std::size_t>(-1))
 					{
 						mbstr.resize(len);
 						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
 					}
-					std::locale::global(loc);
 					return mbstr;
 				}
 				return data_;
@@ -508,7 +524,41 @@ namespace nana
 					}
 					return std::string();
 				}
-				return data_;
+
+				std::string wcstr;
+				const char* sp = data_.c_str();
+				std::mbstate_t mbstate = std::mbstate_t();
+
+				locale_initializer::init();
+				std::size_t len = std::mbsrtowcs(0, &sp, 0, &mbstate);
+				if(len != static_cast<std::size_t>(-1))
+				{
+					wcstr.resize(len * sizeof(wchar_t));
+					std::mbsrtowcs(reinterpret_cast<wchar_t*>(&wcstr[0]), &sp, len, &mbstate);
+
+#if defined(NANA_WINDOWS)
+					switch(encoding)
+					{
+					case unicode::utf8:
+						return utf16_to_utf8(wcstr);
+					case unicode::utf16:
+						return wcstr;
+					case unicode::utf32:
+						return utf16_to_utf32(wcstr);
+					}
+#else
+					switch(encoding)
+					{
+					case unicode::utf8:
+						return utf32_to_utf8(wcstr);
+					case unicode::utf16:
+						return utf32_to_utf16(wcstr);
+					case unicode::utf32:
+						return wcstr;
+					}
+#endif
+				}
+				return std::string();
 			}
 
 			virtual std::wstring wstr() const
@@ -516,44 +566,46 @@ namespace nana
 				if(is_unicode_)
 				{
 					std::string bytes;
+#if defined(NANA_WINDOWS)
 					switch(utf_x_)
 					{
 					case unicode::utf8:
-#if defined (NANA_WINDOWS)
 						bytes = detail::utf8_to_utf16(data_, true);
-#else
-						bytes = detail::utf8_to_utf32(data_, true);
-#endif
 						break;
 					case unicode::utf16:
-#if defined (NANA_WINDOWS)
 						bytes = data_;
-#else
-						bytes = detail::utf16_to_utf32(data_);
-#endif
 						break;
 					case unicode::utf32:
-#if defined (NANA_WINDOWS)
 						bytes = detail::utf32_to_utf16(data_);
-#else
-						bytes = data_;
-#endif
 						break;
 					}
+#else
+					switch(utf_x_)
+					{
+					case unicode::utf8:
+						bytes = detail::utf8_to_utf32(data_, true);
+						break;
+					case unicode::utf16:
+						bytes = detail::utf16_to_utf32(data_);
+						break;
+					case unicode::utf32:
+						bytes = data_;
+						break;
+					}
+#endif
 					return std::wstring(reinterpret_cast<const wchar_t*>(bytes.c_str()), bytes.size() / sizeof(wchar_t));
 				}
 
 				std::wstring wcstr;
 				const char* sp = data_.c_str();
 				std::mbstate_t mbstate = std::mbstate_t();
-				std::locale loc = std::locale::global(std::locale(""));
+				locale_initializer::init();
 				std::size_t len = std::mbsrtowcs(0, &sp, 0, &mbstate);
 				if(len != static_cast<std::size_t>(-1))
 				{
 					wcstr.resize(len);
 					std::mbsrtowcs(&wcstr[0], &sp, len, &mbstate);
 				}
-				std::locale::global(loc);
 				return wcstr;
 			}
 		private:
@@ -583,7 +635,7 @@ namespace nana
 					std::mbstate_t mbstate = std::mbstate_t();
 					const wchar_t* sp = data_.c_str();
 
-					std::locale loc = std::locale::global(std::locale(""));
+					locale_initializer::init();
 					std::size_t len = std::wcsrtombs(0, &sp, 0, &mbstate);
 					if(len != static_cast<std::size_t>(-1))
 					{
@@ -592,7 +644,6 @@ namespace nana
 						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
 						return mbstr;
 					}
-					std::locale::global(loc);
 				}
 				return std::string();
 			}

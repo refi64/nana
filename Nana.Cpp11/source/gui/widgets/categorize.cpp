@@ -571,8 +571,8 @@ namespace nana{	namespace gui{
 						std::vector<node_handle> v;
 						if(treebase_.seq(0, v))
 						{
-							std::vector<node_handle>::iterator end = v.begin() + head_;
-							for(std::vector<node_handle>::iterator i = v.begin(); i != end; ++i)
+							auto end = v.begin() + head_;
+							for(auto i = v.begin(); i != end; ++i)
 								style_.module.strings.push_back((*i)->value.first);
 						}
 						r = style_.active_item_rectangle;
@@ -649,16 +649,15 @@ namespace nana{	namespace gui{
 					std::size_t lines = item_lines_;
 					std::vector<node_handle> v;
 					treebase_.seq(0, v);
-					for(std::vector<node_handle>::iterator vi = v.begin(); vi != v.end(); ++vi)
+					for(auto node : v)
 					{
-						node_handle i = *vi;
-						if(i->value.second.scale.width > px)
+						if(node->value.second.scale.width > px)
 						{
 							if(lines > 1)
 							{
 								--lines;
 								px = r.width;
-								if(px < i->value.second.scale.width)
+								if(px < node->value.second.scale.width)
 								{
 									--lines;
 									continue;
@@ -670,7 +669,7 @@ namespace nana{	namespace gui{
 								break;
 							}
 						}
-						px -= i->value.second.scale.width;
+						px -= node->value.second.scale.width;
 					}
 
 					if(false == all)
@@ -687,22 +686,21 @@ namespace nana{	namespace gui{
 					unsigned highest = 0;
 					std::vector<node_handle> v;
 					treebase_.seq(0, v);
-					for(std::vector<node_handle>::iterator vi = v.begin(); vi != v.end(); ++vi)
+					for(auto node : v)
 					{
-						node_handle i = *vi;
-						i->value.second.scale = graph_->text_extent_size(i->value.first);
+						node->value.second.scale = graph_->text_extent_size(node->value.first);
 
-						if(highest < i->value.second.scale.height)
-							highest = i->value.second.scale.height;
+						if(highest < node->value.second.scale.height)
+							highest = node->value.second.scale.height;
 
-						i->value.second.scale.width += (i->child ? 26 : 10);
+						node->value.second.scale.width += (node->child ? 26 : 10);
 					}
 
 					highest += 6; //the default height of item.
 
 					item_lines_ = (graph_->height() - 2) / highest;
-					if(item_lines_ == 0) item_lines_ = 1;
-
+					if(item_lines_ == 0)
+						item_lines_ = 1;
 					item_height_ = (1 != item_lines_ ? highest : _m_item_fix_scale());
 				}
 
@@ -773,9 +771,9 @@ namespace nana{	namespace gui{
 				nana::gui::window	window_;
 				nana::paint::graphics * graph_;
 				nana::string splitstr_;
-				size_t		head_;
+				std::size_t		head_;
 				unsigned	item_height_;
-				size_t		item_lines_;
+				std::size_t		item_lines_;
 				container	treebase_;
 
 				mutable ui_element	ui_el_;

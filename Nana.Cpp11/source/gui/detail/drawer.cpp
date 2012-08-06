@@ -292,9 +292,8 @@ namespace gui
 
 		void drawer::clear()
 		{
-			std::vector<nana::gui::detail::dynamic_drawing::object*>::iterator it = dynamic_drawing_objects_.begin();
-			for(; it != dynamic_drawing_objects_.end(); ++it)
-				delete *it;
+			for(auto p : dynamic_drawing_objects_)
+				delete p;
 
 			std::vector<nana::gui::detail::dynamic_drawing::object*>().swap(dynamic_drawing_objects_);
 		}

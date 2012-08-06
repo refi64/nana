@@ -89,17 +89,6 @@ namespace detail
 		}
 	}
 
-	void drawable_impl_type::brush_spec::remove()
-	{
-		if(this->handle)
-		{
-			::DeleteObject(this->handle);
-			this->handle = 0;
-			this->style = Solid;
-			this->color = nana::null_color;
-		}
-	}
-
 	void drawable_impl_type::round_region_spec::set(const nana::rectangle& r, unsigned radius_x, unsigned radius_y)
 	{
 		if(this->r != r || this->radius_x != radius_x || this->radius_y != radius_y)

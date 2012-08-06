@@ -114,6 +114,7 @@ namespace xcheckbox
 					case checkbox::blocker:
 						checker_.type = paint::gadget::check_renderer::blocker;
 						break;
+					default:	break;
 					}
 				}
 			}

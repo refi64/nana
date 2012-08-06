@@ -621,7 +621,7 @@ namespace paint
 				}
 				if(changed_ == false) changed_ = true;
 #elif defined(NANA_X11)
-				if(solid && color == color_if_solid)
+				if(solid && (color == color_if_solid))
 				{
 					rectangle(x, y, width, height, color, true);
 				}
@@ -1007,8 +1007,7 @@ namespace paint
 
 		void graphics::stretch(graphics& dst, const nana::rectangle & r) const
 		{
-			nana::size sz = size();
-			stretch(nana::rectangle(0, 0, sz.width, sz.height), dst, r);
+			stretch(nana::rectangle(size()), dst, r);
 		}
 
 		void graphics::flush()

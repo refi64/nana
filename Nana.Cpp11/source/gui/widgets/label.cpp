@@ -236,13 +236,10 @@ namespace gui
 
 				void _m_clear()
 				{
-					for(std::vector<std::vector<section_t*> >::iterator i = container_.begin(); i != container_.end(); ++i)
+					for(auto & line : container_)
 					{
-						line_container & lc = *i;
-						for(std::vector<section_t*>::iterator u = lc.begin(); u != lc.end(); ++u)
-						{
-							delete *u;
-						}
+						for(auto section : line)
+							delete section;
 					}
 
 					container_.clear();
@@ -648,15 +645,15 @@ namespace gui
 					nana::paint::font font;
 					nana::point pos;
 					unsigned bounds = graph.height();
-					const content::line_container * line = 0;
+					const content::line_container * line = nullptr;
 					for(unsigned i = 0; (line = content_.getline(i)); ++i)
 					{
 						unsigned px = _m_line_pixels(graph, line);
-						for(content::line_container::const_iterator u = line->begin(); u != line->end(); ++u)
+						for(auto section : *line)
 						{
 							if(pos.y > static_cast<int>(bounds)) return;
-							_m_change_font(graph, font, *u);
-							pos = _m_draw_string(px, pos.x, pos.y, graph, (*u)->str, (*u));
+							_m_change_font(graph, font, section);
+							pos = _m_draw_string(px, pos.x, pos.y, graph, section->str, section);
 						}
 						pos.y += px;
 						pos.x = 0;
@@ -669,14 +666,14 @@ namespace gui
 					nana::paint::font font;
 					nana::point pos;
 
-					const content::line_container * line = 0;
+					const content::line_container * line = nullptr;
 					for(unsigned i = 0; (line = content_.getline(i)); ++i)
 					{
 						unsigned px = _m_line_pixels(graph, line);
-						for(content::line_container::const_iterator u = line->begin(); u != line->end(); ++u)
+						for(auto section : *line)
 						{
-							_m_change_font(graph, font, *u);
-							pos = _m_extent_size(px, pos.x, pos.y, graph, (*u)->str, (*u));
+							_m_change_font(graph, font, section);
+							pos = _m_extent_size(px, pos.x, pos.y, graph, section->str, section);
 						}
 						pos.y += px;
 						pos.x = 0;
@@ -690,16 +687,16 @@ namespace gui
 					nana::paint::font font;
 					nana::point pos;
 
-					const content::line_container * line = 0;
+					const content::line_container * line = nullptr;
 					nana::size ts;
 					for(unsigned i = 0; (line = content_.getline(i)); ++i)
 					{
 						unsigned px = _m_line_pixels(graph, line);
 						unsigned width = 0;
-						for(content::line_container::const_iterator u = line->begin(); u != line->end(); ++u)
+						for(auto section : *line)
 						{
-							_m_change_font(graph, font, *u);
-							width += graph.text_extent_size((*u)->str).width;
+							_m_change_font(graph, font, section);
+							width += graph.text_extent_size(section->str).width;
 						}
 						if(ts.width < width)
 							ts.width = width;
@@ -710,19 +707,18 @@ namespace gui
 
 				void over(int x, int y)
 				{
-					const content::line_container * line = 0;
+					const content::line_container * line = nullptr;
 					for(unsigned i = 0; (line = content_.getline(i)); ++i)
 					{
-						for(content::line_container::const_iterator u = line->begin(); u != line->end(); ++u)
+						for(auto section : *line)
 						{
-							std::vector<nana::rectangle>::iterator i = (*u)->areas.begin(), end = (*u)->areas.end();
-							for(; i != end; ++i)
+							for(auto & r : section->areas)
 							{
 								//Test if the specified point is in the area specified by rectangle.
-								if((i->x <= x && x < i->x + static_cast<int>(i->width)) && (i->y <= y && y < i->y + static_cast<int>(i->height)))
+								if((r.x <= x && x < r.x + static_cast<int>(r.width)) && (r.y <= y && y < r.y + static_cast<int>(r.height)))
 								{
 									trace_.cursor.load(cursor::predef::hand);
-									trace_.url = (*u)->url;
+									trace_.url = section->url;
 									return;
 								}
 							}
@@ -757,10 +753,10 @@ namespace gui
 				{
 					nana::paint::font font;
 					unsigned pixels = 0;
-					for(content::line_container::const_iterator u = line->begin(); u != line->end(); ++u)
+					for(auto section : *line)
 					{
-						_m_change_font(graph, font, *u);
-						unsigned px = graph.text_extent_size((*u)->str).height;
+						_m_change_font(graph, font, section);
+						unsigned px = graph.text_extent_size(section->str).height;
 						if(px > pixels)
 							pixels = px;
 					}
@@ -922,13 +918,11 @@ namespace gui
 
 				void _m_erase_areas()
 				{
-					const content::line_container * line = 0;
+					const content::line_container * line = nullptr;
 					for(unsigned i = 0; (line = content_.getline(i)); ++i)
 					{
-						for(content::line_container::const_iterator u = line->begin(); u != line->end(); ++u)
-						{
-							(*u)->areas.clear();
-						}
+						for(auto section : *line)
+							section->areas.clear();
 					}
 				}
 			private:
@@ -1039,11 +1033,11 @@ namespace gui
 				{
 					if(0 == impl_->wd) return;
 
-					nana::gui::window wd = impl_->wd->handle();
+					window wd = impl_->wd->handle();
 					if(API::glass_window(wd))
 						API::make_glass_background(wd);
 					else
-						graph.rectangle(0, 0, graph.width(), graph.height(), API::background(wd), true);
+						graph.rectangle(API::background(wd), true);
 
 					impl_->renderer->render(*impl_->wd, graph, API::window_caption(wd));
 				}

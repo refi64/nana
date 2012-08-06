@@ -73,10 +73,10 @@ namespace nana{ namespace gui{
 				{
 					if(index < cont_.size())
 					{
-						for(container::iterator i = cont_.begin(); i != cont_.end(); ++i)
+						for(auto & m : cont_)
 						{
-							if(i->index == index)
-								i->pixels = width;
+							if(m.index == index)
+								m.pixels = width;
 						}
 					}
 				}
@@ -84,10 +84,10 @@ namespace nana{ namespace gui{
 				unsigned pixels() const
 				{
 					unsigned pixels = 0;
-					for(container::const_iterator i = cont_.begin(); i != cont_.end(); ++i)
+					for(auto & m : cont_)
 					{
-						if(i->visible)
-							pixels += i->pixels;
+						if(m.visible)
+							pixels += m.pixels;
 					}
 					return pixels;
 				}
@@ -104,22 +104,22 @@ namespace nana{ namespace gui{
 
 				const item_t& get_item(size_type index) const
 				{
-					for(container::const_iterator i = cont_.begin(); i != cont_.end(); ++i)
+					for(auto & m : cont_)
 					{
-						if(i->index == index)
-							return *i;
+						if(m.index == index)
+							return m;
 					}
 
-					throw std::out_of_range("listbox, wrong header index.");
+					throw std::out_of_range("Nana.GUI.Listbox: Wrong header index.");
 				}
 
 				size_type item_by_x(int x) const
 				{
-					for(container::const_iterator i = cont_.begin(); i != cont_.end(); ++i)
+					for(auto & m : cont_)
 					{
-						if(x < static_cast<int>(i->pixels))
-							return i->index;
-						x -= i->pixels;
+						if(x < static_cast<int>(m.pixels))
+							return m.index;
+						x -= m.pixels;
 					}
 					return npos;
 				}
@@ -127,15 +127,15 @@ namespace nana{ namespace gui{
 				bool item_pos(size_type index, int& xpos, unsigned& pixels) const
 				{
 					xpos = 0;
-					for(container::const_iterator i = cont_.begin(); i != cont_.end(); ++i)
+					for(auto & m : cont_)
 					{
-						if(i->index == index)
+						if(m.index == index)
 						{
-							pixels = i->pixels;
+							pixels = m.pixels;
 							return true;
 						}
-						else if(i->visible)
-							xpos += i->pixels;
+						else if(m.visible)
+							xpos += m.pixels;
 					}
 					return true;
 				}
@@ -143,12 +143,12 @@ namespace nana{ namespace gui{
 				int xpos(size_type index) const
 				{
 					int x = 0;
-					for(container::const_iterator i = cont_.begin(); i != cont_.end(); ++i)
+					for(auto & m : cont_)
 					{
-						if(i->index == index)
+						if(m.index == index)
 							break;
-						else if(i->visible)
-							x += i->pixels;
+						else if(m.visible)
+							x += m.pixels;
 					}
 
 					return x;
@@ -173,20 +173,21 @@ namespace nana{ namespace gui{
 					}
 					return npos;
 				}
+
 				size_type begin() const
 				{
-					for(container::const_iterator i = cont_.begin(); i != cont_.end(); ++i)
+					for(auto & m : cont_)
 					{
-						if(i->visible) return i->index;
+						if(m.visible) return m.index;
 					}
 					return npos;
 				}
 
 				size_type last() const
 				{
-					for(container::const_reverse_iterator i = cont_.rbegin(); i != cont_.rend(); ++i)
+					for(auto & m : cont_)
 					{
-						if(i->visible) return i->index;
+						if(m.visible) return m.index;
 					}
 					return npos;
 				}
@@ -195,10 +196,10 @@ namespace nana{ namespace gui{
 				{
 					if(a != b && a < cont_.size() && b < cont_.size())
 					{
-						for(container::const_iterator i = cont_.begin();i != cont_.end();  ++i)
+						for(auto & m : cont_)
 						{
-							if(a == i->index) return true;
-							if(b == i->index) return false;
+							if(a == m.index) return true;
+							if(b == m.index) return false;
 						}
 					}
 					return false;
@@ -304,9 +305,9 @@ namespace nana{ namespace gui{
 
 					bool select() const
 					{
-						for(container::const_iterator i = items.begin(); i != items.end(); ++i)
+						for(auto & m : items)
 						{
-							if(i->flags.select == false) return false;
+							if(m.flags.select == false) return false;
 						}
 						return (items.size() != 0);
 					}
@@ -485,8 +486,8 @@ namespace nana{ namespace gui{
 
 				void clear()
 				{
-					for(container::iterator i = list_.begin(); i != list_.end(); ++i)
-						i->items.clear();
+					for(auto & m : list_)
+						m.items.clear();
 				}
 
 				std::pair<size_type, size_type> advance(size_type categ, size_type index, size_type n)
@@ -706,12 +707,10 @@ namespace nana{ namespace gui{
 
 				void check_for_all(bool chk)
 				{
-					for(container::iterator i = list_.begin(); i != list_.end(); ++i)
+					for(auto & cat : list_)
 					{
-						for(category::container::iterator u = i->items.begin(); u != i->items.end(); ++u)
-						{
-							if(u->flags.checked != chk)	u->flags.checked = chk;
-						}
+						for(auto & m : cat.items)
+							if(m.flags.checked != chk)	m.flags.checked = chk;
 					}
 				}
 
@@ -760,27 +759,27 @@ namespace nana{ namespace gui{
 
 				void item_checked(std::vector<std::pair<size_type, size_type> >& vec) const
 				{
-					size_type categ_idx = 0;
-					size_type index = 0;
-					for(container::const_iterator i = list_.begin(); i != list_.end(); ++i, ++categ_idx)
+					std::pair<size_type, size_type> id;
+					for(auto & cat : list_)
 					{
-						index = 0;
-						const category& categ = *i;
-						for(category::container::const_iterator u = categ.items.begin(); u != categ.items.end(); ++u, ++index)
+						id.second = 0;
+						for(auto & m : cat.items)
 						{
-							if(u->flags.checked)
-								vec.push_back(std::pair<size_type, size_type>(categ_idx, index));
+							if(m.flags.checked)
+								vec.push_back(id);
+							++id.second;
 						}
+						++id.first;
 					}
 				}
 
 				void select_for_all(bool sel)
 				{
-					for(container::iterator i = list_.begin(); i != list_.end(); ++i)
+					for(auto & cat : list_)
 					{
-						for(category::container::iterator u = i->items.begin(); u != i->items.end(); ++u)
+						for(auto & m : cat.items)
 						{
-							if(u->flags.select != sel)	u->flags.select = sel;
+							if(m.flags.select != sel)	m.flags.select = sel;
 						}
 					}
 				}
@@ -815,17 +814,17 @@ namespace nana{ namespace gui{
 
 				void item_selected(std::vector<std::pair<size_type, size_type> >& vec) const
 				{
-					size_type categ_idx = 0;
-					size_type index = 0;
-					for(container::const_iterator i = list_.begin(); i != list_.end(); ++i, ++categ_idx)
+					std::pair<size_type, size_type> id;
+					for(auto & cat : list_)
 					{
-						index = 0;
-						const category& categ = *i;
-						for(category::container::const_iterator u = categ.items.begin(); u != categ.items.end(); ++u, ++index)
+						id.second = 0;
+						for(auto & m : cat.items)
 						{
-							if(u->flags.select)
-								vec.push_back(std::pair<size_type, size_type>(categ_idx, index));
+							if(m.flags.select)
+								vec.push_back(id);
+							++id.second;
 						}
+						++id.first;
 					}
 				}
 
@@ -928,16 +927,15 @@ namespace nana{ namespace gui{
 					return nana::string();
 				}
 
-				bool categ_checked(size_type categ) const
+				bool categ_checked(size_type cat_index) const
 				{
-					if(list_.size() > categ)
+					if(list_.size() > cat_index)
 					{
-						container::const_iterator i_categ = list_.begin();
-						std::advance(i_categ, categ);
-
-						for(category::container::const_iterator i = i_categ->items.begin(); i != i_categ->items.end(); ++i)
+						container::const_iterator cat = list_.begin();
+						std::advance(cat, cat_index);
+						for(auto & m : cat->items)
 						{
-							if(i->flags.checked == false)
+							if(m.flags.checked == false)
 								return false;
 						}
 						return true;
@@ -945,20 +943,19 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				bool categ_checked(size_type categ, bool chk)
+				bool categ_checked(size_type cat_index, bool chk)
 				{
 					bool changed = false;
-					if(list_.size() > categ)
+					if(list_.size() > cat_index)
 					{
-						container::iterator i_categ = list_.begin();
-						std::advance(i_categ, categ);
-						category::container::iterator end = i_categ->items.end();
+						container::iterator cat = list_.begin();
+						std::advance(cat, cat_index);
 
-						for(category::container::iterator i = i_categ->items.begin(); i != end; ++i)
+						for(auto & m : cat->items)
 						{
-							if(i->flags.checked != chk)
+							if(m.flags.checked != chk)
 							{
-								i->flags.checked = chk;
+								m.flags.checked = chk;
 								changed = true;
 							}
 						}
@@ -966,26 +963,23 @@ namespace nana{ namespace gui{
 					return changed;
 				}
 
-				bool categ_checked_reverse(size_type categ)
+				bool categ_checked_reverse(size_type cat_index)
 				{
-					if(list_.size() > categ)
-					{
-						bool chk = categ_checked(categ);
-						return categ_checked(categ, !chk);
-					}
+					if(list_.size() > cat_index)
+						return categ_checked(cat_index, !categ_checked(cat_index));
 					return false;
 				}
 
-				bool categ_selected(size_type categ) const
+				bool categ_selected(size_type cat_index) const
 				{
-					if(list_.size() > categ)
+					if(list_.size() > cat_index)
 					{
-						container::const_iterator i_categ = list_.begin();
-						std::advance(i_categ, categ);
+						container::const_iterator cat = list_.begin();
+						std::advance(cat, cat_index);
 
-						for(category::container::const_iterator i = i_categ->items.begin(); i != i_categ->items.end(); ++i)
+						for(auto & m : cat->items)
 						{
-							if(i->flags.select == false)
+							if(m.flags.select == false)
 								return false;
 						}
 						return true;
@@ -993,20 +987,19 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				bool categ_selected(size_type categ, bool sel)
+				bool categ_selected(size_type cat_index, bool sel)
 				{
 					bool changed = false;
-					if(list_.size() > categ)
+					if(list_.size() > cat_index)
 					{
-						container::iterator i_categ = list_.begin();
-						std::advance(i_categ, categ);
-						category::container::iterator end = i_categ->items.end();
+						container::iterator cat = list_.begin();
+						std::advance(cat, cat_index);
 
-						for(category::container::iterator i = i_categ->items.begin(); i != end; ++i)
+						for(auto & m : cat->items)
 						{
-							if(i->flags.select != sel)
+							if(m.flags.select != sel)
 							{
-								i->flags.select = sel;
+								m.flags.select = sel;
 								changed = true;
 							}
 						}
@@ -1014,12 +1007,12 @@ namespace nana{ namespace gui{
 					return changed;
 				}
 
-				void reverse_item_select(size_type categ, size_type index)
+				void reverse_item_select(size_type cat_index, size_type index)
 				{
-					if(categ < list_.size())
+					if(cat_index < list_.size())
 					{
 						container::iterator i = list_.begin();
-						std::advance(i, categ);
+						std::advance(i, cat_index);
 						if(index < i->items.size())
 						{
 							(i->items)[index].flags.select = !(i->items)[index].flags.select;
@@ -1144,8 +1137,6 @@ namespace nana{ namespace gui{
 								return true;
 							}
 						}
-
-
 					}
 
 					++categ;
@@ -1172,9 +1163,9 @@ namespace nana{ namespace gui{
 							}
 						}
 					}
-
 					return false;
 				}
+
 				bool backward(size_type categ, size_type index, size_type offs, std::pair<size_type, size_type>& item) const
 				{
 					if(offs == 0)

@@ -25,6 +25,21 @@ namespace nana
 {
 	namespace detail
 	{
+
+		class locale_initializer
+		{
+		public:
+			static void init()
+			{
+				static bool initialized = false;
+				if(false == initialized)
+				{
+					initialized = true;
+					std::locale::global(std::locale(""));
+				}
+			}
+		};
+
 		class charset_encoding_interface
 		{
 		public:
@@ -87,14 +102,13 @@ namespace nana
 					std::string mbstr;
 					std::mbstate_t mbstate = std::mbstate_t();
 					const wchar_t * sp = wcstr.c_str();
-					std::locale loc = std::locale::global(std::locale(""));
+					locale_initializer::init();
 					std::size_t len = std::wcsrtombs(nullptr, &sp, 0, &mbstate);
 					if(len != static_cast<std::size_t>(-1))
 					{
 						mbstr.resize(len);
 						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
 					}
-					std::locale::global(loc);
 					return mbstr;
 				}
 				return data_;
@@ -157,7 +171,37 @@ namespace nana
 					}
 					return std::string();
 				}
-				return data_;
+
+				std::wstring wcstr;
+				const char* sp = data_.c_str();
+				std::mbstate_t mbstate = std::mbstate_t();
+
+				locale_initializer::init();
+				std::size_t len = std::mbsrtowcs(nullptr, &sp, 0, &mbstate);
+				if(len != static_cast<std::size_t>(-1))
+				{
+					wcstr.resize(len);
+					std::mbsrtowcs(&wcstr[0], &sp, len, &mbstate);
+
+					switch(encoding)
+					{
+					case unicode::utf8:
+						return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wcstr);
+					case unicode::utf16:
+						return std::wstring_convert<std::codecvt_utf16<wchar_t>>().to_bytes(wcstr);
+					case unicode::utf32:
+#if defined(NANA_WINDOWS)
+						{
+							const char * bytes = reinterpret_cast<const char*>(wcstr.c_str());
+							std::u32string utf32str = std::wstring_convert<std::codecvt_utf16<char32_t>, char32_t>().from_bytes(bytes, bytes + sizeof(wchar_t) * wcstr.size());
+							return std::string(reinterpret_cast<const char*>(utf32str.c_str()), sizeof(char32_t) * utf32str.size());
+						}
+#else
+						return std::string(reinterpret_cast<const char*>(wcstr.c_str()), sizeof(wchar_t) * wcstr.size());
+#endif
+					}
+				}
+				return std::string();
 			}
 
 			virtual std::wstring wstr() const
@@ -179,14 +223,14 @@ namespace nana
 				std::wstring wcstr;
 				const char* sp = data_.c_str();
 				std::mbstate_t mbstate = std::mbstate_t();
-				std::locale loc = std::locale::global(std::locale(""));
+
+				locale_initializer::init();
 				std::size_t len = std::mbsrtowcs(nullptr, &sp, 0, &mbstate);
 				if(len != static_cast<std::size_t>(-1))
 				{
 					wcstr.resize(len);
 					std::mbsrtowcs(&wcstr[0], &sp, len, &mbstate);
 				}
-				std::locale::global(loc);
 				return wcstr;
 			}
 
@@ -226,7 +270,7 @@ namespace nana
 					std::mbstate_t mbstate = std::mbstate_t();
 					const wchar_t* sp = data_.c_str();
 
-					std::locale loc = std::locale::global(std::locale(""));
+					locale_initializer::init();
 					std::size_t len = std::wcsrtombs(nullptr, &sp, 0, &mbstate);
 					if(len != static_cast<std::size_t>(-1))
 					{
@@ -235,7 +279,6 @@ namespace nana
 						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
 						return mbstr;
 					}
-					std::locale::global(loc);
 				}
 				return std::string();
 			}
@@ -255,7 +298,15 @@ namespace nana
 				case unicode::utf16:
 					return std::wstring_convert<std::codecvt_utf16<wchar_t>>().to_bytes(data_);
 				case unicode::utf32:
+#if defined(NANA_WINDOWS)
+					{
+						const char* bytes = reinterpret_cast<const char*>(data_.c_str());
+						std::u32string utf32str = std::wstring_convert<std::codecvt_utf16<char32_t>, char32_t>().from_bytes(bytes, bytes + sizeof(wchar_t) * data_.size());
+						return std::string(reinterpret_cast<const char*>(utf32str.c_str()), sizeof(char32_t) * utf32str.size());
+					}
+#else
 					return std::string(reinterpret_cast<const char*>(data_.c_str()), data_.size() * sizeof(wchar_t));
+#endif
 				}
 				return std::string();
 			}
@@ -285,7 +336,10 @@ namespace nana
 				unsigned ch = *p;
 				unsigned long code;
 				if(ch < 0xC0)
+				{
+					p = end;
 					return 0;
+				}
 				else if(ch < 0xE0 && (p + 1 <= end))
 				{
 					code = ((ch & 0x1F) << 6) | (p[1] & 0x3F);
@@ -687,14 +741,13 @@ namespace nana
 					std::string mbstr;
 					std::mbstate_t mbstate = std::mbstate_t();
 					const wchar_t * sp = reinterpret_cast<const wchar_t*>(strbuf.c_str());
-					std::locale loc = std::locale::global(std::locale(""));
+					locale_initializer::init();
 					std::size_t len = std::wcsrtombs(0, &sp, 0, &mbstate);
 					if(len != static_cast<std::size_t>(-1))
 					{
 						mbstr.resize(len);
 						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
 					}
-					std::locale::global(loc);
 					return mbstr;
 				}
 				return data_;
@@ -749,7 +802,28 @@ namespace nana
 					}
 					return std::string();
 				}
-				return data_;
+				std::string wcstr;
+				const char* sp = data_.c_str();
+				std::mbstate_t mbstate = std::mbstate_t();
+
+				locale_initializer::init();
+				std::size_t len = std::mbsrtowcs(nullptr, &sp, 0, &mbstate);
+				if(len != static_cast<std::size_t>(-1))
+				{
+					wcstr.resize(len * sizeof(wchar_t));
+					std::mbsrtowcs(reinterpret_cast<wchar_t*>(&wcstr[0]), &sp, len, &mbstate);
+
+					switch(encoding)
+					{
+					case unicode::utf8:
+						return utf32_to_utf8(wcstr);
+					case unicode::utf16:
+						return utf32_to_utf16(wcstr);
+					case unicode::utf32:
+						return wcstr;
+					}
+				}
+				return std::string();
 			}
 
 			virtual std::wstring wstr() const

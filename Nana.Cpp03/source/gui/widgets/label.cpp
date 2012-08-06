@@ -428,6 +428,7 @@ namespace gui
 						case tokens::eof:
 							loop = false;
 							break;
+						default:	break;
 						}
 					}
 					return true;

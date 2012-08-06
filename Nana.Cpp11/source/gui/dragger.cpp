@@ -8,16 +8,16 @@ namespace nana{ namespace gui{
 	{
 		struct drag_target_t
 		{
-			nana::gui::window wd;
+			window wd;
 			nana::point origin;
 		};
 
 		struct trigger_t
 		{
-			nana::gui::window wd;
-			nana::gui::event_handle press;
-			nana::gui::event_handle over;
-			nana::gui::event_handle release;
+			window wd;
+			event_handle press;
+			event_handle over;
+			event_handle release;
 			event_handle destroy;
 		};
 	public:
@@ -64,7 +64,7 @@ namespace nana{ namespace gui{
 
 		void _m_destroy(const eventinfo& ei)
 		{
-			for(std::vector<trigger_t>::iterator i = triggers_.begin(); i != triggers_.end(); ++i)
+			for(auto i = triggers_.begin(); i != triggers_.end(); ++i)
 			{
 				if(i->wd == ei.window)
 				{
@@ -82,7 +82,7 @@ namespace nana{ namespace gui{
 				dragging_ = true;
 				API::capture_window(ei.window, true);
 				origin_ = API::cursor_position();
-				for(std::vector<drag_target_t>::iterator i = targets_.begin(); i != targets_.end(); ++i)
+				for(auto i = targets_.begin(); i != targets_.end(); ++i)
 				{
 					i->origin = API::window_position(i->wd);
 					nana::gui::window owner = API::get_owner_window(i->wd);
@@ -96,7 +96,7 @@ namespace nana{ namespace gui{
 					nana::point pos = API::cursor_position();
 					pos.x -= origin_.x;
 					pos.y -= origin_.y;
-					for(std::vector<drag_target_t>::iterator i = targets_.begin(); i != targets_.end(); ++i)
+					for(auto i = targets_.begin(); i != targets_.end(); ++i)
 					{
 						if(API::is_window_zoomed(i->wd, true) == false)
 						{

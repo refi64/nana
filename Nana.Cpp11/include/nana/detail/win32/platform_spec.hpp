@@ -110,7 +110,6 @@ namespace detail
 			nana::color_t color;
 
 			void set(HDC context, t style, nana::color_t color);
-			void remove();
 		}brush;
 
 		struct round_region_spec

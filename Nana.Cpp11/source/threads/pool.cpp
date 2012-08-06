@@ -115,42 +115,41 @@ namespace threads
 				std::lock_guard<decltype(locks_.thread)> lock(self->locks_.thread);
 				tpool_running_ = false;
 
-				std::vector<detail::pool_thread_object*>::iterator i = self->threads_.begin(), end = self->threads_.end();
-				for(; i != end; ++i)
+				for(auto thr : self->threads_)
 				{
-					if((*i)->state == detail::pool_thread_object::stop)
+					if(thr->state == detail::pool_thread_object::stop)
 					{
 #if defined(NANA_WINDOWS)
 						while(true)
 						{
-							unsigned long susp_n = ::ResumeThread((*i)->handle);
+							unsigned long susp_n = ::ResumeThread(thr->handle);
 							if(susp_n == 1 || susp_n == static_cast<unsigned long>(-1))
 								break;
 						}
 #elif defined(NANA_LINUX)
-						(*i)->cond.notify_one();
+						thr->cond.notify_one();
 #endif
 					}
 				}
 				dup.swap(self->threads_);
 			}
 
-			for(std::vector<detail::pool_thread_object*>::iterator i = dup.begin(); i != dup.end(); ++i)
+			for(auto thr : dup)
 			{
 #if defined(NANA_WINDOWS)
-				::WaitForSingleObject((*i)->handle, INFINITE);
-				::CloseHandle((*i)->handle);
+				::WaitForSingleObject(thr->handle, INFINITE);
+				::CloseHandle(thr->handle);
 #elif defined(NANA_LINUX)
-				::pthread_join((*i)->handle, 0);
-				::pthread_detach((*i)->handle);
+				::pthread_join(thr->handle, 0);
+				::pthread_detach(thr->handle);
 #endif
-				delete (*i);
+				delete thr;
 			}
 		}
 
 		void pool::signal() volatile
 		{
-			detail::task_object* tkob = 0;
+			detail::task_object* tkob = nullptr;
 			try
 			{
 				tkob = new detail::task_signal;
@@ -205,12 +204,11 @@ namespace threads
 				std::lock_guard<decltype(locks_.thread)> lock(self->locks_.thread);
 				if(tpool_running_)
 				{
-					std::vector<detail::pool_thread_object*>::iterator i = self->threads_.begin(), end = self->threads_.end();
-					for(; i != end; ++i)
+					for(auto thr : self->threads_)
 					{
-						if((*i)->state == detail::pool_thread_object::stop)	//sleep
+						if(thr->state == detail::pool_thread_object::stop)	//sleep
 						{
-							pto = *i;
+							pto = thr;
 							pto->state = detail::pool_thread_object::run;
 							break;
 						}

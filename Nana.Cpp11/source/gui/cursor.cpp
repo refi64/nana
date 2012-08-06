@@ -166,13 +166,13 @@ namespace gui
 	{
 		struct cursor_window_t
 		{
-			nana::gui::native_window_type native;
+			native_window_type native;
 			cursor::predef::t id;
-			nana::gui::event_handle enter;
-			nana::gui::event_handle leave;
+			event_handle enter;
+			event_handle leave;
 		};
 	public:
-		typedef std::map<nana::gui::window, cursor_window_t> table;
+		typedef std::map<window, cursor_window_t> table;
 		typedef table::iterator iterator;
 
 		auto_cursor_impl()

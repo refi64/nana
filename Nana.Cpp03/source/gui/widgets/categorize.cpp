@@ -504,6 +504,7 @@ namespace nana{	namespace gui{
 						_m_show_list();
 						style_.mode = scheme::mode_floatlist;
 						break;
+					default:	break;
 					}
 				}
 
@@ -517,6 +518,7 @@ namespace nana{	namespace gui{
 						case ui_element::item_name:
 							_m_selected(ui_el_.index);
 							break;
+						default:	break;
 						}
 					}
 				}
@@ -608,6 +610,7 @@ namespace nana{	namespace gui{
 							_m_selected(style_.module.index);
 							is_draw = true;
 							break;
+						default:	break;
 						}
 					}
 					else

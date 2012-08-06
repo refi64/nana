@@ -39,7 +39,9 @@ namespace nana{	namespace gui{
 			{
 				bool rendered = false;
 				core_window_t * root_wd = wd->root_widget;
-				if(root_wd->other.attribute.root->effects_edge_nimbus.size())
+				auto & nimbus = root_wd->other.attribute.root->effects_edge_nimbus;
+
+				if(nimbus.size())
 				{
 					core_window_t * focused = root_wd->other.attribute.root->focus;
 					native_window_type native = root_wd->root;
@@ -50,29 +52,27 @@ namespace nana{	namespace gui{
 					std::vector<core_window_t*> erase;
 					std::vector<nana::rectangle>	r_set;
 					nana::rectangle r;
-					typename core_window_t::edge_nimbus_container & cont = root_wd->other.attribute.root->effects_edge_nimbus;
-					for(typename core_window_t::edge_nimbus_container::iterator i = cont.begin(); i != cont.end(); ++i)
+					for(auto & action : nimbus)
 					{
-						typename core_window_t::edge_nimbus_action & ena = *i;
-						if(_m_edge_nimbus(focused, ena.window) && window_layer::read_visual_rectangle(ena.window, r))
+						if(_m_edge_nimbus(focused, action.window) && window_layer::read_visual_rectangle(action.window, r))
 						{
-							if(ena.window == wd)
+							if(action.window == wd)
 								rendered = true;
 
 							r_set.push_back(r);
-							ena.rendered = true;
+							action.rendered = true;
 						}
-						else if(ena.rendered)
+						else if(action.rendered)
 						{
-							ena.rendered = false;
-							erase.push_back(ena.window);
+							action.rendered = false;
+							erase.push_back(action.window);
 						}
 					}
 
 					//Erase
 					for(typename std::vector<core_window_t*>::iterator i = erase.begin(); i != erase.end(); ++i)
+					for(auto el : erase)
 					{
-						core_window_t * el = *i;
 						if(el == wd)
 							rendered = true;
 
@@ -85,10 +85,10 @@ namespace nana{	namespace gui{
 
 					std::vector<nana::rectangle>::iterator visual_iterator = r_set.begin();
 					//Render
-					for(typename core_window_t::edge_nimbus_container::iterator i = cont.begin(); i != cont.end(); ++i)
+					for(auto & action : nimbus)
 					{
-						if(i->rendered)
-							_m_render_edge_nimbus(i->window, *(visual_iterator++));
+						if(action.rendered)
+							_m_render_edge_nimbus(action.window, *(visual_iterator++));
 					}
 				}
 				return rendered;
@@ -144,12 +144,8 @@ namespace nana{	namespace gui{
 						std::vector<typename window_layer::wd_rectangle> overlaps;
 						if(window_layer::read_overlaps(wd, visual, overlaps))
 						{
-							typename std::vector<typename window_layer::wd_rectangle>::iterator i = overlaps.begin(), end = overlaps.end();
-							for(; i != end; ++i)
-							{
-								const nana::rectangle& r = i->r;
-								graph->paste(wd->root, r, r.x, r.y);
-							}
+							for(auto & wdr : overlaps)
+								graph->paste(wd->root, wdr.r, wdr.r.x, wdr.r.y);
 						}
 					}
 				}

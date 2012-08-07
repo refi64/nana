@@ -2078,6 +2078,13 @@ namespace nana{ namespace gui{
 						drawer_lister_(new drawer_lister_impl(essence_))
 				{}
 
+				trigger::~trigger()
+				{
+					delete drawer_lister_;
+					delete drawer_header_;
+					delete essence_;
+				}
+
 				essence_t& trigger::essence()
 				{
 					return *essence_;

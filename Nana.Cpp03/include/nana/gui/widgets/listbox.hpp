@@ -34,6 +34,7 @@ namespace nana{ namespace gui{
 				typedef std::size_t size_type;
 
 				trigger();
+				~trigger();
 				essence_t& essence();
 				essence_t& essence() const;
 				void draw();
@@ -46,14 +47,14 @@ namespace nana{ namespace gui{
 				void attached(graph_reference);
 				void detached();
 				void refresh(graph_reference);
-				void mouse_move(graph_reference, const nana::gui::eventinfo&);
-				void mouse_leave(graph_reference, const nana::gui::eventinfo&);
-				void mouse_down(graph_reference, const nana::gui::eventinfo&);
-				void mouse_up(graph_reference, const nana::gui::eventinfo&);
-				void mouse_wheel(graph_reference, const nana::gui::eventinfo&);
-				void dbl_click(graph_reference, const nana::gui::eventinfo&);
-				void resize(graph_reference, const nana::gui::eventinfo&);
-				void key_down(graph_reference, const nana::gui::eventinfo&);
+				void mouse_move(graph_reference, const eventinfo&);
+				void mouse_leave(graph_reference, const eventinfo&);
+				void mouse_down(graph_reference, const eventinfo&);
+				void mouse_up(graph_reference, const eventinfo&);
+				void mouse_wheel(graph_reference, const eventinfo&);
+				void dbl_click(graph_reference, const eventinfo&);
+				void resize(graph_reference, const eventinfo&);
+				void key_down(graph_reference, const eventinfo&);
 			private:
 				essence_t * essence_;
 				drawer_header_impl *drawer_header_;

@@ -2067,6 +2067,13 @@ namespace nana{ namespace gui{
 						drawer_lister_(new drawer_lister_impl(essence_))
 				{}
 
+				trigger::~trigger()
+				{
+					delete drawer_lister_;
+					delete drawer_header_;
+					delete essence_;
+				}
+
 				essence_t& trigger::essence()
 				{
 					return *essence_;
@@ -2105,7 +2112,7 @@ namespace nana{ namespace gui{
 				{
 					nana::paint::graphics * graph = essence_->graph;
 					//Draw Border
-					graph->rectangle(0, 0, graph->width(), graph->height(), 0x9CB6C5, false);
+					graph->rectangle(0x9CB6C5, false);
 					graph->line(1, 1, 1, graph->height() - 2, 0xFFFFFF);
 					graph->line(graph->width() - 2, 1, graph->width() - 2, graph->height() - 2, 0xFFFFFF);
 
@@ -2195,26 +2202,26 @@ namespace nana{ namespace gui{
 					switch(update)
 					{
 					case 1:
-						nana::gui::API::update_window(essence_->window->handle());
+						API::update_window(essence_->window->handle());
 						break;
 					case 2:
 						this->draw();
-						nana::gui::API::lazy_refresh();
+						API::lazy_refresh();
 						break;
 					}
 				}
 
-				void trigger::mouse_leave(trigger::graph_reference graph, const nana::gui::eventinfo&)
+				void trigger::mouse_leave(graph_reference graph, const eventinfo&)
 				{
 					if(static_cast<int>(essence_->pointer_where.x) != essence_->WhereUnknown || essence_->ptr_state != essence_->StateNormal)
 					{
 						essence_->pointer_where.x = essence_->WhereUnknown;
 						essence_->ptr_state = essence_->StateNormal;
 						this->draw();
-						nana::gui::API::lazy_refresh();
+						API::lazy_refresh();
 					}
 				}
-				void trigger::mouse_down(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_down(graph_reference graph, const eventinfo& ei)
 				{
 					bool update = false;
 					if(essence_->pointer_where.x == essence_->WhereHeader && (static_cast<int>(essence_->pointer_where.y) != essence_->WhereUnknown || (drawer_header_->item_spliter() != npos)))
@@ -2223,7 +2230,7 @@ namespace nana{ namespace gui{
 						nana::point pos(ei.mouse.x, ei.mouse.y);
 						essence_->widget_to_header(pos);
 						drawer_header_->grab(pos, true);
-						nana::gui::API::capture_window(essence_->window->handle(), true);
+						API::capture_window(essence_->window->handle(), true);
 						update = true;
 					}
 					else if(essence_->pointer_where.x == essence_->WhereLister || essence_->pointer_where.x == essence_->WhereChecker)
@@ -2260,7 +2267,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_up(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_up(graph_reference graph, const eventinfo& ei)
 				{
 					if(essence_->ptr_state == essence_->StateGrab)
 					{
@@ -2274,7 +2281,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_wheel(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_wheel(graph_reference graph, const eventinfo& ei)
 				{
 					if(essence_->wheel(ei.wheel.upwards))
 					{
@@ -2284,7 +2291,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::dbl_click(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::dbl_click(graph_reference graph, const eventinfo& ei)
 				{
 					if(essence_->pointer_where.x == essence_->WhereLister)
 					{
@@ -2316,23 +2323,23 @@ namespace nana{ namespace gui{
 						}
 					}
 				}
-				void trigger::resize(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::resize(graph_reference graph, const eventinfo& ei)
 				{
 					essence_->adjust_scroll_life();
 					this->draw();
 					nana::gui::API::lazy_refresh();
 				}
 
-				void trigger::key_down(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::key_down(graph_reference graph, const eventinfo& ei)
 				{
 					switch(ei.keyboard.key)
 					{
-					case nana::gui::keyboard::up:
-					case nana::gui::keyboard::down:
-						essence_->lister.move_select(ei.keyboard.key == nana::gui::keyboard::up);
+					case keyboard::up:
+					case keyboard::down:
+						essence_->lister.move_select(ei.keyboard.key == keyboard::up);
 						essence_->trace_selected_item();
 						this->draw();
-						nana::gui::API::lazy_refresh();
+						API::lazy_refresh();
 						break;
 					}
 				}

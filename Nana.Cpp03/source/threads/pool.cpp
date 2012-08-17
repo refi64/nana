@@ -90,14 +90,12 @@ namespace threads
 			:tpool_running_(true)
 		{
 			_m_start_threads(0);
-			locks_.signal.lock();
 		}
 
 		pool::pool(unsigned tsize)
 			:tpool_running_(true)
 		{
 			_m_start_threads(tsize);
-			locks_.signal.lock();
 		}
 
 		pool::~pool()
@@ -166,7 +164,8 @@ namespace threads
 
 		void pool::wait_for_signal() volatile
 		{
-			nana::threads::scope_guard sg(locks_.signal);
+			nana::threads::scope_guard lock(locks_.signal);
+			locks_.signal_cond.wait(locks_.signal);
 		}
 
 		void pool::_m_push(detail::task_object* task) volatile
@@ -335,7 +334,7 @@ namespace threads
 							else
 								break;
 						}
-						owner->locks_.signal.unlock();
+						owner->locks_.signal_cond.signal();
 						break;
 					}
 

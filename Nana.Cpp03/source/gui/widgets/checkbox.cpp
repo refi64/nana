@@ -2,8 +2,8 @@
  *	A CheckBox Implementation
  *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
- *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	Distributed under the Nana Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://stdex.sourceforge.net/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/widgets/checkbox.cpp
@@ -237,6 +237,7 @@ namespace xcheckbox
 			case checkbox::blocker:
 				ichk = nana::paint::gadget::check_renderer::blocker;
 				break;
+            default:    break;
 			}
 			this->get_drawer_trigger().check_renderer().set_image_state(act, ichk, checked, r);
 		}

@@ -32,7 +32,9 @@ namespace nana{	namespace paint
 			paint::image_process::line_interface * line;
 
 			image_processor_tag()
-				: stretch(nullptr), blend(nullptr), line(nullptr)
+				:	stretch(detail::image_process_provider::instance().stretch()),
+					blend(detail::image_process_provider::instance().blend()),
+					line(detail::image_process_provider::instance().line())
 			{}
 		}img_pro;
 
@@ -68,6 +70,59 @@ namespace nana{	namespace paint
 	pixel_buffer::~pixel_buffer()
 	{
 		close();
+	}
+
+	bool pixel_buffer::open(drawable_type drawable)
+	{
+		nana::size sz = nana::paint::detail::drawable_size(drawable);
+		if(0 == sz.width || 0 == sz.height) return false;
+
+		pixel_buffer_storage * sp = (storage_ref_.empty() ? nullptr : storage_ref_.handle());
+		if(nullptr == sp || (sp->pixel_size != sz))
+		{
+			storage_ref_ = new pixel_buffer_storage(sz.width, sz.height);
+			sp = storage_ref_.handle();
+		}
+
+#if defined(NANA_WINDOWS)
+		BITMAPINFO bmpinfo;
+		bmpinfo.bmiHeader.biSize = sizeof(bmpinfo.bmiHeader);
+		bmpinfo.bmiHeader.biWidth = sz.width;
+		bmpinfo.bmiHeader.biHeight = -static_cast<int>(sz.height);
+		bmpinfo.bmiHeader.biPlanes = 1;
+		bmpinfo.bmiHeader.biBitCount = 32;
+		bmpinfo.bmiHeader.biCompression = BI_RGB;
+		bmpinfo.bmiHeader.biSizeImage = static_cast<DWORD>(sz.width * sz.height * sizeof(pixel_rgb_t));
+		bmpinfo.bmiHeader.biClrUsed = 0;
+		bmpinfo.bmiHeader.biClrImportant = 0;
+
+		std::size_t read_lines = ::GetDIBits(drawable->context, drawable->pixmap, 0, static_cast<UINT>(sz.height), sp->raw_pixel_buffer, &bmpinfo, DIB_RGB_COLORS);
+
+		return (sz.height == read_lines);
+#elif defined(NANA_X11)
+		nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
+		Window root;
+		int x, y;
+		unsigned width, height;
+		unsigned border, depth;
+		nana::detail::platform_scope_guard psg;
+		::XGetGeometry(spec.open_display(), drawable->pixmap, &root, &x, &y, &width, &height, &border, &depth);
+
+		XImage * image = ::XGetImage(spec.open_display(), drawable->pixmap, 0, 0, sz.width, sz.height, AllPlanes, ZPixmap);
+		pixel_rgb_t * pixbuf = sp->raw_pixel_buffer;
+		if(image->depth == 32 || (image->depth == 24 && image->bitmap_pad == 32))
+		{
+			memcpy(pixbuf, image->data, image->bytes_per_line * image->height);
+		}
+		else
+		{
+			XDestroyImage(image);
+			return false;
+		}
+
+		XDestroyImage(image);
+		return true;
+#endif
 	}
 
 	bool pixel_buffer::open(drawable_type drawable, const nana::rectangle & want_rectangle)
@@ -189,7 +244,7 @@ namespace nana{	namespace paint
 		if(storage_ref_.empty() == false)
 		{
 			nana::size sz = storage_ref_.handle()->pixel_size;
-			return sizeof(pixel_rgb_t) * (static_cast<size_t>(sz.width) * static_cast<size_t>(sz.height));
+			return sizeof(pixel_rgb_t) * (static_cast<std::size_t>(sz.width) * static_cast<std::size_t>(sz.height));
 		}
 		return 0;
 	}
@@ -373,28 +428,29 @@ namespace nana{	namespace paint
 
 	pixel_rgb_t pixel_buffer::pixel(int x, int y) const
 	{
-		pixel_buffer_storage * sp = storage_ref_.handle();
-		if(sp && 0 <= x && x < static_cast<int>(sp->pixel_size.width) && 0 <= y && y < static_cast<int>(sp->pixel_size.height))
-			return *(sp->raw_pixel_buffer + y * sp->pixel_size.width + x);
+		if(storage_ref_)
+		{
+			pixel_buffer_storage * sp = storage_ref_.handle();
+			if(0 <= x && x < static_cast<int>(sp->pixel_size.width) && 0 <= y && y < static_cast<int>(sp->pixel_size.height))
+				return *(sp->raw_pixel_buffer + y * sp->pixel_size.width + x);
+		}
 		return pixel_rgb_t();
 	}
 
 	void pixel_buffer::pixel(int x, int y, pixel_rgb_t px)
 	{
-		pixel_buffer_storage * sp = storage_ref_.handle();
-		if(sp && 0 <= x && x < static_cast<int>(sp->pixel_size.width) && 0 <= y && y < static_cast<int>(sp->pixel_size.height))
+		if(storage_ref_)
 		{
-			*(sp->raw_pixel_buffer + y * sp->pixel_size.width + x) = px;
+			pixel_buffer_storage * sp = storage_ref_.handle();
+			if(0 <= x && x < static_cast<int>(sp->pixel_size.width) && 0 <= y && y < static_cast<int>(sp->pixel_size.height))
+				*(sp->raw_pixel_buffer + y * sp->pixel_size.width + x) = px;
 		}
 	}
 
 	void pixel_buffer::paste(drawable_type drawable, int x, int y) const
 	{
-		if(!storage_ref_.empty())
-		{
-			nana::size sz = storage_ref_.handle()->pixel_size;
-			this->paste(nana::rectangle(0, 0, sz.width, sz.height), drawable, x, y);
-		}
+		if(storage_ref_)
+			this->paste(nana::rectangle(storage_ref_.handle()->pixel_size), drawable, x, y);
 	}
 
 	void pixel_buffer::paste(const nana::rectangle& src_r, drawable_type drawable, int x, int y) const
@@ -432,8 +488,8 @@ namespace nana{	namespace paint
 
 	void pixel_buffer::paste(nana::gui::native_window_type wd, int x, int y) const
 	{
+		if(storage_ref_.empty() || (0 == wd)) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
-		if(wd && (0 == sp))	return;
 #if defined(NANA_WINDOWS)
 		HDC	handle = ::GetDC(reinterpret_cast<HWND>(wd));
 		if(handle)
@@ -471,28 +527,26 @@ namespace nana{	namespace paint
 
 	void pixel_buffer::line(const std::string& name)
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
-		if(sp)
-			sp->img_pro.line = (name.size() ? detail::image_process_provider::instance().ref_line(name) : 0);
+		sp->img_pro.line = (name.size() ? detail::image_process_provider::instance().ref_line(name) : 0);
 	}
 
 	void pixel_buffer::line(const nana::point &pos_beg, const nana::point &pos_end, nana::color_t color, double fade_rate)
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
-		if(0 == sp)	return;
 
 		//Test if the line intersects the rectangle, and retrive the two points that
 		//are always in the area of rectangle, good_pos_beg is left point, good_pos_end is right.
 		nana::point good_pos_beg, good_pos_end;
-		if(false == nana::gui::intersection(nana::rectangle(sp->pixel_size), pos_beg, pos_end, good_pos_beg, good_pos_end))
-			return;
-
-		(sp->img_pro.line ? sp->img_pro.line : detail::image_process_provider::instance().line())
-			->process(*this, good_pos_beg, good_pos_end, color, fade_rate);
+		if(nana::gui::intersection(nana::rectangle(sp->pixel_size), pos_beg, pos_end, good_pos_beg, good_pos_end))
+			sp->img_pro.line->process(*this, good_pos_beg, good_pos_end, color, fade_rate);
 	}
 
 	void pixel_buffer::rectangle(const nana::rectangle &r, nana::color_t col, double fade_rate, bool solid)
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
 		if((0 == sp) || (fade_rate == 1.0)) return;
 
@@ -665,30 +719,94 @@ namespace nana{	namespace paint
 		detail::free_fade_table(fade_table);
 	}
 
+	void pixel_buffer::shadow_rectangle(const nana::rectangle& draw_rct, nana::color_t beg, nana::color_t end, double fade_rate, bool vertical)
+	{
+		if(storage_ref_.empty()) return;
+		pixel_buffer_storage * sp = storage_ref_.handle();
+
+		nana::rectangle rct;
+		if(false == nana::gui::overlap(nana::rectangle(sp->pixel_size), draw_rct, rct))
+			return;
+
+		int deltapx = int(vertical ? rct.height : rct.width);
+		if(sp && deltapx)
+		{
+			nana::color_t r, g, b;
+			const int delta_r = (int(end & 0xFF0000) - int(r = (beg & 0xFF0000))) / deltapx;
+			const int delta_g = (int((end & 0xFF00) << 8) - int(g = ((beg & 0xFF00) << 8))) / deltapx;
+			const int delta_b = (int((end & 0xFF) << 16 ) - int(b = ((beg & 0xFF)<< 16))) / deltapx;
+
+			if(vertical)
+			{
+				if(deltapx + rct.y > 0)
+				{
+					nana::pixel_rgb_t * pxbuf = sp->raw_pixel_buffer + rct.x + rct.y * sp->pixel_size.width;
+					unsigned align_4 = (rct.width & ~3);
+					unsigned align_reset = rct.width & 3;
+					while(deltapx--)
+					{
+						nana::pixel_rgb_t px;
+
+						px.u.color = ((r += delta_r) & 0xFF0000) | (((g += delta_g) & 0xFF0000) >> 8) | (((b += delta_b) & 0xFF0000) >> 16);
+						
+						nana::pixel_rgb_t * dpx = pxbuf;
+						for(nana::pixel_rgb_t *dpx_end = pxbuf + align_4; dpx != dpx_end; dpx += 4)
+						{
+							*dpx = px;
+							dpx[1] = px;
+							dpx[2] = px;
+							dpx[3] = px;
+						}
+
+						for(nana::pixel_rgb_t * dpx_end = dpx + align_reset; dpx != dpx_end; ++dpx)
+							*dpx = px;
+
+						pxbuf += sp->pixel_size.width;
+					}
+				}
+			}
+			else
+			{
+				if(deltapx + rct.x > 0)
+				{
+					nana::pixel_rgb_t * pxbuf = sp->raw_pixel_buffer + rct.x;
+					nana::pixel_rgb_t * pxbuf_end = pxbuf + rct.width;
+
+					for(; pxbuf != pxbuf_end; ++pxbuf)
+					{
+						nana::pixel_rgb_t px;
+						px.u.color = ((r += delta_r) & 0xFF0000) | (((g += delta_g) & 0xFF0000) >> 8) | (((b += delta_b) & 0xFF0000) >> 16);
+						nana::pixel_rgb_t * dpx_end = pxbuf + rct.height * sp->pixel_size.width;
+						for(nana::pixel_rgb_t * dpx = pxbuf; dpx != dpx_end; dpx += sp->pixel_size.width)
+							*dpx = px;
+					}
+				}			
+			}
+		}
+	}
+
 	//stretch
 	void pixel_buffer::stretch(const std::string& name)
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
-		if(sp)
-			sp->img_pro.stretch = (name.size() ? detail::image_process_provider::instance().ref_stretch(name) : 0);
+		sp->img_pro.stretch = (name.size() ? detail::image_process_provider::instance().ref_stretch(name) : 0);
 	}
 
 	void pixel_buffer::stretch(const nana::rectangle& src_r, drawable_type drawable, const nana::rectangle& r) const
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
-		if(sp == 0) return;
 
 		nana::rectangle good_src_r, good_dst_r;
-		if(nana::gui::overlap(src_r, sp->pixel_size, r, paint::detail::drawable_size(drawable), good_src_r, good_dst_r) == false)
-			return;
-
-		(sp->img_pro.stretch ? sp->img_pro.stretch : detail::image_process_provider::instance().stretch())
-			->process(*this, good_src_r, drawable, good_dst_r);
+		if(nana::gui::overlap(src_r, sp->pixel_size, r, paint::detail::drawable_size(drawable), good_src_r, good_dst_r))
+			sp->img_pro.stretch->process(*this, good_src_r, drawable, good_dst_r);
 	}
 
 	//blend
 	void pixel_buffer::blend(const std::string& name)
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
 		if(sp)
 			sp->img_pro.blend = (name.size() ? detail::image_process_provider::instance().ref_blend(name) : 0);
@@ -696,17 +814,14 @@ namespace nana{	namespace paint
 
 	void pixel_buffer::blend(const nana::point& s_pos, drawable_type dw_dst, const nana::rectangle& r_dst, double fade_rate) const
 	{
-		pixel_buffer_storage * sp = storage_ref_.handle();
-		if(sp == 0) return;
+		if(storage_ref_.empty()) return;
 
+		pixel_buffer_storage * sp = storage_ref_.handle();
 		nana::rectangle s_r(s_pos.x, s_pos.y, r_dst.width, r_dst.height);
 
 		nana::rectangle s_good_r, d_good_r;
-		if(nana::gui::overlap(s_r, sp->pixel_size, r_dst, paint::detail::drawable_size(dw_dst), s_good_r, d_good_r) == false)
-			return;
-
-		(sp->img_pro.blend ? sp->img_pro.blend : detail::image_process_provider::instance().blend())
-			->process(dw_dst, d_good_r, *this, nana::point(s_good_r.x, s_good_r.y), fade_rate);
+		if(nana::gui::overlap(s_r, sp->pixel_size, r_dst, paint::detail::drawable_size(dw_dst), s_good_r, d_good_r))
+			sp->img_pro.blend->process(dw_dst, d_good_r, *this, nana::point(s_good_r.x, s_good_r.y), fade_rate);
 	}
 }//end namespace paint
 }//end namespace nana

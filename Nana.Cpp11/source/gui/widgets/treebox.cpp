@@ -21,7 +21,7 @@ namespace gui
 		namespace treebox
 		{
 			class tlwnd_drawer
-				: public nana::gui::drawer_trigger
+				: public drawer_trigger
 			{
 			public:
 				void text(const nana::string& text, int text_off, bool selected, const nana::paint::image* img)
@@ -34,27 +34,25 @@ namespace gui
 
 				void draw(const nana::paint::image* img)
 				{
-					nana::paint::graphics &graph = *graph_;
-					unsigned width = graph.width();
-					unsigned height = graph.height();
+					nana::size sz = graph_->size();
 
 					int left = 0;
-					int right = left + width - 1;
+					int right = left + sz.width - 1;
 					int top = 0;
-					int bottom = top + height - 1;
+					int bottom = top + sz.height - 1;
 
-					graph.rectangle(left, top, width, height, (selected_ ? 0xC4E8FA : 0xE8F5FD), true);
+					graph_->rectangle((selected_ ? 0xC4E8FA : 0xE8F5FD), true);
 
 					const unsigned colorx = (selected_ ? 0xB6E6FB : 0xD8F0FA);
-					graph.line(left + 1, top, right - 1, top, colorx);
-					graph.line(left + 1, bottom, right - 1, bottom, colorx);
+					graph_->line(left + 1, top, right - 1, top, colorx);
+					graph_->line(left + 1, bottom, right - 1, bottom, colorx);
 
-					graph.line(left, top + 1, left, bottom - 1, colorx);
-					graph.line(right, top + 1, right, bottom - 1, colorx);
+					graph_->line(left, top + 1, left, bottom - 1, colorx);
+					graph_->line(right, top + 1, right, bottom - 1, colorx);
 
-					graph.string(text_off_, 3, 0x0, text_);
+					graph_->string(text_off_, 3, 0x0, text_);
 
-					if(img) img->paste(graph, 2, 2);
+					if(img) img->paste(*graph_, 2, 2);
 				}
 			private:
 				void bind_window(widget_reference wd)
@@ -165,7 +163,7 @@ namespace gui
 						p = attr_.tree_cont.insert(node, key, treebox_node_type(title, v));
 
 					if(p && _m_draw(true))
-						nana::gui::API::update_window(widget_->handle());
+						API::update_window(widget_->handle());
 					return p;
 				}
 
@@ -175,7 +173,7 @@ namespace gui
 					if(x)
 					{
 						if(_m_draw(true))
-							nana::gui::API::update_window(widget_->handle());
+							API::update_window(widget_->handle());
 					}
 					return x;
 				}
@@ -223,7 +221,7 @@ namespace gui
 					if(_m_set_expanded(attr_.tree_cont.find(path), exp))
 					{
 						_m_draw(true);
-						nana::gui::API::update_window(widget_->handle());
+						API::update_window(widget_->handle());
 					}
 				}
 
@@ -656,7 +654,7 @@ namespace gui
 					if(begin)
 					{
 						const node_type *node = begin;
-						const node_type *end = 0;
+						const node_type *end = nullptr;
 						if(pattern.length() == 1)
 						{
 							if(node->value.second.expanded && node->child)
@@ -665,9 +663,9 @@ namespace gui
 							}
 							else
 							{
-								if(node->next == 0)
+								if(nullptr == node->next)
 								{
-									if(node->owner->next == 0)
+									if(nullptr == node->owner->next)
 									{
 										end = begin;
 										node = attr_.tree_cont.get_root()->child;
@@ -786,7 +784,6 @@ namespace gui
 
 					if((node_state_.tooltip == 0) && (pos.x + size.width > _m_visible_width()))
 					{
-						using namespace nana::gui;
 						node_state_.tooltip = new tooltip_window(widget_->handle(), pos, size);
 						node_state_.tooltip->show_text(node->value.second.text, node_desc_.text_offset + node_desc_.image_width, (node == node_state_.selected), this->_m_image(node));
 						node_state_.tooltip->make_event<events::mouse_leave>(*this, &trigger::_m_close_tooltip_window);
@@ -899,7 +896,6 @@ namespace gui
 							shape_.scrollbar.make_event<events::mouse_down>(*this, &trigger::_m_event_scrollbar);
 							shape_.scrollbar.make_event<events::mouse_move>(*this, &trigger::_m_event_scrollbar);
 							shape_.scrollbar.make_event<events::mouse_wheel>(*this, &trigger::_m_event_scrollbar);
-
 						}
 
 						shape_.scrollbar.amount(visual_items);
@@ -997,7 +993,6 @@ namespace gui
 							}
 						}
 						break;
-
 					}
 					return false;
 				}
@@ -1084,7 +1079,7 @@ namespace gui
 						if(node_desc_.offset_x == adjust_.offset_x_adjust)
 						{
 							adjust_.offset_x_adjust = 0;
-							adjust_.node = 0;
+							adjust_.node = nullptr;
 							adjust_.scroll_timestamp = 0;
 							adjust_.timer.enable(false);
 						}

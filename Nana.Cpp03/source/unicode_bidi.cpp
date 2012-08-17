@@ -10,7 +10,7 @@ namespace nana
 
 		static unsigned char charmap_0x0000_0x00C0[192] = {
 			BN, BN, BN, BN, BN, BN, BN, BN, BN, S,  B,  S,  WS, B, BN, BN,
-			BN, BN, BN, BN, BN, BN, BN, BN, BN, BN, BN, BN, B,  B,  B,  S, 
+			BN, BN, BN, BN, BN, BN, BN, BN, BN, BN, BN, BN, B,  B,  B,  S,
 			WS, ON, ON, ET, ET, ET, ON, ON, ON, ON, ON, ES, CS, ES, CS, CS,
 			EN, EN, EN, EN, EN, EN, EN, EN, EN, EN, CS, ON, ON, ON, ON, ON,
 			ON, L,  L,  L,  L,  L,  L,  L,  L,  L,  L,  L,  L,  L,  L,  L,
@@ -630,7 +630,7 @@ namespace nana
 			const char_type * end = str + len;
 
 			std::vector<remember> stack;
-			
+
 			remember cur = {0, directional_override_status::neutral};
 			cur.level = _m_paragraph_level(str, end);
 
@@ -743,6 +743,7 @@ namespace nana
 					return 1;
 				case bidi_char::L:
 					return 0;
+                default:    break;
 				}
 			}
 			return 0;
@@ -919,7 +920,7 @@ namespace nana
 			//The final check etpos out
 			for(; etpos != levels_.end(); ++etpos)
 				etpos->bidi_char_type = bidi_char::ON;
-			
+
 			//W7. Search backward from each instance of a European number until the first strong type (R, L, or sor) is found.
 			//If an L is found, then change the type of the European number to L.
 
@@ -1091,7 +1092,7 @@ namespace nana
 		{
 			return static_cast<unicode_bidi::bidi_category::t>((static_cast<int>(bidi_char_type) & 0xF000) >> 12);
 		}
-		
+
 		unicode_bidi::bidi_char::t unicode_bidi::_m_char_dir(char_type ch)
 		{
 			return static_cast<bidi_char::t>(bidi_charmap::bidi_char_type(ch));

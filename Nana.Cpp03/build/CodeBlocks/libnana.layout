@@ -26,7 +26,7 @@
 		<Cursor position="903" topLine="28" />
 	</File>
 	<File name="..\..\source\gui\msgbox.cpp" open="0" top="0" tabpos="1">
-		<Cursor position="47919" topLine="391" />
+		<Cursor position="48161" topLine="393" />
 	</File>
 	<File name="..\..\source\gui\tooltip.cpp" open="0" top="0" tabpos="9">
 		<Cursor position="2057" topLine="57" />
@@ -36,6 +36,9 @@
 	</File>
 	<File name="..\..\source\gui\widgets\categorize.cpp" open="0" top="0" tabpos="15">
 		<Cursor position="12352" topLine="490" />
+	</File>
+	<File name="..\..\source\gui\widgets\checkbox.cpp" open="0" top="0" tabpos="3">
+		<Cursor position="6097" topLine="223" />
 	</File>
 	<File name="..\..\source\gui\widgets\combox.cpp" open="0" top="0" tabpos="0">
 		<Cursor position="18742" topLine="716" />
@@ -85,8 +88,8 @@
 	<File name="..\..\source\paint\gadget.cpp" open="0" top="0" tabpos="10">
 		<Cursor position="4541" topLine="147" />
 	</File>
-	<File name="..\..\source\paint\graphics.cpp" open="0" top="0" tabpos="5">
-		<Cursor position="31837" topLine="1040" />
+	<File name="..\..\source\paint\graphics.cpp" open="0" top="0" tabpos="2">
+		<Cursor position="31811" topLine="1040" />
 	</File>
 	<File name="..\..\source\paint\image.cpp" open="0" top="0" tabpos="2">
 		<Cursor position="2893" topLine="91" />
@@ -104,6 +107,6 @@
 		<Cursor position="984" topLine="30" />
 	</File>
 	<File name="..\..\source\unicode_bidi.cpp" open="0" top="0" tabpos="4">
-		<Cursor position="37345" topLine="1073" />
+		<Cursor position="26886" topLine="727" />
 	</File>
 </CodeBlocks_layout_file>

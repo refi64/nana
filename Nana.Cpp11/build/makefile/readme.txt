@@ -1,6 +1,6 @@
 Building Nana C++ Library
 requires:
-X11, pthread, Xpm, rt, dl, freetype2, Xft, fontconfig.
+X11, pthread, Xpm, rt, dl, freetype2, Xft, fontconfig, ALSA
 
 Writing a makefile for creating applications with Nana C++ Library
 -------------------
@@ -13,7 +13,7 @@ NANAINC	= $(NANAPATH)/include
 NANALIB = $(NANAPATH)/build/bin/nana.a
 
 INCS	= -I$(NANAINC) -I/usr/include/freetype2
-LIBS	= -lX11 -lpthread -lXpm -lrt -ldl -lXft -lpng #-l$(NANALIB)
+LIBS	= -lX11 -lpthread -lXpm -lrt -ldl -lXft -lpng -lasound #-l$(NANALIB)
 
 LINKOBJ	= $(SOURCES:.cpp=.o)
 

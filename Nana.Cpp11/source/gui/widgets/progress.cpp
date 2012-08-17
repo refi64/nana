@@ -146,7 +146,8 @@ namespace gui
 					int left = (value_ < block ? 0 : value_ - block) + border;
 					int right = (value_ >= width - 1 + border? width - 1 + border: value_);
 
-					graph.shadow_rectangle(left, border, right - left + 1, height, 0x6FFFA8, 0x107515, true);
+					if(right >= left)
+						graph.shadow_rectangle(left, border, right - left + 1, height, 0x6FFFA8, 0x107515, true);
 
 					if(value_ >= width + block)	value_ = 0;
 				}

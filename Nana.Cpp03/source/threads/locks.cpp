@@ -16,6 +16,8 @@
 #elif defined(NANA_LINUX)
 	#include <pthread.h>
 	#include <time.h>
+	#include <sys/time.h>
+	#include <errno.h>
 #endif
 
 namespace nana
@@ -35,7 +37,7 @@ namespace nana
 				::CRITICAL_SECTION lock_obj;
 
 #elif defined(NANA_LINUX)
-				pthread_mutex_t mtx;
+				pthread_mutex_t lock_obj;
 #endif
 				impl_t()
 				{
@@ -43,11 +45,11 @@ namespace nana
 					::InitializeCriticalSection(&lock_obj);
 #elif defined(NANA_LINUX)
 					pthread_mutex_t dup = PTHREAD_MUTEX_INITIALIZER;
-					mtx = dup;
+					lock_obj = dup;
 					pthread_mutexattr_t attr;
 					pthread_mutexattr_init(&attr);
 					pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-					pthread_mutex_init(&mtx, &attr);
+					pthread_mutex_init(&lock_obj, &attr);
 					pthread_mutexattr_destroy(&attr);
 #endif
 				}
@@ -57,7 +59,7 @@ namespace nana
 #if defined(NANA_WINDOWS)
 					::DeleteCriticalSection(&lock_obj);
 #elif defined(NANA_LINUX)
-					pthread_mutex_destroy(&mtx);
+					pthread_mutex_destroy(&lock_obj);
 #endif
 				}
 			};
@@ -77,7 +79,7 @@ namespace nana
 #if defined(NANA_WINDOWS)
 				::EnterCriticalSection(&(impl_->lock_obj));
 #elif defined(NANA_LINUX)
-				pthread_mutex_lock(&(impl_->mtx));
+				pthread_mutex_lock(&(impl_->lock_obj));
 #endif
 				return true;
 			}
@@ -87,7 +89,7 @@ namespace nana
 #if defined(NANA_WINDOWS)
 				return (0 != ::TryEnterCriticalSection(&(impl_->lock_obj)));
 #elif defined(NANA_LINUX)
-				return (0 == pthread_mutex_trylock(&(impl_->mtx)));
+				return (0 == pthread_mutex_trylock(&(impl_->lock_obj)));
 #endif
 			}
 
@@ -96,8 +98,13 @@ namespace nana
 #if defined(NANA_WINDOWS)
 				::LeaveCriticalSection(&(impl_->lock_obj));
 #elif defined(NANA_LINUX)
-				pthread_mutex_unlock(&(impl_->mtx));
+				pthread_mutex_unlock(&(impl_->lock_obj));
 #endif
+			}
+
+			void * token::native_handle() const volatile
+			{
+				return &impl_->lock_obj;
 			}
 		//end class token
 
@@ -105,9 +112,9 @@ namespace nana
 			struct mutex::impl_t
 			{
 #if defined(NANA_WINDOWS)
-				HANDLE object;
+				HANDLE lock_handle;
 #elif defined(NANA_LINUX)
-				pthread_mutex_t mtx;
+				pthread_mutex_t lock_obj;
 #endif
 				unsigned long time;
 			};
@@ -117,11 +124,11 @@ namespace nana
 			{
 				impl_->time = tick_infinite;
 #if defined(NANA_WINDOWS)
-				impl_->object = ::CreateMutex(0, 0, 0);
+				impl_->lock_handle = ::CreateMutex(0, 0, 0);
 #elif defined(NANA_LINUX)
 				pthread_mutex_t dup = PTHREAD_MUTEX_INITIALIZER;
-				impl_->mtx = dup;
-				pthread_mutex_init(&(impl_->mtx), 0);
+				impl_->lock_obj = dup;
+				pthread_mutex_init(&(impl_->lock_obj), 0);
 #endif
 			}
 
@@ -130,10 +137,10 @@ namespace nana
 				if(impl_)
 				{
 #if defined(NANA_WINDOWS)
-					if(impl_->object)
-						::CloseHandle(impl_->object);
+					if(impl_->lock_handle)
+						::CloseHandle(impl_->lock_handle);
 #elif defined(NANA_LINUX)
-					pthread_mutex_destroy(&(impl_->mtx));
+					pthread_mutex_destroy(&(impl_->lock_obj));
 #endif
 					delete impl_;
 				}
@@ -144,17 +151,17 @@ namespace nana
 				if(impl_)
 				{
 #if defined(NANA_WINDOWS)
-					if(impl_->object)
-						return (WAIT_TIMEOUT != ::WaitForSingleObject(impl_->object, impl_->time));
+					if(impl_->lock_handle)
+						return (WAIT_TIMEOUT != ::WaitForSingleObject(impl_->lock_handle, impl_->time));
 #elif defined(NANA_LINUX)
 					if(impl_->time != tick_infinite)
 					{
 						timespec abs;
 						clock_gettime(CLOCK_REALTIME, &abs);
 						abs.tv_nsec += impl_->time;
-						return (0 == pthread_mutex_timedlock(&(impl_->mtx), &abs));
+						return (0 == pthread_mutex_timedlock(&(impl_->lock_obj), &abs));
 					}
-					pthread_mutex_lock(&(impl_->mtx));
+					pthread_mutex_lock(&(impl_->lock_obj));
 					return true;
 #endif
 				}
@@ -166,10 +173,10 @@ namespace nana
 				if(impl_)
 				{
 #if defined(NANA_WINDOWS)
-					if(impl_->object)
-						return (WAIT_TIMEOUT != ::WaitForSingleObject(impl_->object, 1));
+					if(impl_->lock_handle)
+						return (WAIT_TIMEOUT != ::WaitForSingleObject(impl_->lock_handle, 1));
 #elif defined(NANA_LINUX)
-					return (0 == pthread_mutex_trylock(&(impl_->mtx)));
+					return (0 == pthread_mutex_trylock(&(impl_->lock_obj)));
 #endif
 				}
 				return false;
@@ -180,10 +187,10 @@ namespace nana
 				if(impl_)
 				{
 #if defined(NANA_WINDOWS)
-					if(impl_->object)
-						::ReleaseMutex(impl_->object);
+					if(impl_->lock_handle)
+						::ReleaseMutex(impl_->lock_handle);
 #elif defined(NANA_LINUX)
-					pthread_mutex_unlock(&(impl_->mtx));
+					pthread_mutex_unlock(&(impl_->lock_obj));
 #endif
 				}
 			}
@@ -198,15 +205,28 @@ namespace nana
 			{
 				return (impl_ ? impl_->time : 0);
 			}
+
+			void * mutex::native_handle() const volatile
+			{
+				if(impl_)
+				{
+#if defined(NANA_WINDOWS)
+					return impl_->lock_handle;
+#elif defined(NANA_LINUX)
+					return &impl_->lock_obj;
+#endif
+				}
+				return 0;
+			}
 		//end class mutex
 
 		//class condition
 			struct condition::impl_t
 			{
 #if defined(NANA_WINDOWS)
-				HANDLE object;
+				HANDLE lock_handle;
 #elif defined(NANA_LINUX)
-				pthread_mutex_t obj;
+				pthread_cond_t lock_obj;
 #endif
 				unsigned long time;
 			};
@@ -216,11 +236,10 @@ namespace nana
 			{
 				impl_->time = tick_infinite;
 #if defined(NANA_WINDOWS)
-				impl_->object = ::CreateEvent(0, false, true, 0);
+				impl_->lock_handle = ::CreateEvent(0, false, false, 0);
 #elif defined(NANA_LINUX)
-				pthread_mutex_t dup = PTHREAD_MUTEX_INITIALIZER;
-				impl_->obj = dup;
-				pthread_mutex_init(&(impl_->obj), 0);				
+				pthread_cond_t dup = PTHREAD_COND_INITIALIZER;
+				impl_->lock_obj = dup;			
 #endif
 			}
 
@@ -229,95 +248,70 @@ namespace nana
 				if(impl_)
 				{
 #if defined(NANA_WINDOWS)
-					if(impl_->object)
-						::CloseHandle(impl_->object);
+					if(impl_->lock_handle)
+						::CloseHandle(impl_->lock_handle);
 #elif defined(NANA_LINUX)
-					pthread_mutex_destroy(&(impl_->obj));
+					pthread_cond_destroy(&(impl_->lock_obj));
 #endif
 					delete impl_;
 				}
 			}
 
-			bool condition::lock() const volatile
+			void condition::wait(volatile lock_type& lck) volatile
 			{
 				if(impl_)
 				{
 #if defined(NANA_WINDOWS)
-					if(impl_->object)
-						return (WAIT_TIMEOUT != ::WaitForSingleObject(impl_->object, impl_->time));
-#elif defined(NANA_LINUX)
-					if(impl_->time != tick_infinite)
+					if(impl_->lock_handle)
 					{
-						timespec abs;
-						clock_gettime(CLOCK_REALTIME, &abs);
-						abs.tv_nsec += impl_->time;
-						return (0 == pthread_mutex_timedlock(&(impl_->obj), &abs));
+						lck.unlock();
+						::WaitForSingleObject(impl_->lock_handle, INFINITE);
+						lck.lock();
 					}
-					pthread_mutex_lock(&(impl_->obj));
-					return true;
+#elif defined(NANA_LINUX)
+					::pthread_cond_wait(&(impl_->lock_obj), reinterpret_cast<pthread_mutex_t*>(lck.native_handle()));
 #endif
 				}
-				return false;
 			}
 
-			bool condition::try_lock() const volatile
+			bool condition::wait_for(volatile lock_type & lck, std::size_t milliseconds) volatile
 			{
 				if(impl_)
 				{
 #if defined(NANA_WINDOWS)
-					if(impl_->object)
-						return (WAIT_TIMEOUT != ::WaitForSingleObject(impl_->object, 1));
-#elif defined(NANA_LINUX)
-					return (0 == pthread_mutex_trylock(&(impl_->obj)));
-#endif
-				}
-				return false;
-			}
-
-			bool condition::lock(unsigned milliseconds) const volatile
-			{
-				if(impl_)
-				{
-#if defined(NANA_WINDOWS)
-					if(impl_->object)
-						return (::WaitForSingleObject(impl_->object, milliseconds) != WAIT_TIMEOUT);
-#elif defined(NANA_LINUX)
-					if(milliseconds != tick_infinite)
+					if(impl_->lock_handle)
 					{
-						timespec abs;
-						clock_gettime(CLOCK_REALTIME, &abs);
-						abs.tv_nsec += milliseconds;
-						return (0 == pthread_mutex_timedlock(&(impl_->obj), &abs));
+						lck.unlock();
+						bool is_timeout = (WAIT_TIMEOUT == ::WaitForSingleObject(impl_->lock_handle, static_cast<unsigned long>(milliseconds)));
+						lck.lock();
+						return is_timeout;
 					}
-					pthread_mutex_lock(&(impl_->obj));
-					return true;
+#elif defined(NANA_LINUX)
+					struct timeval now;
+					struct timespec tm;
+					::gettimeofday(&now, 0);
+					tm.tv_nsec = now.tv_usec * 1000 + (milliseconds % 1000) * 1000000;
+					tm.tv_sec = now.tv_sec + milliseconds / 1000 + tm.tv_nsec / 1000000000;
+					tm.tv_nsec %= 1000000000;
+					
+					
+					return (ETIMEDOUT == ::pthread_cond_timedwait(&impl_->lock_obj, reinterpret_cast<pthread_mutex_t*>(lck.native_handle()), &tm));
 #endif
 				}
 				return false;
 			}
 
-			void condition::unlock() const volatile
+			void condition::signal() volatile
 			{
 				if(impl_)
 				{
 #if defined(NANA_WINDOWS)
-					if(impl_->object)
-						::SetEvent(impl_->object);
+					if(impl_->lock_handle)
+						::SetEvent(impl_->lock_handle);
 #elif defined(NANA_LINUX)
-					pthread_mutex_unlock(&(impl_->obj));
+					::pthread_cond_signal(&impl_->lock_obj);
 #endif
 				}
-			}
-
-			void condition::time(unsigned milliseconds) volatile
-			{
-				if(impl_)
-					impl_->time = milliseconds;
-			}
-
-			unsigned condition::time() const volatile
-			{
-				return (impl_ ? impl_->time : 0);
 			}
 		//end class condition
 	}	//end namespace threads

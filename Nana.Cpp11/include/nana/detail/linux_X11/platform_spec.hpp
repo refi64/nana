@@ -282,7 +282,6 @@ namespace detail
 				Window	requestor;
 				void*	buffer;
 				size_t	bufsize;
-				volatile bool assigned;
 				std::mutex cond_mutex;
 				std::condition_variable cond;
 			};

@@ -642,65 +642,21 @@ namespace paint
 
 		void graphics::shadow_rectangle(int x, int y, unsigned width, unsigned height, color_t color_begin, color_t color_end, bool vertical)
 		{
-			if(handle_ == 0)	return;
+#if defined(NANA_WINDOWS)
+			if(pxbuf_.open(handle_))
+			{
+				pxbuf_.shadow_rectangle(nana::rectangle(x, y, width, height), color_begin, color_end, 0.0, vertical);
+				pxbuf_.paste(handle_, 0, 0);
+			}
+#elif defined(NANA_X11)
+			if(0 == handle_) return;
+
 			int deltapx = int(vertical ? height : width);
 			double r, g, b;
 			const double delta_r = int(((color_end & 0xFF0000) >> 16) - (r = ((color_begin & 0xFF0000) >> 16))) / double(deltapx);
 			const double delta_g = int(((color_end & 0xFF00) >> 8) - (g = ((color_begin & 0xFF00) >> 8))) / double(deltapx);
 			const double delta_b = int((color_end & 0xFF) - (b = (color_begin & 0xFF))) / double(deltapx);
-#if defined(NANA_WINDOWS)
-			HDC hdc = handle_->context;
 
-			unsigned last_color = RGB( int(r), int(g), int(b));
-
-			HPEN hpen = ::CreatePen(PS_SOLID, 1, last_color);
-			HPEN hpen_old = (HPEN)::SelectObject(hdc, hpen);
-
-			if(vertical)
-			{
-				const int lines = deltapx + y;
-				if(lines > 0)
-				{
-					int x1 = x, x2 = x+ width;
-					for(; y< lines; y++)
-					{
-						::MoveToEx(hdc, x1, y, 0);
-						::LineTo(hdc, x2, y);
-						unsigned new_color = RGB( int(r += delta_r), int(g += delta_g), int(b += delta_b));
-						if(last_color != new_color)
-						{
-							HPEN npen = ::CreatePen(PS_SOLID, 1, new_color);
-							HPEN dpen = (HPEN)::SelectObject(hdc, npen);
-							::DeleteObject(dpen);
-							hpen = npen;
-							last_color = new_color;
-						}
-					}
-				}
-			}
-			else
-			{
-				const int lines = deltapx + x;
-				if(lines > 0)
-				{
-					int y1 = y, y2 = y + height;
-					for(; x< lines; x++)
-					{
-						::MoveToEx(hdc, x, y1, 0);
-						::LineTo(hdc, x, y2);
-						unsigned new_color = RGB( int(r += delta_r), int(g += delta_g), int(b += delta_b));
-						if(last_color != new_color)
-						{
-							hpen= ::CreatePen(PS_SOLID, 1, new_color);
-							::DeleteObject((HPEN)::SelectObject(hdc, hpen));
-							last_color = new_color;
-						}
-					}
-				}
-			}
-			::SelectObject(hdc, hpen_old);
-			::DeleteObject(hpen);
-#elif defined(NANA_X11)
 			unsigned last_color =  (int(r) << 16) | (int(g) << 8) | int(b);
 
 			Display * disp = nana::detail::platform_spec::instance().open_display();

@@ -49,6 +49,12 @@
     <Filter Include="Source Files\gui\detail\win32">
       <UniqueIdentifier>{a93f0a19-cdd9-475d-a89f-09777dacdcfb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\audio">
+      <UniqueIdentifier>{d8dfbbaf-6c5a-4c27-a4c8-d903c7427961}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\audio\detail">
+      <UniqueIdentifier>{a79b050a-0183-46ee-b263-1a6dcd8e53e2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -260,6 +266,18 @@
     </ClCompile>
     <ClCompile Include="..\..\source\charset.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\audio\detail\audio_device.cpp">
+      <Filter>Source Files\audio\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\audio\detail\audio_stream.cpp">
+      <Filter>Source Files\audio\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\audio\detail\buffer_preparation.cpp">
+      <Filter>Source Files\audio\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\audio\player.cpp">
+      <Filter>Source Files\audio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

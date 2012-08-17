@@ -110,7 +110,8 @@ namespace nana
 			{
 				threads::token thread;
 				threads::token task;
-				threads::condition signal;
+				threads::token signal;
+				threads::condition signal_cond;
 			}locks_;
 		};
 

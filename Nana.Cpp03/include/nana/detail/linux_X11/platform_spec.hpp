@@ -278,6 +278,7 @@ namespace detail
 				Window	requestor;
 				void*	buffer;
 				size_t	bufsize;
+				nana::threads::token cond_lock;
 				nana::threads::condition cond;
 			};
 

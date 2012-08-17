@@ -15,6 +15,8 @@ BIN	= nana.a
 SRC_NANA = $(wildcard $(SRCROOT)/*.cpp)
 SRC_DETAIL = $(wildcard $(SRCROOT)/detail/*.cpp) $(wildcard $(SRCROOT)/detail/linux_X11/*.cpp)
 SRC_FILESYSTEM = $(wildcard $(SRCROOT)/filesystem/*.cpp)
+SRC_AUDIO = $(wildcard $(SRCROOT)/audio/*.cpp)
+SRC_AUDIO_DETAIL = $(wildcard $(SRCROOT)/audio/detail/*.cpp)
 SRC_GUI = $(wildcard $(SRCROOT)/gui/*.cpp)
 SRC_GUI_DETAIL = $(wildcard $(SRCROOT)/gui/detail/*.cpp) $(wildcard $(SRCROOT)/gui/detail/linux_X11/*.cpp)
 SRC_GUI_WIDGETS = $(wildcard $(SRCROOT)/gui/widgets/*.cpp)
@@ -24,7 +26,7 @@ SRC_PAINT_DETAIL = $(wildcard $(SRCROOT)/paint/detail/*.cpp)
 SRC_SYSTEM = $(wildcard $(SRCROOT)/system/*.cpp)
 SRC_THREADS= $(wildcard $(SRCROOT)/threads/*.cpp)
 
-SOURCES = $(SRC_NANA) $(SRC_DETAIL) $(SRC_FILESYSTEM) $(SRC_GUI) $(SRC_GUI_DETAIL) $(SRC_GUI_WIDGETS) $(SRC_GUI_WIDGETS_SKELETONS) $(SRC_PAINT) $(SRC_PAINT_DETAIL) $(SRC_SYSTEM) $(SRC_THREADS)
+SOURCES = $(SRC_NANA) $(SRC_DETAIL) $(SRC_FILESYSTEM) $(SRC_AUDIO) $(SRC_AUDIO_DETAIL) $(SRC_GUI) $(SRC_GUI_DETAIL) $(SRC_GUI_WIDGETS) $(SRC_GUI_WIDGETS_SKELETONS) $(SRC_PAINT) $(SRC_PAINT_DETAIL) $(SRC_SYSTEM) $(SRC_THREADS)
 
 LINKOBJ	= $(SOURCES:.cpp=.o)
 

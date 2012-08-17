@@ -234,7 +234,7 @@ namespace detail
 				thread_binder * const thr = i->second;
 				nana::threads::scope_guard sg(thr->lock);
 				thr->msg_queue.push_back(msg);
-				thr->cond.unlock();
+				thr->cond.signal();
 			}
 		}
 
@@ -301,9 +301,8 @@ namespace detail
 				}
 			}
 
-			if(thr->cond.lock(10))
-				return true;
-			return false;
+			nana::threads::scope_guard sg(thr->lock);
+			return (false == thr->cond.wait_for(thr->lock, 10));
 		}
 		
 	private:

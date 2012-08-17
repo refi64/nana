@@ -373,6 +373,26 @@
 						</File>
 					</Filter>
 				</Filter>
+				<Filter
+					Name="audio"
+					Filter="">
+					<File
+						RelativePath="..\..\source\audio\player.cpp">
+					</File>
+					<Filter
+						Name="detail"
+						Filter="">
+						<File
+							RelativePath="..\..\source\audio\detail\audio_device.cpp">
+						</File>
+						<File
+							RelativePath="..\..\source\audio\detail\audio_stream.cpp">
+						</File>
+						<File
+							RelativePath="..\..\source\audio\detail\buffer_preparation.cpp">
+						</File>
+					</Filter>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter

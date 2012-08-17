@@ -52,6 +52,12 @@
     <Filter Include="Source Files\nana\gui\detail\win32">
       <UniqueIdentifier>{771cbb14-8349-4c03-84f9-bc9915788312}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\nana\audio">
+      <UniqueIdentifier>{9f293c8b-2751-4a0e-b9ac-912ba43a3572}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\nana\audio\detail">
+      <UniqueIdentifier>{70102a67-3874-445f-b8ef-8c504619dc65}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -266,6 +272,18 @@
     </ClCompile>
     <ClCompile Include="..\..\source\deploy.cpp">
       <Filter>Source Files\nana</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\audio\detail\audio_device.cpp">
+      <Filter>Source Files\nana\audio\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\audio\detail\audio_stream.cpp">
+      <Filter>Source Files\nana\audio\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\audio\detail\buffer_preparation.cpp">
+      <Filter>Source Files\nana\audio\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\audio\player.cpp">
+      <Filter>Source Files\nana\audio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

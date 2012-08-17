@@ -971,7 +971,7 @@ namespace detail
 				selim->requestor = reinterpret_cast<Window>(requestor);
 				selim->buffer = 0;
 				selim->bufsize = 0;
-				selim->assigned = false;
+
 				this->selection_.items.push_back(selim);
 				::XConvertSelection(display_, clipboard, type, clipboard,
 							reinterpret_cast<Window>(requestor), CurrentTime);
@@ -979,7 +979,7 @@ namespace detail
 				xlib_locker_.unlock();
 
 				std::unique_lock<decltype(selim->cond_mutex)> lock(selim->cond_mutex);
-				selim->cond.wait(lock, [selim](){ return selim->assigned; });
+				selim->cond.wait(lock);
 
 				size = selim->bufsize;
 				void * retbuf = selim->buffer;
@@ -1063,7 +1063,6 @@ namespace detail
 						self.selection_.items.erase(self.selection_.items.begin());
 
 						std::lock_guard<decltype(im->cond_mutex)> lock(im->cond_mutex);
-						im->assigned = true;
 						im->cond.notify_one();
 						
 					}

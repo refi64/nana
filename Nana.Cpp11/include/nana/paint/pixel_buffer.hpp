@@ -12,7 +12,8 @@
 #ifndef NANA_PAINT_PIXEL_BUFFER_HPP
 #define NANA_PAINT_PIXEL_BUFFER_HPP
 
-#include <nana/paint/graphics.hpp>
+#include <nana/gui/basis.hpp>
+#include <nana/refer.hpp>
 
 namespace nana{	namespace paint
 {
@@ -27,6 +28,7 @@ namespace nana{	namespace paint
 
 		~pixel_buffer();
 
+		bool open(drawable_type);
 		bool open(drawable_type, const nana::rectangle& want_rectangle);
 		bool open(std::size_t width, std::size_t height);
 
@@ -47,6 +49,7 @@ namespace nana{	namespace paint
 		void line(const nana::point& pos_beg, const nana::point& pos_end, nana::color_t color, double fade_rate);
 
 		void rectangle(const nana::rectangle& r, nana::color_t, double fade_rate, bool solid);
+		void shadow_rectangle(const nana::rectangle&, nana::color_t beg, nana::color_t end, double fade_rate, bool vertical);
 		
 		pixel_rgb_t pixel(int x, int y) const;
 		void pixel(int x, int y, pixel_rgb_t);

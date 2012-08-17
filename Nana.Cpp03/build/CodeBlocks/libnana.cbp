@@ -35,6 +35,10 @@
 			</Target>
 		</Build>
 		<Unit filename="..\..\source\any.cpp" />
+		<Unit filename="..\..\source\audio\detail\audio_device.cpp" />
+		<Unit filename="..\..\source\audio\detail\audio_stream.cpp" />
+		<Unit filename="..\..\source\audio\detail\buffer_preparation.cpp" />
+		<Unit filename="..\..\source\audio\player.cpp" />
 		<Unit filename="..\..\source\basic_types.cpp" />
 		<Unit filename="..\..\source\charset.cpp" />
 		<Unit filename="..\..\source\datetime.cpp" />

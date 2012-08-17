@@ -13,6 +13,7 @@
 #define NANA_THREADS_LOCKS_HPP
 
 #include "../traits.hpp"
+#include <cstddef>
 
 namespace nana
 {
@@ -28,6 +29,7 @@ namespace nana
 				virtual bool lock() const volatile = 0;
 				virtual bool try_lock() const volatile = 0;
 				virtual void unlock() const volatile = 0;
+				virtual void * native_handle() const volatile = 0;
 			};
 		}//end namespace detail
 
@@ -70,6 +72,7 @@ namespace nana
 			bool lock() const volatile;
 			bool try_lock() const volatile;
 			void unlock() const volatile;
+			void * native_handle() const volatile;
 		private:
 			struct impl_t;
 			impl_t * impl_;
@@ -87,24 +90,23 @@ namespace nana
 
 			void time(unsigned milliseconds) volatile;
 			unsigned time() const volatile;
+
+			void * native_handle() const volatile;
 		private:
 			struct impl_t;
 			impl_t * impl_;
 		};
 
 		class condition
-			: public detail::superlock
 		{
 		public:
+			typedef detail::superlock lock_type;
 			condition();
 			~condition();
-			bool lock() const volatile;
-			bool try_lock() const volatile;
-			bool lock(unsigned milliseconds) const volatile;
-			void unlock() const volatile;
 
-			void time(unsigned milliseconds) volatile;
-			unsigned time() const volatile;
+			void wait(volatile lock_type& ) volatile;
+			bool wait_for(volatile lock_type&, std::size_t milliseconds) volatile;
+			void signal() volatile;
 		private:
 			struct impl_t;
 			impl_t * impl_;

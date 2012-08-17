@@ -30,8 +30,8 @@ namespace gui
 
 				~itembase()
 				{
-					for(container::iterator i = cont_.begin(); i != cont_.end(); ++i)
-						delete (*i);
+					for(auto i : cont_)
+						delete i;
 				}
 
 				void append(const nana::string& text, unsigned long shortkey)
@@ -56,10 +56,12 @@ namespace gui
 					{
 						if(shortkey < 0x61) shortkey += (0x61 - 0x41);
 
-						for(container::const_iterator i = cont_.begin(); i != cont_.end(); ++i)
+						std::size_t index = 0;
+						for(auto i : cont_)
 						{
-							if((*i)->shortkey == shortkey)
-								return (i - cont_.begin());
+							if(i->shortkey == shortkey)
+								return index;
+							++index;
 						}
 					}
 
@@ -135,10 +137,10 @@ namespace gui
 				nana::gui::menu* trigger::push_back(const nana::string& text)
 				{
 					nana::string::value_type shkey;
-					nana::gui::API::transform_shortkey_text(text, shkey, 0);
+					API::transform_shortkey_text(text, shkey, 0);
 
 					if(shkey)
-						nana::gui::API::register_shortkey(widget_->handle(), shkey);
+						API::register_shortkey(widget_->handle(), shkey);
 
 					std::size_t i = items_->size();
 					items_->append(text, shkey);
@@ -284,20 +286,20 @@ namespace gui
 					{
 						switch(ei.keyboard.key)
 						{
-						case nana::gui::keyboard::down:
+						case keyboard::down:
 							state_.menu->goto_next(true);  break;
-						case nana::gui::keyboard::backspace:
-						case nana::gui::keyboard::up:
+						case keyboard::backspace:
+						case keyboard::up:
 							state_.menu->goto_next(false); break;
-						case nana::gui::keyboard::right:
+						case keyboard::right:
 							if(state_.menu->goto_submen() == false)
 								_m_move(false);
 							break;
-						case nana::gui::keyboard::left:
+						case keyboard::left:
 							if(state_.menu->exit_submenu() == false)
 								_m_move(true);
 							break;
-						case nana::gui::keyboard::esc:
+						case keyboard::esc:
 							if(state_.menu->exit_submenu() == false)
 							{
 								_m_close_menu();
@@ -325,25 +327,25 @@ namespace gui
 					{
 						switch(ei.keyboard.key)
 						{
-						case nana::gui::keyboard::right:
+						case keyboard::right:
 							_m_move(false);
 							break;
-						case nana::gui::keyboard::backspace:
-						case nana::gui::keyboard::left:
+						case keyboard::backspace:
+						case keyboard::left:
 							_m_move(true);
 							break;
-						case nana::gui::keyboard::esc:
+						case keyboard::esc:
 							if(state_.behavior == state_.behavior_focus)
 							{
 								state_.active= npos;
 								state_.behavior = state_.behavior_none;
-								nana::gui::API::restore_menubar_taken_window();
+								API::restore_menubar_taken_window();
 							}
 						}
 					}
 
 					_m_draw();
-					nana::gui::API::lazy_refresh();
+					API::lazy_refresh();
 				}
 
 				void trigger::key_up(trigger::graph_reference, const nana::gui::eventinfo& ei)
@@ -364,16 +366,14 @@ namespace gui
 						}
 
 						state_.menu_active = false;
-
 						_m_draw();
-
 						API::lazy_refresh();
 					}
 				}
 
 				void trigger::shortkey(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
 				{
-					nana::gui::API::focus_window(widget_->handle());
+					API::focus_window(widget_->handle());
 
 					std::size_t index = items_->find(ei.keyboard.key);
 					if(index != npos && (index != state_.active || state_.menu == 0))
@@ -387,7 +387,7 @@ namespace gui
 							state_.menu->goto_next(true);
 
 						_m_draw();
-						nana::gui::API::lazy_refresh();
+						API::lazy_refresh();
 						state_.behavior = state_.behavior_menu;
 					}
 				}
@@ -416,7 +416,7 @@ namespace gui
 					{
 						state_.active = index;
 						_m_draw();
-						nana::gui::API::lazy_refresh();
+						API::lazy_refresh();
 
 						if(_m_popup_menu())
 							state_.menu->goto_next(true);
@@ -488,12 +488,13 @@ namespace gui
 					{
 						int item_x = 2;
 						std::size_t index = 0;
-						for(itembase::container::iterator i = items_->begin(); i != items_->end(); ++i, ++index)
+						for(auto i : *items_)
 						{
-							if(item_x <= x && x < item_x + static_cast<int>((*i)->size.width))
+							if(item_x <= x && x < item_x + static_cast<int>(i->size.width))
 								return index;
 
-							item_x += (*i)->size.width;
+							item_x += i->size.width;
+							++index;
 						}
 					}
 
@@ -528,19 +529,19 @@ namespace gui
 					nana::size item_s(0, 23);
 
 					unsigned long index = 0;
-					for(itembase::container::iterator it = items_->begin(); it != items_->end(); ++it, ++index)
+					for(auto i : *items_)
 					{
 						//Transform the text if it contains the hotkey character
 						nana::string::value_type hotkey;
 						nana::string::size_type hotkey_pos;
-						nana::string text = nana::gui::API::transform_shortkey_text((*it)->text, hotkey,&hotkey_pos);
+						nana::string text = API::transform_shortkey_text(i->text, hotkey, &hotkey_pos);
 
 						nana::size text_s = graph_->text_extent_size(text);
 
 						item_s.width = text_s.width + 16;
 
-						(*it)->pos = item_pos;
-						(*it)->size = item_s;
+						i->pos = item_pos;
+						i->size = item_s;
 
 						item_renderer::state_t state = (index != state_.active ? ird.state_normal : (state_.menu_active ? ird.state_selected : ird.state_highlight));
 						ird.background(item_pos, item_s, state);
@@ -548,9 +549,9 @@ namespace gui
 						if(state == ird.state_selected)
 						{
 							int x = item_pos.x + item_s.width;
-							graph_->line(x, item_pos.y + 2, x, item_pos.y + item_s.height - 1, nana::gui::color::gray_border);
+							graph_->line(x, item_pos.y + 2, x, item_pos.y + item_s.height - 1, color::gray_border);
 							x++;
-							graph_->line(x, item_pos.y + 2, x, item_pos.y + item_s.height - 1, nana::gui::color::button_face_shadow_end);
+							graph_->line(x, item_pos.y + 2, x, item_pos.y + item_s.height - 1, color::button_face_shadow_end);
 						}
 
 						//Draw text, the text is transformed from orignal for hotkey character
@@ -566,7 +567,8 @@ namespace gui
 							graph_->line(x, y, x + hotkey_size.width - 1, y, 0x0);
 						}
 
-						item_pos.x += (*it)->size.width;
+						item_pos.x += i->size.width;
+						++index;
 					}
 				}
 

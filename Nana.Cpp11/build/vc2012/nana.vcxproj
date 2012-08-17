@@ -89,6 +89,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\any.cpp" />
+    <ClCompile Include="..\..\source\audio\detail\audio_device.cpp" />
+    <ClCompile Include="..\..\source\audio\detail\audio_stream.cpp" />
+    <ClCompile Include="..\..\source\audio\detail\buffer_preparation.cpp" />
+    <ClCompile Include="..\..\source\audio\player.cpp" />
     <ClCompile Include="..\..\source\basic_types.cpp" />
     <ClCompile Include="..\..\source\charset.cpp" />
     <ClCompile Include="..\..\source\datetime.cpp" />

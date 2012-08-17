@@ -968,13 +968,15 @@ namespace detail
 				selim->requestor = reinterpret_cast<Window>(requestor);
 				selim->buffer = 0;
 				selim->bufsize = 0;
-				selim->cond.lock();
+
 				this->selection_.items.push_back(selim);
 				::XConvertSelection(display_, clipboard, type, clipboard,
 							reinterpret_cast<Window>(requestor), CurrentTime);
 				::XFlush(display_);
 				xlib_locker_.unlock();
-				selim->cond.lock();
+
+				nana::threads::scope_guard sg(selim->cond_lock);
+				selim->cond.wait(selim->cond_lock);
 
 				size = selim->bufsize;
 				void * retbuf = selim->buffer;
@@ -1055,10 +1057,8 @@ namespace detail
 
 						self.selection_.items.erase(self.selection_.items.begin());
 
-						while(im->cond.try_lock())
-							im->cond.unlock();
-
-						im->cond.unlock();
+						nana::threads::scope_guard sg(im->cond_lock);
+						im->cond.signal();
 					}
 				}
 				else if(evt.xselection.property == self.atombase_.xdnd_selection)

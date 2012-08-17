@@ -15,7 +15,7 @@
 #include "../basic_types.hpp"
 #include "../gui/basis.hpp"
 #include "../refer.hpp"
-
+#include "pixel_buffer.hpp"
 namespace nana
 {
 	namespace paint
@@ -142,6 +142,7 @@ namespace nana
             nana::refer<drawable_type, detail::graphics_handle_deleter> ref_;
             drawable_type	handle_;
 			nana::size	size_;
+			nana::paint::pixel_buffer pxbuf_;
 			bool changed_;
 		};
 	}//end namespace paint

@@ -1117,9 +1117,8 @@ namespace nana{ namespace gui{
 
 					if(list_.size() <= categ) return false;
 
-					bool begin_from_categ = (index == npos);
-					//this is a category, so offs should increase.
-					if(begin_from_categ)
+					//this is a category, so...
+					if(npos == index)
 					{
 						//because the first is a category, and offs must not be 0, the category would not be candidated.
 						//the algorithm above to calc the offset item is always starting with a item.
@@ -1134,23 +1133,20 @@ namespace nana{ namespace gui{
 
 					if(i_categ->expand)
 					{
-						container::value_type::container::const_iterator i = i_categ->items.begin() + index;
-						for(; i != i_categ->items.end(); ++i, ++index)
+						std::size_t item_size = i_categ->items.size() - index;
+						if(offs < item_size)
 						{
-							if(offs-- == 0)
-							{
-								item.first = categ;
-								item.second = index;
-								return true;
-							}
+							item.first = categ;
+							item.second = offs + index;
+							return true;
 						}
-
-
+						else
+							offs -= item_size;
 					}
 
 					++categ;
 					++i_categ;
-					for(index = 0; i_categ != list_.end(); ++i_categ, ++categ, index = 0)
+					for(; i_categ != list_.end(); ++i_categ, ++categ)
 					{
 						if(offs-- == 0)
 						{
@@ -1161,20 +1157,19 @@ namespace nana{ namespace gui{
 
 						if(i_categ->expand)
 						{
-							for(container::value_type::container::const_iterator i = i_categ->items.begin(); i != i_categ->items.end(); ++i, ++index)
+							if(offs < i_categ->items.size())
 							{
-								if(offs-- == 0)
-								{
-									item.first = categ;
-									item.second = index;
-									return true;
-								}
+								item.first = categ;
+								item.second = offs;
+								return true;
 							}
+							else
+								offs -= i_categ->items.size();
 						}
 					}
-
 					return false;
 				}
+
 				bool backward(size_type categ, size_type index, size_type offs, std::pair<size_type, size_type>& item) const
 				{
 					if(offs == 0)

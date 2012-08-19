@@ -19,6 +19,26 @@ namespace nana{ namespace gui{
 	namespace drawerbase{
 		namespace float_listbox
 		{
+			//struct module_def
+			//@brief: This defines a data structure used for float_listbox
+			struct module_def
+			{
+				struct item_type
+				{
+					nana::paint::image img;
+					nana::string text;
+
+					item_type(const nana::string&);
+				};
+
+				std::vector<item_type> items;
+				std::size_t max_items;	//the number of items display.
+				mutable std::size_t index;		//the result of the selection.
+
+				static const std::size_t npos = static_cast<std::size_t>(-1);
+				module_def();
+			};
+
 			class item_renderer
 			{
 			public:
@@ -27,20 +47,12 @@ namespace nana{ namespace gui{
 				enum state_t{StateNone, StateHighlighted};
 
 				virtual ~item_renderer();
-				virtual void render(widget_reference, graph_reference, const nana::rectangle&, const nana::string&, state_t state);
+				virtual void image_enabled(bool);
+				virtual bool image_enabled() const;
+				virtual void render(widget_reference, graph_reference, const nana::rectangle&, const module_def::item_type&, state_t state);
 				virtual unsigned item_pixels(graph_reference) const;
-			};
-
-			//struct module_def
-			//@brief: This defines a data structure used for float_listbox
-			struct module_def
-			{
-				std::vector<nana::string> strings;
-				unsigned max_items;	//the number of items display.
-				mutable unsigned index;		//the result of the selection.
-
-				static const unsigned npos = static_cast<unsigned>(-1);
-				module_def();
+			private:
+				bool image_enabled_;
 			};
 
 			class drawer_impl;
@@ -50,6 +62,7 @@ namespace nana{ namespace gui{
 			{
 			public:
 				trigger();
+				~trigger();
 				drawer_impl& get_drawer_impl();
 				const drawer_impl& get_drawer_impl() const;
 			private:

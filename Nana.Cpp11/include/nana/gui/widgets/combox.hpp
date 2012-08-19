@@ -13,6 +13,7 @@
 #define NANA_GUI_WIDGETS_COMBOX_HPP
 #include "widget.hpp"
 #include "float_listbox.hpp"
+#include <nana/any.hpp>
 
 namespace nana{ namespace gui
 {
@@ -74,14 +75,31 @@ namespace nana{ namespace gui
 		void editable(bool);
 		bool editable() const;
 		combox& push_back(const nana::string&);
-		unsigned option() const;
-		void option(unsigned i);
-		nana::string text(unsigned) const;
+		std::size_t option() const;
+		void option(std::size_t);
+		nana::string text(std::size_t) const;
+
+		template<typename T>
+		void anyobj(std::size_t i, const T& obj)
+		{
+			*_m_anyobj(i, true) = obj;
+		}
+
+		template<typename T>
+		T* anyobj(std::size_t i) const
+		{
+			nana::any * obj = _m_anyobj(i, false);
+			return (obj ? obj->get<T>() : nullptr);
+		}
 
 		ext_event_type& ext_event() const;
 		void renderer(item_renderer*);
+
+		void image(std::size_t, const nana::paint::image&);
+		nana::paint::image image(std::size_t) const;
 	private:
 		void _m_caption(const nana::string&);
+		nana::any* _m_anyobj(std::size_t, bool allocate_if_empty) const;
 	};
 }//end namespace gui
 }

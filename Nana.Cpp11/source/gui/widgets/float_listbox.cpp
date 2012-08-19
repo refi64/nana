@@ -18,8 +18,18 @@ namespace nana{ namespace gui{
 		{
 			//class item_renderer
 				item_renderer::~item_renderer(){}
+				
+				void item_renderer::image_enabled(bool enb)
+				{
+					image_enabled_ = enb;
+				}
 
-				void item_renderer::render(item_renderer::widget_reference, item_renderer::graph_reference graph, const nana::rectangle& r, const nana::string& text, item_renderer::state_t state)
+				bool item_renderer::image_enabled() const
+				{
+					return image_enabled_;
+				}
+
+				void item_renderer::render(item_renderer::widget_reference, item_renderer::graph_reference graph, const nana::rectangle& r, const module_def::item_type& item, item_renderer::state_t state)
 				{
 					if(state == StateHighlighted)
 					{
@@ -41,7 +51,24 @@ namespace nana{ namespace gui{
 					else
 						graph.rectangle(r, 0xFFFFFF, true);
 					
-					graph.string(r.x + 2, r.y + 2, 0x0, text);
+					int x = r.x + 2;
+					if(this->image_enabled())
+					{
+						unsigned px = (r.height - 4);
+						if(item.img)
+						{
+							nana::size to_sz = item.img.size();
+							if(to_sz.width > px) to_sz.width = px;
+							if(to_sz.height > px) to_sz.height = px;
+
+							nana::point to_pos(x, r.y + 2);
+							to_pos.x += (px - to_sz.width) / 2;
+							to_pos.y += (px - to_sz.height) / 2;
+							item.img.stretch(item.img.size(), graph, nana::rectangle(to_pos, to_sz));
+						}
+						x += (px + 2);
+					}
+					graph.string(x, r.y + 2, 0x0, item.text);
 				}
 
 				unsigned item_renderer::item_pixels(item_renderer::graph_reference graph) const
@@ -51,6 +78,10 @@ namespace nana{ namespace gui{
 			//}; end class item_renderer
 
 			//struct module_def
+				module_def::item_type::item_type(const nana::string& s)
+					: text(s)
+				{}
+
 				module_def::module_def()
 					:max_items(10), index(npos)
 				{}
@@ -93,7 +124,7 @@ namespace nana{ namespace gui{
 					}
 					else 
 					{
-						if((state_.offset_y + module_->max_items) < module_->strings.size())
+						if((state_.offset_y + module_->max_items) < module_->items.size())
 						{
 							++(state_.offset_y);
 							update = true;
@@ -110,14 +141,14 @@ namespace nana{ namespace gui{
 
 				void move_items(bool upwards, bool recycle)
 				{
-					if(module_ && module_->strings.size())
+					if(module_ && module_->items.size())
 					{
 						unsigned init_index = state_.index;
 						if(state_.index != module_->npos)
 						{
 							unsigned last_offset_y = 0;
-							if(module_->strings.size() > module_->max_items)
-								last_offset_y = static_cast<unsigned>(module_->strings.size() - module_->max_items);
+							if(module_->items.size() > module_->max_items)
+								last_offset_y = static_cast<unsigned>(module_->items.size() - module_->max_items);
 
 							if(upwards)
 							{
@@ -125,7 +156,7 @@ namespace nana{ namespace gui{
 									--(state_.index);
 								else if(recycle)
 								{
-									state_.index = static_cast<unsigned>(module_->strings.size() - 1);
+									state_.index = static_cast<unsigned>(module_->items.size() - 1);
 									state_.offset_y = last_offset_y;
 								}
 
@@ -134,7 +165,7 @@ namespace nana{ namespace gui{
 							}
 							else
 							{
-								if(state_.index < module_->strings.size() - 1)
+								if(state_.index < module_->items.size() - 1)
 									++(state_.index);
 								else if(recycle)
 								{
@@ -187,7 +218,7 @@ namespace nana{ namespace gui{
 				{
 					if(module_)
 					{
-						std::size_t items = (module_->max_items <= module_->strings.size() ? module_->max_items : module_->strings.size());
+						std::size_t items = (module_->max_items <= module_->items.size() ? module_->max_items : module_->items.size());
 						std::size_t h = items * state_.renderer->item_pixels(*graph_);
 						widget_->size(widget_->size().width, static_cast<unsigned>(h + 4));
 					}
@@ -196,7 +227,7 @@ namespace nana{ namespace gui{
 				void set_module(const module_def& md)
 				{
 					module_ = &md;
-					if(md.index >= md.strings.size())
+					if(md.index >= md.items.size())
 						md.index = md.npos;
 				}
 
@@ -231,25 +262,26 @@ namespace nana{ namespace gui{
 				{
 					if(module_)
 					{
-						bool pages = (module_->max_items < module_->strings.size());
+						bool pages = (module_->max_items < module_->items.size());
 						const unsigned outter_w = (4 + (pages ? 16 : 0));
 
 						if(graph_->width() > outter_w && graph_->height() > 4 )
 						{
 							//Draw items
-							unsigned items = static_cast<unsigned>(pages ? module_->max_items : module_->strings.size());							
+							unsigned items = static_cast<unsigned>(pages ? module_->max_items : module_->items.size());							
 							items += state_.offset_y;
 
 							const unsigned item_pixels = state_.renderer->item_pixels(*graph_);
 
 							nana::rectangle item_r(2, 2, graph_->width() - outter_w, item_pixels);
 
+							state_.renderer->image_enabled(_m_image_enabled());
 							for(unsigned i = state_.offset_y; i < items; ++i)
 							{
 								item_renderer::state_t state = item_renderer::StateNone;
 								if(i == state_.index) state = item_renderer::StateHighlighted;
 
-								state_.renderer->render(*widget_, *graph_, item_r, module_->strings[i], state);
+								state_.renderer->render(*widget_, *graph_, item_r, module_->items[i], state);
 								item_r.y += item_pixels;
 							}
 						}	
@@ -265,6 +297,16 @@ namespace nana{ namespace gui{
 					graph_->rectangle(1, 1, graph_->width() - 2, graph_->height() - 2, 0xFFFFFF, false);
 				}
 			private:
+				bool _m_image_enabled() const
+				{
+					for(auto & i : module_->items)
+					{
+						if(false == i.img.empty())
+							return true;
+					}
+					return false;
+				}
+
 				void _m_open_scrollbar(widget_reference wd, bool v)
 				{
 					if(v)
@@ -272,7 +314,7 @@ namespace nana{ namespace gui{
 						if(scrollbar_.empty() && module_)
 						{
 							scrollbar_.create(wd, rectangle(static_cast<int>(wd.size().width - 18), 2, 16, wd.size().height - 4));
-							scrollbar_.amount(module_->strings.size());
+							scrollbar_.amount(module_->items.size());
 							scrollbar_.range(module_->max_items);
 							scrollbar_.value(state_.offset_y);
 							scrollbar_.make_event<events::mouse_wheel>(*this, &drawer_impl::_m_on_scroll);
@@ -331,6 +373,11 @@ namespace nana{ namespace gui{
 				trigger::trigger()
 					:drawer_(new drawer_impl)
 				{}
+
+				trigger::~trigger()
+				{
+					delete drawer_;
+				}
 
 				drawer_impl& trigger::get_drawer_impl()
 				{

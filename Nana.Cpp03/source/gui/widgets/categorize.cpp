@@ -548,7 +548,7 @@ namespace nana{	namespace gui{
 					if(style_.listbox)
 						style_.listbox->close();
 
-					style_.module.strings.clear();
+					style_.module.items.clear();
 
 					nana::rectangle r;
 					style_.list_trigger = ui_el_.what;
@@ -559,7 +559,7 @@ namespace nana{	namespace gui{
 						if(i)
 						{
 							for(node_handle child = i->child; child; child = child->next)
-								style_.module.strings.push_back(child->value.first);
+								style_.module.items.push_back(child->value.first);
 						}
 						r = style_.active_item_rectangle;
 					}
@@ -570,7 +570,7 @@ namespace nana{	namespace gui{
 						{
 							std::vector<node_handle>::iterator end = v.begin() + head_;
 							for(std::vector<node_handle>::iterator i = v.begin(); i != end; ++i)
-								style_.module.strings.push_back((*i)->value.first);
+								style_.module.items.push_back((*i)->value.first);
 						}
 						r = style_.active_item_rectangle;
 					}
@@ -595,7 +595,7 @@ namespace nana{	namespace gui{
 						case ui_element::item_arrow:
 							{
 								treebase_.tail(style_.active);
-								nana::string name = style_.module.strings[style_.module.index];
+								nana::string name = style_.module.items[style_.module.index].text;
 								nana::any value;
 								node_handle i = treebase_.find_child(name);
 								if(i)

@@ -33,22 +33,19 @@ namespace nana{ namespace gui{
 				mutable ext_event_tag ext_event;
 
 				drawer_impl()
-					:widget_(nullptr), graph_(nullptr), item_renderer_(nullptr)
+					:	widget_(nullptr), graph_(nullptr),
+						item_renderer_(nullptr), image_enabled_(false), editor_(nullptr)
 				{}
+
+				~drawer_impl()
+				{
+					for(auto p : anyobj_)
+						delete p;
+				}
 
 				void renderer(drawerbase::float_listbox::item_renderer* ir)
 				{
 					item_renderer_ = ir;
-				}
-
-				void insert(const nana::string& text)
-				{
-					module_.strings.push_back(text);
-				}
-
-				int get_where() const
-				{
-					return state_.pointer_where;
 				}
 
 				void bind(widget_reference wd)
@@ -73,9 +70,38 @@ namespace nana{ namespace gui{
 					graph_ = 0;
 				}
 
+				void insert(const nana::string& text)
+				{
+					module_.items.push_back(text);
+					anyobj_.push_back(nullptr);
+				}
+
+				int get_where() const
+				{
+					return state_.pointer_where;
+				}
+
+				nana::any * anyobj(std::size_t i, bool allocate_if_empty) const
+				{
+					if(i < anyobj_.size())
+					{
+						nana::any * p = anyobj_[i];
+						if(allocate_if_empty && (nullptr == p))
+							anyobj_[i] = p = new nana::any;
+						return p;
+					}
+					return nullptr;
+				}
+
 				void text_area(unsigned width, unsigned height)
 				{
-					editor_->text_area(nana::rectangle(2, 2, width > 19 ? width - 19 : 0, height > 4 ? height - 4 : 0));
+					nana::rectangle r(2, 2, width > 19 ? width - 19 : 0, height > 4 ? height - 4 : 0);
+					if(image_enabled_)
+					{
+						r.x += 18;
+						if(r.width > 18)	r.width -= 18;
+					}
+					editor_->text_area(r);
 				}
 
 				widgets::skeletons::text_editor * editor() const
@@ -95,7 +121,7 @@ namespace nana{ namespace gui{
 
 				void clear()
 				{
-					module_.strings.clear();
+					module_.items.clear();
 				}
 
 				void editable(bool enb)
@@ -196,61 +222,44 @@ namespace nana{ namespace gui{
 				{
 					if(0 == state_.lister)
 					{
-						unsigned orig_i = module_.index;
+						std::size_t orig_i = module_.index;
 						if(upwards)
 						{
 							if(module_.index)
 								--(module_.index);
 							else if(recycle)
-								module_.index = static_cast<unsigned>(module_.strings.size() - 1);
+								module_.index = static_cast<unsigned>(module_.items.size() - 1);
 						}
 						else
 						{
-							if(module_.index != module_.strings.size() - 1)
+							if(module_.index != module_.items.size() - 1)
 								++(module_.index);
 							else if(recycle)
 								module_.index = 0;
 						}
 
 						if(orig_i != module_.index)
-							this->set_text(module_.strings[module_.index]);
+							option(module_.index, false);
 					}
 					else
 						state_.lister->move_items(upwards, recycle);
 				}
 
-				void set_text(const nana::string& text)
-				{
-					if(widget_)
-					{
-						nana::point pos = API::cursor_position();
-						API::calc_window_point(widget_->handle(), pos);
-						if(this->calc_where(*graph_, pos.x, pos.y))
-							state_.state = StateNone;
-
-						editor_->text(text);
-						bool enb = widget_->enabled();
-						_m_draw_push_button(enb);
-
-						//Yes, it's safe to static_cast here!
-						ext_event.selected(*static_cast<nana::gui::combox*>(widget_));
-					}
-				}
-
 				void draw()
 				{
 					bool enb = widget_->enabled();
+					nana::size sz = widget_->size();
 
 					if(editor_)
 					{
-						nana::size sz = widget_->size();
 						text_area(sz.width, sz.height);
 						editor_->redraw(state_.focused);
 					}
 					_m_draw_push_button(enb);
+					_m_draw_image();
 				}
 
-				void draw_border(nana::paint::graphics& graph)
+				void draw_border(graph_reference graph)
 				{
 					nana::rectangle r(graph.size());
 					graph.rectangle(r, (state_.focused ? 0x0595E2 : 0x999A9E), false);
@@ -260,30 +269,43 @@ namespace nana{ namespace gui{
 					graph.rectangle(r, 0xFFFFFF, false);
 				}
 
-				unsigned option() const
+				std::size_t option() const
 				{
 					return module_.index;
 				}
 
-				void option(unsigned index)
+				void option(std::size_t index, bool ignore_condition)
 				{
-					if(index < module_.strings.size())
+					if(index < module_.items.size())
 					{
-						nana::string & str = module_.strings[index];
-						if(module_.index != index)
+						std::size_t old_index = module_.index;
+						module_.index = index;
+						if(widget_)
 						{
-							module_.index = index;
-							set_text(str);
+							//Test if the current item or text is different from selected.
+							if(ignore_condition || (old_index != index) || (module_.items[index].text != widget_->caption()))
+							{
+								nana::point pos = API::cursor_position();
+								API::calc_window_point(widget_->handle(), pos);
+								if(this->calc_where(*graph_, pos.x, pos.y))
+									state_.state = StateNone;
+
+								editor_->text(module_.items[index].text);
+								bool enb = widget_->enabled();
+								_m_draw_push_button(enb);
+								_m_draw_image();
+
+								//Yes, it's safe to static_cast here!
+								ext_event.selected(*static_cast<nana::gui::combox*>(widget_));
+							}
 						}
-						else if(str != widget_->caption())
-							set_text(str);
 					}
 				}
 
-				nana::string text(unsigned i) const
+				nana::string text(std::size_t i) const
 				{
-					if(i < module_.strings.size())
-						return module_.strings[i];
+					if(i < module_.items.size())
+						return module_.items[i].text;
 					return nana::string();
 				}
 
@@ -292,18 +314,38 @@ namespace nana{ namespace gui{
 					if(editor_)
 						editor_->text(str);
 				}
+
+				void image(std::size_t i, const nana::paint::image& img)
+				{
+					if(i < module_.items.size())
+					{
+						module_.items[i].img = img;
+						if((false == image_enabled_) && img)
+						{
+							image_enabled_ = true;
+							draw();
+						}
+					}
+				}
+
+				nana::paint::image image(std::size_t i) const
+				{
+					if(i < module_.items.size())
+						return module_.items[i].img;
+					return nana::paint::image();
+				}
 			private:
 				void _m_lister_close_sig()
 				{
 					state_.lister = 0;	//The lister closes by itself.
 					if(module_.index != module_.npos && module_.index != state_.item_index_before_selection)
 					{
-						set_text(module_.strings[module_.index]);
+						option(module_.index, true);
 						API::update_window(*widget_);
 					}
 				}
 
-				void _m_draw_background(nana::paint::graphics&, const nana::rectangle&, nana::color_t)
+				void _m_draw_background(graph_reference, const nana::rectangle&, nana::color_t)
 				{
 					int x = 1, y = 1;
 					unsigned color_start = color::button_face_shadow_start, color_end = gui::color::button_face_shadow_end;
@@ -361,16 +403,37 @@ namespace nana{ namespace gui{
 					graph_->rectangle(left + 1, mid + 1, right - left - 2, bottom - mid, botcol, true);
 
 					nana::paint::gadget::arrow_16_pixels(*graph_, left, top + ((bottom - top) / 2) - 7, (enabled ? 0xFFFFFF : nana::gui::color::dark_border), 1, nana::paint::gadget::directions::to_south);
+				}
 
+				void _m_draw_image()
+				{
+					if(module_.index != module_.npos)
+					{
+						nana::paint::image img = module_.items[module_.index].img;
+						if(img)
+						{
+							const std::size_t imgpx = 16;
+							nana::size imgsz = img.size();
+							if(imgsz.width > imgpx) imgsz.width = imgpx;
+							if(imgsz.height > imgpx) imgsz.height = imgpx;
+
+							nana::point pos(2, 2);
+							pos.x += (imgpx - imgsz.width) / 2;
+							pos.y += (imgpx - imgsz.height) / 2;
+
+							img.stretch(img.size(), *graph_, nana::rectangle(pos, imgsz));
+						}
+					}
 				}
 			private:
 				nana::gui::float_listbox::module_type module_;
+				mutable std::vector<nana::any*>	anyobj_;
 				nana::gui::widget * widget_;
 				nana::paint::graphics * graph_;
 
 				drawerbase::float_listbox::item_renderer* item_renderer_;
 
-				//textbox	txtbox_;
+				bool image_enabled_;
 				widgets::skeletons::text_editor * editor_;
 
 				struct state_type
@@ -394,8 +457,7 @@ namespace nana{ namespace gui{
 			//class trigger
 				trigger::trigger()
 					: drawer_(new drawer_impl)
-				{
-				}
+				{}
 
 				trigger::~trigger()
 				{
@@ -446,12 +508,12 @@ namespace nana{ namespace gui{
 					API::dev::umake_drawer_event(drawer_->widget()->handle());
 				}
 
-				void trigger::refresh(trigger::graph_reference)
+				void trigger::refresh(graph_reference)
 				{
 					drawer_->draw();
 				}
 
-				void trigger::focus(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::focus(graph_reference, const nana::gui::eventinfo& ei)
 				{
 					drawer_->set_focused(ei.focus.getting);
 					if(drawer_->widget()->enabled())
@@ -462,7 +524,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_enter(trigger::graph_reference, const nana::gui::eventinfo&)
+				void trigger::mouse_enter(graph_reference, const nana::gui::eventinfo&)
 				{
 					drawer_->set_mouse_over(true);
 					if(drawer_->widget()->enabled())
@@ -472,7 +534,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_leave(trigger::graph_reference, const nana::gui::eventinfo&)
+				void trigger::mouse_leave(graph_reference, const nana::gui::eventinfo&)
 				{
 					drawer_->set_mouse_over(false);
 					drawer_->editor()->mouse_enter(false);
@@ -483,7 +545,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_down(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_down(graph_reference graph, const nana::gui::eventinfo& ei)
 				{
 					drawer_->set_mouse_press(true);
 
@@ -505,7 +567,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_up(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_up(graph_reference graph, const nana::gui::eventinfo& ei)
 				{
 					if(drawer_->widget()->enabled())
 					{
@@ -519,7 +581,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_move(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_move(graph_reference graph, const nana::gui::eventinfo& ei)
 				{
 					if(drawer_->widget()->enabled())
 					{
@@ -535,7 +597,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_wheel(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_wheel(graph_reference graph, const nana::gui::eventinfo& ei)
 				{
 					if(drawer_->widget()->enabled())
 					{
@@ -546,7 +608,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::key_down(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::key_down(graph_reference, const nana::gui::eventinfo& ei)
 				{
 					if(drawer_->widget()->enabled())
 					{
@@ -565,7 +627,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::key_char(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::key_char(graph_reference graph, const nana::gui::eventinfo& ei)
 				{
 					widgets::skeletons::text_editor * editor = drawer_->editor();
 					if(drawer_->widget()->enabled() && editor->editable())
@@ -645,17 +707,17 @@ namespace nana{ namespace gui{
 			return *this;
 		}
 
-		unsigned combox::option() const
+		std::size_t combox::option() const
 		{
 			return get_drawer_trigger().get_drawer_impl().option();
 		}
 
-		void combox::option(unsigned i)
+		void combox::option(std::size_t i)
 		{
-			get_drawer_trigger().get_drawer_impl().option(i);
+			get_drawer_trigger().get_drawer_impl().option(i, false);
 		}
 
-		nana::string combox::text(unsigned i) const
+		nana::string combox::text(std::size_t i) const
 		{
 			return get_drawer_trigger().get_drawer_impl().text(i);
 		}
@@ -670,11 +732,31 @@ namespace nana{ namespace gui{
 			get_drawer_trigger().get_drawer_impl().renderer(ir);
 		}
 
+		void combox::image(std::size_t i, const nana::paint::image& img)
+		{
+			if(empty()) return;
+
+			auto & impl = get_drawer_trigger().get_drawer_impl();
+			impl.image(i, img);
+			if(i == impl.option())
+				API::refresh_window(*this);
+		}
+
+		nana::paint::image combox::image(std::size_t i) const
+		{
+			return get_drawer_trigger().get_drawer_impl().image(i);
+		}
+
 		void combox::_m_caption(const nana::string& str)
 		{
 			internal_scope_guard isg;
 			get_drawer_trigger().get_drawer_impl().text(str);
 			API::refresh_window(this->handle());
+		}
+
+		nana::any * combox::_m_anyobj(std::size_t i, bool allocate_if_empty) const
+		{
+			return get_drawer_trigger().get_drawer_impl().anyobj(i, allocate_if_empty);
 		}
 	//end class combox
 }//end namespace gui

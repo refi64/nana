@@ -37,7 +37,7 @@ namespace nana{	namespace audio
 
 			bool audio_stream::empty() const
 			{
-				return (false == fs_.is_open());
+				return (!fs_);
 			}
 
 			const wave_spec::format_chunck & audio_stream::format() const

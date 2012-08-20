@@ -19,21 +19,27 @@ namespace nana{ namespace gui{
 	{
 		namespace label
 		{
+			struct command
+			{
+				enum t{enter, leave, click};
+			};
+
 			//class trigger
 			//@brief:	draw the label
 			class trigger: public nana::gui::drawer_trigger
 			{
-				struct impl_t;
 			public:
+				struct impl_t;
+
 				trigger();
 				~trigger();
-				void bind_window(nana::gui::widget&);
+				void bind_window(widget_reference);
 				impl_t * impl() const;
 			private:
 				void attached(graph_reference);
 				void detached();
-				void refresh(paint::graphics&);
-				void notify_background_change(nana::paint::graphics&);
+				void refresh(graph_reference);
+				void notify_background_change(graph_reference);
 				void mouse_move(graph_reference, const eventinfo&);
 				void mouse_leave(graph_reference, const eventinfo&);
 				void click(graph_reference, const eventinfo&);
@@ -50,15 +56,18 @@ namespace nana{ namespace gui{
 		: public widget_object<category::widget_tag, drawerbase::label::trigger>
 	{
 	public:
+		typedef drawerbase::label::command command;
 		label();
 		label(window, bool visible);
 		label(window, const rectangle& = rectangle(), bool visible = true);
-
 		void transparent(bool);
 		bool transparent() const;
 		void format(bool);
+		void add_format_listener(const nana::functor<void(command::t, const nana::string&)> &);
 		nana::size measure() const;
 		unsigned extent_size() const;
+	private:
+		void _m_caption(const nana::string&);
 	};
 }//end namespace gui
 }//end namespace nana

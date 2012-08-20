@@ -10,7 +10,6 @@
  */
 
 #include <nana/gui/widgets/label.hpp>
-#include <stack>
 #include <nana/gui/cursor.hpp>
 #include <nana/system/platform.hpp>
 #include <nana/unicode_bidi.hpp>
@@ -32,10 +31,11 @@ namespace gui
 				typedef nana::paint::graphics&	graph_reference;
 
 				virtual ~renderer_interface(){}
-
-				virtual void render(widget_reference, graph_reference, const nana::string&) = 0;
-				virtual unsigned extent_size(graph_reference, const nana::string& text) = 0;
-				virtual nana::size measure(graph_reference, const nana::string&) = 0;
+				virtual void parse(window, const nana::string&) = 0;
+				virtual void render(widget_reference, graph_reference) = 0;
+				virtual unsigned extent_size(graph_reference) = 0;
+				virtual nana::size measure(graph_reference) = 0;
+				virtual void bind_listener(std::function<void(command, const nana::string&)> &&) = 0;
 				virtual void over(int x, int y) = 0;
 				virtual void leave() = 0;
 				virtual void click() = 0;
@@ -44,8 +44,16 @@ namespace gui
 			class simple_renderer
 				: public renderer_interface
 			{
-				void render(widget_reference wd, graph_reference graph, const nana::string& text)
+				window wd_;
+			
+				void parse(window wd, const nana::string&)
 				{
+					wd_ = wd;
+				}
+
+				void render(widget_reference wd, graph_reference graph)
+				{
+					nana::string text = API::window_caption(wd_);
 					nana::string::size_type len = text.length();
 					if(len)
 					{
@@ -55,8 +63,9 @@ namespace gui
 					return;
 				}
 
-				unsigned extent_size(graph_reference graph, const nana::string& text)
+				unsigned extent_size(graph_reference graph)
 				{
+					nana::string text = API::window_caption(wd_);
 					nana::string::size_type len = text.length();
 					if(len)
 					{
@@ -66,8 +75,10 @@ namespace gui
 					return 0;
 				}
 
-				nana::size measure(graph_reference graph, const nana::string& text)
+				nana::size measure(graph_reference graph)
 				{
+					nana::string text = API::window_caption(wd_);
+
 					nana::size extsize;
 					nana::string::size_type length = text.length();
 					if(0 == length)	return extsize;
@@ -97,21 +108,17 @@ namespace gui
 					return extsize;
 				}
 
-				void over(int x, int y)
-				{}
-
-				void leave()
-				{}
-
-				void click()
-				{}
+				void bind_listener(std::function<void(command, const nana::string&)> &&){}
+				void over(int x, int y){}
+				void leave(){}
+				void click(){}
 			};
 
 			class content
 			{
 				struct tokens
 				{
-					enum t{string, pure_string, number, beg, end, br, font, bold, size, color, url, equal, comma, backslash, _true, _false, endl, eof};
+					enum t{string, pure_string, number, beg, end, font, bold, size, color, url, target, equal, comma, backslash, _true, _false, endl, eof};
 				};
 
 				struct states
@@ -123,14 +130,13 @@ namespace gui
 
 				struct section_t
 				{
-					bool br;
 					nana::string font;
 					unsigned size;
 					bool bold;
 					nana::color_t color;
 					nana::string url;
+					nana::string target;
 					nana::string str;
-
 					std::vector<nana::rectangle> areas;
 				};
 
@@ -145,6 +151,7 @@ namespace gui
 				std::vector<std::vector<section_t*> > container_;
 			public:
 				typedef std::vector<section_t*> line_container;
+				const static unsigned nsize = static_cast<unsigned>(-1);
 
 				~content()
 				{
@@ -153,11 +160,7 @@ namespace gui
 
 				const line_container* getline(unsigned x) const
 				{
-					if(x < container_.size())
-					{
-						return &container_[x];
-					}
-					return 0;
+					return (x < container_.size() ? &container_[x] : nullptr);
 				}
 
 				void parse(const nana::string& txt)
@@ -167,60 +170,6 @@ namespace gui
 					_m_parse();
 				}
 			private:
-				void _m_push(section_t& s)
-				{
-					font_t f;
-					f.font = s.font;
-					f.bold = s.bold;
-					f.color = s.color;
-					f.size = s.size;
-					stack_.push(f);
-				}
-
-				void _m_pop(section_t& s)
-				{
-					if(stack_.size())
-						stack_.pop();
-
-					s.str.clear();
-					if(stack_.size() == 0)
-					{
-						s.font.clear();
-						s.size = 0xFFFFFFFF;
-						s.bold = false;
-						s.color = 0xFF000000;
-					}
-					else
-					{
-						font_t f = stack_.top();
-						s.font = f.font;
-						s.size = f.size;
-						s.bold = f.bold;
-						s.color = f.color;
-					}
-				}
-
-				void _m_init_section(section_t& s)
-				{
-					s.br = false;
-					s.str.clear();
-					if(stack_.size() == 0)
-					{
-						s.font.clear();
-						s.size = 0xFFFFFFFF;
-						s.bold = false;
-						s.color = 0xFF000000;
-					}
-					else
-					{
-						font_t f = stack_.top();
-						s.font = f.font;
-						s.size = f.size;
-						s.bold = f.bold;
-						s.color = f.color;
-					}
-				}
-
 				void _m_append(const section_t& sec)
 				{
 					if(container_.size() == 0)
@@ -248,7 +197,9 @@ namespace gui
 				void _m_parse()
 				{
 					section_t section;
-					_m_init_section(section);
+					section.size = nsize;
+					section.bold = false;
+					section.color = 0xFF000000;
 
 					while(true)
 					{
@@ -265,17 +216,16 @@ namespace gui
 							break;
 						case tokens::beg:
 							tk = _m_token();
-							if(tk == tokens::br)
+							if(tk == tokens::backslash)
 							{
-								_m_endl();
-								while(tokens::end != _m_token());
+								do
+								{
+									tk = _m_token();
+								}while(tokens::end != tk && tokens::eof != tk);
 							}
 							else
-							{
-								_m_push(section);
-								_m_enter_format(tk);
-								_m_pop(section);
-							}
+								_m_enter_format(tk, section);
+
 							break;
 						case tokens::eof:
 							return;
@@ -301,10 +251,10 @@ namespace gui
 					return n;
 				}
 
-				bool _m_enter_format(token_t tk)
+				bool _m_enter_format(token_t tk, const section_t & init_s)
 				{
-					section_t sect;
-					_m_init_section(sect);
+					section_t sect = init_s;
+					sect.str.clear();
 
 					if(tk == tokens::backslash)
 					{
@@ -334,9 +284,14 @@ namespace gui
 									sect.url = data_.tokenstr;
 							}
 							break;
-						case tokens::br:
+						case tokens::target:
 							tk = _m_token();
-							sect.br = true;
+							if(tokens::equal == tk)
+							{
+								tk = _m_token();
+								if(tk == tokens::pure_string)
+									sect.target = data_.tokenstr;
+							}
 							break;
 						case tokens::bold:
 							tk = _m_token();
@@ -364,9 +319,7 @@ namespace gui
 							{
 								tk = _m_token();
 								if(tk == tokens::number)
-								{
 									sect.size = _m_tokenstr_to_number();
-								}
 							}
 							break;
 						case tokens::color:
@@ -375,9 +328,7 @@ namespace gui
 							{
 								tk = _m_token();
 								if(tk == tokens::number)
-								{
 									sect.color = _m_tokenstr_to_number();
-								}
 							}
 							break;
 						default:
@@ -403,20 +354,18 @@ namespace gui
 							break;
 						case tokens::beg:
 							tk = _m_token();
-							if(tk == tokens::br)
+							if(tk == tokens::backslash)
 							{
-								while(tokens::end != _m_token());
-								tk = _m_token();
-								_m_endl();
+								do
+								{
+									tk = _m_token();
+								}while(tokens::end != tk && tokens::eof != tk);
+								return false;
 							}
 							else
 							{
-								_m_push(sect);
-								if(false == _m_enter_format(tk))
-								{
-									_m_pop(sect);
+								if(false == _m_enter_format(tk, sect))
 									tk = _m_token();
-								}
 								else
 									loop = false;
 							}
@@ -558,9 +507,7 @@ namespace gui
 									case '>':
 									case '"':
 									case ' ':
-										if(STR("br") == data_.tokenstr)
-											return tokens::br;
-										else if(STR("font") == data_.tokenstr)
+										if(STR("font") == data_.tokenstr)
 											return tokens::font;
 										else if(STR("bold") == data_.tokenstr)
 											return tokens::bold;
@@ -572,6 +519,8 @@ namespace gui
 											return tokens::_true;
 										else if(STR("url") == data_.tokenstr)
 											return tokens::url;
+										else if(STR("target") == data_.tokenstr)
+											return tokens::target;
 										else if(STR("false") == data_.tokenstr)
 											return tokens::_false;
 										else
@@ -607,8 +556,6 @@ namespace gui
 
 
 			private:
-				std::stack<font_t> stack_;
-
 				struct data_tag
 				{
 					nana::string tokenstr;
@@ -635,10 +582,15 @@ namespace gui
 			class format_renderer
 				:public renderer_interface
 			{
-				void render(widget_reference wd, graph_reference graph, const nana::string& str)
+				const static unsigned nsize = static_cast<unsigned>(-1);
+
+				void parse(window, const nana::string& s)
 				{
-					_m_erase_areas();
-					content_.parse(str);
+					content_.parse(s);
+				}
+
+				void render(widget_reference wd, graph_reference graph)
+				{
 					trace_.cursor.bind(wd);
 
 					color_sect_ = color_fg_ = wd.foreground();
@@ -660,9 +612,8 @@ namespace gui
 					}
 				}
 
-				virtual unsigned extent_size(graph_reference graph, const nana::string& str)
+				virtual unsigned extent_size(graph_reference graph)
 				{
-					content_.parse(str);
 					nana::paint::font font;
 					nana::point pos;
 
@@ -681,9 +632,8 @@ namespace gui
 					return static_cast<unsigned>(pos.y);				
 				}
 
-				virtual nana::size measure(graph_reference graph, const nana::string& str)
+				virtual nana::size measure(graph_reference graph)
 				{
-					content_.parse(str);
 					nana::paint::font font;
 					nana::point pos;
 
@@ -705,6 +655,11 @@ namespace gui
 					return ts;
 				}
 
+				void bind_listener(std::function<void(command, const nana::string&)> && ls)
+				{
+					listener_ = std::move(ls);
+				}
+
 				void over(int x, int y)
 				{
 					const content::line_container * line = nullptr;
@@ -719,34 +674,44 @@ namespace gui
 								{
 									trace_.cursor.load(cursor::predef::hand);
 									trace_.url = section->url;
+
+									if(trace_.target != section->target)
+									{
+										if(trace_.target.size())
+											listener_(command::leave, trace_.target);
+
+										trace_.target = section->target;
+										listener_(command::enter, trace_.target);
+									}
 									return;
 								}
 							}
 						}
 					}
 
-					if(trace_.cursor.get() != cursor::predef::arrow)
-					{
-						trace_.cursor.load(cursor::predef::arrow);
-						trace_.url.clear();
-					}
+					leave();
 				}
 
 				void leave()
 				{
 					if(trace_.cursor.get() != cursor::predef::arrow)
 					{
+						if(trace_.target.size())
+							listener_(command::leave, trace_.target);
+
 						trace_.cursor.load(cursor::predef::arrow);
 						trace_.url.clear();
+						trace_.target.clear();
 					}
 				}
 
 				void click()
 				{
 					if(trace_.url.size())
-					{
 						system::open_url(trace_.url);
-					}
+
+					if(trace_.target.size())
+						listener_(command::click, trace_.target);
 				}
 
 				unsigned _m_line_pixels(graph_reference graph, const content::line_container * line) const
@@ -765,10 +730,10 @@ namespace gui
 
 				void _m_change_font(nana::paint::graphics& graph, nana::paint::font& font, const content::line_container::value_type s) const
 				{
-					if((s->font.size() && s->font != font.name()) || (s->size != 0xFFFFFF && s->size != font.size()) || (s->bold != font.bold()))
+					if((s->font.size() && s->font != font.name()) || (s->size != nsize && s->size != font.size()) || (s->bold != font.bold()))
 					{
 						nana::string name = (s->font.size() ? s->font : font.name());
-						unsigned size = (s->size != 0xFFFFFFFF ? s->size : font.size());
+						unsigned size = (s->size != nsize ? s->size : font.size());
 						nana::paint::font f(name.c_str(), size, s->bold);
 						graph.typeface(f);
 					}
@@ -794,11 +759,7 @@ namespace gui
 						for(; off + len <= static_cast<int>(s->str.size()); ++len)
 						{
 							ts = graph.text_extent_size(str.c_str() + off, len);
-							if(ts.width < dw)
-							{
-								pixels = ts.width;
-							}
-							else
+							if(ts.width >= dw)
 							{
 								if(ts.width > dw)
 								{
@@ -816,6 +777,8 @@ namespace gui
 								}
 								break;
 							}
+							else
+								pixels = ts.width;
 						}
 
 						//The text is splitted for a new line
@@ -833,6 +796,11 @@ namespace gui
 					return nana::point(x, y);			
 				}
 
+				static bool _m_want_area(const content::line_container::value_type s)
+				{
+					return (s->url.size() || s->target.size());
+				}
+
 				nana::point _m_draw_string(unsigned line_pixels, int x, int y, graph_reference graph, const nana::string& str,  const content::line_container::value_type s)
 				{
 					const unsigned text_area = graph.width();
@@ -848,7 +816,7 @@ namespace gui
 						if(ts.width <= dw)
 						{
 							graph.string(x, y + (line_pixels - ts.height) / 2, clr, str.c_str() + off, str.size() - off);
-							if(s->url.size())
+							if(_m_want_area(s))
 							{
 								r.x = x;
 								r.y = y;
@@ -865,11 +833,7 @@ namespace gui
 						for(; off + len <= static_cast<int>(s->str.size()); ++len)
 						{
 							ts = graph.text_extent_size(str.c_str() + off, len);
-							if(ts.width < dw)
-							{
-								pixels = ts.width;
-							}
-							else
+							if(ts.width >= dw)
 							{
 								if(ts.width > dw)
 								{
@@ -887,10 +851,12 @@ namespace gui
 								}
 								break;
 							}
+							else
+								pixels = ts.width;
 						}
 						if(len)
 						{
-							if(s->url.size())
+							if(_m_want_area(s))
 							{
 								r.x = x;
 								r.y = draw_y_pos;
@@ -915,23 +881,15 @@ namespace gui
 					}
 					return nana::point(x, y);
 				}
-
-				void _m_erase_areas()
-				{
-					const content::line_container * line = nullptr;
-					for(unsigned i = 0; (line = content_.getline(i)); ++i)
-					{
-						for(auto section : *line)
-							section->areas.clear();
-					}
-				}
 			private:
 				struct trace_tag
 				{
 					nana::gui::cursor cursor;
 					nana::string url;
+					nana::string target;
 				}trace_;
 
+				std::function<void(command, const nana::string&)> listener_;
 				content content_;
 				nana::color_t color_sect_;
 				nana::color_t color_fg_;
@@ -956,36 +914,55 @@ namespace gui
 						delete renderer;
 					}
 
-					void format(bool enabled)
+					bool format(bool enabled)
 					{
 						if((enabled != format_state_) && wd)
 						{
 							nana::gui::internal_scope_guard isg;
 							renderer_interface * rnd_if = renderer;
 							if(enabled)
+							{
 								renderer = new format_renderer;
+								renderer->bind_listener(std::bind(&impl_t::_m_call_listener, this, std::placeholders::_1, std::placeholders::_2));
+							}
 							else
 								renderer = new simple_renderer;
 							format_state_ = enabled;
-							API::refresh_window(wd->handle());
 							delete rnd_if;
+							return true;
 						}
+						return false;
+					}
+
+					void add_listener(const std::function<void(command, const nana::string&)> & f)
+					{
+						listener_ += f;
+					}
+
+					void add_listener(std::function<void(command, const nana::string&)> && f)
+					{
+						listener_ += std::move(f);
+					}
+				private:
+					void _m_call_listener(command cmd, const nana::string& tar)
+					{
+						listener_(cmd, tar);
 					}
 				private:
 					bool format_state_;
+					nana::fn_group<void(command, const nana::string&)> listener_;
 				};
 
 				trigger::trigger()
 					:impl_(new impl_t)
-				{
-				}
+				{}
 
 				trigger::~trigger()
 				{
 					delete impl_;
 				}
 
-				void trigger::bind_window(nana::gui::widget& w)
+				void trigger::bind_window(widget_reference w)
 				{
 					impl_->wd = &w;
 				}
@@ -995,7 +972,7 @@ namespace gui
 					return impl_;
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
 					impl_->graph = &graph;
 					window wd = impl_->wd->handle();
@@ -1024,12 +1001,12 @@ namespace gui
 					impl_->renderer->click();
 				}
 
-				void trigger::notify_background_change(nana::paint::graphics& graph)
+				void trigger::notify_background_change(graph_reference graph)
 				{
 					refresh(graph);
 				}
 
-				void trigger::refresh(paint::graphics& graph)
+				void trigger::refresh(graph_reference graph)
 				{
 					if(0 == impl_->wd) return;
 
@@ -1039,7 +1016,7 @@ namespace gui
 					else
 						graph.rectangle(API::background(wd), true);
 
-					impl_->renderer->render(*impl_->wd, graph, API::window_caption(wd));
+					impl_->renderer->render(*impl_->wd, graph);
 				}
 
 			//end class label_drawer
@@ -1075,23 +1052,49 @@ namespace gui
 
 		void label::format(bool f)
 		{
-			this->get_drawer_trigger().impl()->format(f);
+			auto impl = get_drawer_trigger().impl();
+			if(impl->format(f))
+			{
+				window wd = *this;
+				impl->renderer->parse(wd, API::window_caption(wd));
+				API::refresh_window(wd);
+			}
+		}
+
+		void label::add_format_listener(const std::function<void(command, const nana::string&)> & f)
+		{
+			get_drawer_trigger().impl()->add_listener(f);
+		}
+
+		void label::add_format_listener(std::function<void(command, const nana::string&)> && f)
+		{
+			get_drawer_trigger().impl()->add_listener(std::move(f));
 		}
 
 		nana::size label::measure() const
 		{
-			if(this->empty())
-				return nana::size();
+			if(this->empty())	return nana::size();
 
-			return this->get_drawer_trigger().impl()->renderer->measure(*(this->get_drawer_trigger().impl()->graph), API::window_caption(handle()));
+			auto impl = get_drawer_trigger().impl();
+			return impl->renderer->measure(*(impl->graph));
 		}
 
 		unsigned label::extent_size() const
 		{
-			if(this->empty())
-				return 0;
+			if(this->empty())	return 0;
 
-			return this->get_drawer_trigger().impl()->renderer->extent_size(*(this->get_drawer_trigger().impl()->graph), API::window_caption(handle()));
+			auto impl = get_drawer_trigger().impl();
+			return impl->renderer->extent_size(*(impl->graph));
+		}
+
+		void label::_m_caption(const nana::string& s)
+		{
+			internal_scope_guard isg;
+			window wd = *this;
+			auto impl = get_drawer_trigger().impl();
+			impl->renderer->parse(wd, s);
+			API::dev::window_caption(wd, s);
+			API::refresh_window(wd);
 		}
 	//end class label
 }//end namespace gui

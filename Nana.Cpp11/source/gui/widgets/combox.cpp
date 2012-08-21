@@ -39,8 +39,7 @@ namespace nana{ namespace gui{
 
 				~drawer_impl()
 				{
-					for(auto p : anyobj_)
-						delete p;
+					clear();
 				}
 
 				void renderer(drawerbase::float_listbox::item_renderer* ir)
@@ -122,6 +121,9 @@ namespace nana{ namespace gui{
 
 				void clear()
 				{
+					for(auto p : anyobj_)
+						delete p;
+					anyobj_.clear();
 					module_.items.clear();
 				}
 

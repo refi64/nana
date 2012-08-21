@@ -293,8 +293,6 @@ namespace nana
 					tm.tv_nsec = now.tv_usec * 1000 + (milliseconds % 1000) * 1000000;
 					tm.tv_sec = now.tv_sec + milliseconds / 1000 + tm.tv_nsec / 1000000000;
 					tm.tv_nsec %= 1000000000;
-					
-					
 					return (ETIMEDOUT == ::pthread_cond_timedwait(&impl_->lock_obj, reinterpret_cast<pthread_mutex_t*>(lck.native_handle()), &tm));
 #endif
 				}

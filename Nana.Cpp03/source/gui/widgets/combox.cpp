@@ -39,8 +39,7 @@ namespace nana{ namespace gui{
 
 				~drawer_impl()
 				{
-					for(std::vector<nana::any*>::iterator i = anyobj_.begin(); i != anyobj_.end(); ++i)
-						delete (*i);
+					clear();
 				}
 
 				void renderer(drawerbase::float_listbox::item_renderer* ir)
@@ -122,6 +121,9 @@ namespace nana{ namespace gui{
 
 				void clear()
 				{
+					for(std::vector<nana::any*>::iterator i = anyobj_.begin(); i != anyobj_.end(); ++i)
+						delete (*i);
+					anyobj_.clear();
 					module_.items.clear();
 				}
 

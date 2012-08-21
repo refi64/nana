@@ -18,18 +18,21 @@ namespace nana{ namespace gui{
 		{
 			//class item_renderer
 				item_renderer::~item_renderer(){}
-				
-				void item_renderer::image_enabled(bool enb)
+			//end class item_renderer
+
+			class def_item_renderer
+				: public item_renderer
+			{
+				bool image_enabled_;
+				unsigned image_pixels_;
+
+				void image(bool enb, unsigned px)
 				{
 					image_enabled_ = enb;
+					image_pixels_ = px;
 				}
 
-				bool item_renderer::image_enabled() const
-				{
-					return image_enabled_;
-				}
-
-				void item_renderer::render(item_renderer::widget_reference, item_renderer::graph_reference graph, const nana::rectangle& r, const module_def::item_type& item, item_renderer::state_t state)
+				void render(widget_reference, graph_reference graph, const nana::rectangle& r, const module_def::item_type& item, state_t state)
 				{
 					if(state == StateHighlighted)
 					{
@@ -52,30 +55,56 @@ namespace nana{ namespace gui{
 						graph.rectangle(r, 0xFFFFFF, true);
 					
 					int x = r.x + 2;
-					if(this->image_enabled())
+					if(image_enabled_)
 					{
-						unsigned px = (r.height - 4);
+						unsigned vpix = (r.height - 4);
 						if(item.img)
 						{
-							nana::size to_sz = item.img.size();
-							if(to_sz.width > px) to_sz.width = px;
-							if(to_sz.height > px) to_sz.height = px;
+							nana::size imgsz = item.img.size();
+							if(imgsz.width > image_pixels_)
+							{
+								unsigned new_h = image_pixels_ * imgsz.height / imgsz.width;
+								if(new_h > vpix)
+								{
+									imgsz.width = vpix * imgsz.width / imgsz.height;
+									imgsz.height = vpix;
+								}
+								else
+								{
+									imgsz.width = image_pixels_;
+									imgsz.height = new_h;
+								}
+							}
+							else if(imgsz.height > vpix)
+							{
+								unsigned new_w = vpix * imgsz.width / imgsz.height;
+								if(new_w > image_pixels_)
+								{
+									imgsz.height = image_pixels_ * imgsz.height / imgsz.width;
+									imgsz.width = image_pixels_;
+								}
+								else
+								{
+									imgsz.height = vpix;
+									imgsz.width = new_w;
+								}
+							}
 
 							nana::point to_pos(x, r.y + 2);
-							to_pos.x += (px - to_sz.width) / 2;
-							to_pos.y += (px - to_sz.height) / 2;
-							item.img.stretch(item.img.size(), graph, nana::rectangle(to_pos, to_sz));
+							to_pos.x += (image_pixels_ - imgsz.width) / 2;
+							to_pos.y += (vpix - imgsz.height) / 2;
+							item.img.stretch(item.img.size(), graph, nana::rectangle(to_pos, imgsz));
 						}
-						x += (px + 2);
+						x += (image_pixels_ + 2);
 					}
 					graph.string(x, r.y + 2, 0x0, item.text);
 				}
 
-				unsigned item_renderer::item_pixels(item_renderer::graph_reference graph) const
+				unsigned item_pixels(graph_reference graph) const
 				{
 					return graph.text_extent_size(STR("jHWn/?\\{[(0569")).height + 4;
 				}
-			//}; end class item_renderer
+			};//end class item_renderer
 
 			//struct module_def
 				module_def::item_type::item_type(const nana::string& s)
@@ -96,7 +125,8 @@ namespace nana{ namespace gui{
 
 				static const unsigned npos = static_cast<unsigned>(-1);
 
-				drawer_impl():widget_(nullptr), graph_(nullptr), module_(nullptr){}
+				drawer_impl()
+					:	widget_(nullptr), graph_(nullptr), image_pixels_(16), module_(nullptr){}
 
 				void clear_state()
 				{
@@ -224,11 +254,12 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void set_module(const module_def& md)
+				void set_module(const module_def& md, unsigned pixels)
 				{
 					module_ = &md;
 					if(md.index >= md.items.size())
 						md.index = md.npos;
+					image_pixels_ = pixels;
 				}
 
 				void set_result()
@@ -275,7 +306,7 @@ namespace nana{ namespace gui{
 
 							nana::rectangle item_r(2, 2, graph_->width() - outter_w, item_pixels);
 
-							state_.renderer->image_enabled(_m_image_enabled());
+							state_.renderer->image(_m_image_enabled(), image_pixels_);
 							for(unsigned i = state_.offset_y; i < items; ++i)
 							{
 								item_renderer::state_t state = item_renderer::StateNone;
@@ -347,6 +378,8 @@ namespace nana{ namespace gui{
 			private:
 				nana::gui::widget * widget_;
 				nana::paint::graphics * graph_;
+				unsigned image_pixels_;		//Define the width pixels of the image area
+
 				struct state_type
 				{
 					unsigned offset_y;
@@ -355,7 +388,7 @@ namespace nana{ namespace gui{
 					item_renderer * const orig_renderer;
 					item_renderer * renderer;
 
-					state_type(): offset_y(0), index(npos), orig_renderer(new item_renderer), renderer(orig_renderer){}
+					state_type(): offset_y(0), index(npos), orig_renderer(new def_item_renderer), renderer(orig_renderer){}
 					~state_type()
 					{
 						delete orig_renderer;
@@ -446,10 +479,11 @@ namespace nana{ namespace gui{
 			get_drawer_trigger().get_drawer_impl().clear_state();
 		}
 
-		void float_listbox::set_module(const float_listbox::module_type& md)
+		void float_listbox::set_module(const float_listbox::module_type& md, unsigned pixels)
 		{
-			get_drawer_trigger().get_drawer_impl().set_module(md);
-			get_drawer_trigger().get_drawer_impl().resize();
+			auto & impl = get_drawer_trigger().get_drawer_impl();
+			impl.set_module(md, pixels);
+			impl.resize();
 			show();
 		}
 

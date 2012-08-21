@@ -580,7 +580,7 @@ namespace nana{	namespace gui{
 					r.y += r.height;
 
 					style_.listbox = &(nana::gui::form_loader<nana::gui::float_listbox>()(window_, nana::rectangle(r.x, r.y, 100, 100)));
-					style_.listbox->set_module(style_.module);
+					style_.listbox->set_module(style_.module, 16);
 					style_.listbox->show();
 					style_.listbox->make_event<events::destroy>(*this, &scheme::_m_list_closed);
 				}

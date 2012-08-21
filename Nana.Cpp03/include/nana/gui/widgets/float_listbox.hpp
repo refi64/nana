@@ -46,13 +46,10 @@ namespace nana{ namespace gui{
 				typedef paint::graphics& graph_reference;
 				enum state_t{StateNone, StateHighlighted};
 
-				virtual ~item_renderer();
-				virtual void image_enabled(bool);
-				virtual bool image_enabled() const;
-				virtual void render(widget_reference, graph_reference, const nana::rectangle&, const module_def::item_type&, state_t state);
-				virtual unsigned item_pixels(graph_reference) const;
-			private:
-				bool image_enabled_;
+				virtual ~item_renderer() = 0;
+				virtual void image(bool enabled, unsigned pixels) = 0;
+				virtual void render(widget_reference, graph_reference, const nana::rectangle&, const module_def::item_type&, state_t state) = 0;
+				virtual unsigned item_pixels(graph_reference) const = 0;
 			};
 
 			class drawer_impl;
@@ -89,7 +86,7 @@ namespace nana{ namespace gui{
 		float_listbox();
 		float_listbox(window, const rectangle&);
 
-		void set_module(const module_type&);
+		void set_module(const module_type&, unsigned image_pixels);
 		void scroll_items(bool upwards);
 		void move_items(bool upwards, bool recycle);
 		void renderer(item_renderer*);

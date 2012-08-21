@@ -97,6 +97,7 @@ namespace nana{ namespace gui
 
 		void image(std::size_t, const nana::paint::image&);
 		nana::paint::image image(std::size_t) const;
+		void image_pixels(unsigned);
 	private:
 		void _m_caption(const nana::string&);
 		nana::any* _m_anyobj(std::size_t, bool allocate_if_empty) const;

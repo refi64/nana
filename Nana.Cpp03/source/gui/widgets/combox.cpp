@@ -34,7 +34,7 @@ namespace nana{ namespace gui{
 
 				drawer_impl()
 					:	widget_(0), graph_(0),
-						item_renderer_(0), image_enabled_(false), editor_(0)
+						item_renderer_(0), image_enabled_(false), image_pixels_(16), editor_(0)
 				{}
 
 				~drawer_impl()
@@ -98,8 +98,9 @@ namespace nana{ namespace gui{
 					nana::rectangle r(2, 2, width > 19 ? width - 19 : 0, height > 4 ? height - 4 : 0);
 					if(image_enabled_)
 					{
-						r.x += 18;
-						if(r.width > 18)	r.width -= 18;
+						unsigned place = image_pixels_ + 2;
+						r.x += place;
+						if(r.width > place)	r.width -= place;
 					}
 					editor_->text_area(r);
 				}
@@ -203,7 +204,7 @@ namespace nana{ namespace gui{
 					{
 						state_.lister = & nana::gui::form_loader<nana::gui::float_listbox>()(widget_->handle(), rectangle(0, widget_->size().height, widget_->size().width, 10));
 						state_.lister->renderer(item_renderer_);
-						state_.lister->set_module(module_);
+						state_.lister->set_module(module_, image_pixels_);
 						state_.item_index_before_selection = module_.index;
 						//The lister window closes by itself. I just take care about the destroy event.
 						//The event should be destroy rather than unload. Because the unload event is invoked while
@@ -334,6 +335,16 @@ namespace nana{ namespace gui{
 						return module_.items[i].img;
 					return nana::paint::image();
 				}
+
+				bool image_pixels(unsigned px)
+				{
+					if(image_pixels_ != px)
+					{
+						image_pixels_ = px;
+						return true;
+					}
+					return false;
+				}
 			private:
 				void _m_lister_close_sig()
 				{
@@ -413,14 +424,40 @@ namespace nana{ namespace gui{
 						nana::paint::image img = module_.items[module_.index].img;
 						if(img)
 						{
-							const std::size_t imgpx = 16;
+							unsigned vpix = editor_->line_height();
 							nana::size imgsz = img.size();
-							if(imgsz.width > imgpx) imgsz.width = imgpx;
-							if(imgsz.height > imgpx) imgsz.height = imgpx;
+							if(imgsz.width > image_pixels_)
+							{
+								unsigned new_h = image_pixels_ * imgsz.height / imgsz.width;
+								if(new_h > vpix)
+								{
+									imgsz.width = vpix * imgsz.width / imgsz.height;
+									imgsz.height = vpix;
+								}
+								else
+								{
+									imgsz.width = image_pixels_;
+									imgsz.height = new_h;
+								}
+							}
+							else if(imgsz.height > vpix)
+							{
+								unsigned new_w = vpix * imgsz.width / imgsz.height;
+								if(new_w > image_pixels_)
+								{
+									imgsz.height = image_pixels_ * imgsz.height / imgsz.width;
+									imgsz.width = image_pixels_;
+								}
+								else
+								{
+									imgsz.height = vpix;
+									imgsz.width = new_w;
+								}
+							}
 
 							nana::point pos(2, 2);
-							pos.x += (imgpx - imgsz.width) / 2;
-							pos.y += (imgpx - imgsz.height) / 2;
+							pos.x += (image_pixels_ - imgsz.width) / 2;
+							pos.y += (vpix - imgsz.height) / 2;
 
 							img.stretch(img.size(), *graph_, nana::rectangle(pos, imgsz));
 						}
@@ -435,6 +472,7 @@ namespace nana{ namespace gui{
 				drawerbase::float_listbox::item_renderer* item_renderer_;
 
 				bool image_enabled_;
+				unsigned image_pixels_;
 				widgets::skeletons::text_editor * editor_;
 
 				struct state_type
@@ -746,6 +784,12 @@ namespace nana{ namespace gui{
 		nana::paint::image combox::image(std::size_t i) const
 		{
 			return get_drawer_trigger().get_drawer_impl().image(i);
+		}
+
+		void combox::image_pixels(unsigned px)
+		{
+			if(get_drawer_trigger().get_drawer_impl().image_pixels(px))
+				API::refresh_window(*this);
 		}
 
 		void combox::_m_caption(const nana::string& str)

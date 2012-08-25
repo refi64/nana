@@ -14,6 +14,7 @@
 #define NANA_GUI_WIDGETS_LISTBOX_HPP
 #include "widget.hpp"
 #include <nana/any.hpp>
+#include <nana/pat/cloneable.hpp>
 
 namespace nana{ namespace gui{
 	namespace drawerbase
@@ -46,6 +47,7 @@ namespace nana{ namespace gui{
 
 				void attached(graph_reference);
 				void detached();
+				void typeface_changed(graph_reference);
 				void refresh(graph_reference);
 				void mouse_move(graph_reference, const eventinfo&);
 				void mouse_leave(graph_reference, const eventinfo&);
@@ -69,6 +71,37 @@ namespace nana{ namespace gui{
 	public:
 		typedef drawerbase::listbox::size_type size_type;
 		typedef std::pair<size_type, size_type>	index_pair_t;
+
+		template<typename T>
+		class resolver_interface
+		{
+		public:
+			typedef T target;
+			virtual ~resolver_interface(){}
+			virtual nana::string decode(std::size_t, const target&) const = 0;
+			virtual void encode(target&, std::size_t, const nana::string&) const = 0;
+		};
+	private:
+		template<typename T>
+		struct inner_resolver_proxy
+		{
+			pat::cloneable_interface<resolver_interface<T> > * res;
+
+			inner_resolver_proxy()
+				: res(nullptr)
+			{}
+
+			inner_resolver_proxy(const inner_resolver_proxy& rhs)
+				: res(rhs.res ? rhs.res->clone() : nullptr)
+			{}
+
+			~inner_resolver_proxy()
+			{
+				if(res)
+					res->self_delete();
+			}
+		};
+	public:
 
 		listbox();
 		listbox(window, bool visible);
@@ -99,7 +132,40 @@ namespace nana{ namespace gui{
 		void append_header(const nana::string&, unsigned width = 120);
 		void append_item(const nana::string&);
 		void append_item(size_type categ, const nana::string&);
+		
+		template<typename T>
+		void append(size_type categ, const T& t)
+		{
+			inner_resolver_proxy<T> * proxy = _m_resolver().get<inner_resolver_proxy<T> >();
+			if(proxy)
+			{
+				auto & res = proxy->res->refer();
+				size_type index = size_item(categ);
+				append_item(categ, res.decode(0, t));
+
+				std::size_t headers = _m_headers();
+				for(std::size_t i = 1; i < headers; ++i)
+					set_item_text(categ, index, i, res.decode(i, t));
+			}
+		}
+
 		void insert(size_type categ, size_type index, const nana::string&);
+
+		template<typename T>
+		void insert(size_type categ, size_type index, const T& t)
+		{
+			inner_resolver_proxy<T> * proxy = _m_resolver().get<inner_resolver_proxy<T> >();
+			if(proxy)
+			{
+				auto & res = proxy->res->refer();
+				insert(categ, index, res.decode(0, t));
+
+				std::size_t headers = _m_headers();
+				for(std::size_t i = 1; i < headers; ++i)
+					set_item_text(categ, index, i, res.decode(i, t));
+			}		
+		}
+
 		void checkable(bool);
 		bool checked(size_type item) const;
 		bool checked(size_type categ, size_type item) const;
@@ -107,11 +173,34 @@ namespace nana{ namespace gui{
 		void checked(size_type categ, size_type item, bool);
 
 		void clear(size_type categ);
-		void clear_all();
-		void erase(size_type item);
+		void clear();
 		void erase(size_type categ, size_type item);
-		void erase_categ(size_type categ);
-		void erase_all();
+		void erase(size_type categ);
+		void erase();
+
+		template<typename Resolver>
+		void resolver(const Resolver & res)
+		{
+			inner_resolver_proxy<typename Resolver::target> proxy;
+			proxy.res = pat::cloneable<Resolver, resolver_interface<typename Resolver::target> >(res).clone();
+			_m_resolver(nana::any(proxy));
+		}
+
+		template<typename T>
+		bool item(size_type categ, size_type index, T & t) const
+		{
+			inner_resolver_proxy<T> * proxy = _m_resolver().get<inner_resolver_proxy<T> >();
+			if(proxy)
+			{
+				auto & res = proxy->res->refer();
+				std::size_t headers = _m_headers();
+				for(std::size_t i = 0; i < headers; ++i)
+					res.encode(t, i, item_text(categ, index, i));
+				return true;
+			}
+			return false;
+		}
+
 		nana::string item_text(size_type categ, size_type index, size_type sub) const;
 		void set_item_text(size_type index, size_type sub, const nana::string&);
 		void set_item_text(size_type categ, size_type index, size_type sub, const nana::string&);
@@ -135,6 +224,9 @@ namespace nana{ namespace gui{
 		void _m_anyobj(size_type categ, size_type index, const nana::any&);
 		nana::any* _m_anyobj(size_type categ, size_type index);
 		nana::any* _m_anyobj(size_type categ, size_type index) const;
+		void _m_resolver(const nana::any&);
+		const nana::any & _m_resolver() const;
+		std::size_t _m_headers() const;
 	};
 }//end namespace gui
 }//end namespace nana

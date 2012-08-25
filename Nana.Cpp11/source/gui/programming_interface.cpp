@@ -265,7 +265,7 @@ namespace API
 		restrict::window_manager.icon(reinterpret_cast<restrict::core_window_t*>(wd), img);
 	}
 
-	bool empty_window(nana::gui::window wd)
+	bool empty_window(window wd)
 	{
 		return (restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)) == false);
 	}
@@ -275,9 +275,9 @@ namespace API
 		return restrict::bedrock.root(reinterpret_cast<restrict::core_window_t*>(wd));
 	}
 
-	nana::gui::window root(nana::gui::native_window_type wd)
+	window root(native_window_type wd)
 	{
-		return reinterpret_cast<nana::gui::window>(restrict::window_manager.root(wd));
+		return reinterpret_cast<window>(restrict::window_manager.root(wd));
 	}
 
 	bool enabled_double_click(window wd, bool dbl)
@@ -311,7 +311,7 @@ namespace API
 		return restrict::window_manager.insert_frame(reinterpret_cast<restrict::core_window_t*>(frame), native_window);
 	}
 
-	nana::gui::native_window_type frame_container(window frame)
+	native_window_type frame_container(window frame)
 	{
 		if(frame)
 		{
@@ -322,7 +322,7 @@ namespace API
 		return 0;
 	}
 
-	nana::gui::native_window_type frame_element(window frame, unsigned index)
+	native_window_type frame_element(window frame, unsigned index)
 	{
 		if(frame)
 		{
@@ -388,7 +388,7 @@ namespace API
 		return 0;
 	}
 
-	nana::gui::window get_owner_window(nana::gui::window wd)
+	window get_owner_window(window wd)
 	{
 		if(wd)
 		{
@@ -404,9 +404,9 @@ namespace API
 		return 0;
 	}
 
-	void umake_event(nana::gui::window wnd)
+	void umake_event(window wd)
 	{
-		restrict::bedrock.evt_manager.umake(wnd);
+		restrict::bedrock.evt_manager.umake(wd);
 	}
 
 	void umake_event(event_handle eh)
@@ -1054,7 +1054,7 @@ namespace API
 		return restrict::window_manager.get_visual_rectangle(reinterpret_cast<restrict::core_window_t*>(wd), r);
 	}
 
-	void typeface(nana::gui::window wd, const nana::paint::font& font)
+	void typeface(window wd, const nana::paint::font& font)
 	{
 		if(wd)
 		{
@@ -1063,6 +1063,7 @@ namespace API
 			if(restrict::window_manager.available(iwd))
 			{
 				iwd->drawer.graphics.typeface(font);
+				iwd->drawer.typeface_changed();
 				restrict::window_manager.update(iwd, true, false);
 			}
 		}

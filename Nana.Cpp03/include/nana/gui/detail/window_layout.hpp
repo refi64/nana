@@ -360,6 +360,7 @@ namespace detail
 					wd->flags.refreshing = true;
 					make_glass(wd, false, false);
 					wd->drawer.notify_background_change();
+					wd->drawer.refresh();
 					wd->flags.refreshing = false;
 				}
 

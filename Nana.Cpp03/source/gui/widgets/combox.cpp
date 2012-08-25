@@ -186,12 +186,7 @@ namespace nana{ namespace gui{
 					{
 						state_.focused = f;
 						if(editor_->editable())
-						{
-							if(f)
-								editor_->select_all();
-							else
-								editor_->cancel_select();
-						}
+							editor_->select(f);
 					}
 				}
 

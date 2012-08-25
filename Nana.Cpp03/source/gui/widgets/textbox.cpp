@@ -314,23 +314,12 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			return (editor ? editor->selected() : false);
 		}
 
-		void textbox::select_all()
+		void textbox::select(bool yes)
 		{
 			internal_scope_guard isg;
 			widgets::skeletons::text_editor * editor = get_drawer_trigger().editor();
-			if(editor)
-			{
-				editor->select_all();
-				API::refresh_window(*this);
-			}
-		}
-
-		void textbox::select_cancel()
-		{
-			internal_scope_guard isg;
-			widgets::skeletons::text_editor * editor = get_drawer_trigger().editor();
-			if(editor && editor->cancel_select())
-				API::refresh_window(*this);
+			if(editor && editor->select(yes))
+				API::refresh_window(*this);		
 		}
 
 		void textbox::copy() const

@@ -25,12 +25,12 @@ namespace gui
                     unknown_(false), max_(100), value_(0)
 			{}
 
-			void trigger::bind_window(trigger::widget_reference wd)
+			void trigger::bind_window(widget_reference wd)
 			{
 				widget_ = &wd;
 			}
 
-			void trigger::attached(trigger::graph_reference graph)
+			void trigger::attached(graph_reference graph)
 			{
 				graph_ = &graph;
 			}
@@ -42,7 +42,7 @@ namespace gui
 
 			unsigned trigger::value(unsigned v)
 			{
-				nana::gui::internal_scope_guard isg;
+				internal_scope_guard isg;
 				if(false == unknown_)
 				{
 					if(value_ != v)
@@ -54,14 +54,14 @@ namespace gui
 				if(_m_check_changing(value_))
 				{
 					_m_draw();
-					nana::gui::API::update_window(widget_->handle());
+					API::update_window(widget_->handle());
 				}
 				return v;
 			}
 
 			unsigned trigger::inc()
 			{
-				nana::gui::internal_scope_guard isg;
+				internal_scope_guard isg;
 				if(false == unknown_)
 				{
 					if(value_ < max_)
@@ -71,7 +71,7 @@ namespace gui
 					value_ += 5;
 
 				if(_m_check_changing(value_))
-					nana::gui::API::refresh_window(widget_->handle());
+					API::refresh_window(widget_->handle());
 				return value_;
 			}
 
@@ -101,7 +101,7 @@ namespace gui
 				return unknown_;
 			}
 
-			void trigger::refresh(trigger::graph_reference)
+			void trigger::refresh(graph_reference)
 			{
 				_m_draw();
 			}
@@ -115,7 +115,7 @@ namespace gui
 				_m_draw_progress(*graph_);
 			}
 
-			void trigger::_m_draw_box(trigger::graph_reference graph)
+			void trigger::_m_draw_box(graph_reference graph)
 			{
 				unsigned width = graph.width();
 				unsigned height = graph.height();
@@ -129,7 +129,7 @@ namespace gui
 				graph.line(right, 0, right, bottom, 0xFFFFFF);
 			}
 
-			void trigger::_m_draw_progress(trigger::graph_reference graph)
+			void trigger::_m_draw_progress(graph_reference graph)
 			{
 				unsigned width = graph.width() - border * 2;
 				unsigned height = graph.height() - border * 2;
@@ -183,7 +183,7 @@ namespace gui
 
 		unsigned progress::value(unsigned val)
 		{
-			nana::gui::internal_scope_guard isg;
+			internal_scope_guard isg;
 			if(API::empty_window(this->handle()) == false)
 				return get_drawer_trigger().value(val);
 			return 0;
@@ -191,7 +191,7 @@ namespace gui
 
 		unsigned progress::inc()
 		{
-			nana::gui::internal_scope_guard isg;
+			internal_scope_guard isg;
 			return get_drawer_trigger().inc();
 		}
 

@@ -118,7 +118,6 @@ namespace nana{	namespace gui{
 						graph.rectangle(r, 0x3C7FB1, false);
 					}
 
-
 					graph.string(strpos.x, strpos.y, style_.fgcolor, name);
 
 					if(has_child)
@@ -202,13 +201,9 @@ namespace nana{	namespace gui{
 
 				bool seq(std::size_t index, std::vector<node_handle> & seqv) const
 				{
-					node_handle i = cur_;
 					node_handle root = tree_.get_root();
-					while(i && (i != root))
-					{
+					for(node_handle i = cur_; i && (i != root); i = i->owner)
 						seqv.insert(seqv.begin(), i);
-						i = i->owner;
-					}
 
 					if(index < seqv.size())
 					{
@@ -233,13 +228,10 @@ namespace nana{	namespace gui{
 				nana::string path() const
 				{
 					std::vector<node_handle> v;
-					node_handle i = cur_;
 					node_handle root = tree_.get_root();
-					while(i && (i != root))
-					{
+					for(node_handle i = cur_; i && (i != root); i = i->owner)
 						v.insert(v.begin(), i);
-						i = i->owner;
-					}
+
 					nana::string str;
 					bool not_head = false;
 					for(std::vector<node_handle>::iterator i = v.begin(); i != v.end(); ++i)
@@ -260,16 +252,12 @@ namespace nana{	namespace gui{
 
 				node_handle at(std::size_t index) const
 				{
-					std::vector<node_handle> seqv;
-					node_handle i = cur_;
+					std::vector<node_handle> v;
 					node_handle root = tree_.get_root();
-					while(i && (i != root))
-					{
-						seqv.insert(seqv.begin(), i);
-						i = i->owner;
-					}
+					for(node_handle i = cur_; i && (i != root); i = i->owner)
+						v.insert(v.begin(), i);
 
-					return (index < seqv.size() ? seqv[index] : 0);
+					return (index < v.size() ? v[index] : nullptr);
 				}
 
 				node_handle tail(std::size_t index)
@@ -336,7 +324,7 @@ namespace nana{	namespace gui{
 								return i;
 						}
 					}
-					return 0;
+					return nullptr;
 				}
 			private:
 				container tree_;
@@ -527,7 +515,7 @@ namespace nana{	namespace gui{
 
 				bool is_list_shown() const
 				{
-					return (style_.listbox != 0);
+					return (nullptr != style_.listbox);
 				}
 
 				ext_event_raw_tag& ext_event() const
@@ -771,9 +759,9 @@ namespace nana{	namespace gui{
 				nana::gui::window	window_;
 				nana::paint::graphics * graph_;
 				nana::string splitstr_;
-				std::size_t		head_;
+				std::size_t	head_;
 				unsigned	item_height_;
-				std::size_t		item_lines_;
+				std::size_t	item_lines_;
 				container	treebase_;
 
 				mutable ui_element	ui_el_;
@@ -895,12 +883,12 @@ namespace nana{	namespace gui{
 					API::dev::umake_drawer_event(scheme_->window());
 				}
 
-				void trigger::refresh(trigger::graph_reference)
+				void trigger::refresh(graph_reference)
 				{
 					scheme_->draw();
 				}
 
-				void trigger::mouse_down(trigger::graph_reference, const eventinfo&)
+				void trigger::mouse_down(graph_reference, const eventinfo&)
 				{
 					if(scheme_->locate().what > ui_element::somewhere)
 					{
@@ -913,7 +901,7 @@ namespace nana{	namespace gui{
 					}
 				}
 
-				void trigger::mouse_up(trigger::graph_reference, const eventinfo&)
+				void trigger::mouse_up(graph_reference, const eventinfo&)
 				{
 					if(scheme_->locate().what > ui_element::somewhere)
 					{
@@ -926,7 +914,7 @@ namespace nana{	namespace gui{
 					}
 				}
 
-				void trigger::mouse_move(trigger::graph_reference, const eventinfo& ei)
+				void trigger::mouse_move(graph_reference, const eventinfo& ei)
 				{
 					if(scheme_->locate(ei.mouse.x, ei.mouse.y) && API::window_enabled(scheme_->window()))
 					{
@@ -935,7 +923,7 @@ namespace nana{	namespace gui{
 					}
 				}
 
-				void trigger::mouse_leave(trigger::graph_reference, const eventinfo&)
+				void trigger::mouse_leave(graph_reference, const eventinfo&)
 				{
 					if(API::window_enabled(scheme_->window()) && (scheme_->is_list_shown() == false) && scheme_->erase_locate())
 					{

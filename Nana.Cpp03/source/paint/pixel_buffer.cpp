@@ -665,6 +665,71 @@ namespace nana{	namespace paint
 		detail::free_fade_table(fade_table);
 	}
 
+	void pixel_buffer::shadow_rectangle(const nana::rectangle& draw_rct, nana::color_t beg, nana::color_t end, double fade_rate, bool vertical)
+	{
+		if(storage_ref_.empty()) return;
+		pixel_buffer_storage * sp = storage_ref_.handle();
+
+		nana::rectangle rct;
+		if(false == nana::gui::overlap(nana::rectangle(sp->pixel_size), draw_rct, rct))
+			return;
+
+		int deltapx = int(vertical ? rct.height : rct.width);
+		if(sp && deltapx)
+		{
+			nana::color_t r, g, b;
+			const int delta_r = (int(end & 0xFF0000) - int(r = (beg & 0xFF0000))) / deltapx;
+			const int delta_g = (int((end & 0xFF00) << 8) - int(g = ((beg & 0xFF00) << 8))) / deltapx;
+			const int delta_b = (int((end & 0xFF) << 16 ) - int(b = ((beg & 0xFF)<< 16))) / deltapx;
+
+			nana::pixel_rgb_t * pxbuf = sp->raw_pixel_buffer + rct.x + rct.y * sp->pixel_size.width;
+			if(vertical)
+			{
+				if(deltapx + rct.y > 0)
+				{
+					unsigned align_4 = (rct.width & ~3);
+					unsigned align_reset = rct.width & 3;
+					while(deltapx--)
+					{
+						nana::pixel_rgb_t px;
+
+						px.u.color = ((r += delta_r) & 0xFF0000) | (((g += delta_g) & 0xFF0000) >> 8) | (((b += delta_b) & 0xFF0000) >> 16);
+						
+						nana::pixel_rgb_t * dpx = pxbuf;
+						for(nana::pixel_rgb_t *dpx_end = pxbuf + align_4; dpx != dpx_end; dpx += 4)
+						{
+							*dpx = px;
+							dpx[1] = px;
+							dpx[2] = px;
+							dpx[3] = px;
+						}
+
+						for(nana::pixel_rgb_t * dpx_end = dpx + align_reset; dpx != dpx_end; ++dpx)
+							*dpx = px;
+
+						pxbuf += sp->pixel_size.width;
+					}
+				}
+			}
+			else
+			{
+				if(deltapx + rct.x > 0)
+				{
+					nana::pixel_rgb_t * pxbuf_end = pxbuf + rct.width;
+
+					for(; pxbuf != pxbuf_end; ++pxbuf)
+					{
+						nana::pixel_rgb_t px;
+						px.u.color = ((r += delta_r) & 0xFF0000) | (((g += delta_g) & 0xFF0000) >> 8) | (((b += delta_b) & 0xFF0000) >> 16);
+						nana::pixel_rgb_t * dpx_end = pxbuf + rct.height * sp->pixel_size.width;
+						for(nana::pixel_rgb_t * dpx = pxbuf; dpx != dpx_end; dpx += sp->pixel_size.width)
+							*dpx = px;
+					}
+				}			
+			}
+		}
+	}
+
 	//stretch
 	void pixel_buffer::stretch(const std::string& name)
 	{

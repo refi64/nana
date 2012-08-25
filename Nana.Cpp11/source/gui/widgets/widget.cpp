@@ -15,10 +15,8 @@ namespace nana
 {
 namespace gui
 {
-	/*
-	 * class widget
-	 *		The definition of class widget
-	 */
+	//class widget
+	//@brief:The definition of class widget
 		widget::~widget(){}
 
 		nana::string widget::caption() const
@@ -28,107 +26,107 @@ namespace gui
 		
 		void widget::caption(const nana::string& str)
 		{
-			this->_m_caption(str);
+			_m_caption(str);
 		}
 
 		void widget::typeface(const nana::paint::font& font)
 		{
-			this->_m_typeface(font);
+			_m_typeface(font);
 		}
 
 		nana::paint::font widget::typeface() const
 		{
-			return this->_m_typeface();
+			return _m_typeface();
 		}
 
 		void widget::close()
 		{
-			this->_m_close();
+			_m_close();
 		}
 
 		window widget::parent() const
 		{
-			return nana::gui::API::get_parent_window(this->handle());
+			return API::get_parent_window(handle());
 		}
 
 		bool widget::enabled() const
 		{
-			return nana::gui::API::window_enabled(this->handle());
+			return API::window_enabled(handle());
 		}
 
 		void widget::enabled(bool value)
 		{
-			this->_m_enabled(value);
+			_m_enabled(value);
 		}
 
 		bool widget::empty() const
 		{
-			return (this->handle() == 0);	
+			return (handle() == 0);	
 		}
 
 		void widget::show()
 		{
-			this->_m_show(true);
+			_m_show(true);
 		}
 
 		void widget::hide()
 		{
-			this->_m_show(false);
+			_m_show(false);
 		}
 
 		bool widget::visible() const
 		{
-			return this->_m_visible();
+			return _m_visible();
 		}
 
 		nana::size widget::size() const
 		{
-			return nana::gui::API::window_size(this->handle());
+			return API::window_size(handle());
 		}
 
 		void widget::size(unsigned width, unsigned height)
 		{
-			this->_m_size(width, height);
+			_m_size(width, height);
 		}
 
 		nana::point widget::pos() const
 		{
-			return nana::gui::API::window_position(this->handle());
+			return API::window_position(handle());
 		}
 
 		void widget::move(int x, int y)
 		{
-			this->_m_move(x, y);
+			_m_move(x, y);
 		}
 
 		void widget::move(int x, int y, unsigned width, unsigned height)
 		{
-			this->_m_move(x, y, width, height);
+			_m_move(x, y, width, height);
 		}
 
 		bool widget::focused() const
 		{
-			return nana::gui::API::is_focus_window(handle());
+			return API::is_focus_window(handle());
 		}
 
 		void widget::foreground(nana::color_t value)
 		{
-			this->_m_foreground(value);
+			_m_foreground(value);
 		}
 
 		nana::color_t widget::foreground() const
 		{
-			return this->_m_foreground();
+			return _m_foreground();
 		}
 
 		void widget::background(nana::color_t value)
 		{
-			this->_m_background(value);
+			_m_background(value);
 		}
 
 		nana::color_t widget::background() const
 		{
-			return this->_m_background();
+			return _m_background();
 		}
 
 		void widget::umake_event(event_handle eh) const
@@ -138,12 +136,12 @@ namespace gui
 
 		widget::operator widget::dummy_bool_type() const
 		{
-			return (this->handle()? dummy_bool_type(1):0);
+			return (handle()? dummy_bool_type(1):0);
 		}
 
 		widget::operator nana::gui::window() const
 		{
-			return this->handle();
+			return handle();
 		}
 
 		void widget::_m_complete_creation()
@@ -151,83 +149,83 @@ namespace gui
 
 		nana::string widget::_m_caption() const
 		{
-			return API::window_caption(this->handle());
+			return API::window_caption(handle());
 		}
 		
 		void widget::_m_caption(const nana::string& str)
 		{
-			API::dev::window_caption(this->handle(), str);
+			API::dev::window_caption(handle(), str);
 		}
 
 		void widget::_m_close()
 		{
-			nana::gui::API::close_window(this->handle());
+			API::close_window(handle());
 		}
 
 		bool widget::_m_enabled() const
 		{
-			return nana::gui::API::window_enabled(this->handle());
+			return API::window_enabled(handle());
 		}
 
 		void widget::_m_enabled(bool value)
 		{
-			nana::gui::API::window_enabled(this->handle(), value);
+			API::window_enabled(handle(), value);
 		}
 
 		bool widget::_m_show(bool visible)
 		{
-			API::show_window(this->handle(), visible);
+			API::show_window(handle(), visible);
 			return visible;
 		}
 
 		bool widget::_m_visible() const
 		{
-			return API::visible(this->handle());
+			return API::visible(handle());
 		}
 
 		void widget::_m_size(unsigned width, unsigned height)
 		{
-			nana::gui::API::window_size(this->handle(), width, height);
+			API::window_size(handle(), width, height);
 		}
 
 		void widget::_m_move(int x, int y)
 		{
-			nana::gui::API::move_window(this->handle(), x, y);
+			API::move_window(handle(), x, y);
 		}
 
 		void widget::_m_move(int x, int y, unsigned width, unsigned height)
 		{
-			API::move_window(this->handle(), x, y, width, height);
+			API::move_window(handle(), x, y, width, height);
 		}
 
 		void widget::_m_typeface(const nana::paint::font& font)
 		{
-			nana::gui::API::typeface(this->handle(), font);
+			API::typeface(handle(), font);
 		}
 
 		nana::paint::font widget::_m_typeface() const
 		{
-			return nana::gui::API::typeface(this->handle());
+			return API::typeface(handle());
 		}
 
 		void widget::_m_foreground(nana::color_t value)
 		{
-			nana::gui::API::foreground(this->handle(), value);
+			API::foreground(handle(), value);
 		}
 
 		nana::color_t widget::_m_foreground() const
 		{
-			return nana::gui::API::foreground(this->handle());
+			return API::foreground(handle());
 		}
 
 		void widget::_m_background(nana::color_t value)
 		{
-			nana::gui::API::background(this->handle(), value);
+			API::background(handle(), value);
 		}
 
 		nana::color_t widget::_m_background() const
 		{
-			return nana::gui::API::background(this->handle());
+			return API::background(handle());
 		}
 
 	//end class widget

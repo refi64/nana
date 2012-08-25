@@ -35,7 +35,8 @@ namespace nana
 				if(false == initialized)
 				{
 					initialized = true;
-					std::locale::global(std::locale(""));
+					//Only set the C library locale
+					std::setlocale(LC_CTYPE, "");
 				}
 			}
 		};

@@ -75,8 +75,7 @@ namespace nana{ namespace gui{
 		textbox& tip_string(const nana::string&);
 		textbox& mask(nana::char_t);
 		bool selected() const;
-		void select_all();
-		void select_cancel();
+		void select(bool);
 
 		void copy() const;
 		void paste();

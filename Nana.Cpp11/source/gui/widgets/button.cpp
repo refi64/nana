@@ -165,7 +165,7 @@ namespace drawerbase
 			delete bgimage_;
 		}
 
-		void trigger::bind_window(nana::gui::widget& wd)
+		void trigger::bind_window(widget_reference wd)
 		{
 			widget_ = &wd;
 		}

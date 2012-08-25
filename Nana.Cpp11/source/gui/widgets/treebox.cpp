@@ -180,24 +180,24 @@ namespace gui
 
 				bool trigger::check(trigger::node_type* parent, trigger::node_type* child) const
 				{
-					if(parent == 0 || child == 0) return false;
+					if(nullptr == parent || nullptr == child) return false;
 
 					while(child && (child != parent))
 						child = child->owner;
 
-					return (child != 0);
+					return (nullptr != child);
 				}
 
 				void trigger::remove(trigger::node_type* node)
 				{
 					if(check(node, node_state_.event_node))
-						node_state_.event_node = 0;
+						node_state_.event_node = nullptr;
 
 					if(check(node, node_desc_.first))
-						node_desc_.first = 0;
+						node_desc_.first = nullptr;
 
 					if(check(node, node_state_.selected))
-						node_state_.selected = 0;
+						node_state_.selected = nullptr;
 
 					attr_.tree_cont.remove(node);
 				}
@@ -237,7 +237,7 @@ namespace gui
 
 				node_image_tag& trigger::image(const nana::string& id) const
 				{
-					std::map<nana::string, node_image_tag>::iterator i = shape_.image_table.find(id);
+					auto i = shape_.image_table.find(id);
 					if(i != shape_.image_table.end())
 						return i->second;
 					throw std::invalid_argument("Nana.GUI.treebox.image() invalid image identifier");
@@ -253,7 +253,7 @@ namespace gui
 					if(check(node))
 					{
 						node->value.second.img_idstr = id;
-						std::map<nana::string, node_image_tag>::iterator i = shape_.image_table.find(id);
+						auto i = shape_.image_table.find(id);
 						if((i != shape_.image_table.end()) && _m_draw(true))
 								API::update_window(widget_->handle());
 					}
@@ -489,7 +489,7 @@ namespace gui
 							else
 							{
 								node = node->owner;
-								while(node && (node->next == 0))
+								while(node && (nullptr == node->next))
 									node = node->owner;
 
 								if(node)
@@ -566,7 +566,7 @@ namespace gui
 
 				void trigger::_m_find_first(unsigned long offset)
 				{
-					node_desc_.first = attr_.tree_cont.advance_if(0, offset, pred_allow_child());
+					node_desc_.first = attr_.tree_cont.advance_if(nullptr, offset, pred_allow_child());
 				}
 
 				unsigned trigger::_m_node_height() const
@@ -617,7 +617,7 @@ namespace gui
 								if(t)
 									return t;
 								else if(finish)
-									return 0;
+									return nullptr;
 							}
 
 							node = node->next;
@@ -688,15 +688,15 @@ namespace gui
 								return child;
 
 							if(finish || (node == end))
-								return 0;
+								return nullptr;
 
-							if(0 == node->next)
+							if(nullptr == node->next)
 							{
 								node = node->owner;
 								if(node)
 									node = node->next;
 
-								if(node == 0)
+								if(nullptr == node)
 								{
 									node = attr_.tree_cont.get_root()->child;
 									end = begin;
@@ -706,7 +706,7 @@ namespace gui
 								node = node->next;
 						}
 					}
-					return 0;
+					return nullptr;
 				}
 
 				nana::paint::image* trigger::_m_image(const trigger::node_type* node)
@@ -714,9 +714,9 @@ namespace gui
 					const nana::string& idstr = node->value.second.img_idstr;
 					if(idstr.size())
 					{
-						std::map<nana::string, node_image_tag>::iterator i = shape_.image_table.find(idstr);
+						auto i = shape_.image_table.find(idstr);
 						if(i == shape_.image_table.end())
-							return 0;
+							return nullptr;
 
 						unsigned long state = 0xFFFFFFFF;
 						if(node_state_.highlight == node && node_state_.highlight_object == item_locator::object::item)
@@ -733,7 +733,7 @@ namespace gui
 
 						return &nodeimg.normal;
 					}
-					return 0;
+					return nullptr;
 				}
 
 				bool trigger::_m_track_mouse(int x, int y)
@@ -782,7 +782,7 @@ namespace gui
 				{
 					_m_close_tooltip_window();
 
-					if((node_state_.tooltip == 0) && (pos.x + size.width > _m_visible_width()))
+					if((nullptr == node_state_.tooltip) && (pos.x + size.width > _m_visible_width()))
 					{
 						node_state_.tooltip = new tooltip_window(widget_->handle(), pos, size);
 						node_state_.tooltip->show_text(node->value.second.text, node_desc_.text_offset + node_desc_.image_width, (node == node_state_.selected), this->_m_image(node));
@@ -799,7 +799,7 @@ namespace gui
 					if(node_state_.tooltip)
 					{
 						tooltip_window * x = node_state_.tooltip;
-						node_state_.tooltip = 0;
+						node_state_.tooltip = nullptr;
 						delete x;
 					}
 				}
@@ -873,7 +873,7 @@ namespace gui
 
 				void trigger::_m_show_scrollbar()
 				{
-					if(0 == graph_) return;
+					if(nullptr == graph_) return;
 
 					unsigned max_allow = _m_max_allow();
 					unsigned visual_items = visual_item_size();
@@ -883,7 +883,7 @@ namespace gui
 						if(false == shape_.scrollbar.empty())
 						{
 							shape_.scrollbar.close();
-							node_desc_.first = 0;
+							node_desc_.first = nullptr;
 						}
 					}
 					else
@@ -928,7 +928,7 @@ namespace gui
 
 				bool trigger::_m_adjust(tree_cont_type::node_type * node, int reason)
 				{
-					if(0 == node) return false;
+					if(nullptr == node) return false;
 
 					switch(reason)
 					{

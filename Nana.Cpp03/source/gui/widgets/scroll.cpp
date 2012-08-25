@@ -34,7 +34,7 @@ namespace nana{ namespace gui{
 				vertical_ = v;
 			}
 
-			buttons::t drawer::what(drawer::graph_reference graph, int x, int y)
+			buttons::t drawer::what(graph_reference graph, int x, int y)
 			{
 				unsigned scale;
 				int pos;
@@ -168,7 +168,7 @@ namespace nana{ namespace gui{
 				
 			}
 		//private:
-			void drawer::_m_background(drawer::graph_reference graph)
+			void drawer::_m_background(graph_reference graph)
 			{
 				graph.rectangle(0xF0F0F0, true);
 
@@ -195,7 +195,7 @@ namespace nana{ namespace gui{
 				}
 			}
 
-			void drawer::_m_button_frame(drawer::graph_reference graph, int x, int y, unsigned width, unsigned height, int state)
+			void drawer::_m_button_frame(graph_reference graph, int x, int y, unsigned width, unsigned height, int state)
 			{
 				if(state)
 				{
@@ -218,17 +218,21 @@ namespace nana{ namespace gui{
 
 					unsigned color_x = graph.mix(color, 0xFFFFFF, 0.5);
 
+					x += 2;
+					y += 2;
+					width -= 4;
+					height -= 4;
 					if(vertical_)
 					{
-						unsigned half = (width - 4) / 2;
-						graph.rectangle(x + 2 + (width - 4 - half), y + 2, half, height - 4, color_x, true);
-						graph.shadow_rectangle(x + 2, y + 2, width - 4 - half, height - 4, 0xFFFFFF, color_x, false); 
+						unsigned half = width / 2;
+						graph.rectangle(x + (width - half), y, half, height, color_x, true);
+						graph.shadow_rectangle(x, y, width - half, height, 0xFFFFFF, color_x, false);
 					}
 					else
 					{
-						unsigned half = (height - 4) / 2;
-						graph.rectangle(x + 2, y + 2 + height - 4 - half, width - 4, half, color_x, true);
-						graph.shadow_rectangle(x + 2, y + 2, width - 4, height - 4 - half, 0xFFFFFF, color_x, true); 				
+						unsigned half = height / 2;
+						graph.rectangle(x, y + height - half, width, half, color_x, true);
+						graph.shadow_rectangle(x, y, width, height - half, 0xFFFFFF, color_x, true); 
 					}
 				}
 			}
@@ -238,7 +242,7 @@ namespace nana{ namespace gui{
 				return (metrics_.scroll_length && metrics_.range && (metrics_.peak > metrics_.range));
 			}
 
-			void drawer::_m_adjust_scroll(drawer::graph_reference graph)
+			void drawer::_m_adjust_scroll(graph_reference graph)
 			{
 				if(metrics_.range == 0 || metrics_.peak <= metrics_.range) return;
 
@@ -273,7 +277,7 @@ namespace nana{ namespace gui{
 				metrics_.scroll_length = len;
 			}
 
-			void drawer::_m_draw_scroll(drawer::graph_reference graph, int state)
+			void drawer::_m_draw_scroll(graph_reference graph, int state)
 			{
 				if(_m_check())
 				{
@@ -301,7 +305,7 @@ namespace nana{ namespace gui{
 				}
 			}
 
-			void drawer::_m_draw_button(drawer::graph_reference graph, int x, int y, unsigned width, unsigned height, buttons::t what, int state)
+			void drawer::_m_draw_button(graph_reference graph, int x, int y, unsigned width, unsigned height, buttons::t what, int state)
 			{
 				if(_m_check())
 					_m_button_frame(graph, x, y, width, height, state);
@@ -310,17 +314,18 @@ namespace nana{ namespace gui{
 
 				if(buttons::first == what || buttons::second == what)
 				{
+					nana::size sz = graph.size();
 					directions::t dir;
 					if(buttons::second == what)
 					{
 						if(vertical_)
 						{
-							y = static_cast<int>(graph.height() - fixedsize);
+							y = static_cast<int>(sz.height - fixedsize);
 							dir = directions::to_south;
 						}
 						else
 						{
-							x = static_cast<int>(graph.width() - fixedsize);
+							x = static_cast<int>(sz.width - fixedsize);
 							dir = directions::to_east;
 						}
 					}
@@ -328,9 +333,9 @@ namespace nana{ namespace gui{
 						dir = vertical_ ? directions::to_north : directions::to_west;
 
 					if(vertical_)
-						x = (static_cast<int>(graph.width()) - 16) / 2;
+						x = (static_cast<int>(sz.width) - 16) / 2;
 					else
-						y = (static_cast<int>(graph.height()) - 16) / 2;
+						y = (static_cast<int>(sz.height) - 16) / 2;
 					
 					arrow_16_pixels(graph, x, y, _m_check() ? 0x0 : 0x808080, (states::none == state ? 0 : 1), dir);
 				}

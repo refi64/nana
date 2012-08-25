@@ -74,11 +74,9 @@ namespace nana{	namespace gui{	namespace widgets
 			void show_caret(bool isshow);
 
 			bool selected() const;
-
+			bool select(bool);
 			//Set the end position of a selected string
 			void set_end_caret();
-			void select_all();
-			bool cancel_select();
 			bool hit_text_area(int x, int y) const;
 			bool hit_select_area(nana::upoint pos) const;
 			bool move_select();

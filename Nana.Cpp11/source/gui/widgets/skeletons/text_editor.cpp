@@ -154,7 +154,7 @@ namespace nana{	namespace gui{	namespace widgets
 					}
 					else
 					{
-						if(cancel_select() == false)
+						if(select(false) == false)
 						{
 							select_.a = points_.caret;	//Set begin caret
 							set_end_caret();
@@ -199,7 +199,7 @@ namespace nana{	namespace gui{	namespace widgets
 			else if(select_.mode_selection == selection::mode_no_selected)
 			{
 				if(select_.dragged == false || move_select() == false)
-					cancel_select();
+					select(false);
 				do_draw = true;
 			}
 			select_.dragged = false;
@@ -343,17 +343,18 @@ namespace nana{	namespace gui{	namespace widgets
 				redraw(true);
 		}
 
-		void text_editor::select_all()
+		bool text_editor::select(bool yes)
 		{
-			select_.a.x = select_.a.y = 0;
-			select_.b.y = static_cast<unsigned>(textbase_.lines());
-			if(select_.b.y) --select_.b.y;
-			select_.b.x = static_cast<unsigned>(textbase_.getline(select_.b.y).length());
-			select_.mode_selection = selection::mode_method_selected;
-		}
+			if(yes)
+			{
+				select_.a.x = select_.a.y = 0;
+				select_.b.y = static_cast<unsigned>(textbase_.lines());
+				if(select_.b.y) --select_.b.y;
+				select_.b.x = static_cast<unsigned>(textbase_.getline(select_.b.y).length());
+				select_.mode_selection = selection::mode_method_selected;
+				return true;
+			}
 
-		bool text_editor::cancel_select()
-		{
 			select_.mode_selection = selection::mode_no_selected;
 			if(_m_cancel_select(0))
 			{
@@ -1214,8 +1215,8 @@ namespace nana{	namespace gui{	namespace widgets
 			if(if_mask && mask_char_)
 			{
 				std::size_t n = 0;
-				for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
-					n += (i->end - i->begin);
+				for(auto & en : reordered)
+					n += en.end - en.begin;
 
 				nana::string maskstr;
 				maskstr.append(n, mask_char_);

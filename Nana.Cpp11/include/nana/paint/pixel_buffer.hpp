@@ -48,7 +48,7 @@ namespace nana{	namespace paint
 		void line(const std::string& name);
 		void line(const nana::point& pos_beg, const nana::point& pos_end, nana::color_t color, double fade_rate);
 
-		void rectangle(const nana::rectangle& r, nana::color_t, double fade_rate, bool solid);
+		void rectangle(const nana::rectangle&, nana::color_t, double fade_rate, bool solid);
 		void shadow_rectangle(const nana::rectangle&, nana::color_t beg, nana::color_t end, double fade_rate, bool vertical);
 		
 		pixel_rgb_t pixel(int x, int y) const;

@@ -63,14 +63,13 @@ namespace gui
 				nana::point pos;
 			};
 	}//end namespace detail
-	/*
-	 * eventinfo
-	 * @brief:
-	 */
+
+	//eventinfo
+	//@brief:
 	struct eventinfo
 	{
 		mutable unsigned identifier;	//for identifying what event is
-		mutable gui::window window;	//which window the event triggered on
+		mutable gui::window window;		//which window the event triggered on
 
 		union
 		{
@@ -89,7 +88,7 @@ namespace gui
 			struct
 			{
 				bool getting;
-				nana::gui::native_window_type receiver;
+				native_window_type receiver;
 			}focus;
 
 			struct
@@ -123,6 +122,8 @@ namespace gui
 				key_char,
 				key_up,
 				shortkey,
+
+				//Unoperational events
 				elapse,
 				count
 			};

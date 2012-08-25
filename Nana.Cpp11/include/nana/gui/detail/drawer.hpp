@@ -38,6 +38,7 @@ namespace gui
 		//notify_background_change:
 		//@brief: If the widget is a glass window, and the widgets under the glass widget are changed, nana.gui will invoke a notify_background_change
 		virtual void notify_background_change(graph_reference);
+		virtual void typeface_changed(graph_reference);
 		virtual void refresh(graph_reference);
 
 		virtual void resize(graph_reference, const eventinfo&);
@@ -79,6 +80,7 @@ namespace gui
 			~drawer();
 			// the event is fired by window_layout
 			void notify_background_change();
+			void typeface_changed();
 			void click(const eventinfo&);
 			void dbl_click(const eventinfo&);
 			void mouse_enter(const eventinfo&);
@@ -94,7 +96,7 @@ namespace gui
 			void key_char(const eventinfo&);
 			void key_up(const eventinfo&);
 			void shortkey(const eventinfo&);
-			void map(nana::gui::window, const nana::rectangle& vr);	//Copy the root buffer to screen
+			void map(window, const nana::rectangle& vr);	//Copy the root buffer to screen
 			void refresh();
 			drawer_trigger* realizer() const;
 			void attached(drawer_trigger&);

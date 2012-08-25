@@ -736,11 +736,11 @@ namespace nana{	namespace paint
 			const int delta_g = (int((end & 0xFF00) << 8) - int(g = ((beg & 0xFF00) << 8))) / deltapx;
 			const int delta_b = (int((end & 0xFF) << 16 ) - int(b = ((beg & 0xFF)<< 16))) / deltapx;
 
+			nana::pixel_rgb_t * pxbuf = sp->raw_pixel_buffer + rct.x + rct.y * sp->pixel_size.width;
 			if(vertical)
 			{
 				if(deltapx + rct.y > 0)
 				{
-					nana::pixel_rgb_t * pxbuf = sp->raw_pixel_buffer + rct.x + rct.y * sp->pixel_size.width;
 					unsigned align_4 = (rct.width & ~3);
 					unsigned align_reset = rct.width & 3;
 					while(deltapx--)
@@ -769,7 +769,6 @@ namespace nana{	namespace paint
 			{
 				if(deltapx + rct.x > 0)
 				{
-					nana::pixel_rgb_t * pxbuf = sp->raw_pixel_buffer + rct.x;
 					nana::pixel_rgb_t * pxbuf_end = pxbuf + rct.width;
 
 					for(; pxbuf != pxbuf_end; ++pxbuf)

@@ -26,8 +26,9 @@ namespace gui
 		void drawer_trigger::bind_window(widget_reference){}
 		void drawer_trigger::attached(graph_reference){}	//none-const
 		void drawer_trigger::detached(){}	//none-const
-		void drawer_trigger::notify_background_change(graph_reference graph){ refresh(graph); }
-		void drawer_trigger::refresh(graph_reference graph){}
+		void drawer_trigger::notify_background_change(graph_reference){}
+		void drawer_trigger::typeface_changed(graph_reference){}
+		void drawer_trigger::refresh(graph_reference){}
 
 		void drawer_trigger::resize(graph_reference graph, const eventinfo&)
 		{
@@ -103,6 +104,12 @@ namespace gui
 				realizer_->notify_background_change(graphics);
 				_m_draw_dynamic_drawing_object();
 			}
+		}
+
+		void drawer::typeface_changed()
+		{
+			if(realizer_)
+				realizer_->typeface_changed(graphics);
 		}
 
 		void drawer::click(const eventinfo& ei)

@@ -75,7 +75,7 @@ namespace nana
 		{
 			if(off < 0)
 				return _m_sub(static_cast<unsigned>(-off));
-			return _m_sub(static_cast<unsigned>(off));
+			return _m_add(static_cast<unsigned>(off));
 		}
 
 		bool date::operator==(const date& r) const

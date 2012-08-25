@@ -204,11 +204,8 @@ namespace nana{	namespace gui{
 				{
 					node_handle i = cur_;
 					node_handle root = tree_.get_root();
-					while(i && (i != root))
-					{
+					for(node_handle i = cur_; i && (i != root); i = i->owner)
 						seqv.insert(seqv.begin(), i);
-						i = i->owner;
-					}
 
 					if(index < seqv.size())
 					{
@@ -233,13 +230,10 @@ namespace nana{	namespace gui{
 				nana::string path() const
 				{
 					std::vector<node_handle> v;
-					node_handle i = cur_;
 					node_handle root = tree_.get_root();
-					while(i && (i != root))
-					{
+					for(node_handle i = cur_; i && (i != root); i = i->owner)
 						v.insert(v.begin(), i);
-						i = i->owner;
-					}
+
 					nana::string str;
 					bool not_head = false;
 					for(std::vector<node_handle>::iterator i = v.begin(); i != v.end(); ++i)
@@ -261,13 +255,9 @@ namespace nana{	namespace gui{
 				node_handle at(std::size_t index) const
 				{
 					std::vector<node_handle> seqv;
-					node_handle i = cur_;
 					node_handle root = tree_.get_root();
-					while(i && (i != root))
-					{
+					for(node_handle i = cur_; i && (i != root); i = i->owner)
 						seqv.insert(seqv.begin(), i);
-						i = i->owner;
-					}
 
 					return (index < seqv.size() ? seqv[index] : 0);
 				}

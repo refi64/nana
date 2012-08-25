@@ -154,7 +154,7 @@ namespace nana{	namespace gui{	namespace widgets
 					}
 					else
 					{
-						if(cancel_select() == false)
+						if(select(false) == false)
 						{
 							select_.a = points_.caret;	//Set begin caret
 							set_end_caret();
@@ -202,7 +202,7 @@ namespace nana{	namespace gui{	namespace widgets
 			else if(select_.mode_selection == selection::mode_no_selected)
 			{
 				if(select_.dragged == false || move_select() == false)
-					cancel_select();
+					select(false);
 				do_draw = true;
 			}
 			select_.dragged = false;
@@ -336,6 +336,27 @@ namespace nana{	namespace gui{	namespace widgets
 			return (select_.a != select_.b);
 		}
 
+		bool text_editor::select(bool yes)
+		{
+			if(yes)
+			{
+				select_.a.x = select_.a.y = 0;
+				select_.b.y = static_cast<unsigned>(textbase_.lines());
+				if(select_.b.y) --select_.b.y;
+				select_.b.x = static_cast<unsigned>(textbase_.getline(select_.b.y).length());
+				select_.mode_selection = selection::mode_method_selected;
+				return true;
+			}
+
+			select_.mode_selection = selection::mode_no_selected;
+			if(_m_cancel_select(0))
+			{
+				redraw(true);
+				return true;
+			}
+			return false;
+		}
+
 		void text_editor::set_end_caret()
 		{
 			bool new_sel_end = (select_.b != points_.caret);
@@ -344,26 +365,6 @@ namespace nana{	namespace gui{	namespace widgets
 
 			if(new_sel_end || _m_adjust_caret_into_screen())
 				redraw(true);
-		}
-
-		void text_editor::select_all()
-		{
-			select_.a.x = select_.a.y = 0;
-			select_.b.y = static_cast<unsigned>(textbase_.lines());
-			if(select_.b.y) --select_.b.y;
-			select_.b.x = static_cast<unsigned>(textbase_.getline(select_.b.y).length());
-			select_.mode_selection = selection::mode_method_selected;
-		}
-
-		bool text_editor::cancel_select()
-		{
-			select_.mode_selection = selection::mode_no_selected;
-			if(_m_cancel_select(0))
-			{
-				redraw(true);
-				return true;
-			}
-			return false;
 		}
 
 		bool text_editor::hit_text_area(int x, int y) const

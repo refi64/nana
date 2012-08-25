@@ -21,11 +21,11 @@ namespace gui
 	{
 		namespace progress
 		{
-			class trigger: public nana::gui::drawer_trigger
+			class trigger: public drawer_trigger
 			{
 			public:
 				trigger();
-				void bind_window(nana::gui::widget&);
+				void bind_window(widget_reference);
 				void attached(graph_reference);
 				unsigned value() const;
 				unsigned value(unsigned);

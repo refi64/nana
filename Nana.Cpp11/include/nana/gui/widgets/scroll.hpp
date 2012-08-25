@@ -189,20 +189,20 @@ namespace nana{ namespace gui{
 					drawer_.draw(graph, metrics_.what);
 				}
 
-				void resize(graph_reference graph, const nana::gui::eventinfo& ei)
+				void resize(graph_reference graph, const eventinfo& ei)
 				{
 					drawer_.draw(graph, metrics_.what);
 					API::lazy_refresh();
 				}
 
-				void mouse_enter(graph_reference graph, const nana::gui::eventinfo& ei)
+				void mouse_enter(graph_reference graph, const eventinfo& ei)
 				{
 					metrics_.what = drawer_.what(graph, ei.mouse.x, ei.mouse.y);
 					drawer_.draw(graph, metrics_.what);
 					API::lazy_refresh();
 				}
 
-				void mouse_move(graph_reference graph, const nana::gui::eventinfo& ei)
+				void mouse_move(graph_reference graph, const eventinfo& ei)
 				{
 					bool redraw = false;
 					if(metrics_.pressed && (metrics_.what == buttons::scroll))
@@ -226,7 +226,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void mouse_down(graph_reference graph, const nana::gui::eventinfo& ei)
+				void mouse_down(graph_reference graph, const eventinfo& ei)
 				{
 					if(ei.mouse.left_button)
 					{
@@ -256,7 +256,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void mouse_up(graph_reference graph, const nana::gui::eventinfo& ei)
+				void mouse_up(graph_reference graph, const eventinfo& ei)
 				{
 					timer_.enable(false);
 					
@@ -269,7 +269,7 @@ namespace nana{ namespace gui{
 					API::lazy_refresh();
 				}
 
-				void mouse_leave(graph_reference graph, const nana::gui::eventinfo& ei)
+				void mouse_leave(graph_reference graph, const eventinfo& ei)
 				{
 					if(metrics_.pressed) return;
 
@@ -278,7 +278,7 @@ namespace nana{ namespace gui{
 					API::lazy_refresh();
 				}
 
-				void mouse_wheel(graph_reference graph, const nana::gui::eventinfo& ei)
+				void mouse_wheel(graph_reference graph, const eventinfo& ei)
 				{
 					if(this->make_step(ei.wheel.upwards == false, 3))
 					{
@@ -298,7 +298,7 @@ namespace nana{ namespace gui{
 				nana::paint::graphics * graph_;
 				metrics_type metrics_;
 				drawer	drawer_;
-				nana::gui::timer timer_;
+				timer timer_;
 			};
 		}//end namespace scroll
 	}//end namespace drawerbase

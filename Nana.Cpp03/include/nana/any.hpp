@@ -1,6 +1,8 @@
 #ifndef NANA_ANY_HPP
 #define NANA_ANY_HPP
 #include <typeinfo>
+#include <nana/traits.hpp>
+
 namespace nana
 {
 
@@ -9,9 +11,9 @@ namespace nana
 		struct super_type
 		{
 			virtual ~super_type();
-			super_type& operator=(const super_type &rhs);
-			virtual super_type& assign(const super_type &rhs) = 0;
-			virtual bool same(const super_type& rhs) const = 0;
+			super_type& operator=(const super_type&);
+			virtual super_type& assign(const super_type&) = 0;
+			virtual bool same(const super_type&) const = 0;
 			virtual super_type* clone() const = 0;
 		}; //end struct super_type
 
@@ -84,7 +86,8 @@ namespace nana
 		{
 			if(super_)
 			{
-				object_type<T>* obj = dynamic_cast<object_type<T>*>(super_);
+				typedef typename nana::metacomp::rm_const<T>::value_type type;
+				object_type<type>* obj = dynamic_cast<object_type<type>*>(super_);
 				if(obj) return &(obj->object);
 			}
 			return 0;

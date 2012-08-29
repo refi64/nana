@@ -13,8 +13,8 @@
 #ifndef NANA_GUI_WIDGETS_LISTBOX_HPP
 #define NANA_GUI_WIDGETS_LISTBOX_HPP
 #include "widget.hpp"
-#include <nana/any.hpp>
 #include <nana/pat/cloneable.hpp>
+#include <nana/concepts.hpp>
 
 namespace nana{ namespace gui{
 	namespace drawerbase
@@ -66,7 +66,8 @@ namespace nana{ namespace gui{
 	}//end namespace drawerbase
 
 	class listbox
-		: public nana::gui::widget_object<category::widget_tag, drawerbase::listbox::trigger>
+		:	public widget_object<category::widget_tag, drawerbase::listbox::trigger>,
+			public concepts::any_objective<drawerbase::listbox::size_type, 2>
 	{
 	public:
 		typedef drawerbase::listbox::size_type size_type;
@@ -105,26 +106,6 @@ namespace nana{ namespace gui{
 		listbox();
 		listbox(window, bool visible);
 		listbox(window, const rectangle& = rectangle(), bool visible = true);
-
-		template<typename T>
-		void anyobj(size_type categ, size_type index, const T& t)
-		{
-			_m_anyobj(categ, index, t);
-		}
-
-		template<typename T>
-		T * anyobj(size_type categ, size_type index)
-		{
-			nana::any * p = _m_anyobj(categ, index);
-			return (p ? p->get<T>() : 0);
-		}
-
-		template<typename T>
-		T * anyobj(size_type categ, size_type index) const
-		{
-			nana::any * p = _m_anyobj(categ, index);
-			return (p ? p->get<T>() : 0);
-		}
 
 		void auto_draw(bool);
 		void append_categ(const nana::string& text);
@@ -220,9 +201,7 @@ namespace nana{ namespace gui{
 		size_type size_item() const;
 		size_type size_item(size_type categ) const;
 	private:
-		void _m_anyobj(size_type categ, size_type index, const nana::any&);
-		nana::any* _m_anyobj(size_type categ, size_type index);
-		nana::any* _m_anyobj(size_type categ, size_type index) const;
+		nana::any* _m_anyobj(size_type cat, size_type index, bool allocate_if_empty) const;
 		void _m_resolver(const nana::any&);
 		const nana::any & _m_resolver() const;
 		std::size_t _m_headers() const;

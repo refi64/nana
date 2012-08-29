@@ -245,7 +245,7 @@ namespace nana{ namespace gui{
 						flags_tag():select(false), checked(false)
 						{}
 					}flags;
-					nana::any * anyobj;
+					mutable nana::any * anyobj;
 
 					item_t()
 						:bkcolor(0xFF000000), fgcolor(0xFF000000), anyobj(0)
@@ -305,43 +305,20 @@ namespace nana{ namespace gui{
 					list_.push_back(cg);
 				}
 
-				void object(size_type categ, size_type index, const nana::any& anyobj)
+				nana::any * anyobj(size_type cat, size_type index, bool allocate_if_empty) const
 				{
-					if(categ < list_.size())
-					{
-						container::iterator i = list_.begin();
-						std::advance(i, categ);
-						if(index < i->items.size())
-						{
-							item_t & item = i->items[index];
-							if(item.anyobj)
-								*item.anyobj = anyobj;
-							else
-								item.anyobj = new nana::any(anyobj);
-						}
-					}
-				}
-
-				nana::any* object(size_type categ, size_type index)
-				{
-					if(categ < list_.size())
-					{
-						container::iterator i = list_.begin();
-						std::advance(i, categ);
-						if(index < i->items.size())
-							return i->items[index].anyobj;
-					}
-					return 0;
-				}
-
-				nana::any* object(size_type categ, size_type index) const
-				{
-					if(categ < list_.size())
+					if(cat < list_.size())
 					{
 						container::const_iterator i = list_.begin();
-						std::advance(i, categ);
+						std::advance(i, cat);
 						if(index < i->items.size())
-							return i->items[index].anyobj;
+						{
+							const item_t & item = i->items[index];
+							if(item.anyobj)
+								return item.anyobj;
+							if(allocate_if_empty)
+								return (item.anyobj = new nana::any);
+						}
 					}
 					return 0;
 				}
@@ -2613,19 +2590,9 @@ namespace nana{ namespace gui{
 			return get_drawer_trigger().essence().lister.size_item(categ);
 		}
 
-		void listbox::_m_anyobj(listbox::size_type categ, listbox::size_type index, const nana::any& anyobj)
+		nana::any* listbox::_m_anyobj(size_type cat, size_type index, bool allocate_if_empty) const
 		{
-			get_drawer_trigger().essence().lister.object(categ, index, anyobj);
-		}
-
-		nana::any* listbox::_m_anyobj(listbox::size_type categ, listbox::size_type index)
-		{
-			return get_drawer_trigger().essence().lister.object(categ, index);
-		}
-
-		nana::any* listbox::_m_anyobj(listbox::size_type categ, listbox::size_type index) const
-		{
-			return get_drawer_trigger().essence().lister.object(categ, index);
+			return get_drawer_trigger().essence().lister.anyobj(cat, index, allocate_if_empty);
 		}
 
 		void listbox::_m_resolver(const nana::any& res)

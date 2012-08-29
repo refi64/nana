@@ -13,7 +13,7 @@
 #define NANA_GUI_WIDGETS_COMBOX_HPP
 #include "widget.hpp"
 #include "float_listbox.hpp"
-#include <nana/any.hpp>
+#include <nana/concepts.hpp>
 
 namespace nana{ namespace gui
 {
@@ -61,7 +61,8 @@ namespace nana{ namespace gui
 	}//end namespace drawerbase
 
 	class combox
-		: public widget_object<category::widget_tag, drawerbase::combox::trigger>
+		:	public widget_object<category::widget_tag, drawerbase::combox::trigger>,
+			public concepts::any_objective<std::size_t, 1>
 	{
 	public:
 		typedef float_listbox::item_renderer item_renderer;
@@ -78,19 +79,6 @@ namespace nana{ namespace gui
 		std::size_t option() const;
 		void option(std::size_t);
 		nana::string text(std::size_t) const;
-
-		template<typename T>
-		void anyobj(std::size_t i, const T& obj)
-		{
-			*_m_anyobj(i, true) = obj;
-		}
-
-		template<typename T>
-		T* anyobj(std::size_t i) const
-		{
-			nana::any * obj = _m_anyobj(i, false);
-			return (obj ? obj->get<T>() : nullptr);
-		}
 
 		ext_event_type& ext_event() const;
 		void renderer(item_renderer*);

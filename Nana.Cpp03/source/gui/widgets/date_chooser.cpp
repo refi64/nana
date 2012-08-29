@@ -66,7 +66,7 @@ namespace nana{ namespace gui{
 					color_.bkcolor = 0x88C4FF;
 				}
 
-				int trigger::_m_pos_where(trigger::graph_reference graph, int x, int y)
+				int trigger::_m_pos_where(graph_reference graph, int x, int y)
 				{
 					int xend = static_cast<int>(graph.width()) - 1;
 					int yend = static_cast<int>(graph.height()) - 1;
@@ -93,7 +93,7 @@ namespace nana{ namespace gui{
 					return WhereNone;
 				}
 
-				void trigger::_m_draw(trigger::graph_reference graph)
+				void trigger::_m_draw(graph_reference graph)
 				{
 					_m_init_color();
 
@@ -126,7 +126,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::_m_draw_topbar(trigger::graph_reference graph)
+				void trigger::_m_draw_topbar(graph_reference graph)
 				{
 					int ypos = (topbar_height - 16) / 2 + 1;
 
@@ -158,7 +158,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::_m_make_drawing_basis(trigger::drawing_basis& dbasis, trigger::graph_reference graph, const nana::point& refpos)
+				void trigger::_m_make_drawing_basis(drawing_basis& dbasis, graph_reference graph, const nana::point& refpos)
 				{
 					dbasis.refpos = refpos;
 					const unsigned width = graph.width();
@@ -178,14 +178,10 @@ namespace nana{ namespace gui{
 					dbasis_ = dbasis;
 				}
 
-				void trigger::_m_draw_pos(trigger::drawing_basis & dbasis, trigger::graph_reference graph, int x, int y, const nana::string& str, bool primary, bool sel)
+				void trigger::_m_draw_pos(drawing_basis & dbasis, graph_reference graph, int x, int y, const nana::string& str, bool primary, bool sel)
 				{
-					nana::point refpos;
-					refpos.x = static_cast<int>(x * dbasis.row_s);
-					refpos.y = static_cast<int>(y * dbasis.line_s);
-
-					int width = static_cast<int>(dbasis.row_s);
-					int height = static_cast<int>(dbasis.line_s);
+					nana::rectangle r(static_cast<int>(x * dbasis.row_s), static_cast<int>(y * dbasis.line_s),
+						static_cast<int>(dbasis.row_s), static_cast<int>(dbasis.line_s));
 
 					nana::color_t color = color_.normal;
 
@@ -194,27 +190,27 @@ namespace nana{ namespace gui{
 					tpos.y -= dbasis.refpos.y;
 
 					if(pos_ == WhereTextArea
-						&& refpos.x <= tpos.x
-						&& tpos.x < refpos.x + width
-						&& refpos.y <= tpos.y
-						&& tpos.y < refpos.y + height)
+						&& r.x <= tpos.x
+						&& tpos.x < r.x + static_cast<int>(r.width)
+						&& r.y <= tpos.y
+						&& tpos.y < r.y + static_cast<int>(r.height))
 					{
-						if(page_ != PageDate || y)
+						if((page_ != PageDate) || y)
 						{
 							color = color_.highlight;
-							graph.rectangle(refpos.x, refpos.y, width, height, color_.bkcolor, true);
+							graph.rectangle(r, color_.bkcolor, true);
 						}
 					}
 
 					if(sel)
 					{
 						color = color_.highlight;
-						graph.rectangle(refpos.x, refpos.y, width, height, color_.bkcolor, true);
-						graph.rectangle(refpos.x, refpos.y, width, height, color_.selected, false);
+						graph.rectangle(r, color_.bkcolor, true);
+						graph.rectangle(r, color_.selected, false);
 					}
 
-					x = refpos.x + width / 2;
-					y = refpos.y + height / 2;
+					x = r.x + r.width / 2;
+					y = r.y + r.height / 2;
 
 					nana::size txt_s = graph.text_extent_size(str);
 					x -= txt_s.width / 2;
@@ -226,14 +222,14 @@ namespace nana{ namespace gui{
 					graph.string(x, y, color, str);
 				}
 
-				void trigger::_m_draw_pos(trigger::drawing_basis & dbasis, trigger::graph_reference graph, int x, int y, int number, bool primary, bool sel)
+				void trigger::_m_draw_pos(drawing_basis & dbasis, graph_reference graph, int x, int y, int number, bool primary, bool sel)
 				{
 					std::stringstream ss;
 					ss<<number;
 					_m_draw_pos(dbasis, graph, x, y, nana::charset(ss.str()), primary, sel);
 				}
 
-				void trigger::_m_draw_ex_days(trigger::drawing_basis & dbasis, trigger::graph_reference graph, int begx, int begy, bool before)
+				void trigger::_m_draw_ex_days(drawing_basis & dbasis, graph_reference graph, int begx, int begy, bool before)
 				{
 					int x = nana::date::day_of_week(chmonth_.year, chmonth_.month, 1);
 					int y = (x ? 1 : 2);
@@ -283,7 +279,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::_m_draw_days(const nana::point& refpos, trigger::graph_reference graph)
+				void trigger::_m_draw_days(const nana::point& refpos, graph_reference graph)
 				{
 					drawing_basis dbasis;
 					_m_make_drawing_basis(dbasis, graph, refpos);
@@ -323,7 +319,7 @@ namespace nana{ namespace gui{
 					this->_m_draw_ex_days(dbasis, graph, x, y, false);
 				}
 
-				void trigger::_m_draw_months(const nana::point& refpos, trigger::graph_reference graph)
+				void trigger::_m_draw_months(const nana::point& refpos, graph_reference graph)
 				{
 					drawing_basis dbasis;
 					_m_make_drawing_basis(dbasis, graph, refpos);
@@ -379,7 +375,7 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				void trigger::_m_perf_transform(int tfid, nana::paint::graphics& graph,  nana::paint::graphics& dirtybuf, nana::paint::graphics& newbuf, const nana::point& refpos)
+				void trigger::_m_perf_transform(int tfid, graph_reference graph,  graph_reference dirtybuf, graph_reference newbuf, const nana::point& refpos)
 				{
 					const int sleep_time = 15;
 					const int count = 20;
@@ -475,49 +471,49 @@ namespace nana{ namespace gui{
 					graph.bitblt(refpos.x, refpos.y, newbuf.width(), newbuf.height(), newbuf, 0, 0);
 				}
 
-				void trigger::refresh(trigger::graph_reference graph)
+				void trigger::refresh(graph_reference graph)
 				{
 					_m_draw(graph);
 				}
 
-				void trigger::bind_window(trigger::widget_reference wd)
+				void trigger::bind_window(widget_reference wd)
 				{
 					widget_ = &wd;
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
-					window wd = widget_->handle();
+					window wd = *widget_;
 					using namespace API::dev;
-					make_drawer_event<nana::gui::events::mouse_move>(wd);
-					make_drawer_event<nana::gui::events::mouse_leave>(wd);
-					make_drawer_event<nana::gui::events::mouse_down>(wd);
-					make_drawer_event<nana::gui::events::mouse_up>(wd);
+					make_drawer_event<events::mouse_move>(wd);
+					make_drawer_event<events::mouse_leave>(wd);
+					make_drawer_event<events::mouse_down>(wd);
+					make_drawer_event<events::mouse_up>(wd);
 				}
 
 				void trigger::detached()
 				{
-					API::dev::umake_drawer_event(widget_->handle());
+					API::dev::umake_drawer_event(*widget_);
 				}
 
-				void trigger::mouse_move(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
 				{
 					int pos = this->_m_pos_where(graph, ei.mouse.x, ei.mouse.y);
 					if(pos == pos_ && pos_ != WhereTextArea) return;
 					pos_ = pos;
 					_m_draw(graph);
-					nana::gui::API::lazy_refresh();
+					API::lazy_refresh();
 				}
 
-				void trigger::mouse_leave(trigger::graph_reference graph, const nana::gui::eventinfo&)
+				void trigger::mouse_leave(graph_reference graph, const eventinfo&)
 				{
 					if(WhereNone == pos_) return;
 					pos_ = WhereNone;
 					_m_draw(graph);
-					nana::gui::API::lazy_refresh();
+					API::lazy_refresh();
 				}
 
-				void trigger::mouse_up(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_up(graph_reference graph, const eventinfo& ei)
 				{
 					bool redraw = true;
 					int pos = this->_m_pos_where(graph, ei.mouse.x, ei.mouse.y);
@@ -643,7 +639,7 @@ namespace nana{ namespace gui{
 						else
 							_m_draw(graph);
 
-						nana::gui::API::lazy_refresh();
+						API::lazy_refresh();
 					}
 				}
 			//end class trigger
@@ -661,29 +657,29 @@ namespace nana{ namespace gui{
 
 		date_chooser::date_chooser(window wd, const rectangle& r, bool visible)
 		{
-			this->create(wd, r, visible);
+			create(wd, r, visible);
 		}
 
 		bool date_chooser::chose() const
 		{
-			return this->get_drawer_trigger().chose();
+			return get_drawer_trigger().chose();
 		}
 
 		nana::date date_chooser::read() const
 		{
-			return this->get_drawer_trigger().read();
+			return get_drawer_trigger().read();
 		}
 
 		void date_chooser::weekstr(unsigned index, const nana::string& str)
 		{
-			this->get_drawer_trigger().week_name(index, str);
-			nana::gui::API::refresh_window(this->handle());
+			get_drawer_trigger().week_name(index, str);
+			API::refresh_window(*this);
 		}
 
 		void date_chooser::monthstr(unsigned index, const nana::string& str)
 		{
-			this->get_drawer_trigger().month_name(index, str);
-			nana::gui::API::refresh_window(this->handle());
+			get_drawer_trigger().month_name(index, str);
+			nana::gui::API::refresh_window(*this);
 		}
 
 

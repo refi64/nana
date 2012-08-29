@@ -73,38 +73,28 @@ namespace nana{ namespace gui{
 				unsigned max_pixels;
 			};
 
-
 			class menu_builder
 			{
 			public:
 				typedef menu_item_type item_type;
 
 				typedef menu_type::item_container::value_type::event_fn_t event_fn_t;
-				typedef menu_type::item_container::iterator iterator;
-				typedef menu_type::item_container::const_iterator const_iterator;
 
 				~menu_builder();
 				void append(const nana::string&, const event_fn_t&);
 				void append_splitter();
 				void clear();
-				void check_style(unsigned index, int style);
-				void checked(unsigned index, bool check);
-				bool checked(unsigned index) const;
+				void check_style(std::size_t index, int style);
+				void checked(std::size_t index, bool check);
 				menu_type& get_root();
-				void insert(unsigned long index, const nana::string&, const event_fn_t&);
-				void answerer(std::size_t index, const event_fn_t&);
-				void enabled(unsigned long index, bool);
-				bool enabled(unsigned long index) const;
-				void erase(unsigned long index);
-				void image(size_t, const paint::image&);
-				bool set_sub_menu(unsigned long index, menu_type &);
-				void remove_sub_menu(unsigned long index);
+				void insert(std::size_t index, const nana::string&, const event_fn_t&);
+				item_type & at(std::size_t index);
+				const item_type& at(std::size_t index) const;
+				void erase(std::size_t index);
+				bool set_sub_menu(std::size_t index, menu_type &);
+				void remove_sub_menu(std::size_t index);
 				void destroy();
 				unsigned size() const;
-				iterator begin();
-				const_iterator begin() const;
-				iterator end();
-				const_iterator end() const;
 				void max_pixels(unsigned);
 				unsigned max_pixels() const;
 			private:
@@ -222,19 +212,14 @@ namespace nana{ namespace gui{
 				nana::gui::timer timer_;
 				struct state_type
 				{
-					state_type();
-
 					bool self_submenu; //Indicates whether the menu window is used for a submenu
 					bool owner_menubar;
 					bool auto_popup_submenu;
 					nana::point mouse_pos;
-
 				}state_;
 
 				struct submenu_type
 				{
-					submenu_type();
-
 					menu_window*	parent;
 					menu_window*	child;
 					const menu_type *object;
@@ -268,15 +253,15 @@ namespace nana{ namespace gui{
 		void clear();
 		void close();
 		void image(std::size_t index, const paint::image&);
-		void check_style(unsigned index, check_t style);
-		void checked(unsigned index, bool check);
-		bool checked(unsigned index) const;
-		void enabled(unsigned long index, bool enable);
-		bool enabled(unsigned long index) const;
-		void erase(unsigned long index);
-		bool link(unsigned long index, menu& menu_obj);
-		menu * link(unsigned long index);
-		menu *create_sub_menu(unsigned long index);
+		void check_style(std::size_t index, check_t style);
+		void checked(std::size_t index, bool check);
+		bool checked(std::size_t index) const;
+		void enabled(std::size_t index, bool enable);
+		bool enabled(std::size_t index) const;
+		void erase(std::size_t index);
+		bool link(std::size_t index, menu& menu_obj);
+		menu * link(std::size_t index);
+		menu *create_sub_menu(std::size_t index);
 		void popup(window, int x, int y, bool owner_menubar);
 		void answerer(std::size_t index, const event_fn_t&);
 		void destroy_answer(const std::function<void()>&);
@@ -293,7 +278,7 @@ namespace nana{ namespace gui{
 		drawerbase::menu::menu_builder mbuilder_;
 		drawerbase::menu::menu_window *window_;
 		std::function<void()> destroy_answerer_;
-		std::map<unsigned long, menu_info> sub_container_;
+		std::map<std::size_t, menu_info> sub_container_;
 	};
 
 	namespace detail

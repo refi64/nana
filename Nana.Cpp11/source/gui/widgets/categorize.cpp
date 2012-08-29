@@ -131,7 +131,7 @@ namespace nana{	namespace gui{
 				{
 					graph.rectangle(0xF0F0F0, false);
 
-					int left = 1, top = 1;
+					const int left = 1, top = 1;
 					int right = static_cast<int>(graph.width()) - 2, bottom = static_cast<int>(graph.height()) - 2;
 					graph.line(left, top, right, top, 0x484E55);
 					graph.line(left, bottom, right, bottom, 0x9DABB9);
@@ -234,13 +234,13 @@ namespace nana{	namespace gui{
 
 					nana::string str;
 					bool not_head = false;
-					for(std::vector<node_handle>::iterator i = v.begin(); i != v.end(); ++i)
+					for(auto i : v)
 					{
 						if(not_head)
 							str += splitstr_;
 						else
 							not_head = true;
-						str += (*i)->value.first;
+						str += i->value.first;
 					}
 					return str;
 				}
@@ -365,13 +365,13 @@ namespace nana{	namespace gui{
 					graph_ = graph;
 				}
 
-				void bind(nana::gui::window wd)
+				void bind(window wd)
 				{
 					window_ = wd;
 					API::background(wd, 0xFFFFFF);
 				}
 
-				nana::gui::window window() const
+				window window_handle() const
 				{
 					return window_;
 				}
@@ -428,9 +428,9 @@ namespace nana{	namespace gui{
 							//Change the meaning of variable r. Now, r indicates the area of a item
 							r.height = item_height_;
 
-							for(std::vector<node_handle>::iterator seqi = seq.begin(); seqi != seq.end(); ++seqi)
+							std::size_t seq_index = 0;
+							for(auto i : seq)
 							{
-								node_handle i = *seqi;
 								r.width = i->value.second.pixels;
 								//If the item is over the right border of widget, the item would be painted at
 								//the begining of the next line.
@@ -443,7 +443,7 @@ namespace nana{	namespace gui{
 								if(nana::gui::is_hit_the_rectangle(r, x, y))
 								{
 									style_.active_item_rectangle = r;
-									std::size_t index = static_cast<size_t>(std::distance(seq.begin(), seqi)) + head_;
+									std::size_t index = seq_index + head_;
 
 									ui_element::t what;
 									if(i->child && (r.x + static_cast<int>(r.width) - 16 < x))
@@ -458,6 +458,7 @@ namespace nana{	namespace gui{
 									return true;
 								}
 								r.x += r.width;
+								++seq_index;
 							}
 						}
 					}
@@ -507,8 +508,7 @@ namespace nana{	namespace gui{
 						case ui_element::item_name:
 							_m_selected(ui_el_.index);
 							break;
-						default:
-							break;
+						default:	break;
 						}
 					}
 				}
@@ -528,7 +528,7 @@ namespace nana{	namespace gui{
 					node_handle i = treebase_.tail(index);
 					if(i)
 					{
-						API::dev::window_caption(window(), tree().path());
+						API::dev::window_caption(window_handle(), tree().path());
 						if(ext_event_.selected)
 							ext_event_.selected(i->value.second.value);
 					}
@@ -566,8 +566,8 @@ namespace nana{	namespace gui{
 						r = style_.active_item_rectangle;
 					}
 					r.y += r.height;
-
-					style_.listbox = &(nana::gui::form_loader<nana::gui::float_listbox>()(window_, nana::rectangle(r.x, r.y, 100, 100)));
+					r.width = r.height = 100;
+					style_.listbox = &(form_loader<nana::gui::float_listbox>()(window_, r));
 					style_.listbox->set_module(style_.module, 16);
 					style_.listbox->show();
 					style_.listbox->make_event<events::destroy>(*this, &scheme::_m_list_closed);
@@ -700,7 +700,7 @@ namespace nana{	namespace gui{
 					head_ = 0;
 					std::vector<node_handle> v;
 					treebase_.seq(0, v);
-					for(std::vector<node_handle>::reverse_iterator vi = v.rbegin(); vi != v.rend(); ++vi)
+					for(auto vi = v.rbegin(); vi != v.rend(); ++vi)
 					{
 						item_tag & m = (*vi)->value.second;
 						if(r.width >= px + m.scale.width)
@@ -742,7 +742,7 @@ namespace nana{	namespace gui{
 					const int xend = static_cast<int>(r.width) + r.x;
 					std::vector<node_handle> v;
 					treebase_.seq(0, v);
-					for(std::vector<node_handle>::iterator vi = v.begin() + head_; vi != v.end(); ++vi)
+					for(auto vi = v.begin() + head_; vi != v.end(); ++vi)
 					{
 						node_handle i = (*vi);
 						if(static_cast<int>(i->value.second.pixels) + item_r.x > xend)
@@ -798,7 +798,7 @@ namespace nana{	namespace gui{
 				void trigger::insert(const nana::string& str, nana::any value)
 				{
 					scheme_->tree().insert(str, value);
-					API::dev::window_caption(scheme_->window(), scheme_->tree().path());
+					API::dev::window_caption(scheme_->window_handle(), scheme_->tree().path());
 					scheme_->draw();
 				}
 
@@ -844,7 +844,7 @@ namespace nana{	namespace gui{
 
 				nana::any& trigger::value() const
 				{
-					tree_wrapper::node_handle node = scheme_->tree().cur();
+					auto node = scheme_->tree().cur();
 					if(node)
 						return node->value.second.value;
 
@@ -861,15 +861,15 @@ namespace nana{	namespace gui{
 					}
 				}
 
-				void trigger::bind_window(trigger::widget_reference wd)
+				void trigger::bind_window(widget_reference wd)
 				{
 					scheme_->bind(wd);
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
 					scheme_->attach(&graph);
-					window wd = scheme_->window();
+					window wd = scheme_->window_handle();
 					using namespace API::dev;
 					make_drawer_event<events::mouse_down>(wd);
 					make_drawer_event<events::mouse_up>(wd);
@@ -880,7 +880,7 @@ namespace nana{	namespace gui{
 				void trigger::detached()
 				{
 					scheme_->attach(0);
-					API::dev::umake_drawer_event(scheme_->window());
+					API::dev::umake_drawer_event(scheme_->window_handle());
 				}
 
 				void trigger::refresh(graph_reference)
@@ -892,7 +892,7 @@ namespace nana{	namespace gui{
 				{
 					if(scheme_->locate().what > ui_element::somewhere)
 					{
-						if(API::window_enabled(scheme_->window()))
+						if(API::window_enabled(scheme_->window_handle()))
 						{
 							scheme_->mouse_pressed();
 							scheme_->draw();
@@ -905,7 +905,7 @@ namespace nana{	namespace gui{
 				{
 					if(scheme_->locate().what > ui_element::somewhere)
 					{
-						if(API::window_enabled(scheme_->window()))
+						if(API::window_enabled(scheme_->window_handle()))
 						{
 							scheme_->mouse_release();
 							scheme_->draw();
@@ -916,7 +916,7 @@ namespace nana{	namespace gui{
 
 				void trigger::mouse_move(graph_reference, const eventinfo& ei)
 				{
-					if(scheme_->locate(ei.mouse.x, ei.mouse.y) && API::window_enabled(scheme_->window()))
+					if(scheme_->locate(ei.mouse.x, ei.mouse.y) && API::window_enabled(scheme_->window_handle()))
 					{
 						scheme_->draw();
 						API::lazy_refresh();
@@ -925,7 +925,7 @@ namespace nana{	namespace gui{
 
 				void trigger::mouse_leave(graph_reference, const eventinfo&)
 				{
-					if(API::window_enabled(scheme_->window()) && (scheme_->is_list_shown() == false) && scheme_->erase_locate())
+					if(API::window_enabled(scheme_->window_handle()) && (scheme_->is_list_shown() == false) && scheme_->erase_locate())
 					{
 						scheme_->draw();
 						API::lazy_refresh();

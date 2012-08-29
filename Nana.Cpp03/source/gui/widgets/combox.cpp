@@ -109,14 +109,9 @@ namespace nana{ namespace gui{
 					return editor_;
 				}
 
-				nana::gui::widget* widget()
+				widget* widget_ptr() const
 				{
 					return widget_;
-				}
-
-				nana::paint::graphics * graph()
-				{
-					return graph_;
 				}
 
 				void clear()
@@ -261,9 +256,7 @@ namespace nana{ namespace gui{
 				{
 					nana::rectangle r(graph.size());
 					graph.rectangle(r, (state_.focused ? 0x0595E2 : 0x999A9E), false);
-					r.x = r.y = 1;
-					r.width -= 2;
-					r.height -= 2;
+					r.pare_off(1);
 					graph.rectangle(r, 0xFFFFFF, false);
 				}
 
@@ -511,17 +504,17 @@ namespace nana{ namespace gui{
 					return *drawer_;
 				}
 
-				void trigger::bind_window(trigger::widget_reference wd)
+				void trigger::bind_window(widget_reference wd)
 				{
 					drawer_->bind(wd);
 					wd.background(0xFFFFFF);
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
 					drawer_->attached(graph);
 
-					window wd = drawer_->widget()->handle();
+					window wd = drawer_->widget_ptr()->handle();
 					using namespace API::dev;
 					make_drawer_event<events::mouse_down>(wd);
 					make_drawer_event<events::mouse_up>(wd);
@@ -532,7 +525,6 @@ namespace nana{ namespace gui{
 					make_drawer_event<events::mouse_wheel>(wd);
 					make_drawer_event<events::key_down>(wd);
 					make_drawer_event<events::key_char>(wd);
-					make_drawer_event<events::focus>(wd);
 
 					effects::edge_nimbus(wd, effects::edge_nimbus_active);
 					effects::edge_nimbus(wd, effects::edge_nimbus_over);
@@ -541,7 +533,7 @@ namespace nana{ namespace gui{
 				void trigger::detached()
 				{
 					drawer_->detached();
-					API::dev::umake_drawer_event(drawer_->widget()->handle());
+					API::dev::umake_drawer_event(drawer_->widget_ptr()->handle());
 				}
 
 				void trigger::refresh(graph_reference)
@@ -549,10 +541,10 @@ namespace nana{ namespace gui{
 					drawer_->draw();
 				}
 
-				void trigger::focus(graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::focus(graph_reference, const eventinfo& ei)
 				{
 					drawer_->set_focused(ei.focus.getting);
-					if(drawer_->widget()->enabled())
+					if(drawer_->widget_ptr()->enabled())
 					{
 						drawer_->draw();
 						drawer_->editor()->reset_caret();
@@ -560,32 +552,32 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_enter(graph_reference, const nana::gui::eventinfo&)
+				void trigger::mouse_enter(graph_reference, const eventinfo&)
 				{
 					drawer_->set_mouse_over(true);
-					if(drawer_->widget()->enabled())
+					if(drawer_->widget_ptr()->enabled())
 					{
 						drawer_->draw();
 						API::lazy_refresh();
 					}
 				}
 
-				void trigger::mouse_leave(graph_reference, const nana::gui::eventinfo&)
+				void trigger::mouse_leave(graph_reference, const eventinfo&)
 				{
 					drawer_->set_mouse_over(false);
 					drawer_->editor()->mouse_enter(false);
-					if(drawer_->widget()->enabled())
+					if(drawer_->widget_ptr()->enabled())
 					{
 						drawer_->draw();
 						API::lazy_refresh();
 					}
 				}
 
-				void trigger::mouse_down(graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_down(graph_reference graph, const eventinfo& ei)
 				{
 					drawer_->set_mouse_press(true);
 
-					if(drawer_->widget()->enabled())
+					if(drawer_->widget_ptr()->enabled())
 					{
 						widgets::skeletons::text_editor * editor = drawer_->editor();
 
@@ -603,9 +595,9 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_up(graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_up(graph_reference graph, const eventinfo& ei)
 				{
-					if(drawer_->widget()->enabled())
+					if(drawer_->widget_ptr()->enabled())
 					{
 						if(false == drawer_->has_lister())
 						{
@@ -617,9 +609,9 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_move(graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
 				{
-					if(drawer_->widget()->enabled())
+					if(drawer_->widget_ptr()->enabled())
 					{
 						bool redraw = drawer_->calc_where(graph, ei.mouse.x, ei.mouse.y);
 						redraw |= drawer_->editor()->mouse_move(ei.mouse.left_button, ei.mouse.x, ei.mouse.y);
@@ -633,9 +625,9 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_wheel(graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_wheel(graph_reference graph, const eventinfo& ei)
 				{
-					if(drawer_->widget()->enabled())
+					if(drawer_->widget_ptr()->enabled())
 					{
 						if(drawer_->has_lister())
 							drawer_->scroll_items(ei.wheel.upwards);
@@ -644,9 +636,9 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::key_down(graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::key_down(graph_reference, const eventinfo& ei)
 				{
-					if(drawer_->widget()->enabled())
+					if(drawer_->widget_ptr()->enabled())
 					{
 						using namespace nana::gui;
 						switch(ei.keyboard.key)
@@ -663,10 +655,10 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::key_char(graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::key_char(graph_reference graph, const eventinfo& ei)
 				{
 					widgets::skeletons::text_editor * editor = drawer_->editor();
-					if(drawer_->widget()->enabled() && editor->editable())
+					if(drawer_->widget_ptr()->enabled() && editor->editable())
 					{
 						switch(ei.keyboard.key)
 						{

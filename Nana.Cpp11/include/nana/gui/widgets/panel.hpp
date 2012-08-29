@@ -15,29 +15,29 @@
 #define NANA_GUI_WIDGETS_PANEL_HPP
 #include "widget.hpp"
 
-namespace nana
+namespace nana{	namespace gui
 {
-namespace gui
-{
-namespace xpanel
-{
-	class drawer: public nana::gui::drawer_trigger
+	namespace drawerbase
 	{
-	public:
-		drawer();
-	private:
-		void bind_window(widget_reference widget);
-		void refresh(graph_reference graph);
-	private:
-		nana::gui::window window_;
-	};
-
-}//end namespace xpanel
+		namespace panel
+		{
+			class drawer: public drawer_trigger
+			{
+			public:
+				drawer();
+			private:
+				void bind_window(widget_reference widget);
+				void refresh(graph_reference graph);
+			private:
+				window window_;
+			};
+		}// end namespace panel
+	}//end namespace drawerbase
 
 	template<bool HasBackground>
 	class panel
-		: public gui::widget_object<typename metacomp::static_if<HasBackground,
-									gui::category::widget_tag, gui::category::lite_widget_tag>::value_type, xpanel::drawer>
+		: public widget_object<typename metacomp::static_if<HasBackground,
+		gui::category::widget_tag, gui::category::lite_widget_tag>::value_type, drawerbase::panel::drawer>
 	{
 	public:
 		panel(){}

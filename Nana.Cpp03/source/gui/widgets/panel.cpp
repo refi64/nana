@@ -13,34 +13,32 @@
 
 #include <nana/gui/widgets/panel.hpp>
 
-namespace nana
+namespace nana{	namespace gui
 {
-namespace gui
-{
-namespace xpanel
-{
-	//class drawer
-	//public:
-		drawer::drawer()
-			:window_(0)
-		{}
-	//private:
-
-		void drawer::bind_window(widget_reference widget)
+	namespace drawerbase
+	{
+		namespace panel
 		{
-			widget.caption(STR("Nana Panel"));
-			window_ = widget.handle();
-		}
+		//class drawer
+			drawer::drawer()
+				:window_(0)
+			{}
 
-		void drawer::refresh(drawer::graph_reference graph)
-		{
-			if(API::glass_window(window_))
-				API::make_glass_background(window_);
-			else
-				graph.rectangle(0, 0, graph.width(), graph.height(), nana::gui::API::background(window_), true);
-		}
-	//end class drawer
+			void drawer::bind_window(widget_reference widget)
+			{
+				widget.caption(STR("Nana Panel"));
+				window_ = widget.handle();
+			}
 
-}//end namespace xpanel
+			void drawer::refresh(graph_reference graph)
+			{
+				if(API::glass_window(window_))
+					API::make_glass_background(window_);
+				else
+					graph.rectangle(API::background(window_), true);
+			}
+		//end class drawer
+		}//end namespace panel
+	}//end namespace drawerbase
 }//end namespace gui
 }//end namespace nana

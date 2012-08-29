@@ -105,9 +105,6 @@
     <ClCompile Include="..\..\source\gui\widgets\button.cpp">
       <Filter>Source Files\nana\gui\widgets</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\gui\widgets\caret.cpp">
-      <Filter>Source Files\nana\gui\widgets</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\gui\widgets\checkbox.cpp">
       <Filter>Source Files\nana\gui\widgets</Filter>
     </ClCompile>

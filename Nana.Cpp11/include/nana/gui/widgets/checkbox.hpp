@@ -29,14 +29,14 @@ namespace gui
 			typedef paint::gadget::check_renderer check_renderer_t;
 
 			drawer();
-			void bind_window(nana::gui::widget&);
+			void bind_window(widget_reference);
 			void attached(graph_reference);
 			void detached();
 			void refresh(graph_reference);
-			void mouse_enter(graph_reference, const nana::gui::eventinfo&);
-			void mouse_leave(graph_reference, const nana::gui::eventinfo&);
-			void mouse_down(graph_reference, const nana::gui::eventinfo&);
-			void mouse_up(graph_reference, const nana::gui::eventinfo&);
+			void mouse_enter(graph_reference, const eventinfo&);
+			void mouse_leave(graph_reference, const eventinfo&);
+			void mouse_down(graph_reference, const eventinfo&);
+			void mouse_up(graph_reference, const eventinfo&);
 		public:
 			paint::gadget::check_renderer& check_renderer();
 
@@ -54,7 +54,7 @@ namespace gui
 			void _m_draw_title(graph_reference);
 		private:
 			static const int interval = 4;
-			nana::gui::widget* widget_;
+			widget* widget_;
 			unsigned state_;
 
 			struct checker_tag
@@ -64,8 +64,6 @@ namespace gui
 				bool radio;
 				paint::gadget::check_renderer::checker_t type;
 				paint::gadget::check_renderer renderer;
-
-				checker_tag();
 			}checker_;
 		};
 	}//end namespace xcheckbox

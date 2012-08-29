@@ -640,6 +640,11 @@ namespace paint
 			this->round_rectangle(r.x, r.y, r.width, r.height, radius_x, radius_y, color, solid, color_if_solid);
 		}
 
+		void graphics::shadow_rectangle(const nana::rectangle& r, color_t beg_color, color_t end_color, bool vertical)
+		{
+			shadow_rectangle(r.x, r.y, r.width, r.height, beg_color, end_color, vertical);
+		}
+
 		void graphics::shadow_rectangle(int x, int y, unsigned width, unsigned height, color_t color_begin, color_t color_end, bool vertical)
 		{
 			if(handle_ == 0)	return;

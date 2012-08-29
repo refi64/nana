@@ -19,20 +19,20 @@ namespace gui
 {
 namespace xcheckbox
 {
-
-	drawer::checker_tag::checker_tag()
-		:	react(true), checked(false), radio(false),
-			type(paint::gadget::check_renderer::clasp)
-	{}
 		//class drawer
-			drawer::drawer():widget_(0){}
+			drawer::drawer():widget_(0)
+			{
+				checker_.react = true;
+				checker_.checked = checker_.radio = false;
+				checker_.type = paint::gadget::check_renderer::clasp;
+			}
 
-			void drawer::bind_window(nana::gui::widget& w)
+			void drawer::bind_window(widget_reference w)
 			{
 				widget_ = &w;
 			}
 
-			void drawer::attached(drawer::graph_reference)
+			void drawer::attached(graph_reference)
 			{
 				window wd = *widget_;
 				using namespace API::dev;
@@ -48,17 +48,17 @@ namespace xcheckbox
 				API::dev::umake_drawer_event(*widget_);
 			}
 
-			void drawer::refresh(drawer::graph_reference graph)
+			void drawer::refresh(graph_reference graph)
 			{
 				_m_draw(graph);
 			}
 
-			void drawer::mouse_down(drawer::graph_reference graph, const nana::gui::eventinfo& ei)
+			void drawer::mouse_down(graph_reference graph, const eventinfo&)
 			{
 				_m_draw(graph);
 			}
 
-			void drawer::mouse_up(drawer::graph_reference graph, const nana::gui::eventinfo& ei)
+			void drawer::mouse_up(graph_reference graph, const eventinfo&)
 			{
 				if(checker_.react)
 					checker_.checked = ! checker_.checked;
@@ -66,12 +66,12 @@ namespace xcheckbox
 				_m_draw(graph);
 			}
 
-			void drawer::mouse_enter(drawer::graph_reference graph, const nana::gui::eventinfo&)
+			void drawer::mouse_enter(graph_reference graph, const eventinfo&)
 			{
 				_m_draw(graph);
 			}
 
-			void drawer::mouse_leave(drawer::graph_reference graph, const nana::gui::eventinfo&)
+			void drawer::mouse_leave(graph_reference graph, const eventinfo&)
 			{
 				_m_draw(graph);
 			}
@@ -89,7 +89,7 @@ namespace xcheckbox
 			void drawer::checked(bool chk)
 			{
 				checker_.checked = chk;
-				API::refresh_window(widget_->handle());
+				API::refresh_window(*widget_);
 			}
 
 			bool drawer::checked() const
@@ -132,21 +132,21 @@ namespace xcheckbox
 				API::lazy_refresh();
 			}
 
-			void drawer::_m_draw_background(drawer::graph_reference graph)
+			void drawer::_m_draw_background(graph_reference graph)
 			{
-				using namespace nana::gui;
-				if(API::glass_window(widget_->handle()))
-					API::make_glass_background(widget_->handle());
+				window wd = *widget_;
+				if(API::glass_window(wd))
+					API::make_glass_background(wd);
 				else
-					graph.rectangle(0, 0, graph.width(), graph.height(), API::background(widget_->handle()), true);
+					graph.rectangle(API::background(wd), true);
 			}
 
-			void drawer::_m_draw_checkbox(nana::paint::graphics& graph, unsigned first_line_height)
+			void drawer::_m_draw_checkbox(graph_reference graph, unsigned first_line_height)
 			{
 				checker_.renderer.render(graph, 0, (first_line_height > 16 ? (first_line_height - 16) / 2 : 0), 16, 16, API::mouse_action(*widget_), (checker_.radio ? paint::gadget::check_renderer::radio : checker_.type), checker_.checked);
 			}
 
-			void drawer::_m_draw_title(nana::paint::graphics& graph)
+			void drawer::_m_draw_title(graph_reference graph)
 			{
 				if(graph.width() > 16 + interval)
 				{
@@ -179,22 +179,22 @@ namespace xcheckbox
 
 		checkbox::checkbox(window wd, const rectangle& r, bool visible)
 		{
-			this->create(wd, r, visible);
+			create(wd, r, visible);
 		}
 
 		void checkbox::react(bool want)
 		{
-			this->get_drawer_trigger().react(want);
+			get_drawer_trigger().react(want);
 		}
 
 		bool checkbox::checked() const
 		{
-			return this->get_drawer_trigger().checked();
+			return get_drawer_trigger().checked();
 		}
 
 		void checkbox::check(bool chk)
 		{
-			this->get_drawer_trigger().checked(chk);
+			get_drawer_trigger().checked(chk);
 		}
 
 		void checkbox::radio(bool is_radio)
@@ -204,19 +204,19 @@ namespace xcheckbox
 
 		void checkbox::style(checkbox::checker_t chk)
 		{
-			this->get_drawer_trigger().style(static_cast<drawer_trigger_t::check_renderer_t::checker_t>(chk));
-			API::refresh_window(this->handle());
+			get_drawer_trigger().style(static_cast<drawer_trigger_t::check_renderer_t::checker_t>(chk));
+			API::refresh_window(*this);
 		}
 
 		checkbox::checker_t checkbox::style() const
 		{
-			return static_cast<checker_t>(this->get_drawer_trigger().style());
+			return static_cast<checker_t>(get_drawer_trigger().style());
 		}
 
 		void checkbox::transparent(bool value)
 		{
-			if(API::glass_window(this->handle(), value) != value)
-				API::refresh_window(this->handle());
+			if(API::glass_window(*this, value) != value)
+				API::refresh_window(*this);
 		}
 
 		bool checkbox::transparent() const

@@ -65,7 +65,6 @@
 		<Unit filename="..\..\source\gui\timer.cpp" />
 		<Unit filename="..\..\source\gui\tooltip.cpp" />
 		<Unit filename="..\..\source\gui\widgets\button.cpp" />
-		<Unit filename="..\..\source\gui\widgets\caret.cpp" />
 		<Unit filename="..\..\source\gui\widgets\categorize.cpp" />
 		<Unit filename="..\..\source\gui\widgets\checkbox.cpp" />
 		<Unit filename="..\..\source\gui\widgets\combox.cpp" />

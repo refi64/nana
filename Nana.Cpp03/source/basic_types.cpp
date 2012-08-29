@@ -127,6 +127,15 @@ namespace nana
 			height = sz.height;
 			return *this;
 		}
+
+		rectangle& rectangle::pare_off(unsigned pixels)
+		{
+			x += static_cast<int>(pixels);
+			y += static_cast<int>(pixels);
+			width -= (pixels << 1);
+			height -= (pixels << 1);
+			return *this;
+		}
 	//end struct rectangle
 
 	//struct arrange

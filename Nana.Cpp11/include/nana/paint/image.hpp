@@ -39,8 +39,7 @@ namespace paint
 		void paste(graphics& dst, int x, int y) const;
 		void paste(graphics& dst, int x, int y, unsigned width, unsigned height) const;
 		void paste(graphics& dst, int x, int y, unsigned width, unsigned height, int srcx, int srcy) const;
-		void paste(graphics& dst, int x, int y, unsigned width, unsigned height, int srcx, int srcy, unsigned srcw, unsigned srch) const;
-		void paste(graphics& dst, const nana::rectangle& dst_r, const nana::rectangle& src_r) const;
+		void paste(const nana::rectangle& r_src, graphics& dst, const point& p_dst) const;
 		void stretch(const nana::rectangle& r_src, graphics& dst, const nana::rectangle& r_dst) const;
 	private:
 		nana::refer<image_impl_interface*> ref_image_;

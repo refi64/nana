@@ -148,8 +148,7 @@ namespace gui
 												backimg_.image.paste(graph, x, 0, fixed_size, imgsize.height, backimg_.beg, 0);
 										}
 										else
-											backimg_.image.paste(graph, backimg_.beg, 0, gsize.width - fixed_size, imgsize.height, backimg_.beg, 0, imgsize.width - fixed_size, imgsize.height);
-										
+											backimg_.image.stretch(nana::rectangle(backimg_.beg, 0, imgsize.width - fixed_size, imgsize.height), graph, nana::rectangle(backimg_.beg, 0, gsize.width - fixed_size, imgsize.height));
 									}
 								}
 							}
@@ -165,7 +164,7 @@ namespace gui
 									}									
 								}
 								else
-									backimg_.image.paste(graph, 0, 0, gsize.width, imgsize.height, 0, 0, imgsize.width, imgsize.height);
+									backimg_.image.stretch(imgsize, graph, nana::size(gsize.width, imgsize.height));
 							}
 							break;
 						case nana::arrange::vertical:
@@ -199,7 +198,7 @@ namespace gui
 												backimg_.image.paste(graph, 0, y, imgsize.width, fixed_size, 0, backimg_.beg);
 										}
 										else
-											backimg_.image.paste(graph, 0, backimg_.beg, imgsize.width, gsize.height - fixed_size, 0, backimg_.beg, imgsize.width, imgsize.height - fixed_size);
+											backimg_.image.stretch(nana::rectangle(0, backimg_.beg, imgsize.width, imgsize.height - fixed_size), graph, nana::rectangle(0, backimg_.beg, imgsize.width, gsize.height - fixed_size));
 									}
 								}
 							}
@@ -215,7 +214,7 @@ namespace gui
 									}
 								}
 								else
-									backimg_.image.paste(graph, 0, 0, imgsize.width, gsize.height, 0, 0, imgsize.width, imgsize.height);
+									backimg_.image.stretch(imgsize, graph, nana::rectangle(0, 0, imgsize.width, gsize.height));
 							}
 							break;
 						case nana::arrange::horizontal_vertical:
@@ -234,7 +233,7 @@ namespace gui
 								}
 							}
 							else
-								backimg_.image.paste(graph, 0, 0, gsize.width, gsize.height, 0, 0, imgsize.width, imgsize.height);
+								backimg_.image.stretch(imgsize, graph, gsize);
 							break;
 						}
 					}

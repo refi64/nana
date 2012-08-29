@@ -197,7 +197,7 @@ namespace nana{ namespace gui{
 					if((index != to) && (index < cont_.size()) && (to < cont_.size()))
 					{
 						item_t from;
-						for(container::iterator i = cont_.begin();i != cont_.end();  ++i)
+						for(auto i = cont_.begin();i != cont_.end();  ++i)
 						{
 							if(index == i->index)
 							{
@@ -207,7 +207,7 @@ namespace nana{ namespace gui{
 							}
 						}
 
-						for(container::iterator i = cont_.begin();i != cont_.end();  ++i)
+						for(auto i = cont_.begin();i != cont_.end();  ++i)
 						{
 							if(to == i->index)
 							{
@@ -1367,37 +1367,33 @@ namespace nana{ namespace gui{
 
 					if(h)
 					{
-						if(false == scroll.h.empty())
+						rectangle r(1, sz.height - scroll.scale - 1, width, scroll.scale);
+						if(scroll.h.empty())
 						{
-							scroll.h.move(1, sz.height - scroll.scale - 1);
-							scroll.h.size(width, scroll.scale);
-						}
-						else
-						{
-							scroll.h.create(window->handle(), nana::rectangle(1, sz.height - scroll.scale - 1, width, scroll.scale));
+							scroll.h.create(window->handle(), r);
 							API::take_active(scroll.h.handle(), false, window->handle());
 							scroll.h.make_event<events::mouse_move>(*this, &essence_t::_m_answer_scroll);
 							scroll.h.make_event<events::mouse_up>(*this, &essence_t::_m_answer_scroll);
-
 						}
+						else
+							scroll.h.move(r.x, r.y, r.width, r.height);
 					}
 					else if(!scroll.h.empty())
 						scroll.h.close();
 
 					if(v)
 					{
-						if(false == scroll.v.empty())
+						rectangle r(sz.width - 1 - scroll.scale, 1, scroll.scale, height);
+						if(scroll.v.empty())
 						{
-							scroll.v.move(sz.width - 1 - scroll.scale, 1);
-							scroll.v.size(scroll.scale, height);
-						}
-						else
-						{
-							scroll.v.create(window->handle(), rectangle(sz.width - 1 - scroll.scale, 1, scroll.scale, height));
+							scroll.v.create(window->handle(), r);
 							API::take_active(scroll.v.handle(), false, window->handle());
 							scroll.v.make_event<events::mouse_move>(*this, &essence_t::_m_answer_scroll);
 							scroll.v.make_event<events::mouse_up>(*this, &essence_t::_m_answer_scroll);
 						}
+						else
+							scroll.v.move(r.x, r.y, r.width, r.height);
+
 					}
 					else if(!scroll.v.empty())
 					{
@@ -2070,12 +2066,11 @@ namespace nana{ namespace gui{
 
 					if(essence_->header.visible())
 					{
-						essence_->rect_header(rect);
-						drawer_header_->draw(rect);
+						if(essence_->rect_header(rect))
+							drawer_header_->draw(rect);
 					}
-					essence_->rect_lister(rect);
-
-					drawer_lister_->draw(rect);
+					if(essence_->rect_lister(rect))
+						drawer_lister_->draw(rect);
 					_m_draw_border();
 				}
 

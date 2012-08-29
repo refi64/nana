@@ -209,9 +209,6 @@
 							RelativePath="..\..\source\gui\widgets\button.cpp">
 						</File>
 						<File
-							RelativePath="..\..\source\gui\widgets\caret.cpp">
-						</File>
-						<File
 							RelativePath="..\..\source\gui\widgets\categorize.cpp">
 						</File>
 						<File

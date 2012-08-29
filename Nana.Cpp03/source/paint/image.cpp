@@ -255,16 +255,10 @@ namespace paint
 				ref_image_.handle()->paste(nana::rectangle(srcx, srcy, width, height), dst, x, y);
 		}
 
-		void image::paste(graphics& dst, int x, int y, unsigned width, unsigned height, int srcx, int srcy, unsigned srcw, unsigned srch) const
+		void image::paste(const nana::rectangle& r_src, graphics & dst, const nana::point& p_dst) const
 		{
 			if(ref_image_)
-				ref_image_.handle()->stretch(nana::rectangle(srcx, srcy, srcw, srch), dst, nana::rectangle(x, y, width, height));
-		}
-
-		void image::paste(graphics & dst, const nana::rectangle& r_dst, const nana::rectangle& r_src) const
-		{
-			if(ref_image_)
-				ref_image_.handle()->stretch(r_src, dst, r_dst);	
+				ref_image_.handle()->paste(r_src, dst, p_dst.x, p_dst.y);	
 		}
 
 		void image::stretch(const nana::rectangle& r_src, graphics& dst, const nana::rectangle & r_dst) const

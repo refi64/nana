@@ -73,8 +73,6 @@ namespace nana{namespace gui{
 					paint::image * icon;
 					color_t bgcolor;
 					color_t fgcolor;
-					attr_tag();
-					~attr_tag();
 				}attr_;
 			};
 		}//end namespace button

@@ -42,7 +42,7 @@ namespace gui
 
 				nana::gui::menu* get_menu(std::size_t index) const
 				{
-					return (index < cont_.size() ? &(cont_[index]->menu_obj) : 0);
+					return (index < cont_.size() ? &(cont_[index]->menu_obj) : nullptr);
 				}
 
 				const item_type& at(std::size_t index) const
@@ -64,23 +64,12 @@ namespace gui
 							++index;
 						}
 					}
-
 					return npos;
 				}
 
-				std::size_t size() const
+				const container& cont() const
 				{
-					return cont_.size();
-				}
-
-				container::iterator begin()
-				{
-					return cont_.begin();
-				}
-
-				container::iterator end()
-				{
-					return cont_.end();
+					return cont_;
 				}
 			private:
 				container cont_;
@@ -93,29 +82,34 @@ namespace gui
 
 				void item_renderer::background(const nana::point& pos, const nana::size& size, state_t state)
 				{
-					nana::point points[4] = {
-						nana::point(pos.x, pos.y),
-						nana::point(pos.x + size.width - 1, pos.y),
-						nana::point(pos.x, pos.y + size.height - 1),
-						nana::point(pos.x + size.width - 1, pos.y + size.height - 1)
-					};
+					nana::color_t border, body, corner;
 
-					if(state == this->state_highlight)
+					switch(state)
 					{
-						graph_.rectangle(pos.x, pos.y, size.width, size.height, nana::gui::color::highlight, false);
-						for(int i = 0; i < 4; ++i)
-							graph_.set_pixel(points[i].x, points[i].y, 0xC0DDFC);
-
-						graph_.rectangle(pos.x + 1, pos.y + 1, size.width - 2, size.height - 2, 0xC0DDFC, true);
+					case this->state_highlight:
+						border = nana::gui::color::highlight;
+						corner = 0xC0DDFC;
+						body = 0xC0DDFC;
+						break;
+					case this->state_selected:
+						border = nana::gui::color::dark_border;
+						corner = nana::gui::color::button_face;
+						body = 0xFFFFFF;
+						break;
+					default:	//Don't process other states.
+						return;
 					}
-					else if(state == this->state_selected)
-					{
-						graph_.rectangle(pos.x, pos.y, size.width, size.height, nana::gui::color::dark_border, false);
-						for(int i = 0; i < 4; ++i)
-							graph_.set_pixel(points[i].x, points[i].y, nana::gui::color::button_face);
 
-						graph_.rectangle(pos.x + 1, pos.y + 1, size.width - 2, size.height - 2, 0xFFFFFF, true);
-					}
+					nana::rectangle r(pos, size);
+					graph_.rectangle(r, border, false);
+
+					graph_.set_pixel(pos.x, pos.y, corner);
+					graph_.set_pixel(pos.x + size.width - 1, pos.y, corner);
+					graph_.set_pixel(pos.x, pos.y + size.height - 1, corner);
+					graph_.set_pixel(pos.x + size.width - 1, pos.y + size.height - 1, corner);
+
+					r.pare_off(1);
+					graph_.rectangle(r, body, true);
 				}
 
 				void item_renderer::caption(int x, int y, const nana::string& text)
@@ -142,7 +136,7 @@ namespace gui
 					if(shkey)
 						API::register_shortkey(widget_->handle(), shkey);
 
-					std::size_t i = items_->size();
+					std::size_t i = items_->cont().size();
 					items_->append(text, shkey);
 					_m_draw();
 					return items_->get_menu(i);
@@ -155,15 +149,15 @@ namespace gui
 
 				std::size_t trigger::size() const
 				{
-					return items_->size();
+					return items_->cont().size();
 				}
 
-				void trigger::bind_window(trigger::widget_reference widget)
+				void trigger::bind_window(widget_reference widget)
 				{
 					widget_ = &widget;
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
 					graph_ = &graph;
 					window wd = widget_->handle();
@@ -183,13 +177,13 @@ namespace gui
 					API::dev::umake_drawer_event(widget_->handle());
 				}
 
-				void trigger::refresh(trigger::graph_reference)
+				void trigger::refresh(graph_reference)
 				{
 					_m_draw();
-					nana::gui::API::lazy_refresh();
+					API::lazy_refresh();
 				}
 
-				void trigger::mouse_move(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::mouse_move(graph_reference, const eventinfo& ei)
 				{
 					if(ei.mouse.x != state_.mouse_pos.x || ei.mouse.y != state_.mouse_pos.y)
 						state_.nullify_mouse = false;
@@ -211,20 +205,20 @@ namespace gui
 					{
 						_m_popup_menu();
 						_m_draw();
-						nana::gui::API::lazy_refresh();
+						API::lazy_refresh();
 					}
 
 					state_.mouse_pos.x = ei.mouse.x;
 					state_.mouse_pos.y = ei.mouse.y;
 				}
 
-				void trigger::mouse_leave(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_leave(graph_reference graph, const eventinfo& ei)
 				{
 					state_.nullify_mouse = false;
 					mouse_move(graph, ei);
 				}
 
-				void trigger::mouse_down(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_down(graph_reference graph, const eventinfo& ei)
 				{
 					state_.nullify_mouse = false;
 
@@ -248,7 +242,7 @@ namespace gui
 					API::lazy_refresh();
 				}
 
-				void trigger::mouse_up(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_up(graph_reference graph, const eventinfo& ei)
 				{
 					state_.nullify_mouse = false;
 
@@ -267,7 +261,7 @@ namespace gui
 
 				}
 
-				void trigger::focus(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::focus(graph_reference, const eventinfo& ei)
 				{
 					if((ei.focus.getting == false) && (state_.active != npos))
 					{
@@ -279,7 +273,7 @@ namespace gui
 					}
 				}
 
-				void trigger::key_down(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::key_down(graph_reference, const eventinfo& ei)
 				{
 					state_.nullify_mouse = true;
 					if(state_.menu)
@@ -348,7 +342,7 @@ namespace gui
 					API::lazy_refresh();
 				}
 
-				void trigger::key_up(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::key_up(graph_reference, const eventinfo& ei)
 				{
 					if(ei.keyboard.key == 18)
 					{
@@ -371,7 +365,7 @@ namespace gui
 					}
 				}
 
-				void trigger::shortkey(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::shortkey(graph_reference graph, const eventinfo& ei)
 				{
 					API::focus_window(widget_->handle());
 
@@ -394,7 +388,7 @@ namespace gui
 
 				void trigger::_m_move(bool to_left)
 				{
-					if(items_->size() == 0) return;
+					if(items_->cont().size() == 0) return;
 
 					std::size_t index = state_.active;
 					if(to_left)
@@ -402,11 +396,11 @@ namespace gui
 						if(index > 0)
 							--index;
 						else
-							index = items_->size() - 1;
+							index = items_->cont().size() - 1;
 					}
 					else
 					{
-						if(index == items_->size() - 1)
+						if(index == items_->cont().size() - 1)
 							index = 0;
 						else
 							++index;
@@ -488,7 +482,7 @@ namespace gui
 					{
 						int item_x = 2;
 						std::size_t index = 0;
-						for(auto i : *items_)
+						for(auto i : items_->cont())
 						{
 							if(item_x <= x && x < item_x + static_cast<int>(i->size.width))
 								return index;
@@ -506,14 +500,10 @@ namespace gui
 					if(state_.nullify_mouse == false)
 					{
 						std::size_t which = _m_item_by_pos(x, y);
-
-						if(which != state_.active)
+						if((which != state_.active) && (which != npos || (false == state_.menu_active)))
 						{
-							if(!(which == npos && state_.menu_active))
-							{
-								state_.active = which;
-								return true;
-							}
+							state_.active = which;
+							return true;
 						}
 					}
 					return false;
@@ -521,7 +511,7 @@ namespace gui
 
 				void trigger::_m_draw()
 				{
-					graph_->rectangle(0, 0, graph_->width(), graph_->height(), nana::gui::color::button_face, true);
+					graph_->rectangle(nana::gui::color::button_face, true);
 
 					item_renderer ird(*graph_);
 
@@ -529,7 +519,7 @@ namespace gui
 					nana::size item_s(0, 23);
 
 					unsigned long index = 0;
-					for(auto i : *items_)
+					for(auto i : items_->cont())
 					{
 						//Transform the text if it contains the hotkey character
 						nana::string::value_type hotkey;

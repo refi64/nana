@@ -640,6 +640,19 @@ namespace paint
 			this->round_rectangle(r.x, r.y, r.width, r.height, radius_x, radius_y, color, solid, color_if_solid);
 		}
 
+		void graphics::shadow_rectangle(const nana::rectangle& r, color_t beg_color, color_t end_color, bool vertical)
+		{
+#if defined(NANA_WINDOWS)
+			if(pxbuf_.open(handle_))
+			{
+				pxbuf_.shadow_rectangle(r, beg_color, end_color, 0.0, vertical);
+				pxbuf_.paste(handle_, 0, 0);
+			}
+#elif defined(NANA_X11)
+			shadow_rectangle(r.x, r.y, r.width, r.height, beg_color, end_color, vertical);
+#endif
+		}
+
 		void graphics::shadow_rectangle(int x, int y, unsigned width, unsigned height, color_t color_begin, color_t color_end, bool vertical)
 		{
 #if defined(NANA_WINDOWS)

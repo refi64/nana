@@ -412,7 +412,7 @@ namespace gadget
 			{
 				x += static_cast<int>(width - is.width) / 2;
 				y += static_cast<int>(height - is.height) / 2;
-				image_.paste(graph, x, y, is.width, is.height, is.x, is.y);
+				image_.paste(nana::rectangle(is.x, is.y, is.width, is.height), graph, nana::point(x, y));
 			}
 			else
 			{

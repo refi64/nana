@@ -25,6 +25,10 @@ namespace nana{namespace gui{
 			{
 			public:
 				struct bgimage_tag;
+				struct state
+				{
+					enum t{normal, focused, highlight, pressed, disabled};
+				};
 				
 				trigger();
 				~trigger();
@@ -63,14 +67,12 @@ namespace nana{namespace gui{
 					bool omitted;
 					bool focused;
 					bool pressed;
-					std::size_t state;
+					state::t act_state;
 					bool enable_pushed;
 					bool focus_color;
 					paint::image * icon;
 					color_t bgcolor;
 					color_t fgcolor;
-					attr_tag();
-					~attr_tag();
 				}attr_;
 			};
 		}//end namespace button
@@ -84,10 +86,7 @@ namespace nana{namespace gui{
 			typedef button self_type;
 			typedef widget_object<category::widget_tag, drawerbase::button::trigger> base_type;
 		public:
-			struct state
-			{
-				enum t{normal, focused, highlight, pressed, disabled};
-			};
+			typedef drawerbase::button::trigger::state state;
 
 			button();
 			button(window, bool visible);

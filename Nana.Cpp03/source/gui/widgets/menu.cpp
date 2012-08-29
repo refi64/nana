@@ -78,7 +78,7 @@ namespace nana{ namespace gui{
 					root_.items.clear();
 				}
 
-				void menu_builder::check_style(unsigned index, int style)
+				void menu_builder::check_style(std::size_t index, int style)
 				{
 					if(gui::menu::check_none <= style && style <= gui::menu::check_highlight)
 					{
@@ -87,7 +87,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void menu_builder::checked(unsigned index, bool check)
+				void menu_builder::checked(std::size_t index, bool check)
 				{
 					if(root_.items.size() > index)
 					{
@@ -98,23 +98,24 @@ namespace nana{ namespace gui{
 							{
 								if(index)
 								{
-									unsigned i = index;
+									std::size_t i = index;
 									do
 									{
-										--i;
-										if(root_.items[i].flags.splitter) break;
+										item_type& el = root_.items[--i];
+										if(el.flags.splitter) break;
 
-										if(root_.items[i].style == gui::menu::check_option)
-											root_.items[i].flags.checked = false;
+										if(el.style == gui::menu::check_option)
+											el.flags.checked = false;
 									}while(i);
 								}
 
-								for(unsigned i = index + 1; i < root_.items.size(); ++i)
+								for(std::size_t i = index + 1; i < root_.items.size(); ++i)
 								{
-									if(root_.items[i].flags.splitter) break;
+									item_type & el = root_.items[i];
+									if(el.flags.splitter) break;
 
-									if(root_.items[i].style == gui::menu::check_option)
-										root_.items[i].flags.checked = false;
+									if(el.style == gui::menu::check_option)
+										el.flags.checked = false;
 								}
 							}
 						}
@@ -122,19 +123,12 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				bool menu_builder::checked(unsigned index) const
-				{
-					if(root_.items.size() > index)
-						return root_.items[index].flags.checked;
-					return false;
-				}
-
 				menu_type& menu_builder::get_root()
 				{
 					return root_;
 				}
 
-				void menu_builder::insert(unsigned long pos, const nana::string& text, const menu_builder::functor_type& f)
+				void menu_builder::insert(std::size_t pos, const nana::string& text, const menu_builder::functor_type& f)
 				{
 					if(pos < root_.items.size())
 						root_.items.insert(root_.items.begin() + pos, menu_item_type(text, f));
@@ -142,38 +136,23 @@ namespace nana{ namespace gui{
 						append(text, f);
 				}
 
-				void menu_builder::answerer(std::size_t index, const menu_builder::functor_type& fn)
+				menu_builder::item_type& menu_builder::at(std::size_t index)
 				{
-					if(index < root_.items.size())
-						root_.items[index].functor = fn;
+					return root_.items.at(index);
 				}
 
-				void menu_builder::enabled(unsigned long index, bool enable)
+				const menu_builder::item_type& menu_builder::at(std::size_t index) const
 				{
-					if(root_.items.size() > index)
-						root_.items[index].flags.enabled = enable;
+					return root_.items.at(index);
 				}
 
-				bool menu_builder::enabled(unsigned long index) const
-				{
-					if(root_.items.size() > index)
-						return root_.items[index].flags.enabled;
-					return false;
-				}
-
-				void menu_builder::erase(unsigned long index)
+				void menu_builder::erase(std::size_t index)
 				{
 					if(index < root_.items.size())
 						root_.items.erase(root_.items.begin() + index);
 				}
 
-				void menu_builder::image(std::size_t index, const paint::image& img)
-				{
-					if(index < root_.items.size())
-						root_.items[index].image = img;
-				}
-
-				bool menu_builder::set_sub_menu(unsigned long pos, menu_type &sub)
+				bool menu_builder::set_sub_menu(std::size_t pos, menu_type &sub)
 				{
 					if(root_.items.size() > pos)
 					{
@@ -189,7 +168,7 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				void menu_builder::remove_sub_menu(unsigned long pos)
+				void menu_builder::remove_sub_menu(std::size_t pos)
 				{
 					if(root_.items.size() <= pos) return;
 
@@ -234,26 +213,6 @@ namespace nana{ namespace gui{
 				unsigned menu_builder::size() const
 				{
 					return static_cast<unsigned>(root_.items.size());
-				}
-
-				menu_builder::iterator menu_builder::begin()
-				{
-					return root_.items.begin();
-				}
-
-				menu_builder::const_iterator menu_builder::begin() const
-				{
-					return root_.items.begin();
-				}
-
-				menu_builder::iterator menu_builder::end()
-				{
-					return root_.items.end();
-				}
-
-				menu_builder::const_iterator menu_builder::end() const
-				{
-					return root_.items.end();
 				}
 
 				void menu_builder::max_pixels(unsigned px)
@@ -713,6 +672,12 @@ namespace nana{ namespace gui{
 				menu_window::menu_window(window wd, const point& pos)
 					:	base_type(wd, false, rectangle(pos, nana::size(2, 2)), appear::bald<appear::floating>())
 				{
+					state_.owner_menubar = state_.self_submenu = false;
+					state_.auto_popup_submenu = true;
+
+					submenu_.child = submenu_.parent = 0;
+					submenu_.object = 0;
+
 					_m_make_mouse_event();
 				}
 
@@ -1011,21 +976,8 @@ namespace nana{ namespace gui{
 						_m_show_submenu(sbm, pos, false);
 					}
 				}
-
-				//struct state_type
-					menu_window::state_type::state_type()
-						:self_submenu(false), owner_menubar(false), auto_popup_submenu(true)
-					{}
-				//end struct state_type
-
-				//struct submenu_type
-					menu_window::submenu_type::submenu_type():parent(0), child(0), object(0){}
-				//end struct submenu_type
 			//end class menu_window
-
 		}//end namespace menu
-
-
 	}//end namespace drawerbase
 
 	//class menu
@@ -1035,7 +987,7 @@ namespace nana{ namespace gui{
 
 		menu::~menu()
 		{
-			for(std::map<unsigned long, menu_info>::reverse_iterator i = sub_container_.rbegin(); i != sub_container_.rend(); ++i)
+			for(std::map<std::size_t, menu_info>::reverse_iterator i = sub_container_.rbegin(); i != sub_container_.rend(); ++i)
 			{
 				if(i->second.kill)
 					delete i->second.handle;
@@ -1057,27 +1009,27 @@ namespace nana{ namespace gui{
 			mbuilder_.clear();
 		}
 
-		void menu::enabled(unsigned long index, bool enable)
+		void menu::enabled(std::size_t index, bool enable)
 		{
-			mbuilder_.enabled(index, enable);
+			mbuilder_.at(index).flags.enabled = enable;
 		}
 
-		bool menu::enabled(unsigned long index) const
+		bool menu::enabled(std::size_t index) const
 		{
-			return mbuilder_.enabled(index);
+			return mbuilder_.at(index).flags.enabled;
 		}
 
-		void menu::erase(unsigned long index)
+		void menu::erase(std::size_t index)
 		{
 			mbuilder_.erase(index);
 		}
 
 		void menu::image(std::size_t index, const paint::image& img)
 		{
-			mbuilder_.image(index, img);
+			mbuilder_.at(index).image = img;
 		}
 
-		bool menu::link(unsigned long index, menu& menu_obj)
+		bool menu::link(std::size_t index, menu& menu_obj)
 		{
 			if(mbuilder_.set_sub_menu(index, menu_obj.mbuilder_.get_root()))
 			{
@@ -1089,15 +1041,15 @@ namespace nana{ namespace gui{
 			return false;
 		}
 
-		menu* menu::link(unsigned long index)
+		menu* menu::link(std::size_t index)
 		{
-			std::map<unsigned long, menu_info>::iterator i = sub_container_.find(index);
+			std::map<std::size_t, menu_info>::iterator i = sub_container_.find(index);
 			if(i == sub_container_.end())
 				return 0;
 			return i->second.handle;
 		}
 
-		menu *menu::create_sub_menu(unsigned long index)
+		menu *menu::create_sub_menu(std::size_t index)
 		{
 			self_type * sub = new self_type;
 
@@ -1135,24 +1087,24 @@ namespace nana{ namespace gui{
 			}
 		}
 
-		void menu::check_style(unsigned index, check_t style)
+		void menu::check_style(std::size_t index, check_t style)
 		{
 			mbuilder_.check_style(index, style);
 		}
 
-		void menu::checked(unsigned index, bool check)
+		void menu::checked(std::size_t index, bool check)
 		{
 			this->mbuilder_.checked(index, check);
 		}
 
-		bool menu::checked(unsigned index) const
+		bool menu::checked(std::size_t index) const
 		{
-			return mbuilder_.checked(index);
+			return mbuilder_.at(index).flags.checked;
 		}
 
 		void menu::answerer(std::size_t index, const menu::event_fn_t& fn)
 		{
-			mbuilder_.answerer(index, fn);
+			mbuilder_.at(index).functor = fn;
 		}
 
 		void menu::destroy_answer(const nana::functor<void()>& func)

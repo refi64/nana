@@ -100,9 +100,10 @@ namespace drawerbase
 			void update_blocks()
 			{
 				int blocks = 0;
-				for(int i = 0; i < state_number; ++i)
+				image_block * blockptr = block;
+				for(int i = 0; i < state_number; ++i, ++blockptr)
 				{
-					if(block[i].enable && (block[i].who == static_cast<state>(i)))
+					if(blockptr->enable && (blockptr->who == static_cast<state>(i)))
 						++blocks;
 				}
 
@@ -123,19 +124,20 @@ namespace drawerbase
 				}
 
 				int pos = 0;
-				for(int i = 0; i < state_number; ++i)
+				blockptr = block;
+				for(int i = 0; i < state_number; ++i, ++blockptr)
 				{
-					if(block[i].enable && (block[i].who == static_cast<state>(i)))
+					if(blockptr->enable && (blockptr->who == static_cast<state>(i)))
 					{
 						if(arrange == nana::arrange::horizontal)
 						{
-							block[i].pos.x = valid_area.x + pos;
-							block[i].pos.y = valid_area.y;
+							blockptr->pos.x = valid_area.x + pos;
+							blockptr->pos.y = valid_area.y;
 						}
 						else
 						{
-							block[i].pos.x = valid_area.x;
-							block[i].pos.y = valid_area.y + pos;
+							blockptr->pos.x = valid_area.x;
+							blockptr->pos.y = valid_area.y + pos;
 						}
 						pos += static_cast<int>(each_pixels);
 					}
@@ -143,25 +145,20 @@ namespace drawerbase
 			}
 		};
 
-		trigger::attr_tag::attr_tag()
-			:	omitted(false), focused(false), pressed(false), act_state(state::normal),
-                enable_pushed(false), focus_color(true), icon(nullptr)
-		{}
-
-		trigger::attr_tag::~attr_tag()
-		{
-			delete icon;
-		}
-
 		//trigger
 		//@brief: draw the button
 		trigger::trigger()
 			:widget_(nullptr), graph_(nullptr), bgimage_(nullptr)
 		{
+			attr_.omitted = attr_.focused = attr_.pressed = attr_.enable_pushed = false;
+			attr_.focus_color = true;
+			attr_.icon = nullptr;
+			attr_.act_state = state::normal;
 		}
 
 		trigger::~trigger()
 		{
+			delete attr_.icon;
 			delete bgimage_;
 		}
 
@@ -422,13 +419,13 @@ namespace drawerbase
 							bgimage_->image.paste(graph, 0, 0, img_beg_width, height, block.pos.x, block.pos.y);
 
 						unsigned width = graph.width() - (img_beg_width + img_end_width);
-						bgimage_->image.paste(graph, bgimage_->stretch.beg, 0, width, height, block.pos.x + bgimage_->stretch.beg, block.pos.y, img_mid_width, height);
+						bgimage_->image.stretch(nana::rectangle(block.pos.x + bgimage_->stretch.beg, block.pos.y, img_mid_width, height), graph, nana::rectangle(bgimage_->stretch.beg, 0, width, height));
 						if(bgimage_->stretch.end)
 							bgimage_->image.paste(graph, graph.width() - img_end_width, 0, img_end_width, height, bgimage_->stretch.end, block.pos.y);
 					}
 					else if((bgimage_->stretch.arrange == nana::arrange::horizontal_vertical) && (bgimage_->stretch.beg >= bgimage_->stretch.end))
 					{
-						bgimage_->image.paste(graph, 0, 0, graph.width(), graph.height(), block.pos.x, block.pos.y, bgimage_->block_size.width, bgimage_->block_size.height);
+						bgimage_->image.stretch(nana::rectangle(block.pos, bgimage_->block_size), graph, graph.size());
 					}
 					else
 					{
@@ -437,7 +434,7 @@ namespace drawerbase
 							_m_draw_background(graph);
 							_m_draw_border(graph);
 						}
-						bgimage_->image.paste(graph, 0, 0, bgimage_->block_size.width, bgimage_->block_size.height, block.pos.x, block.pos.y);
+						bgimage_->image.paste(bgimage_->block_size, graph, block.pos);
 					}
 				}
 			}
@@ -451,23 +448,24 @@ namespace drawerbase
 
 		void trigger::_m_draw_background(graph_reference graph)
 		{
-			int x = 1, y = 1;
+			nana::rectangle r(graph.size());
+			r.pare_off(1);
 			unsigned color_start = color::button_face_shadow_start, color_end = gui::color::button_face_shadow_end;
 			if(attr_.act_state == state::pressed)
 			{
-				x = 2;
-				y = 2;
+				r.x = r.y = 2;
 				color_start = gui::color::button_face_shadow_end;
 				color_end = gui::color::button_face_shadow_start;
 			}
 
-			graph.shadow_rectangle(x, y, graph.width() - 2, graph.height() - 2, color_start, color_end, true);
+			graph.shadow_rectangle(r, color_start, color_end, true);
 		}
 
 		void trigger::_m_draw_border(graph_reference graph)
 		{
-			int right = graph.width() - 1;
-			int bottom = graph.height() - 1;
+			nana::rectangle r(graph.size());
+			int right = r.width - 1;
+			int bottom = r.height - 1;
 			graph.line(1, 0, right - 1, 0, 0x7F7F7F);
 			graph.line(1, bottom, right - 1, bottom, 0x707070);
 			graph.line(0, 1, 0, bottom - 1, 0x7F7F7F);
@@ -485,7 +483,10 @@ namespace drawerbase
 
 
 			if(attr_.act_state == state::pressed)
-				graph.rectangle(1, 1, graph.width() - 2, graph.height() - 2, 0xC3C3C3, false);
+			{
+				r.pare_off(1);
+				graph.rectangle(r, 0xC3C3C3, false);
+			}
 		}
 
 		void trigger::icon(const nana::paint::image& img)
@@ -506,7 +507,7 @@ namespace drawerbase
 			{
 				bgimage_ = new bgimage_tag;
 				bgimage_->image = img;
-				bgimage_->set_valid_area(nana::arrange::horizontal, nana::rectangle(0, 0, img.size().width, img.size().height));
+				bgimage_->set_valid_area(nana::arrange::horizontal, img.size());
 			}
 		}
 
@@ -545,7 +546,7 @@ namespace drawerbase
 				if(img.open(filename))
 				{
 					internal_scope_guard isg;
-					base_type::get_drawer_trigger().image(img);
+					get_drawer_trigger().image(img);
 					API::refresh_window(this->handle());
 				}
 			}
@@ -553,7 +554,7 @@ namespace drawerbase
 			void button::image(const nana::paint::image& img)
 			{
 				internal_scope_guard isg;
-				base_type::get_drawer_trigger().image(img);
+				get_drawer_trigger().image(img);
 				API::refresh_window(this->handle());
 			}
 

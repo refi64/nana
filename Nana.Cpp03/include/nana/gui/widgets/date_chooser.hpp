@@ -55,15 +55,15 @@ namespace nana{ namespace gui{
 				void _m_draw_days(const nana::point& refpos, graph_reference graph);
 				void _m_draw_months(const nana::point& refpos, graph_reference graph);
 				bool _m_get_trace(int x, int y, int & res);
-				void _m_perf_transform(int tfid, nana::paint::graphics&,  nana::paint::graphics& dirtybuf, nana::paint::graphics& newbuf, const nana::point& refpos);
+				void _m_perf_transform(int tfid, graph_reference, graph_reference dirtybuf, graph_reference newbuf, const nana::point& refpos);
 			private:
 				void refresh(graph_reference);
 				void bind_window(widget_reference);
 				void attached(graph_reference);
 				void detached();
-				void mouse_move(graph_reference, const nana::gui::eventinfo&);
-				void mouse_leave(graph_reference, const nana::gui::eventinfo&);
-				void mouse_up(graph_reference, const nana::gui::eventinfo&);
+				void mouse_move(graph_reference, const eventinfo&);
+				void mouse_leave(graph_reference, const eventinfo&);
+				void mouse_up(graph_reference, const eventinfo&);
 			private:
 				nana::string weekstr_[7];
 				nana::string monthstr_[12];

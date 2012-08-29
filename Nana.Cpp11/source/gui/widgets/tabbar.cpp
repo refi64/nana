@@ -110,7 +110,7 @@ namespace nana{ namespace gui{
 					case item_renderer::press:
 						color = 0xA0A0A0; break;
 					case item_renderer::disable:
-						color = 0x808080;
+						color = 0x808080; break;
 					default:
 						color = 0xF0F0F0;
 					}
@@ -136,9 +136,10 @@ namespace nana{ namespace gui{
 					{
 						nana::color_t bgcolor = 0xCCD2DD;
 						graph.round_rectangle(r.x, r.y, r.width, r.height, 1, 1, 0x9DA3AB, false, 0);
-						graph.rectangle(r.x + 1, r.y + 1, r.width - 2, r.height - 2, graph.mix(0x9DA3AB, bgcolor, 0.8), false);
-						graph.rectangle(r.x + 2, r.y + 2, r.width - 4, r.height - 4, graph.mix(0x9DA3AB, bgcolor, 0.4), false);
-						graph.rectangle(r.x + 3, r.y + 3, r.width - 6, r.height - 6, graph.mix(0x9DA3AB, bgcolor, 0.2), false);
+						nana::rectangle draw_r(r);
+						graph.rectangle(draw_r.pare_off(1), graph.mix(0x9DA3AB, bgcolor, 0.8), false);
+						graph.rectangle(draw_r.pare_off(1), graph.mix(0x9DA3AB, bgcolor, 0.4), false);
+						graph.rectangle(draw_r.pare_off(1), graph.mix(0x9DA3AB, bgcolor, 0.2), false);
 						color = 0x0;
 					}
 
@@ -189,7 +190,6 @@ namespace nana{ namespace gui{
 				nana::color_t blcolor_;
 				nana::color_t ilcolor_;
 			};
-
 
 			class toolbox
 			{
@@ -1033,7 +1033,7 @@ namespace nana{ namespace gui{
 							}
 
 							if(false == item.img.empty())
-								item.img.paste(*basis_.graph, m.r.x + 4, (m.r.height - 16) / 2, 16, 16, 0, 0, item.img.size().width, item.img.size().height);
+								item.img.stretch(item.img.size(), *basis_.graph, nana::rectangle(m.r.x + 4, (m.r.height - 16) / 2, 16, 16));
 
 							if(item.text.size())
 							{

@@ -144,9 +144,6 @@
     <ClCompile Include="..\..\source\gui\widgets\button.cpp">
       <Filter>Source Files\gui\widgets</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\gui\widgets\caret.cpp">
-      <Filter>Source Files\gui\widgets</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\gui\widgets\categorize.cpp">
       <Filter>Source Files\gui\widgets</Filter>
     </ClCompile>

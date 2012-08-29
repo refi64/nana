@@ -132,7 +132,7 @@ namespace nana{	namespace gui{
 				{
 					graph.rectangle(0xF0F0F0, false);
 
-					int left = 1, top = 1;
+					const int left = 1, top = 1;
 					int right = static_cast<int>(graph.width()) - 2, bottom = static_cast<int>(graph.height()) - 2;
 					graph.line(left, top, right, top, 0x484E55);
 					graph.line(left, bottom, right, bottom, 0x9DABB9);
@@ -373,7 +373,7 @@ namespace nana{	namespace gui{
 					API::background(wd, 0xFFFFFF);
 				}
 
-				nana::gui::window window() const
+				nana::gui::window window_handle() const
 				{
 					return window_;
 				}
@@ -528,7 +528,7 @@ namespace nana{	namespace gui{
 					node_handle i = treebase_.tail(index);
 					if(i)
 					{
-						API::dev::window_caption(window(), tree().path());
+						API::dev::window_caption(window_handle(), tree().path());
 						ext_event_.selected(i->value.second.value);
 					}
 				}
@@ -565,8 +565,8 @@ namespace nana{	namespace gui{
 						r = style_.active_item_rectangle;
 					}
 					r.y += r.height;
-
-					style_.listbox = &(nana::gui::form_loader<nana::gui::float_listbox>()(window_, rectangle(r.x, r.y, 100, 100)));
+					r.width = r.height = 100;
+					style_.listbox = &(form_loader<nana::gui::float_listbox>()(window_, r));
 					style_.listbox->set_module(style_.module, 16);
 					style_.listbox->show();
 					style_.listbox->make_event<events::unload>(*this, &scheme::_m_list_closed);
@@ -798,7 +798,7 @@ namespace nana{	namespace gui{
 				void trigger::insert(const nana::string& str, nana::any value)
 				{
 					scheme_->tree().insert(str, value);
-					API::dev::window_caption(scheme_->window(), scheme_->tree().path());
+					API::dev::window_caption(scheme_->window_handle(), scheme_->tree().path());
 					scheme_->draw();
 				}
 
@@ -863,15 +863,15 @@ namespace nana{	namespace gui{
 					}
 				}
 
-				void trigger::bind_window(trigger::widget_reference wd)
+				void trigger::bind_window(widget_reference wd)
 				{
 					scheme_->bind(wd);
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
 					scheme_->attach(&graph);
-					window wd = scheme_->window();
+					window wd = scheme_->window_handle();
 					using namespace API::dev;
 					make_drawer_event<events::mouse_down>(wd);
 					make_drawer_event<events::mouse_up>(wd);
@@ -882,19 +882,19 @@ namespace nana{	namespace gui{
 				void trigger::detached()
 				{
 					scheme_->attach(0);
-					API::dev::umake_drawer_event(scheme_->window());
+					API::dev::umake_drawer_event(scheme_->window_handle());
 				}
 
-				void trigger::refresh(trigger::graph_reference)
+				void trigger::refresh(graph_reference)
 				{
 					scheme_->draw();
 				}
 
-				void trigger::mouse_down(trigger::graph_reference, const eventinfo&)
+				void trigger::mouse_down(graph_reference, const eventinfo&)
 				{
 					if(scheme_->locate().what > ui_element::somewhere)
 					{
-						if(API::window_enabled(scheme_->window()))
+						if(API::window_enabled(scheme_->window_handle()))
 						{
 							scheme_->mouse_pressed();
 							scheme_->draw();
@@ -903,11 +903,11 @@ namespace nana{	namespace gui{
 					}
 				}
 
-				void trigger::mouse_up(trigger::graph_reference, const eventinfo&)
+				void trigger::mouse_up(graph_reference, const eventinfo&)
 				{
 					if(scheme_->locate().what > ui_element::somewhere)
 					{
-						if(API::window_enabled(scheme_->window()))
+						if(API::window_enabled(scheme_->window_handle()))
 						{
 							scheme_->mouse_release();
 							scheme_->draw();
@@ -916,18 +916,18 @@ namespace nana{	namespace gui{
 					}
 				}
 
-				void trigger::mouse_move(trigger::graph_reference, const eventinfo& ei)
+				void trigger::mouse_move(graph_reference, const eventinfo& ei)
 				{
-					if(scheme_->locate(ei.mouse.x, ei.mouse.y) && API::window_enabled(scheme_->window()))
+					if(scheme_->locate(ei.mouse.x, ei.mouse.y) && API::window_enabled(scheme_->window_handle()))
 					{
 						scheme_->draw();
 						API::lazy_refresh();
 					}
 				}
 
-				void trigger::mouse_leave(trigger::graph_reference, const eventinfo&)
+				void trigger::mouse_leave(graph_reference, const eventinfo&)
 				{
-					if(API::window_enabled(scheme_->window()) && (scheme_->is_list_shown() == false) && scheme_->erase_locate())
+					if(API::window_enabled(scheme_->window_handle()) && (scheme_->is_list_shown() == false) && scheme_->erase_locate())
 					{
 						scheme_->draw();
 						API::lazy_refresh();

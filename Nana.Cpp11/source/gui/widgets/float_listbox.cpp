@@ -48,8 +48,7 @@ namespace nana{ namespace gui{
 						graph.set_pixel(r.x + r.width - 2, r.y + 1, 0xAFC7E3);
 						graph.set_pixel(r.x + 1, r.y + r.height - 2, 0xAFC7E3);
 						graph.set_pixel(r.x + r.width - 2, r.y + r.height - 2, 0xAFC7E3);
-
-						graph.shadow_rectangle(r.x + 2, r.y + 2, r.width - 4, r.height - 4, 0xDDECFD, 0xC2DCFD, true);
+						graph.shadow_rectangle(nana::rectangle(r).pare_off(2), 0xDDECFD, 0xC2DCFD, true);
 					}
 					else
 						graph.rectangle(r, 0xFFFFFF, true);
@@ -165,7 +164,7 @@ namespace nana{ namespace gui{
 					{
 						draw();
 						scrollbar_.value(state_.offset_y);
-						API::update_window(widget_->handle());
+						API::update_window(*widget_);
 					}
 				}
 
@@ -214,7 +213,7 @@ namespace nana{ namespace gui{
 						{
 							draw();
 							scrollbar_.value(state_.offset_y);
-							API::update_window(widget_->handle());
+							API::update_window(*widget_);
 						}
 					}
 				}
@@ -224,12 +223,12 @@ namespace nana{ namespace gui{
 					return state_.index;
 				}
 
-				nana::gui::widget* widget()
+				widget* widget_ptr()
 				{
 					return widget_;
 				}
 
-				void attach(nana::gui::widget* wd, nana::paint::graphics* graph)
+				void attach(widget* wd, nana::paint::graphics* graph)
 				{
 					if(wd)
 					{
@@ -294,7 +293,7 @@ namespace nana{ namespace gui{
 					if(module_)
 					{
 						bool pages = (module_->max_items < module_->items.size());
-						const unsigned outter_w = (4 + (pages ? 16 : 0));
+						const unsigned outter_w = (pages ? 20 : 4);
 
 						if(graph_->width() > outter_w && graph_->height() > 4 )
 						{
@@ -324,8 +323,8 @@ namespace nana{ namespace gui{
 					}
 
 					//Draw border
-					graph_->rectangle(0, 0, graph_->width(), graph_->height(), 0x0, false);
-					graph_->rectangle(1, 1, graph_->width() - 2, graph_->height() - 2, 0xFFFFFF, false);
+					graph_->rectangle(0x0, false);
+					graph_->rectangle(nana::rectangle(graph_->size()).pare_off(1), 0xFFFFFF, false);
 				}
 			private:
 				bool _m_image_enabled() const
@@ -357,26 +356,26 @@ namespace nana{ namespace gui{
 						scrollbar_.close();
 				}
 
-				void _m_on_scroll(const nana::gui::eventinfo& ei)
+				void _m_on_scroll(const eventinfo& ei)
 				{
 					switch(ei.identifier)
 					{
-					case nana::gui::events::mouse_wheel::identifier:
+					case events::mouse_wheel::identifier:
 						this->scroll_items(ei.wheel.upwards);
 						break;
-					case nana::gui::events::mouse_move::identifier:
-					case nana::gui::events::mouse_up::identifier:
+					case events::mouse_move::identifier:
+					case events::mouse_up::identifier:
 						if(ei.mouse.left_button && (scrollbar_.value() != state_.offset_y))
 						{
 							state_.offset_y = static_cast<unsigned>(scrollbar_.value());
 							draw();
-							API::update_window(widget_->handle());
+							API::update_window(*widget_);
 						}
 						break;
 					}
 				}
 			private:
-				nana::gui::widget * widget_;
+				widget * widget_;
 				nana::paint::graphics * graph_;
 				unsigned image_pixels_;		//Define the width pixels of the image area
 
@@ -430,7 +429,7 @@ namespace nana{ namespace gui{
 				void trigger::attached(trigger::graph_reference graph)
 				{
 					drawer_->attach(0, &graph);
-					window wd = drawer_->widget()->handle();
+					window wd = *drawer_->widget_ptr();
 					API::dev::make_drawer_event<events::mouse_move>(wd);
 					API::dev::make_drawer_event<events::mouse_down>(wd);
 					API::dev::make_drawer_event<events::mouse_up>(wd);
@@ -439,7 +438,7 @@ namespace nana{ namespace gui{
 				void trigger::detached()
 				{
 					drawer_->detach();
-					API::dev::umake_drawer_event(drawer_->widget()->handle());
+					API::dev::umake_drawer_event(*drawer_->widget_ptr());
 				}
 
 				void trigger::refresh(trigger::graph_reference)
@@ -461,7 +460,7 @@ namespace nana{ namespace gui{
 					if(drawer_->right_area(graph, ei.mouse.x, ei.mouse.y))
 						drawer_->set_result();
 					
-					drawer_->widget()->close();					
+					drawer_->widget_ptr()->close();					
 				}
 			//end class trigger
 		}

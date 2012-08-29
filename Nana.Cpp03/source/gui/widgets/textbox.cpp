@@ -206,9 +206,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			{
 				nana::rectangle r(graph.size());
 				graph.rectangle(r, (status_.has_focus ? 0x0595E2 : 0x999A9E), false);
-				r.x = r.y = 1;
-				r.width -= 2;
-				r.height -= 2;
+				r.pare_off(1);
 				graph.rectangle(r, 0xFFFFFF, false);
 			}
 		}

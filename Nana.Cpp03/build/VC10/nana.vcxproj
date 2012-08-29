@@ -181,7 +181,6 @@
     <ClCompile Include="..\..\source\gui\timer.cpp" />
     <ClCompile Include="..\..\source\gui\tooltip.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\button.cpp" />
-    <ClCompile Include="..\..\source\gui\widgets\caret.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\categorize.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\checkbox.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\combox.cpp" />

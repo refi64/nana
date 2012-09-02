@@ -32,10 +32,17 @@ namespace nana{ namespace gui{
 
 				mutable ext_event_tag ext_event;
 
+				typedef drawerbase::float_listbox::module_def::item_type item_type;
+
 				drawer_impl()
 					:	widget_(nullptr), graph_(nullptr),
 						item_renderer_(nullptr), image_enabled_(false), image_pixels_(16), editor_(nullptr)
-				{}
+				{
+					state_.focused = false;
+					state_.state = StateNone;
+					state_.pointer_where = WhereUnknown;
+					state_.lister = nullptr;
+				}
 
 				~drawer_impl()
 				{
@@ -253,10 +260,8 @@ namespace nana{ namespace gui{
 
 				void draw_border(graph_reference graph)
 				{
-					nana::rectangle r(graph.size());
-					graph.rectangle(r, (state_.focused ? 0x0595E2 : 0x999A9E), false);
-					r.pare_off(1);
-					graph.rectangle(r, 0xFFFFFF, false);
+					graph.rectangle((state_.focused ? 0x0595E2 : 0x999A9E), false);
+					graph.rectangle(nana::rectangle(graph.size()).pare_off(1), 0xFFFFFF, false);
 				}
 
 				std::size_t option() const
@@ -292,11 +297,9 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				nana::string text(std::size_t i) const
+				const item_type & at(std::size_t i) const
 				{
-					if(i < module_.items.size())
-						return module_.items[i].text;
-					return nana::string();
+					return module_.items.at(i);
 				}
 
 				void text(const nana::string& str)
@@ -316,13 +319,6 @@ namespace nana{ namespace gui{
 							draw();
 						}
 					}
-				}
-
-				nana::paint::image image(std::size_t i) const
-				{
-					if(i < module_.items.size())
-						return module_.items[i].img;
-					return nana::paint::image();
 				}
 
 				bool image_pixels(unsigned px)
@@ -345,19 +341,20 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void _m_draw_background(graph_reference, const nana::rectangle&, nana::color_t)
+				void _m_draw_background(graph_reference graph, const nana::rectangle&, nana::color_t)
 				{
-					int x = 1, y = 1;
+					nana::rectangle r(graph.size());
 					unsigned color_start = color::button_face_shadow_start, color_end = gui::color::button_face_shadow_end;
 					if(state_.state == StatePress)
 					{
-						x = 2;
-						y = 2;
+						r.pare_off(2);
 						color_start = gui::color::button_face_shadow_end;
 						color_end = gui::color::button_face_shadow_start;
 					}
+					else
+						r.pare_off(1);
 
-					graph_->shadow_rectangle(x, y, graph_->width() - (x << 1), graph_->height() - (y << 1), color_start, color_end, true);
+					graph.shadow_rectangle(r, color_start, color_end, true);
 				}
 
 				void _m_draw_push_button(bool enabled)
@@ -471,12 +468,6 @@ namespace nana{ namespace gui{
 
 					nana::gui::float_listbox * lister;
 					std::size_t	item_index_before_selection;
-
-					state_type()
-						:   focused(false),
-                            state(StateNone), pointer_where(WhereUnknown), lister(nullptr)
-					{}
-
 				}state_;
 			};
 
@@ -574,20 +565,17 @@ namespace nana{ namespace gui{
 				void trigger::mouse_down(graph_reference graph, const eventinfo& ei)
 				{
 					drawer_->set_mouse_press(true);
-
 					if(drawer_->widget_ptr()->enabled())
 					{
 						widgets::skeletons::text_editor * editor = drawer_->editor();
 
-						if(editor->mouse_down(ei.mouse.left_button, ei.mouse.x, ei.mouse.y))
-						{
-						}
-						else if(drawer_->WherePushButton == drawer_->get_where())
-							drawer_->open_lister();
+						if(false == editor->mouse_down(ei.mouse.left_button, ei.mouse.x, ei.mouse.y))
+							if(drawer_->WherePushButton == drawer_->get_where())
+								drawer_->open_lister();
 
 						drawer_->draw();
-						if(drawer_->editor()->editable())
-							drawer_->editor()->reset_caret();
+						if(editor->editable())
+							editor->reset_caret();
 
 						API::lazy_refresh();
 					}
@@ -745,7 +733,7 @@ namespace nana{ namespace gui{
 
 		nana::string combox::text(std::size_t i) const
 		{
-			return get_drawer_trigger().get_drawer_impl().text(i);
+			return get_drawer_trigger().get_drawer_impl().at(i).text;
 		}
 
 		combox::ext_event_type& combox::ext_event() const
@@ -770,7 +758,7 @@ namespace nana{ namespace gui{
 
 		nana::paint::image combox::image(std::size_t i) const
 		{
-			return get_drawer_trigger().get_drawer_impl().image(i);
+			return get_drawer_trigger().get_drawer_impl().at(i).img;
 		}
 
 		void combox::image_pixels(unsigned px)

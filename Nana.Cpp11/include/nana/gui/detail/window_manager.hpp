@@ -270,8 +270,7 @@ namespace detail
 		bool available(nana::gui::native_window_type);
 
 		core_window_t* create_root(core_window_t* owner, bool nested, rectangle, const appearance&);
-		core_window_t* create_widget(core_window_t* parent, const rectangle&);
-		core_window_t* create_lite_widget(core_window_t* parent, const rectangle&);
+		core_window_t* create_widget(core_window_t* parent, const rectangle&, bool is_lite);
 		core_window_t* create_frame(core_window_t* parent, const rectangle&);
 		bool insert_frame(core_window_t* frame, native_window wd);
 		bool insert_frame(core_window_t* frame, core_window_t* wd);

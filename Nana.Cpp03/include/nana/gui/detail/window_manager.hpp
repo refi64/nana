@@ -424,24 +424,17 @@ namespace detail
 			return false;
 		}
 
-		core_window_t* create_widget(core_window_t* parent, const rectangle& r)
+		core_window_t* create_widget(core_window_t* parent, const rectangle& r, bool is_lite)
 		{
 			if(parent == 0)	return 0;
 			//Thread-Safe Required!
 			NANA_SCOPE_GUARD(wnd_mgr_lock_);
 			if(handle_manager_.available(parent) == false)	return 0;
-			core_window_t * wd = new core_window_t(parent, r, (category::widget_tag**)0);
-			handle_manager_.insert(wd, wd->thread_id);
-			return wd;
-		}
-
-		core_window_t* create_lite_widget(core_window_t* parent, const rectangle& r)
-		{
-			if(parent == 0)	return 0;
-			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
-			if(handle_manager_.available(parent) == false)	return 0;
-			core_window_t * wd = new core_window_t(parent, r, (category::lite_widget_tag**)0);
+			core_window_t * wd;
+			if(is_lite)
+				wd = new core_window_t(parent, r, (category::lite_widget_tag**)0);
+			else
+				wd = new core_window_t(parent, r, (category::widget_tag**)0);
 			handle_manager_.insert(wd, wd->thread_id);
 			return wd;
 		}

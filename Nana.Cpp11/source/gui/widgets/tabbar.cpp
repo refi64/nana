@@ -1066,11 +1066,6 @@ namespace nana{ namespace gui{
 						basis_.graph->line(0, bottom, active_m.r.x, bottom, 0x808080);
 					if(0 <= end && end < right)
 						basis_.graph->line(end, bottom, right, bottom, 0x808080);
-/*
-					basis_.graph->line(0, bottom, static_cast<int>(basis_.graph->width()), bottom, 0x808080);
-					if(0 < active_m.r.x + active_m.r.width && active_m.r.x < static_cast<int>(basis_.graph->width()))
-						basis_.graph->line(active_m.r.x, bottom, active_m.r.x + static_cast<int>(active_m.r.width), bottom, active_m.bgcolor);
-						*/
 				}
 
 				void _m_render_toolbox(nana::color_t bgcolor)

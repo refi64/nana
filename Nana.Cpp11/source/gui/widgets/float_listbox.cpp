@@ -37,7 +37,6 @@ namespace nana{ namespace gui{
 					if(state == StateHighlighted)
 					{
 						graph.rectangle(r, 0xAFC7E3, false);
-						graph.rectangle(r.x + 1, r.y + 1, r.width - 2, r.height - 2, 0xEBF4FB, false);
 
 						graph.set_pixel(r.x, r.y, 0xFFFFFF);
 						graph.set_pixel(r.x + r.width - 1, r.y, 0xFFFFFF);
@@ -48,7 +47,10 @@ namespace nana{ namespace gui{
 						graph.set_pixel(r.x + r.width - 2, r.y + 1, 0xAFC7E3);
 						graph.set_pixel(r.x + 1, r.y + r.height - 2, 0xAFC7E3);
 						graph.set_pixel(r.x + r.width - 2, r.y + r.height - 2, 0xAFC7E3);
-						graph.shadow_rectangle(nana::rectangle(r).pare_off(2), 0xDDECFD, 0xC2DCFD, true);
+
+						nana::rectangle po_r(r);
+						graph.rectangle(po_r.pare_off(1), 0xEBF4FB, false);
+						graph.shadow_rectangle(po_r.pare_off(1), 0xDDECFD, 0xC2DCFD, true);
 					}
 					else
 						graph.rectangle(r, 0xFFFFFF, true);

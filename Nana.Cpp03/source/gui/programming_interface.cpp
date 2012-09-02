@@ -138,12 +138,12 @@ namespace API
 
 		window create_widget(window parent, const rectangle& r)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), r));
+			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), r, false));
 		}
 
 		window create_lite_widget(window parent, const rectangle& r)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_lite_widget(reinterpret_cast<restrict::core_window_t*>(parent), r));
+			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), r, true));
 		}
 
 		window create_frame(window parent, const rectangle& r)

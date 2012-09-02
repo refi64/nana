@@ -127,6 +127,7 @@ namespace detail
 	{
 		//Create default font object.
 		NONCLIENTMETRICS metrics = {};
+		metrics.cbSize = sizeof metrics;
 #if(WINVER >= 0x0600)
 		OSVERSIONINFO osvi = {};
 		osvi.dwOSVersionInfoSize = sizeof(osvi);
@@ -134,7 +135,6 @@ namespace detail
 		if (osvi.dwMajorVersion < 6)
 			metrics.cbSize -= sizeof(metrics.iPaddedBorderWidth);
 #endif 
-		metrics.cbSize = sizeof metrics;
 		::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof metrics, &metrics, 0);
 		def_font_ref_ = make_native_font(metrics.lfMessageFont.lfFaceName, font_size_to_height(9), 400, false, false, false);
 	}

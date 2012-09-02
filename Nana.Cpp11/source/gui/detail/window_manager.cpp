@@ -326,24 +326,17 @@ namespace detail
 			return false;
 		}
 
-		window_manager::core_window_t* window_manager::create_widget(core_window_t* parent, const rectangle& r)
+		window_manager::core_window_t* window_manager::create_widget(core_window_t* parent, const rectangle& r, bool is_lite)
 		{
 			if(parent == nullptr)	return nullptr;
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 			if(handle_manager_.available(parent) == false)	return nullptr;
-			core_window_t * wd = new core_window_t(parent, r, (nana::gui::category::widget_tag**)nullptr);
-			handle_manager_.insert(wd, wd->thread_id);
-			return wd;
-		}
-
-		window_manager::core_window_t* window_manager::create_lite_widget(core_window_t* parent, const rectangle& r)
-		{
-			if(parent == nullptr)	return nullptr;
-			//Thread-Safe Required!
-			std::lock_guard<decltype(mutex_)> lock(mutex_);
-			if(handle_manager_.available(parent) == false)	return nullptr;
-			core_window_t * wd = new core_window_t(parent, r, (nana::gui::category::lite_widget_tag**)nullptr);
+			core_window_t * wd;
+			if(is_lite)
+				wd = new core_window_t(parent, r, (nana::gui::category::lite_widget_tag**)nullptr);
+			else
+				wd = new core_window_t(parent, r, (nana::gui::category::widget_tag**)nullptr);
 			handle_manager_.insert(wd, wd->thread_id);
 			return wd;
 		}
@@ -732,13 +725,11 @@ namespace detail
 			if(wd->visible)
 			{
 				for(core_window_t* pnt = wd->parent ; pnt; pnt = pnt->parent)
-				{
 					if(pnt->visible == false)
 					{
 						if(redraw) wd->drawer.refresh();
 						return true;
 					}
-				}
 
 				if(force || (false == belong_to_lazy(wd)))
 				{
@@ -1227,7 +1218,7 @@ namespace detail
 			bedrock & bedrock_instance = bedrock::instance();
 			auto context = bedrock_instance.get_thread_context();
 			if(context && context->event_window == wd)
-				context->event_window = 0;
+				context->event_window = nullptr;
 
 			wd->flags.destroying = true;
 
@@ -1235,7 +1226,7 @@ namespace detail
 			{
 				//The deletion of caret wants to know whether the window is destroyed under SOME platform. Such as X11
 				delete wd->together.caret;
-				wd->together.caret = 0;
+				wd->together.caret = nullptr;
 			}
 			//Delete the children widgets.
 			std::for_each(wd->children.rbegin(), wd->children.rend(), [this](core_window_t * child){ this->_m_destroy(child);});
@@ -1248,10 +1239,10 @@ namespace detail
 
 			auto * root_attr = wd->root_widget->other.attribute.root;
 			if(root_attr->focus == wd)
-				root_attr->focus = 0;
+				root_attr->focus = nullptr;
 
 			if(root_attr->menubar == wd)
-				root_attr->menubar = 0;
+				root_attr->menubar = nullptr;
 
 			if(wd->flags.glass)
 				wndlayout_type::glass_window(wd, false);

@@ -51,13 +51,11 @@ namespace effects
 					if(iwd->effect.edge_nimbus)
 					{
 						for(auto i = cont.begin(); i != cont.end(); ++i)
-						{
 							if(i->window == iwd)
 							{
 								cont.erase(i);
 								break;
 							}
-						}						
 					}
 					iwd->effect.edge_nimbus = effects::edge_nimbus_none;
 				}
@@ -109,7 +107,7 @@ namespace API
 			}
 		}
 
-		void umake_drawer_event(nana::gui::window wd)
+		void umake_drawer_event(window wd)
 		{
 			restrict::bedrock.evt_manager.umake_for_drawer(wd);
 		}
@@ -138,12 +136,12 @@ namespace API
 
 		window create_widget(window parent, const rectangle& r)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), r));
+			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), r, false));
 		}
 
 		window create_lite_widget(window parent, const rectangle& r)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_lite_widget(reinterpret_cast<restrict::core_window_t*>(parent), r));
+			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), r, true));
 		}
 
 		window create_frame(window parent, const rectangle& r)
@@ -244,7 +242,7 @@ namespace API
 		return result;
 	}
 
-	nana::rectangle make_center(nana::gui::window wd, unsigned width, unsigned height)
+	nana::rectangle make_center(window wd, unsigned width, unsigned height)
 	{
 		nana::rectangle r = make_center(width, height);
 
@@ -306,7 +304,7 @@ namespace API
 		}
 	}
 
-	bool insert_frame(window frame, nana::gui::native_window_type native_window)
+	bool insert_frame(window frame, native_window_type native_window)
 	{
 		return restrict::window_manager.insert_frame(reinterpret_cast<restrict::core_window_t*>(frame), native_window);
 	}
@@ -396,7 +394,7 @@ namespace API
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd) && (iwd->other.category == category::root_tag::value))
 			{
-				nana::gui::native_window_type owner = restrict::interface_type::get_owner_window(iwd->root);
+				native_window_type owner = restrict::interface_type::get_owner_window(iwd->root);
 				if(owner)
 					return reinterpret_cast<window>(restrict::window_manager.root(owner));
 			}
@@ -528,7 +526,7 @@ namespace API
 		if(wd == 0) return false;
 
 		restrict::core_window_t* iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-		nana::gui::internal_scope_guard isg;
+		internal_scope_guard isg;
 		if(restrict::window_manager.available(iwd) == false) return false;
 
 		nana::size & ts = (true_for_max ? iwd->max_track_size : iwd->min_track_size);
@@ -562,7 +560,7 @@ namespace API
 		if(wd)
 		{
 			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-			nana::gui::internal_scope_guard isg;
+			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd) && (iwd->flags.enabled != enabled))
 			{
 				iwd->flags.enabled = enabled;
@@ -576,7 +574,7 @@ namespace API
 		if(wd)
 		{
 			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-			nana::gui::internal_scope_guard isg;
+			internal_scope_guard isg;
 			return (restrict::window_manager.available(iwd) ? iwd->flags.enabled : false);
 		}
 		return false;

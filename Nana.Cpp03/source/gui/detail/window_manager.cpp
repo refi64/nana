@@ -50,25 +50,22 @@ namespace detail
 
 
 	//class shortkey_container::
-		bool shortkey_container::make(nana::gui::window wnd, unsigned long key)
+		bool shortkey_container::make(window wd, unsigned long key)
 		{
-			if(wnd == 0) return false;
+			if(wd == 0) return false;
 			if(key < 0x61) key += (0x61 - 0x41);
 
 			for(std::vector<item_type>::iterator i = keybase_.begin(); i != keybase_.end(); ++i)
-			{
-				if(i->window == wnd)
+				if(i->window == wd)
 				{
 					i->keys.push_back(key);
 					return true;
 				}
-			}
 
 			item_type m;
-			m.window = wnd;
+			m.window = wd;
 			m.keys.push_back(key);
 			keybase_.push_back(m);
-
 			return true;
 		}
 
@@ -77,17 +74,15 @@ namespace detail
 			keybase_.clear();
 		}
 
-		void shortkey_container::umake(nana::gui::window wnd)
+		void shortkey_container::umake(nana::gui::window wd)
 		{
-			if(wnd == 0) return;
+			if(wd == 0) return;
 			for(std::vector<item_type>::iterator i = keybase_.begin(); i != keybase_.end(); ++i)
-			{
-				if(i->window == wnd)
+				if(i->window == wd)
 				{
 					keybase_.erase(i);
 					return;
 				}
-			}
 		}
 
 		nana::gui::window shortkey_container::find(unsigned long key)

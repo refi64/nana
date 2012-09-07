@@ -35,7 +35,8 @@ namespace nana{	namespace gui{	namespace widgets
 			typedef textbase<char_type>::size_type size_type;
 			typedef textbase<char_type>::string_type string_type;
 
-			text_editor(nana::gui::window, graph_reference);
+			text_editor(window, graph_reference);
+			~text_editor();
 
 			void border_renderer(std::function<void(nana::paint::graphics&)>);
 

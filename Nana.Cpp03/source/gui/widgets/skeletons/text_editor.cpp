@@ -25,6 +25,12 @@ namespace nana{	namespace gui{	namespace widgets
 			API::foreground(wd, 0x000000);
 		}
 
+		text_editor::~text_editor()
+		{
+			delete attributes_.vscroll;
+			delete attributes_.hscroll;
+		}
+
 		void text_editor::border_renderer(nana::functor<void(nana::paint::graphics&)> fn)
 		{
 			text_area_.border_renderer = fn;

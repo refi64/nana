@@ -8,7 +8,7 @@ namespace nana{	namespace gui{	namespace widgets
 	{
 
 		//class text_editor
-		text_editor::text_editor(nana::gui::window wd, graph_reference graph)
+		text_editor::text_editor(window wd, graph_reference graph)
 			:window_(wd), graph_(graph), mask_char_(0)
 		{
 			text_area_.area.width = graph.width();
@@ -23,6 +23,12 @@ namespace nana{	namespace gui{	namespace widgets
 			API::create_caret(wd, 1, line_height());
 			API::background(wd, 0xFFFFFF);
 			API::foreground(wd, 0x000000);
+		}
+
+		text_editor::~text_editor()
+		{
+			delete attributes_.vscroll;
+			delete attributes_.hscroll;
 		}
 
 		void text_editor::border_renderer(std::function<void(nana::paint::graphics&)> f)

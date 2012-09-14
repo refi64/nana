@@ -14,6 +14,7 @@
 
 #if defined(NANA_WINDOWS)
 	#include <windows.h>
+	#include PLATFORM_SPEC_HPP
 #elif defined(NANA_LINUX)
 	#include <time.h>
 	#include <errno.h>
@@ -26,11 +27,9 @@ namespace nana
 {
 namespace system
 {
-	/*
-	 * sleep
-	 *	suspend current thread for a specified milliseconds.
-	 *	its precision is depended on hardware.
-	 */
+	//sleep
+	//@brief:	Suspend current thread for a specified milliseconds.
+	//			its precision is depended on hardware.
 	void sleep(unsigned milliseconds)
 	{
 #if defined(NANA_WINDOWS)
@@ -49,10 +48,8 @@ namespace system
 #endif
 	}
 
-	/*
-	 *	this_thread_id
-	 *	@brief: get the identifier of calling thread.
-	 */
+	//this_thread_id
+	//@brief: get the identifier of calling thread.
 	unsigned long this_thread_id()
 	{
 #if defined(NANA_WINDOWS)
@@ -106,20 +103,8 @@ namespace system
 			//verb implementations) that are activated using Component Object Model (COM), COM should be initialized
 			//before ShellExecute is called. Some Shell extensions require the COM single-threaded apartment (STA) type.
 			//In that case, COM should be initialized under WinXP.
-			typedef HRESULT (__stdcall *CoInitializeEx_t)(LPVOID, DWORD);
-			typedef void (__stdcall *CoUninitialize_t)(void);
-			HMODULE md =::LoadLibrary(STR("Ole32.DLL"));
-			if(md == 0) return;
-
-			CoInitializeEx_t fn_init = reinterpret_cast<CoInitializeEx_t>(::GetProcAddress(md, "CoInitializeEx"));
-			CoUninitialize_t fn_unin = reinterpret_cast<CoUninitialize_t>(::GetProcAddress(md, "CoUninitialize"));
-			if(fn_init && fn_unin)
-			{
-				fn_init(0, COINIT_APARTMENTTHREADED | /*COINIT_DISABLE_OLE1DDE =*/0x4);
-				::ShellExecute(0, STR("open"), url.c_str(), 0, 0, SW_SHOWNORMAL);
-				fn_unin();
-			}
-			::FreeLibrary(md);
+			nana::detail::platform_spec::co_initializer co_init;
+			::ShellExecute(0, STR("open"), url.c_str(), 0, 0, SW_SHOWNORMAL);
 		}
 #elif defined(NANA_LINUX)
 #endif

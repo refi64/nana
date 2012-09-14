@@ -35,6 +35,30 @@ namespace detail
 			tree_node(tree_node* owner)
 				:owner(owner), next(0), child(0)
 			{}
+
+			~tree_node()
+			{
+				if(owner)
+				{
+					tree_node * t = owner->child;
+					if(t != this)
+					{
+						while(t->next != this)
+							t = t->next;
+						t->next = next;
+					}
+					else
+						owner->child = next;
+				}
+
+				tree_node * t = child;
+				while(t)
+				{
+					tree_node * t_next = t->next;
+					delete t;
+					t = t_next;
+				}
+			}
 		};
 
 		template<typename UserData>
@@ -49,6 +73,16 @@ namespace detail
 			tree_cont()
 				:root_(0)
 			{}
+
+			~tree_cont()
+			{
+				clear();
+			}
+
+			void clear()
+			{
+				remove(root_.child);
+			}
 
 			bool check(const node_type* node) const
 			{
@@ -138,38 +172,7 @@ namespace detail
 			void remove(node_type* node)
 			{
 				if(check(node))
-				{
-					if(node->child)
-					{
-						std::stack<node_type*> stack;
-						node_type* child = node->child;
-
-						while(child)
-						{
-							stack.push(child);
-							child = child->next;
-						}
-
-						while(stack.size())
-						{
-							delete stack.top();
-							stack.pop();
-						}
-					}
-
-					if(node->owner->child != node)
-					{
-						node_type* sibling = node->owner->child;
-						while(sibling->next != node)
-							sibling = sibling->next;
-
-						sibling->next = node->next;
-					}
-					else
-						node->owner->child = node->next;
-
 					delete node;
-				}
 			}
 
 			node_type* find(const nana::string& path)

@@ -158,6 +158,10 @@ namespace API
 
 	void window_caption(window, const nana::string& title);
 	nana::string window_caption(window);
+
+	void window_cursor(window, cursor::t);
+	cursor::t window_cursor(window);
+
 	//paste a graphics into a window
 	void paste_graphics(const nana::paint::graphics&, int x, int y, window);
 

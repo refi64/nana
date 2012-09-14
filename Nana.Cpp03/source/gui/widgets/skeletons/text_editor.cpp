@@ -14,7 +14,6 @@ namespace nana{	namespace gui{	namespace widgets
 			text_area_.area.width = graph.width();
 			text_area_.area.height = graph.height();
 			text_area_.captured = false;
-			text_area_.cursor.bind(wd);
 			text_area_.tab_space = 4;
 			text_area_.hscroll = text_area_.vscroll = 0;
 			select_.mode_selection = selection::mode_no_selected;
@@ -134,7 +133,7 @@ namespace nana{	namespace gui{	namespace widgets
 		bool text_editor::mouse_enter(bool enter)
 		{
 			if((false == enter) && (false == text_area_.captured))
-				text_area_.cursor.load(cursor::predef::arrow);
+				API::window_cursor(window_, nana::gui::cursor::arrow);
 
 			if(API::focus_window() != window_)
 			{
@@ -176,10 +175,11 @@ namespace nana{	namespace gui{	namespace widgets
 
 		bool text_editor::mouse_move(bool left_button, int screen_x, int screen_y)
 		{
-			if(false == hit_text_area(screen_x, screen_y))
-				text_area_.cursor.load(text_area_.captured ? cursor::predef::iterm : cursor::predef::arrow);
-			else
-				text_area_.cursor.load(cursor::predef::iterm);
+			nana::gui::cursor::t cur = nana::gui::cursor::iterm;
+			if((false == hit_text_area(screen_x, screen_y)) && (false == text_area_.captured))
+				cur = nana::gui::cursor::arrow;
+			
+			API::window_cursor(window_, cur);
 
 			if(left_button)
 			{
@@ -216,7 +216,7 @@ namespace nana{	namespace gui{	namespace widgets
 			API::capture_window(window_, false);
 			text_area_.captured = false;
 			if(hit_text_area(screen_x, screen_y) == false)
-				text_area_.cursor.load(cursor::predef::arrow);
+				API::window_cursor(window_, nana::gui::cursor::arrow);
 
 			text_area_.border_renderer(graph_);
 			return do_draw;

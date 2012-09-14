@@ -21,6 +21,12 @@ namespace nana
 		any::any(const any& rhs)
 			:super_(rhs.super_ ? rhs.super_->clone() : 0)
 		{}
+
+		any::any(any&& r)
+			:super_(r.super_)
+		{
+			r.super_ = nullptr;
+		}
 		
 		any::~any()
 		{
@@ -39,6 +45,17 @@ namespace nana
 			}
 			return *this;	
 		}
+
+		any& any::operator=(any&& r)
+		{
+			if(this != &r)
+			{
+				delete super_;
+				super_ = r.super_;
+				r.super_ = nullptr;
+			}
+			return *this;
+		}
 		
 		bool any::same(const any &rhs) const
 		{
@@ -49,7 +66,6 @@ namespace nana
 				else if(super_ || rhs.super_)
 					return false;
 			}
-			
 			return true;
 		}
 	//end class any

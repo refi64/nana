@@ -1,7 +1,7 @@
 [Project]
 FileName=libnana.dev
 Name=libnana
-UnitCount=72
+UnitCount=71
 Type=2
 Ver=1
 ObjFiles=
@@ -310,9 +310,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit31]
-FileName=..\..\source\gui\cursor.cpp
+FileName=..\..\source\gui\widgets\textbox.cpp
 CompileCpp=1
-Folder=nana/gui
+Folder=nana/gui/widgets
 Compile=1
 Link=1
 Priority=1000
@@ -348,9 +348,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit32]
-FileName=..\..\source\gui\widgets\textbox.cpp
+FileName=..\..\source\system\dataexch.cpp
 CompileCpp=1
-Folder=nana/gui/widgets
+Folder=nana/system
 Compile=1
 Link=1
 Priority=1000
@@ -358,16 +358,6 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit34]
-FileName=..\..\source\gui\widgets\combox.cpp
-CompileCpp=1
-Folder=nana/gui/widgets
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit35]
 FileName=..\..\source\paint\gadget.cpp
 CompileCpp=1
 Folder=nana/paint
@@ -377,10 +367,20 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit36]
+[Unit35]
 FileName=..\..\source\gui\layout.cpp
 CompileCpp=1
 Folder=nana/gui
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit36]
+FileName=..\..\source\gui\widgets\panel.cpp
+CompileCpp=1
+Folder=nana/gui/widgets
 Compile=1
 Link=1
 Priority=1000
@@ -398,16 +398,6 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit37]
-FileName=..\..\source\gui\widgets\panel.cpp
-CompileCpp=1
-Folder=nana/gui/widgets
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit38]
 FileName=..\..\source\any.cpp
 CompileCpp=1
 Folder=nana
@@ -417,7 +407,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit39]
+[Unit38]
 FileName=..\..\source\gui\widgets\menu.cpp
 CompileCpp=1
 Folder=nana/gui/widgets
@@ -427,7 +417,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit40]
+[Unit39]
 FileName=..\..\source\gui\widgets\menubar.cpp
 CompileCpp=1
 Folder=nana/gui/widgets
@@ -437,7 +427,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit41]
+[Unit40]
 FileName=..\..\source\gui\widgets\treebox.cpp
 CompileCpp=1
 Folder=nana/gui/widgets
@@ -447,7 +437,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit42]
+[Unit41]
 FileName=..\..\source\gui\detail\window_manager.cpp
 CompileCpp=1
 Folder=nana/gui/detail
@@ -457,7 +447,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit43]
+[Unit42]
 FileName=..\..\source\gui\tooltip.cpp
 CompileCpp=1
 Folder=nana/gui
@@ -467,7 +457,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit44]
+[Unit43]
 FileName=..\..\source\gui\widgets\toolbar.cpp
 CompileCpp=1
 Folder=nana/gui/widgets
@@ -477,7 +467,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit45]
+[Unit44]
 FileName=..\..\source\gui\widgets\float_listbox.cpp
 CompileCpp=1
 Folder=nana/gui/widgets
@@ -487,7 +477,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit46]
+[Unit45]
 FileName=..\..\source\datetime.cpp
 CompileCpp=1
 Folder=nana
@@ -497,7 +487,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit47]
+[Unit46]
 FileName=..\..\source\gui\widgets\date_chooser.cpp
 CompileCpp=1
 Folder=nana/gui/widgets
@@ -507,7 +497,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit48]
+[Unit47]
 FileName=..\..\source\gui\widgets\tray.cpp
 CompileCpp=1
 Folder=nana/gui/widgets
@@ -517,7 +507,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit49]
+[Unit48]
 FileName=..\..\source\gui\widgets\slider.cpp
 CompileCpp=1
 Folder=nana/gui/widgets
@@ -527,7 +517,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit50]
+[Unit49]
 FileName=..\..\source\gui\widgets\login.cpp
 CompileCpp=1
 Folder=nana/gui/widgets
@@ -537,7 +527,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit51]
+[Unit50]
 FileName=..\..\source\gui\layout_utility.cpp
 CompileCpp=1
 Folder=nana/gui
@@ -547,7 +537,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit52]
+[Unit51]
 FileName=..\..\source\paint\detail\native_paint_interface.cpp
 CompileCpp=1
 Folder=nana/paint/detail
@@ -557,7 +547,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit53]
+[Unit52]
 FileName=..\..\source\filesystem\fs_utility.cpp
 CompileCpp=1
 Folder=nana/system
@@ -567,7 +557,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit54]
+[Unit53]
 FileName=..\..\source\gui\dragger.cpp
 CompileCpp=1
 Folder=nana/gui
@@ -577,7 +567,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit55]
+[Unit54]
 FileName=..\..\source\gui\detail\native_window_interface.cpp
 CompileCpp=1
 Folder=nana/gui/detail
@@ -587,7 +577,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit56]
+[Unit55]
 FileName=..\..\source\gui\functional.cpp
 CompileCpp=1
 Folder=nana/gui
@@ -597,7 +587,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit57]
+[Unit56]
 FileName=..\..\source\gui\widgets\categorize.cpp
 CompileCpp=1
 Folder=nana/gui/widgets
@@ -607,7 +597,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit58]
+[Unit57]
 FileName=..\..\source\paint\pixel_buffer.cpp
 CompileCpp=1
 Folder=nana/paint
@@ -617,7 +607,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit59]
+[Unit58]
 FileName=..\..\source\paint\detail\image_process_provider.cpp
 CompileCpp=1
 Folder=nana/paint/detail
@@ -627,7 +617,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit60]
+[Unit59]
 FileName=..\..\source\paint\image_process_selector.cpp
 CompileCpp=1
 Folder=nana/paint
@@ -637,7 +627,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit61]
+[Unit60]
 FileName=..\..\source\gui\msgbox.cpp
 CompileCpp=1
 Folder=nana/gui
@@ -647,7 +637,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit62]
+[Unit61]
 FileName=..\..\source\gui\widgets\skeletons\text_editor.cpp
 CompileCpp=1
 Folder=nana/gui/widgets/skeletons
@@ -657,7 +647,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit63]
+[Unit62]
 FileName=..\..\source\unicode_bidi.cpp
 CompileCpp=1
 Folder=nana
@@ -667,7 +657,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit64]
+[Unit63]
 FileName=..\..\source\paint\text_renderer.cpp
 CompileCpp=1
 Folder=nana/paint
@@ -677,17 +667,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit33]
-FileName=..\..\source\system\dataexch.cpp
-CompileCpp=1
-Folder=nana/system
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit65]
+[Unit64]
 FileName=..\..\source\detail\win32\platform_spec.cpp
 CompileCpp=1
 Folder=nana/detail/win32
@@ -697,7 +677,17 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit66]
+[Unit33]
+FileName=..\..\source\gui\widgets\combox.cpp
+CompileCpp=1
+Folder=nana/gui/widgets
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit65]
 FileName=..\..\source\gui\detail\win32\bedrock.cpp
 CompileCpp=1
 Folder=nana/gui/detail/win32
@@ -707,7 +697,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit67]
+[Unit66]
 FileName=..\..\source\charset.cpp
 CompileCpp=1
 Folder=nana
@@ -717,7 +707,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit68]
+[Unit67]
 FileName=..\..\source\deploy.cpp
 CompileCpp=1
 Folder=nana
@@ -727,7 +717,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit69]
+[Unit68]
 FileName=..\..\source\audio\detail\audio_device.cpp
 CompileCpp=1
 Folder=nana/audio/detail
@@ -737,7 +727,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit70]
+[Unit69]
 FileName=..\..\source\audio\detail\audio_stream.cpp
 CompileCpp=1
 Folder=nana/audio/detail
@@ -747,10 +737,20 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit71]
+[Unit70]
 FileName=..\..\source\audio\detail\buffer_preparation.cpp
 CompileCpp=1
 Folder=nana/audio/detail
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit71]
+FileName=..\..\source\audio\player.cpp
+CompileCpp=1
+Folder=nana/audio
 Compile=1
 Link=1
 Priority=1000

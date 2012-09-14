@@ -12,6 +12,7 @@
 #include <nana/gui/widgets/date_chooser.hpp>
 #include <nana/paint/gadget.hpp>
 #include <nana/system/platform.hpp>
+#include <sstream>
 
 namespace nana{ namespace gui{
 

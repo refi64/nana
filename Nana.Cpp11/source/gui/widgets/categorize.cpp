@@ -326,6 +326,16 @@ namespace nana{	namespace gui{
 					}
 					return nullptr;
 				}
+
+				bool clear()
+				{
+					if(tree_.get_root()->child)
+					{
+						tree_.clear();
+						return true;
+					}
+					return false;
+				}
 			private:
 				container tree_;
 				nana::string splitstr_;
@@ -506,7 +516,7 @@ namespace nana{	namespace gui{
 						switch(ui_el_.what)
 						{
 						case ui_element::item_name:
-							_m_selected(ui_el_.index);
+							_m_selected(treebase_.tail(ui_el_.index));
 							break;
 						default:	break;
 						}
@@ -523,14 +533,13 @@ namespace nana{	namespace gui{
 					return ext_event_;
 				}
 			private:
-				void _m_selected(std::size_t index)
+				void _m_selected(node_handle node)
 				{
-					node_handle i = treebase_.tail(index);
-					if(i)
+					if(node)
 					{
 						API::dev::window_caption(window_handle(), tree().path());
 						if(ext_event_.selected)
-							ext_event_.selected(i->value.second.value);
+							ext_event_.selected(node->value.second.value);
 					}
 				}
 
@@ -575,12 +584,10 @@ namespace nana{	namespace gui{
 
 				void _m_list_closed()
 				{
-					nana::point pos = API::cursor_position();
-					API::calc_window_point(this->window_, pos);
-					this->locate(pos.x, pos.y);
 					style_.mode = mode::normal;
 					style_.state = mouse_action::normal;
 
+					bool is_draw = false;
 					if(style_.module.index != style_.module.npos)
 					{
 						switch(style_.list_trigger)
@@ -590,25 +597,27 @@ namespace nana{	namespace gui{
 								treebase_.tail(style_.active);
 								nana::string name = style_.module.items[style_.module.index].text;
 								nana::any value;
-								node_handle i = treebase_.find_child(name);
-								if(i)
+								node_handle node = treebase_.find_child(name);
+								if(node)
 								{
-									treebase_.cur(i);
-									API::refresh_window(window_);
-									if(ext_event_.selected)
-										ext_event_.selected(i->value.second.value);
+									treebase_.cur(node);
+									_m_selected(node);
+									is_draw = true;
 								}
 							}
 							break;
 						case ui_element::item_root:
-							API::refresh_window(window_);
-							_m_selected(style_.module.index);
+							_m_selected(treebase_.tail(style_.module.index));
+							is_draw = true;
 							break;
 						default:	//Don't take care about other elements
 							break;
 						}
 					}
 					else
+						is_draw = true;
+
+					if(is_draw)
 					{
 						this->draw();
 						API::update_window(window_);
@@ -815,6 +824,16 @@ namespace nana{	namespace gui{
 				bool trigger::childset_erase(const nana::string& str)
 				{
 					if(scheme_->tree().childset_erase(str))
+					{
+						scheme_->draw();
+						return true;
+					}
+					return false;
+				}
+
+				bool trigger::clear()
+				{
+					if(scheme_->tree().clear())
 					{
 						scheme_->draw();
 						return true;

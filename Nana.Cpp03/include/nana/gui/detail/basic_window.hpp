@@ -370,6 +370,7 @@ namespace detail
 				parent->children.push_back(this);
 			}
 
+			this->predef_cursor = cursor::arrow;
 			this->flags.capture = false;
 			this->flags.dbl_click = true;
 			this->flags.enabled = true;
@@ -424,6 +425,7 @@ namespace detail
 		nana::gui::detail::drawer	drawer;	//Self Drawer with owen graphics
 		basic_window*		root_widget;	//A pointer refers to the root basic window, if the window is a root, the pointer refers to itself.
 		paint::graphics*	root_graph;		//Refer to the root buffer graphics
+		nana::gui::cursor::t	predef_cursor;
 
 		struct flags_type
 		{

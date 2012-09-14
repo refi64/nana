@@ -29,6 +29,16 @@ namespace gui
 			_m_caption(str);
 		}
 
+		nana::gui::cursor::t widget::cursor() const
+		{
+			return _m_cursor();
+		}
+
+		void widget::cursor(nana::gui::cursor::t cur)
+		{
+			_m_cursor(cur);
+		}
+
 		void widget::typeface(const nana::paint::font& font)
 		{
 			_m_typeface(font);
@@ -155,6 +165,16 @@ namespace gui
 		void widget::_m_caption(const nana::string& str)
 		{
 			API::dev::window_caption(handle(), str);
+		}
+
+		nana::gui::cursor::t widget::_m_cursor() const
+		{
+			return API::window_cursor(handle());
+		}
+
+		void widget::_m_cursor(nana::gui::cursor::t cur)
+		{
+			API::window_cursor(handle(), cur);
 		}
 
 		void widget::_m_close()

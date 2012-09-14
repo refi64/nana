@@ -72,6 +72,7 @@ namespace gui
 				typedef ext_event_tag<pseudo_node_type*>	ext_event_type;
 
 				trigger();
+				void auto_draw(bool);
 				bool check(const node_type*) const;
 				nana::any & value(node_type*) const;
 				node_type* find(const nana::string& key_path);
@@ -83,6 +84,7 @@ namespace gui
 				bool check(node_type* parent, node_type* child) const;
 				void remove(node_type*);
 				node_type * selected() const;
+				void selected(node_type*);
 				void set_expand(node_type* node, bool);
 				void set_expand(const nana::string& path, bool);
 				unsigned visual_item_size() const;
@@ -120,15 +122,15 @@ namespace gui
 				void _m_tooltip_window(node_type* node, const nana::point& pos, const nana::size& size);
 				void _m_close_tooltip_window();
 				void _m_mouse_move_tooltip_window();
-				void _m_click_tooltip_window(const nana::gui::eventinfo&);
+				void _m_click_tooltip_window(const eventinfo&);
 				bool _m_draw(bool scrollbar_react);
 				void _m_draw_tree();
 				unsigned _m_visible_width() const;
 				void _m_show_scrollbar();
-				void _m_event_scrollbar(const nana::gui::eventinfo&);
-				bool _m_adjust(tree_cont_type::node_type * node, int reason);
-				void _m_set_selected(node_type * node);
-				bool _m_set_expanded(tree_cont_type::node_type* node, bool value);
+				void _m_event_scrollbar(const eventinfo&);
+				bool _m_adjust(node_type * node, int reason);
+				bool _m_set_selected(node_type * node);
+				bool _m_set_expanded(node_type* node, bool value);
 				void _m_deal_adjust();
 			private:
 				//Functor
@@ -204,6 +206,7 @@ namespace gui
 				{
 					attribute_type();
 
+					bool auto_draw;
 					mutable ext_event_type ext_event;
 					std::size_t mutable visual_item_size;
 					uint32_t	button_width;
@@ -277,6 +280,11 @@ namespace gui
 		treebox(window wd, const rectangle& r, bool visible)
 		{
 			create(wd, r, visible);
+		}
+
+		void auto_draw(bool ad)
+		{
+			get_drawer_trigger().auto_draw(ad);
 		}
 
 		ext_event_type& ext_event() const
@@ -391,6 +399,11 @@ namespace gui
 		node_type selected() const
 		{
 			return reinterpret_cast<node_type>(get_drawer_trigger().selected());
+		}
+
+		void selected(node_type node)
+		{
+			get_drawer_trigger().selected(reinterpret_cast<drawer_trigger_t::node_type*>(node));
 		}
 
 		unsigned children_size(node_type node) const

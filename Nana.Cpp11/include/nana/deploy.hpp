@@ -20,7 +20,6 @@
 #undef NANA_WINDOWS
 #endif
 
-#include <sstream>
 #ifndef NANA_UNICODE
 	namespace nana
 	{

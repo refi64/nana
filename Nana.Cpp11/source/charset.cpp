@@ -850,14 +850,13 @@ namespace nana
 				std::wstring wcstr;
 				const char* sp = data_.c_str();
 				std::mbstate_t mbstate = std::mbstate_t();
-				std::locale loc = std::locale::global(std::locale(""));
+				locale_initializer::init();
 				std::size_t len = std::mbsrtowcs(0, &sp, 0, &mbstate);
 				if(len != static_cast<std::size_t>(-1))
 				{
 					wcstr.resize(len);
 					std::mbsrtowcs(&wcstr[0], &sp, len, &mbstate);
 				}
-				std::locale::global(loc);
 				return wcstr;
 			}
 
@@ -894,7 +893,7 @@ namespace nana
 					std::mbstate_t mbstate = std::mbstate_t();
 					const wchar_t* sp = data_.c_str();
 
-					std::locale loc = std::locale::global(std::locale(""));
+					locale_initializer::init();
 					std::size_t len = std::wcsrtombs(0, &sp, 0, &mbstate);
 					if(len != static_cast<std::size_t>(-1))
 					{
@@ -903,7 +902,6 @@ namespace nana
 						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
 						return mbstr;
 					}
-					std::locale::global(loc);
 				}
 				return std::string();
 			}

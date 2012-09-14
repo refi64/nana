@@ -1216,9 +1216,7 @@ namespace detail
 			if(wd->flags.destroying) return;
 
 			bedrock & bedrock_instance = bedrock::instance();
-			auto context = bedrock_instance.get_thread_context();
-			if(context && context->event_window == wd)
-				context->event_window = nullptr;
+			bedrock_instance.thread_context_destroy(wd);
 
 			wd->flags.destroying = true;
 

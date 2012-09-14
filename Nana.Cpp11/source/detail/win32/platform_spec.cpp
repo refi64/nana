@@ -111,6 +111,39 @@ namespace detail
 	}
 	//end struct font_tag::deleter
 
+	//class platform_spec
+	platform_spec::co_initializer::co_initializer()
+		: ole32_(::LoadLibrary(STR("OLE32.DLL")))
+	{
+		if(ole32_)
+		{
+			typedef HRESULT (__stdcall *CoInitializeEx_t)(LPVOID, DWORD);
+			CoInitializeEx_t fn_init = reinterpret_cast<CoInitializeEx_t>(::GetProcAddress(ole32_, "CoInitializeEx"));
+			if(0 == fn_init)
+			{
+				::FreeLibrary(ole32_);
+				ole32_ = 0;
+				throw std::runtime_error("Nana.PlatformSpec.Co_initializer: Can't locate the CoInitializeEx().");
+			}
+			else
+				fn_init(0, COINIT_APARTMENTTHREADED | /*COINIT_DISABLE_OLE1DDE =*/0x4);
+		}
+		else
+			throw std::runtime_error("Nana.PlatformSpec.Co_initializer: No Ole32.DLL Loaded.");
+	}
+
+	platform_spec::co_initializer::~co_initializer()
+	{
+		if(ole32_)
+		{
+			typedef void (__stdcall *CoUninitialize_t)(void);
+			CoUninitialize_t fn_unin = reinterpret_cast<CoUninitialize_t>(::GetProcAddress(ole32_, "CoUninitialize"));
+			if(fn_unin)
+				fn_unin();
+			::FreeLibrary(ole32_);
+		}	
+	}
+
 	platform_spec::platform_spec()
 	{
 		//Create default font object.

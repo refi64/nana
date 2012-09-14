@@ -85,12 +85,12 @@ namespace gui
 
 					switch(state)
 					{
-					case this->state_highlight:
+					case item_renderer::state_highlight:
 						border = nana::gui::color::highlight;
 						corner = 0xC0DDFC;
 						body = 0xC0DDFC;
 						break;
-					case this->state_selected:
+					case item_renderer::state_selected:
 						border = nana::gui::color::dark_border;
 						corner = nana::gui::color::button_face;
 						body = 0xFFFFFF;

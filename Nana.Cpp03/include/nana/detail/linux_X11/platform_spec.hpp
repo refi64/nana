@@ -171,8 +171,8 @@ namespace detail
 			nana::gui::native_window_type owner;
 			std::vector<nana::gui::native_window_type> * owned;
 		};
-    public:
-        int error_code;
+	public:
+		int error_code;
 	public:
 		typedef drawable_impl_type::font_refer_t font_refer_t;
 		typedef void (*timer_proc_type)(unsigned tid);

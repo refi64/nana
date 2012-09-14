@@ -13,27 +13,25 @@
 #include <nana/datetime.hpp>
 #if defined(NANA_WINDOWS)
 	#include <windows.h>
-#elif defined(NANA_LINUX)
-	#include <time.h>
 #endif
 
 namespace nana
 {
+	//class date
 		date::date()
 		{
-#if defined(NANA_WINDOWS)
-			SYSTEMTIME st;
-			::GetLocalTime(&st);
-			value_.year = st.wYear;
-			value_.month = st.wMonth;
-			value_.day = st.wDay;
-#elif defined(NANA_LINUX)
-			time_t t = time(nullptr);
-			struct tm * tm_addr = localtime(&t);
+			time_t t = std::time(nullptr);
+			struct tm * tm_addr = std::localtime(&t);
 			value_.year = tm_addr->tm_year + 1900;
 			value_.month = tm_addr->tm_mon + 1;
 			value_.day = tm_addr->tm_mday;
-#endif
+		}
+
+		date::date(const std::tm& t)
+		{
+			value_.year = t.tm_year + 1900;
+			value_.month = t.tm_mon + 1;
+			value_.day = t.tm_mday;
 		}
 
 		date::date(int year, int month, int day)
@@ -49,19 +47,11 @@ namespace nana
 				}
 			}
 
-#if defined(NANA_WINDOWS)
-			SYSTEMTIME st;
-			::GetLocalTime(&st);
-			value_.year = st.wYear;
-			value_.month = st.wMonth;
-			value_.day = st.wDay;
-#elif defined(NANA_LINUX)
-			time_t t = time(0);
-			struct tm * tm_addr = localtime(&t);
+			time_t t = std::time(0);
+			struct tm * tm_addr = std::localtime(&t);
 			value_.year = tm_addr->tm_year + 1900;
 			value_.month = tm_addr->tm_mon + 1;
 			value_.day = tm_addr->tm_mday;
-#endif
 		}
 
 		date date::operator - (int off) const
@@ -242,4 +232,43 @@ namespace nana
 				return 366;
 			return 365;
 		}
+	//end class date
+
+	//class time
+		time::time()
+		{
+			time_t t = ::time(0);
+			struct tm * tm_addr = ::localtime(&t);
+			value_.hour = tm_addr->tm_hour;
+			value_.minute = tm_addr->tm_min;
+			value_.second = tm_addr->tm_sec;
+		}
+
+		time::time(const std::tm& t)
+		{
+			value_.hour = t.tm_hour;
+			value_.minute = t.tm_min;
+			value_.second = t.tm_sec;	
+		}
+
+		time::time(unsigned hour, unsigned minute, unsigned second)
+		{
+			if(hour < 24 && minute < 60 && second < 62)
+			{
+				value_.hour = hour;
+				value_.minute = minute;
+				value_.second = second;
+			}
+			time_t t = ::time(0);
+			struct tm * tm_addr = ::localtime(&t);
+			value_.hour = tm_addr->tm_hour;
+			value_.minute = tm_addr->tm_min;
+			value_.second = tm_addr->tm_sec;
+		}
+
+		const time::value& time::read() const
+		{
+			return value_;
+		}
+	//end class time
 }//end namespace nana

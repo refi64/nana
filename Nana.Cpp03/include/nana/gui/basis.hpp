@@ -55,6 +55,23 @@ namespace gui
 		};
 	};
 
+	struct cursor
+	{
+		enum t
+		{
+			hand	= 60,
+			arrow	= 68,
+			wait	= 150,
+			iterm	= 152, //A text caret
+			size_we	= 108,
+			size_ns	= 116,
+			size_top_left = 134,
+			size_top_right = 136,
+			size_bottom_left = 12,
+			size_bottom_right = 14
+		};
+	};
+
 	namespace color
 	{
 		enum

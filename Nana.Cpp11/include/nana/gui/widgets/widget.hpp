@@ -38,6 +38,9 @@ namespace gui
 		nana::string caption() const;
 		void caption(const nana::string& str);
 
+		void cursor(nana::gui::cursor);
+		nana::gui::cursor cursor() const;
+
 		void typeface(const nana::paint::font& font);
 		nana::paint::font typeface() const;
 
@@ -100,7 +103,9 @@ namespace gui
 		virtual void _m_complete_creation();
 
 		virtual nana::string _m_caption() const;
-		virtual void _m_caption(const nana::string& str);
+		virtual void _m_caption(const nana::string&);
+		virtual nana::gui::cursor _m_cursor() const;
+		virtual void _m_cursor(nana::gui::cursor);
 		virtual void _m_close();
 		virtual bool _m_enabled() const;
 		virtual void _m_enabled(bool);

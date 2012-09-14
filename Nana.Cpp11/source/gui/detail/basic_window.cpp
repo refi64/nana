@@ -302,7 +302,7 @@ namespace nana{	namespace gui{
 					this->index = static_cast<unsigned>(parent->children.size());
 					parent->children.push_back(this);
 				}
-
+				this->predef_cursor = cursor::arrow;
 				this->flags.capture = false;
 				this->flags.dbl_click = true;
 				this->flags.enabled = true;

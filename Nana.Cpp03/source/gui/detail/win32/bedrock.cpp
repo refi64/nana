@@ -107,10 +107,37 @@ namespace detail
 
 #pragma pack()
 
+	struct bedrock::thread_context
+	{
+		unsigned event_pump_ref_count;
+
+		int		window_count;	//The number of windows
+		core_window_t* event_window;
+
+		struct platform_detail_tag
+		{
+			nana::char_t keychar;
+		}platform;
+
+		struct cursor_tag
+		{
+			core_window_t * window;
+			nana::gui::cursor::t	predef_cursor;
+		}cursor;
+
+		thread_context()
+			: event_pump_ref_count(0), window_count(0), event_window(0)
+		{
+			cursor.window = 0;
+			cursor.predef_cursor = nana::gui::cursor::arrow;
+		}
+	};
+
 	struct bedrock::private_impl
 	{
+		typedef std::map<unsigned, thread_context> thr_context_container;
 		nana::threads::token token;
-		context_container tcontexts;
+		thr_context_container thr_contexts;
 
 		struct cache_type
 		{
@@ -150,12 +177,6 @@ namespace detail
 			unsigned long alt : 2;
 		}keyboard_tracking_state;
 	};
-
-
-	bedrock::thread_context::thread_context()
-		:	event_pump_ref_count(0), window_count(0), event_window(0)
-	{
-	}
 
 	//class bedrock defines a static object itself to implement a static singleton
 	//here is the definition of this object
@@ -230,7 +251,7 @@ namespace detail
 		private_impl * impl = instance().impl_;
 		nana::threads::scope_guard sg(impl->token);
 
-		int & cnt = (impl->tcontexts[tid ? tid : nana::system::this_thread_id()].window_count);
+		int & cnt = (impl->thr_contexts[tid ? tid : nana::system::this_thread_id()].window_count);
 		return (cnt < 0 ? cnt = 1 : ++cnt);
 	}
 
@@ -242,8 +263,8 @@ namespace detail
 			return impl_->cache.tcontext.object;
 
 		impl_->cache.tcontext.tid = tid;
-		context_container::iterator i = impl_->tcontexts.find(tid);
-		thread_context * context = (i == impl_->tcontexts.end() ? &(impl_->tcontexts[tid]) : &(i->second));
+		private_impl::thr_context_container::iterator i = impl_->thr_contexts.find(tid);
+		thread_context * context = (i == impl_->thr_contexts.end() ? &(impl_->thr_contexts[tid]) : &(i->second));
 		impl_->cache.tcontext.object = context;
 		return context;
 	}
@@ -257,8 +278,8 @@ namespace detail
 		if(impl_->cache.tcontext.tid == tid)
 			return impl_->cache.tcontext.object;
 
-		context_container::iterator i = impl_->tcontexts.find(tid);
-		if(i != impl_->tcontexts.end())
+		private_impl::thr_context_container::iterator i = impl_->thr_contexts.find(tid);
+		if(i != impl_->thr_contexts.end())
 		{
 			impl_->cache.tcontext.tid = tid;
 			return (impl_->cache.tcontext.object = &(i->second));
@@ -280,7 +301,7 @@ namespace detail
 			impl_->cache.tcontext.object = 0;
 		}
 
-		impl_->tcontexts.erase(tid);
+		impl_->thr_contexts.erase(tid);
 	}
 
 	bedrock& bedrock::instance()
@@ -288,12 +309,12 @@ namespace detail
 		return bedrock_object;
 	}
 
-	void bedrock::map_thread_root_buffer(bedrock::core_window_t* wd)
+	void bedrock::map_thread_root_buffer(core_window_t* wd)
 	{
 		::PostMessage(reinterpret_cast<HWND>(wd->root), nana::detail::messages::map_thread_root_buffer, reinterpret_cast<WPARAM>(wd), 0);
 	}
 
-	void interior_helper_for_menu(MSG& msg, nana::gui::native_window_type menu_window)
+	void interior_helper_for_menu(MSG& msg, native_window_type menu_window)
 	{
 		switch(msg.message)
 		{
@@ -305,7 +326,7 @@ namespace detail
 		}
 	}
 
-	void bedrock::pump_event(nana::gui::window modal_window)
+	void bedrock::pump_event(window modal_window)
 	{
 		const unsigned tid = ::GetCurrentThreadId();
 		thread_context * context = this->open_thread_context(tid);
@@ -378,7 +399,7 @@ namespace detail
 		}
 	}//end bedrock::event_loop
 
-	void make_eventinfo(nana::gui::eventinfo& ei, nana::gui::detail::bedrock::core_window_t* wnd, unsigned msg, const parameter_decoder& pmdec)
+	void make_eventinfo(eventinfo& ei, bedrock::core_window_t* wnd, unsigned msg, const parameter_decoder& pmdec)
 	{
 		ei.window = reinterpret_cast<nana::gui::window>(wnd);
 
@@ -590,7 +611,7 @@ namespace detail
 		static nana::gui::detail::bedrock& bedrock = nana::gui::detail::bedrock::instance();
 		static restrict::TRACKMOUSEEVENT track = {sizeof track, 0x00000002};
 
-		nana::gui::native_window_type native_window = reinterpret_cast<nana::gui::native_window_type>(root_window);
+		native_window_type native_window = reinterpret_cast<native_window_type>(root_window);
 		wm_root_runtime_type* root_runtime = bedrock.wd_manager.root_runtime(native_window);
 
 		bool def_window_proc = false;
@@ -791,7 +812,7 @@ namespace detail
 					make_eventinfo(ei, mouse_window, message, pmdec);
 					msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);
 					wnd_type click_window = 0;
-					
+
 					if(msgwnd == mouse_window)
 					{
 						mouse_window->flags.action = mouse_action_over;
@@ -1313,11 +1334,11 @@ namespace detail
 		return bedrock_object.evt_manager.answer(event_id, reinterpret_cast<window>(wd), ei, event_manager::event_kind::user);
 	}
 
-	bool bedrock::raise_event(unsigned eventid, core_window_t* wd, const eventinfo& ei, bool ask_update)
+	bool bedrock::raise_event(unsigned eid, core_window_t* wd, const eventinfo& ei, bool ask_update)
 	{
 		if(bedrock_object.wd_manager.available(wd) == false)
 			return false;
-		ei.identifier = eventid;
+		ei.identifier = eid;
 		ei.window = reinterpret_cast<window>(wd);
 
 		thread_context * thrd = bedrock_object.get_thread_context();
@@ -1326,38 +1347,18 @@ namespace detail
 		{
 			prev_event_wd = thrd->event_window;
 			thrd->event_window = wd;
+			bedrock_object._m_event_filter(eid, wd, thrd);
 		}
 
 		if(wd->other.upd_state == core_window_t::update_state::none)
 			wd->other.upd_state = core_window_t::update_state::lazy;
 
-		bedrock_object.evt_manager.answer(eventid, reinterpret_cast<window>(wd), ei, event_manager::event_kind::both);
-		
+		bedrock_object.evt_manager.answer(eid, reinterpret_cast<window>(wd), ei, event_manager::event_kind::both);
+
 		if(ask_update)
 			bedrock_object.wd_manager.do_lazy_refresh(wd, false);
 		else if(bedrock_object.wd_manager.available(wd))
 			wd->other.upd_state = core_window_t::update_state::none;
-
-		if(thrd)	thrd->event_window = prev_event_wd;
-		return true;		
-	}
-
-	bool bedrock::raise_event_keep_ei(unsigned eventid, core_window_t* wd, const eventinfo &ei, bedrock::thread_context* thrd)
-	{
-		if(bedrock_object.wd_manager.available(wd) == false) return false;
-
-		core_window_t* prev_event_wd;
-		if(thrd)
-		{
-			prev_event_wd = thrd->event_window;
-			thrd->event_window = wd;
-		}
-
-		if(wd->other.upd_state == core_window_t::update_state::none)
-			wd->other.upd_state = core_window_t::update_state::lazy;
-
-		bedrock_object.evt_manager.answer(eventid, reinterpret_cast<window>(wd), ei, event_manager::event_kind::both);
-		bedrock_object.wd_manager.do_lazy_refresh(wd, false);
 
 		if(thrd)	thrd->event_window = prev_event_wd;
 		return true;
@@ -1388,6 +1389,141 @@ namespace detail
 
 				wd_manager.update(wd, true, true);
 			}
+		}
+	}
+
+	void bedrock::thread_context_destroy(core_window_t * wd)
+	{
+		bedrock::thread_context * thr = get_thread_context(0);
+		if(thr && thr->event_window == wd)
+			thr->event_window = 0;
+	}
+
+	void bedrock::thread_context_lazy_refresh()
+	{
+		thread_context* thrd = get_thread_context(0);
+		if(thrd && thrd->event_window)
+		{
+			//the state none should be tested, becuase in an event, there would be draw after an update,
+			//if the none is not tested, the draw after update will not be refreshed.
+			switch(thrd->event_window->other.upd_state)
+			{
+			case core_window_t::update_state::none:
+			case core_window_t::update_state::lazy:
+				thrd->event_window->other.upd_state = core_window_t::update_state::refresh;
+			default:	break;
+			}
+		}
+	}
+
+	const nana::char_t* translate(nana::gui::cursor::t id)
+	{
+		const nana::char_t* name = IDC_ARROW;
+
+		switch(id)
+		{
+		case nana::gui::cursor::arrow:
+			name = IDC_ARROW;	break;
+		case nana::gui::cursor::wait:
+			name = IDC_WAIT;	break;
+		case nana::gui::cursor::hand:
+			name = IDC_HAND;	break;
+		case nana::gui::cursor::size_we:
+			name = IDC_SIZEWE;	break;
+		case nana::gui::cursor::size_ns:
+			name = IDC_SIZENS;	break;
+		case nana::gui::cursor::size_bottom_left:
+		case nana::gui::cursor::size_top_right:
+			name = IDC_SIZENESW;	break;
+		case nana::gui::cursor::size_top_left:
+		case nana::gui::cursor::size_bottom_right:
+			name = IDC_SIZENWSE;	break;
+		case nana::gui::cursor::iterm:
+			name = IDC_IBEAM;	break;
+		}
+		return name;
+	}
+
+	void SetCursor(bedrock::core_window_t* wd, nana::gui::cursor::t cur)
+	{
+#ifdef _WIN64
+			::SetClassLongPtr(reinterpret_cast<HWND>(wd->root), GCLP_HCURSOR,
+					reinterpret_cast<LONG_PTR>(::LoadCursor(0, translate(cur))));
+#else
+			::SetClassLong(reinterpret_cast<HWND>(wd->root), GCL_HCURSOR,
+					static_cast<unsigned long>(reinterpret_cast<size_t>(::LoadCursor(0, translate(cur)))));
+#endif
+	}
+
+	void bedrock::update_cursor(core_window_t * wd)
+	{
+		internal_scope_guard isg;
+		if(wd_manager.available(wd))
+		{
+			thread_context * thrd = get_thread_context(wd->thread_id);
+			if(thrd)
+			{
+				if((wd->predef_cursor == nana::gui::cursor::arrow) && (thrd->cursor.window == wd))
+				{
+					if(thrd->cursor.predef_cursor != nana::gui::cursor::arrow)
+					{
+						SetCursor(wd, nana::gui::cursor::arrow);
+						thrd->cursor.window = 0;
+						thrd->cursor.predef_cursor = nana::gui::cursor::arrow;
+					}
+					return;
+				}
+
+				nana::point pos = native_interface::cursor_position();
+				native_window_type native_handle = native_interface::find_window(pos.x, pos.y);
+				if(0 == native_handle)
+					return;
+
+				native_interface::calc_window_point(native_handle, pos);
+				if(wd != wd_manager.find_window(native_handle, pos.x, pos.y))
+					return;
+
+				if(wd->predef_cursor != thrd->cursor.predef_cursor)
+				{
+					if(thrd->cursor.predef_cursor != nana::gui::cursor::arrow)
+						thrd->cursor.window = 0;
+
+					if(wd->predef_cursor != cursor::arrow)
+					{
+						thrd->cursor.window = wd;
+						SetCursor(wd, wd->predef_cursor);
+					}
+					thrd->cursor.predef_cursor = wd->predef_cursor;
+				}
+			}
+		}
+	}
+
+	void bedrock::_m_event_filter(unsigned event_id, core_window_t * wd, thread_context * thrd)
+	{
+		switch(event_id)
+		{
+		case events::mouse_enter::identifier:
+			if(wd->predef_cursor != cursor::arrow)
+			{
+				thrd->cursor.window = wd;
+				if(wd->predef_cursor != thrd->cursor.predef_cursor)
+					thrd->cursor.predef_cursor = wd->predef_cursor;
+				SetCursor(wd, thrd->cursor.predef_cursor);
+			}
+			break;
+		case events::mouse_leave::identifier:
+			if(wd->predef_cursor != cursor::arrow)
+				SetCursor(wd, nana::gui::cursor::arrow);
+			break;
+		case events::destroy::identifier:
+			if(wd == thrd->cursor.window)
+			{
+				SetCursor(wd, nana::gui::cursor::arrow);
+				thrd->cursor.predef_cursor = cursor::arrow;
+				thrd->cursor.window = 0;
+			}
+			break;
 		}
 	}
 }//end namespace detail

@@ -48,7 +48,6 @@
 		<Unit filename="..\..\source\filesystem\file_iterator.cpp" />
 		<Unit filename="..\..\source\filesystem\fs_utility.cpp" />
 		<Unit filename="..\..\source\gui\basis.cpp" />
-		<Unit filename="..\..\source\gui\cursor.cpp" />
 		<Unit filename="..\..\source\gui\detail\drawer.cpp" />
 		<Unit filename="..\..\source\gui\detail\event_manager.cpp" />
 		<Unit filename="..\..\source\gui\detail\native_window_interface.cpp" />

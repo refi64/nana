@@ -69,9 +69,6 @@
     <ClCompile Include="..\..\source\gui\basis.cpp">
       <Filter>Source Files\nana\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\gui\cursor.cpp">
-      <Filter>Source Files\nana\gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\gui\drawing.cpp">
       <Filter>Source Files\nana\gui</Filter>
     </ClCompile>

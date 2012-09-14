@@ -76,6 +76,7 @@ namespace nana{ namespace gui
 		void editable(bool);
 		bool editable() const;
 		combox& push_back(const nana::string&);
+		std::size_t the_number_of_options() const;
 		std::size_t option() const;
 		void option(std::size_t);
 		nana::string text(std::size_t) const;

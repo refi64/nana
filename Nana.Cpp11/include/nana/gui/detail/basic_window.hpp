@@ -137,6 +137,7 @@ namespace detail
 		nana::gui::detail::drawer	drawer;	//Self Drawer with owen graphics
 		basic_window*		root_widget;	//A pointer refers to the root basic window, if the window is a root, the pointer refers to itself.
 		paint::graphics*	root_graph;		//Refer to the root buffer graphics
+		cursor	predef_cursor;
 
 		struct flags_type
 		{

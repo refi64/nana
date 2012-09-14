@@ -108,6 +108,7 @@ namespace nana{	namespace gui
 				void insert(const nana::string&, nana::any);
 				bool childset(const nana::string&, nana::any);
 				bool childset_erase(const nana::string&);
+				bool clear();
 
 				//splitstr
 				//@brief: Sets the splitstr. If the parameter will be ingored if it is an empty string.
@@ -205,6 +206,12 @@ namespace nana{	namespace gui
 			if(get_drawer_trigger().childset_erase(name))
 				API::update_window(*this);
 			return *this;
+		}
+
+		void clear()
+		{
+			if(get_drawer_trigger().clear())
+				API::update_window(*this);
 		}
 
 		categorize& splitstr(const nana::string& sstr)

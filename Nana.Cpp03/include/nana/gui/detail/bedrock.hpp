@@ -43,22 +43,7 @@ namespace detail
 		typedef window_manager_t::interface_type	interface_type;
 		typedef window_manager_t::core_window_t core_window_t;
 
-		struct thread_context
-		{
-			unsigned event_pump_ref_count;
-
-			int		window_count;	//The number of windows
-			core_window_t* event_window;
-
-			struct platform_detail_tag
-			{
-				nana::char_t keychar;
-			}platform;
-
-			thread_context();
-		};
-
-		typedef std::map<unsigned, thread_context> context_container;
+		struct thread_context;
 
 		~bedrock();
 		void pump_event(nana::gui::window);
@@ -75,10 +60,10 @@ namespace detail
 
 		void set_menubar_taken(core_window_t*);
 		core_window_t* get_menubar_taken();
-		bool close_menu_if_focus_other_window(nana::gui::native_window_type focus);
-		void set_menu(nana::gui::native_window_type menu_window, bool is_keyboard_condition);
-		nana::gui::native_window_type get_menu(nana::gui::native_window_type owner, bool is_keyboard_condition);
-		nana::gui::native_window_type get_menu();
+		bool close_menu_if_focus_other_window(native_window_type focus);
+		void set_menu(native_window_type menu_window, bool is_keyboard_condition);
+		native_window_type get_menu(native_window_type owner, bool is_keyboard_condition);
+		native_window_type get_menu();
 		void remove_menu();
 		void empty_menu();
 
@@ -87,6 +72,9 @@ namespace detail
 		bool whether_keyboard_shortkey() const;
 	public:
 		void event_expose(core_window_t *, bool exposed);
+		void thread_context_destroy(core_window_t*);
+		void thread_context_lazy_refresh();
+		void update_cursor(core_window_t *);
 	public:
 		window_manager_t wd_manager;
 		event_manager	evt_manager;
@@ -97,8 +85,8 @@ namespace detail
 		//raise_event
 		//@return: Returns true if the window is available, otherwise returns false
 		static bool raise_event(unsigned eventid, core_window_t*, const eventinfo&, bool ask_update);
-		//raise_event_keep_ei dose not modify the ei's members - identifier and window.
-		static bool raise_event_keep_ei(unsigned event_id, core_window_t*, const eventinfo&, thread_context*);
+	private:
+		void _m_event_filter(unsigned event_id, core_window_t*, thread_context*);
 	private:
 		static bedrock bedrock_object;
 

@@ -16,13 +16,17 @@
 #include <vector>
 #if defined(NANA_WINDOWS)
 	#include <windows.h>
+	#include <nana/datetime.hpp>
 #elif defined(NANA_LINUX)
+	#include <nana/charset.hpp>
 	#include <sys/stat.h>
 	#include <sys/types.h>
 	#include <dirent.h>
 	#include <cstdio>
+	#include <cstring>
 	#include <errno.h>
 	#include <unistd.h>
+	#include <stdlib.h>
 #endif
 
 namespace nana
@@ -107,16 +111,12 @@ namespace filesystem
 			return nana::charset(text_.substr(pos + 1));
 #endif
 		}
-	//private:
-	//	nana::string text_;
-	//};
+	//end class path
 
 	namespace detail
 	{
-		/*
-		 *	rm_dir_recursive
-		 *	@brief: remove a directory, if it is not empty, recursively remove it's subfiles and sub directories
-		 */
+		//rm_dir_recursive
+		//@brief: remove a directory, if it is not empty, recursively remove it's subfiles and sub directories
 		bool rm_dir_recursive(const nana::char_t* dir)
 		{
 			std::vector<file_iterator::value_type> files;
@@ -136,9 +136,81 @@ namespace filesystem
 
 			return rmdir(dir, true);
 		}
+
+		bool mkdir_helper(const nana::string& dir, bool & if_exist)
+		{
+#if defined(NANA_WINDOWS)
+			if(::CreateDirectory(dir.c_str(), 0))
+			{
+				if_exist = false;
+				return true;
+			}
+
+			if_exist = (::GetLastError() == ERROR_ALREADY_EXISTS);
+#elif defined(NANA_LINUX)
+			if(0 == ::mkdir(static_cast<std::string>(nana::charset(dir)).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
+			{
+				if_exist = false;
+				return true;
+			}
+
+			if_exist = (errno == EEXIST);
+#endif
+			return false;
+		}
+
+#if defined(NANA_WINDOWS)
+		void filetime_to_c_tm(FILETIME& ft, struct tm& t)
+		{
+			FILETIME local_file_time;
+			if(::FileTimeToLocalFileTime(&ft, &local_file_time))
+			{
+				SYSTEMTIME st;
+				::FileTimeToSystemTime(&local_file_time, &st);
+				t.tm_year = st.wYear - 1900;
+				t.tm_mon = st.wMonth - 1;
+				t.tm_mday = st.wDay;
+				t.tm_wday = st.wDayOfWeek - 1;
+				t.tm_yday = nana::date::day_in_year(st.wYear, st.wMonth, st.wDay);
+
+				t.tm_hour = st.wHour;
+				t.tm_min = st.wMinute;
+				t.tm_sec = st.wSecond;
+			}
+		}
+#endif
+
+	}//end namespace detail
+
+	bool file_attrib(const nana::string& file, attribute& attr)
+	{
+#if defined(NANA_WINDOWS)
+		WIN32_FILE_ATTRIBUTE_DATA fad;
+		if(::GetFileAttributesEx(file.c_str(), GetFileExInfoStandard, &fad))
+		{
+			LARGE_INTEGER li;
+			li.u.LowPart = fad.nFileSizeLow;
+			li.u.HighPart = fad.nFileSizeHigh;
+			attr.bytes = li.QuadPart;
+			attr.is_directory = (0 != (fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY));
+			detail::filetime_to_c_tm(fad.ftLastWriteTime, attr.modified);
+			return true;
+		}
+#elif defined(NANA_LINUX)
+		struct stat fst;
+		if(0 == ::stat(static_cast<std::string>(nana::charset(file)).c_str(), &fst))
+		{
+			attr.bytes = fst.st_size;
+			attr.is_directory = (0 != (040000 & fst.st_mode));
+			attr.modified = *(::localtime(&fst.st_ctime));
+			return true;
+		}
+#endif
+		return false;
 	}
 
-	long long filesize(const nana::char_t* file)
+
+	long_long_t filesize(const nana::char_t* file)
 	{
 #if defined(NANA_WINDOWS)
 		//Some compilation environment may fail to link to GetFileSizeEx
@@ -160,7 +232,7 @@ namespace filesystem
 		return 0;
 #elif defined(NANA_LINUX)
 		FILE * stream = ::fopen(static_cast<std::string>(nana::charset(file)).c_str(), "rb");
-		long long size = 0;
+		long_long_t size = 0;
 		if(stream)
 		{
 			fseeko64(stream, 0, SEEK_END);
@@ -169,6 +241,91 @@ namespace filesystem
 		}
 		return size;
 #endif
+	}
+
+	bool modified_file_time(const nana::string& file, struct tm& t)
+	{
+#if defined(NANA_WINDOWS)
+		WIN32_FILE_ATTRIBUTE_DATA attr;
+		if(::GetFileAttributesEx(file.c_str(), GetFileExInfoStandard, &attr))
+		{
+			FILETIME local_file_time;
+			if(::FileTimeToLocalFileTime(&attr.ftLastWriteTime, &local_file_time))
+			{
+				SYSTEMTIME st;
+				::FileTimeToSystemTime(&local_file_time, &st);
+				t.tm_year = st.wYear - 1900;
+				t.tm_mon = st.wMonth - 1;
+				t.tm_mday = st.wDay;
+				t.tm_wday = st.wDayOfWeek - 1;
+				t.tm_yday = nana::date::day_in_year(st.wYear, st.wMonth, st.wDay);
+
+				t.tm_hour = st.wHour;
+				t.tm_min = st.wMinute;
+				t.tm_sec = st.wSecond;
+				return true;
+			}
+		}
+#elif defined(NANA_LINUX)
+		struct stat attr;
+		if(0 == ::stat(static_cast<std::string>(nana::charset(file)).c_str(), &attr))
+		{
+			t = *(::localtime(&attr.st_ctime));
+			return true;
+		}
+#endif
+		return false;
+	}
+
+	bool mkdir(const nana::string& path, bool & if_exist)
+	{
+		if_exist = false;
+		if(path.size() == 0) return false;
+
+		nana::string root;
+#if defined(NANA_WINDOWS)
+		if(path.size() > 3 && path[1] == STR(':'))
+			root = path.substr(0, 3);
+#elif defined(NANA_LINUX)
+		if(path[0] == STR('/'))
+			root = '/';
+#endif
+		bool mkstat = false;
+		std::size_t beg = root.size();
+
+		while(true)
+		{
+			beg = path.find_first_not_of(STR("/\\"), beg);
+			if(beg == path.npos)
+				break;
+
+			std::size_t pos = path.find_first_of(STR("/\\"), beg + 1);
+			if(pos != path.npos)
+			{
+				root += path.substr(beg, pos - beg);
+
+				mkstat = detail::mkdir_helper(root, if_exist);
+				if(mkstat == false && if_exist == false)
+					return false;
+
+#if defined(NANA_WINDOWS)
+				root += STR('\\');
+#elif defined(NANA_LINUX)
+				root += STR('/');
+#endif
+			}
+			else
+			{
+				if(beg + 1 < path.size())
+				{
+					root += path.substr(beg);
+					mkstat = detail::mkdir_helper(root, if_exist);
+				}
+				break;
+			}
+			beg = pos + 1;
+		}
+		return mkstat;
 	}
 
 	bool rmfile(const nana::char_t* file)
@@ -235,7 +392,31 @@ namespace filesystem
 			}
 		}
 
-		return index?path.substr(0, index + 1):nana::string();
+		return (index ? path.substr(0, index + 1) : nana::string());
+	}
+
+	nana::string path_user()
+	{
+#if defined(NANA_WINDOWS)
+		return nana::string();
+#elif defined(NANA_LINUX)
+		const char * s = ::getenv("HOME");
+		if(s)
+			return nana::charset(std::string(s, std::strlen(s)), nana::unicode::utf8);
+		return nana::string();
+#endif
+	}
+
+	nana::string path_current()
+	{
+#if defined(NANA_WINDOWS)
+		return nana::string();
+#elif defined(NANA_LINUX)
+		const char * s = ::getenv("PWD");
+		if(s)
+			return nana::charset(std::string(s, std::strlen(s)), nana::unicode::utf8);
+		return nana::string();
+#endif
 	}
 
 }//end namespace filesystem

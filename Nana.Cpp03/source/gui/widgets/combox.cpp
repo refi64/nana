@@ -265,6 +265,11 @@ namespace nana{ namespace gui{
 					graph.rectangle(nana::rectangle(graph.size()).pare_off(1), 0xFFFFFF, false);
 				}
 
+				std::size_t the_number_of_options() const
+				{
+					return module_.items.size();
+				}
+
 				std::size_t option() const
 				{
 					return module_.index;
@@ -720,6 +725,11 @@ namespace nana{ namespace gui{
 		{
 			get_drawer_trigger().get_drawer_impl().insert(text);
 			return *this;
+		}
+
+		std::size_t combox::the_number_of_options() const
+		{
+			return get_drawer_trigger().get_drawer_impl().the_number_of_options();
 		}
 
 		std::size_t combox::option() const

@@ -70,11 +70,13 @@ namespace nana
 		{}
 
 		any();
-		any(const any& rhs);
+		any(const any&);
+		any(any&&);
 		~any();
 		
-		bool same(const any &rhs) const;
-		any& operator=(const any& rhs);
+		bool same(const any &) const;
+		any& operator=(const any&);
+		any& operator=(any&&);
 		
 		template<typename T>
 		any& operator=(T const &rhs)

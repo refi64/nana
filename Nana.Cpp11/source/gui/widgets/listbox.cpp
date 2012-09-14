@@ -13,11 +13,11 @@
 
 #include <nana/gui/widgets/listbox.hpp>
 #include <nana/gui/widgets/scroll.hpp>
-#include <nana/gui/cursor.hpp>
+#include <nana/paint/gadget.hpp>
 #include <list>
 #include <deque>
 #include <stdexcept>
-#include <nana/paint/gadget.hpp>
+#include <sstream>
 
 namespace nana{ namespace gui{
 	namespace drawerbase
@@ -991,7 +991,6 @@ namespace nana{ namespace gui{
 
 				widget * window;
 				nana::paint::graphics *graph;
-				class cursor	cursor;
 				bool auto_draw;
 				bool checkable;
 				bool if_image;
@@ -1876,7 +1875,6 @@ namespace nana{ namespace gui{
 				void trigger::bind_window(trigger::widget_reference wd)
 				{
 					essence_->window = &wd;
-					essence_->cursor.bind(wd);
 					wd.background(0xFFFFFF);
 				}
 
@@ -1918,7 +1916,6 @@ namespace nana{ namespace gui{
 				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
 				{
 					int update = 0; //0 = nothing, 1 = update, 2 = refresh
-
 					if(essence_->ptr_state == essence_->StateGrab)
 					{
 						nana::point pos(ei.mouse.x, ei.mouse.y);
@@ -1943,15 +1940,15 @@ namespace nana{ namespace gui{
 							if(drawer_header_->mouse_spliter(r, ei.mouse.x))
 							{
 								set_spliter = true;
-								essence_->cursor.load(cursor::predef::size_we);
+								essence_->window->cursor(cursor::size_we);
 							}
 						}
 					}
 					if(set_spliter == false && essence_->ptr_state != essence_->StateGrab)
 					{
-						if((drawer_header_->item_spliter() != npos) || (essence_->cursor.get() == cursor::predef::size_we))
+						if((drawer_header_->item_spliter() != npos) || (essence_->window->cursor() == cursor::size_we))
 						{
-							essence_->cursor.load(cursor::predef::arrow);
+							essence_->window->cursor(cursor::arrow);
 							drawer_header_->cancel_spliter();
 							update = 2;
 						}
@@ -1971,10 +1968,13 @@ namespace nana{ namespace gui{
 
 				void trigger::mouse_leave(graph_reference graph, const eventinfo&)
 				{
-					if(static_cast<int>(essence_->pointer_where.x) != essence_->WhereUnknown || essence_->ptr_state != essence_->StateNormal)
+					if((static_cast<int>(essence_->pointer_where.x) != essence_->WhereUnknown) || (essence_->ptr_state != essence_->StateNormal))
 					{
-						essence_->pointer_where.x = essence_->WhereUnknown;
-						essence_->ptr_state = essence_->StateNormal;
+						if(essence_->ptr_state != essence_->StateGrab)
+						{
+							essence_->pointer_where.x = essence_->WhereUnknown;
+							essence_->ptr_state = essence_->StateNormal;
+						}
 						draw();
 						API::lazy_refresh();
 					}

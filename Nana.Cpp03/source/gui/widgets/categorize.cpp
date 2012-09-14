@@ -202,7 +202,6 @@ namespace nana{	namespace gui{
 
 				bool seq(std::size_t index, std::vector<node_handle> & seqv) const
 				{
-					node_handle i = cur_;
 					node_handle root = tree_.get_root();
 					for(node_handle i = cur_; i && (i != root); i = i->owner)
 						seqv.insert(seqv.begin(), i);
@@ -327,6 +326,16 @@ namespace nana{	namespace gui{
 						}
 					}
 					return 0;
+				}
+
+				bool clear()
+				{
+					if(tree_.get_root()->child)
+					{
+						tree_.clear();
+						return true;
+					}
+					return false;
 				}
 			private:
 				container tree_;
@@ -506,7 +515,7 @@ namespace nana{	namespace gui{
 						switch(ui_el_.what)
 						{
 						case ui_element::item_name:
-							_m_selected(ui_el_.index);
+							_m_selected(treebase_.tail(ui_el_.index));
 							break;
 						default:	break;
 						}
@@ -523,13 +532,12 @@ namespace nana{	namespace gui{
 					return ext_event_;
 				}
 			private:
-				void _m_selected(std::size_t index)
+				void _m_selected(node_handle node)
 				{
-					node_handle i = treebase_.tail(index);
-					if(i)
+					if(node)
 					{
 						API::dev::window_caption(window_handle(), tree().path());
-						ext_event_.selected(i->value.second.value);
+						ext_event_.selected(node->value.second.value);
 					}
 				}
 
@@ -587,17 +595,17 @@ namespace nana{	namespace gui{
 								treebase_.tail(style_.active);
 								nana::string name = style_.module.items[style_.module.index].text;
 								nana::any value;
-								node_handle i = treebase_.find_child(name);
-								if(i)
+								node_handle node = treebase_.find_child(name);
+								if(node)
 								{
-									treebase_.cur(i);
-									ext_event_.selected(i->value.second.value);
+									treebase_.cur(node);
+									_m_selected(node);
 									is_draw = true;
 								}
 							}
 							break;
 						case ui_element::item_root:
-							_m_selected(style_.module.index);
+							_m_selected(treebase_.tail(style_.module.index));
 							is_draw = true;
 							break;
 						default:	break;
@@ -815,6 +823,16 @@ namespace nana{	namespace gui{
 				bool trigger::childset_erase(const nana::string& str)
 				{
 					if(scheme_->tree().childset_erase(str))
+					{
+						scheme_->draw();
+						return true;
+					}
+					return false;
+				}
+
+				bool trigger::clear()
+				{
+					if(scheme_->tree().clear())
 					{
 						scheme_->draw();
 						return true;

@@ -11,6 +11,7 @@
 
 #ifndef NANA_DATETIME_HPP
 #define NANA_DATETIME_HPP
+#include <ctime>
 
 namespace nana
 {
@@ -25,6 +26,7 @@ namespace nana
 		};
 
 		date();
+		date(const std::tm &);
 		date(int year, int month, int day);
 
 		date operator - (int off) const;
@@ -49,6 +51,25 @@ namespace nana
 	private:
 		value	value_;
 	}; //end namespace date
+
+
+	class time
+	{
+	public:
+		struct value
+		{
+			unsigned hour;		//[0-23]
+			unsigned minute;	//[0-59]
+			unsigned second;	//[0-61], the range of [60, 61] is used for leap seconds
+		};
+
+		time();
+		time(const std::tm&);
+		time(unsigned hour, unsigned minute, unsigned second);
+		const value& read() const;
+	private:
+		value	value_;
+	};
 }//end namespace nana
 
 #endif

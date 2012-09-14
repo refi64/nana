@@ -2,7 +2,6 @@
 #define NANA_GUI_MSGBOX_HPP
 
 #include <sstream>
-#include <string>
 #include <nana/gui/basis.hpp>
 
 namespace nana{	namespace gui{

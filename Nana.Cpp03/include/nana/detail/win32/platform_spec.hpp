@@ -143,6 +143,15 @@ namespace detail
 	public:
 		typedef drawable_impl_type::font_refer_t font_refer_t;
 
+		class co_initializer
+		{
+		public:
+			co_initializer();
+			~co_initializer();
+		private:
+			HMODULE ole32_;
+		};
+
 		platform_spec();
 
 		const font_refer_t& default_native_font() const;

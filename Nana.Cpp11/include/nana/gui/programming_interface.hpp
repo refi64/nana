@@ -86,7 +86,7 @@ namespace API
 
 	void fullscreen(window, bool);
 	bool enabled_double_click(window, bool);
-	bool insert_frame(window frame, nana::gui::native_window_type native_window);
+	bool insert_frame(window frame, native_window_type native_window);
 	native_window_type frame_container(window frame);
 	native_window_type frame_element(window frame, unsigned index);
 	void close_window(window);
@@ -154,6 +154,10 @@ namespace API
 
 	void window_caption(window, const nana::string& title);
 	nana::string window_caption(window);
+
+	void window_cursor(window, cursor);
+	cursor window_cursor(window);
+
 	//paste a graphics into a window
 	void paste_graphics(const nana::paint::graphics&, int x, int y, window);
 

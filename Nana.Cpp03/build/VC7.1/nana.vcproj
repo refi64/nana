@@ -144,9 +144,6 @@
 						RelativePath="..\..\source\gui\basis.cpp">
 					</File>
 					<File
-						RelativePath="..\..\source\gui\cursor.cpp">
-					</File>
-					<File
 						RelativePath="..\..\source\gui\dragger.cpp">
 					</File>
 					<File

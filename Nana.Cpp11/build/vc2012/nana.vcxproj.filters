@@ -90,9 +90,6 @@
     <ClCompile Include="..\..\source\gui\basis.cpp">
       <Filter>Source Files\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\gui\cursor.cpp">
-      <Filter>Source Files\gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\gui\dragger.cpp">
       <Filter>Source Files\gui</Filter>
     </ClCompile>

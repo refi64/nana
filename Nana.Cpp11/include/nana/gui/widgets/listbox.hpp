@@ -116,7 +116,7 @@ namespace nana{ namespace gui{
 		template<typename T>
 		void append(size_type categ, const T& t)
 		{
-			inner_resolver_proxy<T> * proxy = _m_resolver().get<inner_resolver_proxy<T> >();
+			inner_resolver_proxy<T> * proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
 			if(proxy)
 			{
 				auto & res = proxy->res->refer();
@@ -134,7 +134,7 @@ namespace nana{ namespace gui{
 		template<typename T>
 		void insert(size_type categ, size_type index, const T& t)
 		{
-			inner_resolver_proxy<T> * proxy = _m_resolver().get<inner_resolver_proxy<T> >();
+			inner_resolver_proxy<T> * proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
 			if(proxy)
 			{
 				auto & res = proxy->res->refer();
@@ -169,7 +169,7 @@ namespace nana{ namespace gui{
 		template<typename T>
 		bool item(size_type categ, size_type index, T & t) const
 		{
-			inner_resolver_proxy<T> * proxy = _m_resolver().get<inner_resolver_proxy<T> >();
+			inner_resolver_proxy<T> * proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
 			if(proxy)
 			{
 				auto & res = proxy->res->refer();

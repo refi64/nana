@@ -123,12 +123,22 @@ namespace gui
 					adjust_.timer.interval(10);
 				}
 
-				bool trigger::check(const trigger::node_type* node) const
+				void trigger::auto_draw(bool ad)
+				{
+					if(attr_.auto_draw != ad)
+					{
+						attr_.auto_draw = ad;
+						if(ad)
+							API::update_window(widget_->handle());
+					}
+				}
+
+				bool trigger::check(const node_type* node) const
 				{
 					return attr_.tree_cont.check(node);
 				}
 
-				nana::any & trigger::value(trigger::node_type* node) const
+				nana::any & trigger::value(node_type* node) const
 				{
 					if(attr_.tree_cont.check(node) == false)
 						throw std::invalid_argument("Nana.GUI.treebox.value() invalid node");
@@ -141,7 +151,7 @@ namespace gui
 					return attr_.tree_cont.find(key_path);
 				}
 
-				trigger::node_type* trigger::get_owner(const trigger::node_type* node) const
+				trigger::node_type* trigger::get_owner(const node_type* node) const
 				{
 					return attr_.tree_cont.get_owner(node);
 				}
@@ -151,7 +161,7 @@ namespace gui
 					return attr_.tree_cont.get_root();
 				}
 
-				trigger::node_type* trigger::insert(trigger::node_type* node, const nana::string& key, const nana::string& title, const nana::any& v)
+				trigger::node_type* trigger::insert(node_type* node, const nana::string& key, const nana::string& title, const nana::any& v)
 				{
 					node_type * p = attr_.tree_cont.node(node, key);
 					if(p)
@@ -162,7 +172,7 @@ namespace gui
 					else
 						p = attr_.tree_cont.insert(node, key, treebox_node_type(title, v));
 
-					if(p && _m_draw(true))
+					if(p && attr_.auto_draw && _m_draw(true))
 						API::update_window(widget_->handle());
 					return p;
 				}
@@ -170,15 +180,12 @@ namespace gui
 				trigger::node_type* trigger::insert(const nana::string& path, const nana::string& title, const nana::any& v)
 				{
 					node_type * x = attr_.tree_cont.insert(path, treebox_node_type(title, v));
-					if(x)
-					{
-						if(_m_draw(true))
-							API::update_window(widget_->handle());
-					}
+					if(x && attr_.auto_draw && _m_draw(true))
+						API::update_window(widget_->handle());
 					return x;
 				}
 
-				bool trigger::check(trigger::node_type* parent, trigger::node_type* child) const
+				bool trigger::check(node_type* parent, node_type* child) const
 				{
 					if(nullptr == parent || nullptr == child) return false;
 
@@ -188,7 +195,7 @@ namespace gui
 					return (nullptr != child);
 				}
 
-				void trigger::remove(trigger::node_type* node)
+				void trigger::remove(node_type* node)
 				{
 					if(check(node, node_state_.event_node))
 						node_state_.event_node = nullptr;
@@ -207,7 +214,16 @@ namespace gui
 					return node_state_.selected;
 				}
 
-				void trigger::set_expand(tree_cont_type::node_type* node, bool exp)
+				void trigger::selected(node_type* node)
+				{
+					if(attr_.tree_cont.check(node) && _m_set_selected(node))
+					{
+						_m_draw(true);
+						API::update_window(*widget_);
+					}
+				}
+
+				void trigger::set_expand(node_type* node, bool exp)
 				{
 					if(widget_ && _m_set_expanded(node, exp))
 					{
@@ -248,7 +264,7 @@ namespace gui
 					shape_.image_table.erase(id);
 				}
 
-				void trigger::node_image(trigger::node_type* node, const nana::string& id)
+				void trigger::node_image(node_type* node, const nana::string& id)
 				{
 					if(check(node))
 					{
@@ -259,7 +275,7 @@ namespace gui
 					}
 				}
 
-				unsigned long trigger::node_width(const trigger::node_type *node) const
+				unsigned long trigger::node_width(const node_type *node) const
 				{
 					return (static_cast<int>(graph_->text_extent_size(node->value.second.text).width) + node_desc_.text_offset * 2 + node_desc_.image_width);
 				}
@@ -293,14 +309,14 @@ namespace gui
 					return attr_.ext_event;
 				}
 
-				void trigger::bind_window(trigger::widget_reference widget)
+				void trigger::bind_window(widget_reference widget)
 				{
 					widget.background(0xFFFFFF);
 					widget_ = &widget;
 					widget.caption(STR("Nana Treebox"));
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
 					graph_ = &graph;
 					window wd = widget_->handle();
@@ -320,12 +336,12 @@ namespace gui
 					API::dev::umake_drawer_event(widget_->handle());
 				}
 
-				void trigger::refresh(trigger::graph_reference)
+				void trigger::refresh(graph_reference)
 				{
 					_m_draw(false);
 				}
 
-				void trigger::dbl_click(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::dbl_click(graph_reference, const eventinfo& ei)
 				{
 					int xpos = attr_.tree_cont.indent_size(node_desc_.first) * node_desc_.indent_size - node_desc_.offset_x;
 					item_locator nl(*this, xpos, ei.mouse.x, ei.mouse.y);
@@ -340,7 +356,7 @@ namespace gui
 					}
 				}
 
-				void trigger::mouse_down(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_down(graph_reference graph, const eventinfo& ei)
 				{
 					int xpos = attr_.tree_cont.indent_size(node_desc_.first) * node_desc_.indent_size - node_desc_.offset_x;
 					item_locator nl(*this, xpos, ei.mouse.x, ei.mouse.y);
@@ -386,7 +402,7 @@ namespace gui
 					}
 				}
 
-				void trigger::mouse_up(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::mouse_up(graph_reference, const eventinfo& ei)
 				{
 					int xpos = attr_.tree_cont.indent_size(node_desc_.first) * node_desc_.indent_size - node_desc_.offset_x;
 					item_locator nl(*this, xpos, ei.mouse.x, ei.mouse.y);
@@ -403,7 +419,7 @@ namespace gui
 					}
 				}
 
-				void trigger::mouse_move(trigger::graph_reference graph, const nana::gui::eventinfo& ei)
+				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
 				{
 					if(_m_track_mouse(ei.mouse.x, ei.mouse.y))
 					{
@@ -412,7 +428,7 @@ namespace gui
 					}
 				}
 
-				void trigger::mouse_wheel(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::mouse_wheel(graph_reference, const eventinfo& ei)
 				{
 					unsigned prev = shape_.prev_first_value;
 
@@ -429,7 +445,7 @@ namespace gui
 					}
 				}
 
-				void trigger::resize(trigger::graph_reference, const nana::gui::eventinfo&)
+				void trigger::resize(graph_reference, const eventinfo&)
 				{
 					_m_draw(false);
 					API::lazy_refresh();
@@ -441,7 +457,7 @@ namespace gui
 					}
 				}
 
-				void trigger::key_down(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::key_down(graph_reference, const eventinfo& ei)
 				{
 					bool redraw = false;
 					bool scroll = false; //Adjust the scrollbar
@@ -550,7 +566,7 @@ namespace gui
 					}
 				}
 
-				void trigger::key_char(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::key_char(graph_reference, const eventinfo& ei)
 				{
 					const node_type * node = _m_find_track_node(ei.keyboard.key);
 
@@ -709,7 +725,7 @@ namespace gui
 					return nullptr;
 				}
 
-				nana::paint::image* trigger::_m_image(const trigger::node_type* node)
+				nana::paint::image* trigger::_m_image(const node_type* node)
 				{
 					const nana::string& idstr = node->value.second.img_idstr;
 					if(idstr.size())
@@ -778,7 +794,7 @@ namespace gui
 					return redraw;
 				}
 
-				void trigger::_m_tooltip_window(trigger::node_type* node, const nana::point& pos, const nana::size& size)
+				void trigger::_m_tooltip_window(node_type* node, const nana::point& pos, const nana::size& size)
 				{
 					_m_close_tooltip_window();
 
@@ -813,7 +829,7 @@ namespace gui
 						_m_close_tooltip_window();
 				}
 
-				void trigger::_m_click_tooltip_window(const nana::gui::eventinfo& ei)
+				void trigger::_m_click_tooltip_window(const eventinfo& ei)
 				{
 					bool redraw = false;
 					switch(ei.identifier)
@@ -905,7 +921,7 @@ namespace gui
 					shape_.scrollbar.value(attr_.tree_cont.distance_if(node_desc_.first, pred_allow_child()));
 				}
 
-				void trigger::_m_event_scrollbar(const nana::gui::eventinfo& ei)
+				void trigger::_m_event_scrollbar(const eventinfo& ei)
 				{
 					if(ei.identifier == events::mouse_wheel::identifier || ei.mouse.left_button)
 					{
@@ -926,7 +942,7 @@ namespace gui
 					}
 				}
 
-				bool trigger::_m_adjust(tree_cont_type::node_type * node, int reason)
+				bool trigger::_m_adjust(node_type * node, int reason)
 				{
 					if(nullptr == node) return false;
 
@@ -997,7 +1013,7 @@ namespace gui
 					return false;
 				}
 
-				void trigger::_m_set_selected(trigger::node_type * node)
+				bool trigger::_m_set_selected(trigger::node_type * node)
 				{
 					if(node_state_.selected != node)
 					{
@@ -1009,10 +1025,12 @@ namespace gui
 						if(node)
 							attr_.ext_event.selected(widget_->handle(), reinterpret_cast<ext_event_type::node_type>(node), true);
 						dwflags_.pause = false;
+						return true;
 					}
+					return false;
 				}
 
-				bool trigger::_m_set_expanded(trigger::tree_cont_type::node_type* node, bool value)
+				bool trigger::_m_set_expanded(node_type* node, bool value)
 				{
 					if(node && node->value.second.expanded != value)
 					{
@@ -1277,7 +1295,7 @@ namespace gui
 
 				//struct attribute_type
 					trigger::attribute_type::attribute_type()
-						: visual_item_size(0), button_width(16)
+						: auto_draw(true), visual_item_size(0), button_width(16)
 					{}
 				//end struct attribute_type
 

@@ -33,18 +33,7 @@ namespace gui
 		void drawer_trigger::resize(graph_reference graph, const eventinfo&)
 		{
 			refresh(graph);
-			using nana::gui::detail::bedrock;
-			const bedrock::thread_context* thrd = bedrock::instance().get_thread_context();
-			if(thrd && thrd->event_window)
-			{
-				switch(thrd->event_window->other.upd_state)
-				{
-				case bedrock::core_window_t::update_state::none:
-				case bedrock::core_window_t::update_state::lazy:
-					thrd->event_window->other.upd_state = bedrock::core_window_t::update_state::refresh;
-				default: break;
-				}
-			}
+			detail::bedrock::instance().thread_context_lazy_refresh();
 		}
 
 		void drawer_trigger::click(graph_reference, const eventinfo&){}

@@ -164,7 +164,6 @@
     <ClCompile Include="..\..\source\filesystem\file_iterator.cpp" />
     <ClCompile Include="..\..\source\filesystem\fs_utility.cpp" />
     <ClCompile Include="..\..\source\gui\basis.cpp" />
-    <ClCompile Include="..\..\source\gui\cursor.cpp" />
     <ClCompile Include="..\..\source\gui\detail\drawer.cpp" />
     <ClCompile Include="..\..\source\gui\detail\event_manager.cpp" />
     <ClCompile Include="..\..\source\gui\detail\native_window_interface.cpp" />

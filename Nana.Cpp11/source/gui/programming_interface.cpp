@@ -585,19 +585,7 @@ namespace API
 	//@brief: A widget drawer draws the widget surface in answering an event. This function will tell the drawer to copy the graphics into window after event answering.
 	void lazy_refresh()
 	{
-		const nana::gui::detail::bedrock::thread_context* thrd = restrict::bedrock.get_thread_context();
-		if(thrd && thrd->event_window)
-		{
-			//the state none should be tested, becuase in an event, there would be draw after an update,
-			//if the none is not tested, the draw after update will not be refreshed.
-			switch(thrd->event_window->other.upd_state)
-			{
-			case restrict::core_window_t::update_state::none:
-			case restrict::core_window_t::update_state::lazy:
-				thrd->event_window->other.upd_state = restrict::core_window_t::update_state::refresh;
-			default: break;
-			}
-		}
+		restrict::bedrock.thread_context_lazy_refresh();
 	}
 
 	//refresh_window
@@ -639,6 +627,32 @@ namespace API
 			}
 		}
 		return nana::string();
+	}
+
+	void window_cursor(window wd, cursor cur)
+	{
+		if(wd)
+		{
+			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+			internal_scope_guard isg;
+			if(restrict::window_manager.available(iwd))
+			{
+				iwd->predef_cursor = cur;
+				restrict::bedrock.update_cursor(iwd);
+			}
+		}
+	}
+
+	cursor window_cursor(window wd)
+	{
+		if(wd)
+		{
+			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+			internal_scope_guard isg;
+			if(restrict::window_manager.available(iwd))
+				return iwd->predef_cursor;
+		}
+		return cursor::arrow;
 	}
 
 	//paste a graphics into a window

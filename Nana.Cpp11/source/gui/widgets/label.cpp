@@ -10,11 +10,11 @@
  */
 
 #include <nana/gui/widgets/label.hpp>
-#include <nana/gui/cursor.hpp>
 #include <nana/system/platform.hpp>
 #include <nana/unicode_bidi.hpp>
 #include <nana/paint/text_renderer.hpp>
 #include <stdexcept>
+#include <sstream>
 
 namespace nana
 {
@@ -591,7 +591,7 @@ namespace gui
 
 				void render(widget_reference wd, graph_reference graph)
 				{
-					trace_.cursor.bind(wd);
+					trace_.wd = wd;
 
 					color_sect_ = color_fg_ = wd.foreground();
 					nana::paint::font font;
@@ -672,7 +672,7 @@ namespace gui
 								//Test if the specified point is in the area specified by rectangle.
 								if((r.x <= x && x < r.x + static_cast<int>(r.width)) && (r.y <= y && y < r.y + static_cast<int>(r.height)))
 								{
-									trace_.cursor.load(cursor::predef::hand);
+									API::window_cursor(trace_.wd, cursor::hand);
 									trace_.url = section->url;
 
 									if(trace_.target != section->target)
@@ -694,12 +694,12 @@ namespace gui
 
 				void leave()
 				{
-					if(trace_.cursor.get() != cursor::predef::arrow)
+					if(API::window_cursor(trace_.wd) != cursor::arrow)
 					{
 						if(trace_.target.size())
 							listener_(command::leave, trace_.target);
 
-						trace_.cursor.load(cursor::predef::arrow);
+						API::window_cursor(trace_.wd, cursor::arrow);
 						trace_.url.clear();
 						trace_.target.clear();
 					}
@@ -884,7 +884,7 @@ namespace gui
 			private:
 				struct trace_tag
 				{
-					nana::gui::cursor cursor;
+					window wd;
 					nana::string url;
 					nana::string target;
 				}trace_;

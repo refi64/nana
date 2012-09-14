@@ -14,7 +14,6 @@
 #define NANA_GUI_SKELETONS_TEXT_EDITOR_HPP
 #include "textbase.hpp"
 #include <nana/gui/widgets/scroll.hpp>
-#include <nana/gui/cursor.hpp>
 #include <nana/unicode_bidi.hpp>
 
 namespace nana{	namespace gui{	namespace widgets
@@ -190,7 +189,6 @@ namespace nana{	namespace gui{	namespace widgets
 				nana::rectangle	area;
 
 				bool captured;
-				nana::gui::cursor cursor;
 				unsigned long tab_space;
 				unsigned long vscroll;
 				unsigned long hscroll;

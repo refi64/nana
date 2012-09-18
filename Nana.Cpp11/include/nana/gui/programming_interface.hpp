@@ -18,14 +18,10 @@
 
 namespace nana{	namespace gui{
 
-namespace effects
-{
-	void edge_nimbus(window wd, edge_nimbus_t);
-	edge_nimbus_t edge_nimbus(window wd);
-}
-
 namespace API
 {
+	void effects_edge_nimbus(window, effects::edge_nimbus);
+	effects::edge_nimbus effects_edge_nimbus(window);
 
 	//namespace dev
 	//@brief: The interfaces defined in namespace dev are used for developing the nana.gui

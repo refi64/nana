@@ -229,7 +229,7 @@ namespace xcheckbox
 			this->get_drawer_trigger().check_renderer().open_background_image(img);
 		}
 
-		void checkbox::set_check_image(mouse_action_t act, checkbox::checker_t chk, bool checked, const nana::rectangle& r)
+		void checkbox::set_check_image(mouse_action::t act, checkbox::checker_t chk, bool checked, const nana::rectangle& r)
 		{
 			drawer_trigger_t::check_renderer_t::checker_t ichk = nana::paint::gadget::check_renderer::clasp;
 			switch(chk)

@@ -286,20 +286,20 @@ namespace nana{ namespace gui{
 		class popuper
 		{
 		public:
-			popuper(menu&, mouse::t);
-			popuper(menu&, window owner, const point&, mouse::t);
+			popuper(menu&, mouse);
+			popuper(menu&, window owner, const point&, mouse);
 			void operator()(const eventinfo&);
 		private:
 			menu & mobj_;
 			nana::gui::window owner_;
 			bool take_mouse_pos_;
 			nana::point pos_;
-			mouse::t mouse_;
+			mouse mouse_;
 		};
 	}
 
-	detail::popuper menu_popuper(menu&, mouse::t = mouse::right_button);
-	detail::popuper menu_popuper(menu&, window owner, const point&, mouse::t = mouse::right_button);
+	detail::popuper menu_popuper(menu&, mouse = mouse::right_button);
+	detail::popuper menu_popuper(menu&, window owner, const point&, mouse = mouse::right_button);
 }//end namespace gui
 }//end namespace nana
 #endif

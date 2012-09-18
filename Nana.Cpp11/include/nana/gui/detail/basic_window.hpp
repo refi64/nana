@@ -170,7 +170,7 @@ namespace detail
 
 		struct
 		{
-			effects::edge_nimbus_t	edge_nimbus;
+			effects::edge_nimbus	edge_nimbus;
 		}effect;
 		
 		struct other_tag

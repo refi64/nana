@@ -64,12 +64,9 @@ namespace gui
 		};
 	};
 
-	struct mouse
+	enum class mouse
 	{
-		enum t
-		{
-			any_button, left_button, middle_button, right_button
-		};
+		any_button, left_button, middle_button, right_button
 	};
 
 	enum class cursor

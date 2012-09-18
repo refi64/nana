@@ -1254,7 +1254,7 @@ namespace detail
 					tabstop.erase(i);
 			}
 
-			if(wd->effect.edge_nimbus)
+			if(effects::edge_nimbus::none != wd->effect.edge_nimbus)
 			{
 				auto & container = root_attr->effects_edge_nimbus;
 				for(auto i = container.begin(); i != container.end(); ++i)

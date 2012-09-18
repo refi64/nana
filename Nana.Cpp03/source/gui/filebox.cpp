@@ -1,4 +1,5 @@
 #include <nana/gui/filebox.hpp>
+#include <nana/filesystem/fs_utility.hpp>
 
 #if defined(NANA_WINDOWS)
 	#include <windows.h>
@@ -11,7 +12,6 @@
 	#include <nana/gui/widgets/treebox.hpp>
 	#include <nana/gui/widgets/combox.hpp>
 	#include <nana/filesystem/file_iterator.hpp>
-	#include <nana/filesystem/fs_utility.hpp>
 	#include <nana/gui/layout.hpp>
 	#include <nana/gui/functional.hpp>
 	#include <stdexcept>
@@ -60,7 +60,7 @@ namespace nana{	namespace gui
 				case 2:
 					if(false == item.directory)
 					{
-						std:size_t pos = item.name.find_last_of(STR('.'));
+						std::size_t pos = item.name.find_last_of(STR('.'));
 						if(pos != item.name.npos && (pos + 1 < item.name.size()))
 							return item.name.substr(pos + 1);
 						return STR("File");
@@ -136,7 +136,7 @@ namespace nana{	namespace gui
 		typedef treebox<kind::t>::node_type node_type;
 	public:
 
-		filebox_implement(window owner, bool io_read)
+		filebox_implement(window owner, bool io_read, const nana::string& title)
 			: form(owner, API::make_center(owner, 630, 440)), io_read_(io_read)
 		{
 			path_.create(*this);
@@ -185,10 +185,10 @@ namespace nana{	namespace gui
 			_m_init_tree();
 			_m_load_cat_path(nana::filesystem::path_user());
 
-			if(io_read)
-				caption(STR("Open"));
+			if(0 == title.size())
+				caption(io_read ? STR("Open") : STR("Save As"));
 			else
-				caption(STR("Save As"));
+				caption(title);
 		}
 
 		void def_extension(const nana::string& ext)
@@ -412,7 +412,6 @@ namespace nana{	namespace gui
 			}
 			_m_load_path(path);
 			_m_list_fs();
-			
 		}
 
 		bool _m_filter_allowed(const nana::string& name, bool is_dir, const nana::string& filter, const std::vector<nana::string>* extension) const
@@ -590,7 +589,7 @@ namespace nana{	namespace gui
 				{
 					if(file[0] == STR('.'))
 					{
-						msgbox mb(*this, STR("Invalid Filename"));
+						msgbox mb(*this, caption());
 						mb.icon(msgbox::icon_warning);
 						mb<<file<<std::endl<<STR("The filename is invalid.");
 						mb();
@@ -628,7 +627,7 @@ namespace nana{	namespace gui
 					{
 						if(good)
 						{
-							msgbox mb(*this, STR("Save As"), msgbox::yes_no);
+							msgbox mb(*this, caption(), msgbox::yes_no);
 							mb.icon(msgbox::icon_question);
 							mb<<STR("The input file is existing, do you want to overwrite it?");
 							if(msgbox::pick_no == mb())
@@ -786,10 +785,10 @@ namespace nana{	namespace gui
 
 		void filebox::init_path(const nana::string& s)
 		{
-#if defined(NANA_WINDOWS)
-			if(::GetFileAttributes(s.c_str()) == FILE_ATTRIBUTE_DIRECTORY)
-				impl_->path = s;
-#endif
+			nana::filesystem::attribute attr;
+			if(nana::filesystem::file_attrib(s, attr))
+				if(attr.is_directory)
+					impl_->path = s;
 		}
 
 		void filebox::add_filter(const nana::string& description, const nana::string& filetype)
@@ -840,6 +839,7 @@ namespace nana{	namespace gui
 				filter = STR("ALl Files\0*.*\0");
 
 			ofn.lpstrFilter = filter.c_str();
+			ofn.lpstrTitle = (impl_->title.size() ? impl_->title.c_str() : 0);
 			ofn.nFilterIndex = 0;
 			ofn.lpstrFileTitle = NULL;
 			ofn.nMaxFileTitle = 0;
@@ -851,7 +851,7 @@ namespace nana{	namespace gui
 				return true;
 			}
 #elif defined(NANA_LINUX)
-			filebox_implement fb(impl_->owner, impl_->open_or_save);
+			filebox_implement fb(impl_->owner, impl_->open_or_save, impl_->title);
 
 			if(impl_->filters.size())
 			{

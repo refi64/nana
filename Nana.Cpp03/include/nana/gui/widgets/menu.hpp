@@ -283,23 +283,25 @@ namespace nana{ namespace gui{
 		std::map<std::size_t, menu_info> sub_container_;
 	};
 
-	class menu_popuper
+	namespace detail
 	{
-	public:
-		enum mouse_t{mouse_all, mouse_left, mouse_middle, mouse_right};
+		class popuper
+		{
+		public:
+			popuper(menu&, mouse::t);
+			popuper(menu&, window owner, const point&, mouse::t);
+			void operator()(const eventinfo&);
+		private:
+			menu & mobj_;
+			nana::gui::window owner_;
+			bool take_mouse_pos_;
+			nana::point pos_;
+			mouse::t mouse_;
+		};
+	}
 
-		menu_popuper(menu&);
-		menu_popuper(menu&, mouse_t);
-		menu_popuper(menu& mobj, window owner, int x, int y);
-		menu_popuper(menu& mobj, window owner, int x, int y, mouse_t);
-		void operator()(const eventinfo& ei);
-	private:
-		menu & mobj_;
-		nana::gui::window owner_;
-		bool take_mouse_pos_;
-		nana::point pos_;
-		mouse_t mouse_;
-	};
+	detail::popuper menu_popuper(menu&, mouse::t = mouse::right_button);
+	detail::popuper menu_popuper(menu&, window owner, const point&, mouse::t = mouse::right_button);
 }//end namespace gui
 }//end namespace nana
 #endif

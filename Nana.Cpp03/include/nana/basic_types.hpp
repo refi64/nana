@@ -28,7 +28,13 @@ namespace nana
 
 	namespace gui
 	{
-		enum mouse_action_t{mouse_action_normal, mouse_action_over, mouse_action_pressed, mouse_action_end};
+		struct mouse_action
+		{
+			enum t
+			{
+				begin, normal = begin, over, pressed, end
+			};
+		};
 	}
 
 	typedef unsigned scalar_t;

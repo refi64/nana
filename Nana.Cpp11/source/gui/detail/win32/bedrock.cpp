@@ -842,10 +842,14 @@ namespace detail
 				msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);
 				if(mousemove_window && (msgwnd != mousemove_window))
 				{
+					wnd_type leave_wd = mousemove_window;
+					root_runtime->condition.mousemove_window = 0;
+					mousemove_window = 0;
+
 					 //if current window is not the previous mouse event window
-					make_eventinfo(ei, mousemove_window, message, pmdec);
-					mousemove_window->flags.action = mouse_action::normal;
-					bedrock.raise_event(event_tag::mouse_leave, mousemove_window, ei, true);
+					make_eventinfo(ei, leave_wd, message, pmdec);
+					leave_wd->flags.action = mouse_action::normal;
+					bedrock.raise_event(event_tag::mouse_leave, leave_wd, ei, true);
 
 					//if msgwnd is neither captured window nor the child of captured window,
 					//redirect the msgwnd to the captured window.
@@ -879,14 +883,14 @@ namespace detail
 					make_eventinfo(ei, msgwnd, message, pmdec);
 					msgwnd->flags.action = mouse_action::over;
 					if(mousemove_window != msgwnd)
+					{
+						root_runtime->condition.mousemove_window = msgwnd;
+						mousemove_window = msgwnd;
 						bedrock.raise_event(event_tag::mouse_enter, msgwnd, ei, true);
-
+					}
 					bedrock.raise_event(event_tag::mouse_move, msgwnd, ei, true);
-
 					track.hwndTrack = native_window;
 					restrict::track_mouse_event(&track);
-
-					mousemove_window = msgwnd;
 				}
 				break;
 			case WM_MOUSELEAVE:

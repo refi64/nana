@@ -130,6 +130,7 @@ namespace nana{	namespace gui{	namespace widgets
 			//@brief: Moves the view window
 			bool _m_move_offset_x_while_over_border(int many);
 
+			int _m_text_top_base() const;
 			//_m_endx
 			//@brief: Gets the right point of text area
 			int _m_endx() const;

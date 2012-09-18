@@ -1158,12 +1158,12 @@ namespace nana{ namespace gui{
 		}
 	//end class menu
 
-	detail::popuper menu_popuper(menu& mobj, mouse::t ms)
+	detail::popuper menu_popuper(menu& mobj, mouse ms)
 	{
 		return detail::popuper(mobj, ms);
 	}
 
-	detail::popuper menu_popuper(menu& mobj, window owner, const point& pos, mouse::t ms)
+	detail::popuper menu_popuper(menu& mobj, window owner, const point& pos, mouse ms)
 	{
 		return detail::popuper(mobj, owner, pos, ms);
 	}
@@ -1171,12 +1171,12 @@ namespace nana{ namespace gui{
 	namespace detail
 	{
 	//class popuper
-		popuper::popuper(menu& mobj, mouse::t mouse)
-			: mobj_(mobj), owner_(nullptr), take_mouse_pos_(true), mouse_(mouse)
+		popuper::popuper(menu& mobj, mouse ms)
+			: mobj_(mobj), owner_(nullptr), take_mouse_pos_(true), mouse_(ms)
 		{}
 
-		popuper::popuper(menu& mobj, window owner, const point& pos, mouse::t mouse)
-			: mobj_(mobj), owner_(owner), take_mouse_pos_(false), pos_(pos), mouse_(mouse)
+		popuper::popuper(menu& mobj, window owner, const point& pos, mouse ms)
+			: mobj_(mobj), owner_(owner), take_mouse_pos_(false), pos_(pos), mouse_(ms)
 		{}
 
 		void popuper::operator()(const eventinfo& ei)

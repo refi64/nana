@@ -1158,24 +1158,28 @@ namespace nana{ namespace gui{
 		}
 	//end class menu
 
-	//class menu_popuper
-		menu_popuper::menu_popuper(menu& mobj)
-			: mobj_(mobj), owner_(0), take_mouse_pos_(true), mouse_(mouse_right)
+		detail::popuper menu_popuper(menu& mobj, mouse::t ms)
+	{
+		return detail::popuper(mobj, ms);
+	}
+
+		detail::popuper menu_popuper(menu& mobj, window owner, const point& pos, mouse::t ms)
+	{
+		return detail::popuper(mobj, owner, pos, ms);
+	}
+
+	namespace detail
+	{
+	//class popuper
+		popuper::popuper(menu& mobj, mouse::t ms)
+			: mobj_(mobj), owner_(0), take_mouse_pos_(true), mouse_(ms)
 		{}
 
-		menu_popuper::menu_popuper(menu& mobj, mouse_t mouse)
-			: mobj_(mobj), owner_(0), take_mouse_pos_(true), mouse_(mouse)
+		popuper::popuper(menu& mobj, window owner, const point& pos, mouse::t ms)
+			: mobj_(mobj), owner_(owner), take_mouse_pos_(false), pos_(pos), mouse_(ms)
 		{}
 
-		menu_popuper::menu_popuper(menu& mobj, window owner, int x, int y)
-			: mobj_(mobj), owner_(owner), take_mouse_pos_(false), pos_(x, y), mouse_(mouse_right)
-		{}
-
-		menu_popuper::menu_popuper(menu& mobj, window owner, int x, int y, mouse_t mouse)
-			: mobj_(mobj), owner_(owner), take_mouse_pos_(false), pos_(x, y), mouse_(mouse)
-		{}
-
-		void menu_popuper::operator()(const eventinfo& ei)
+		void popuper::operator()(const eventinfo& ei)
 		{
 			if(take_mouse_pos_)
 			{
@@ -1195,22 +1199,22 @@ namespace nana{ namespace gui{
 			bool popup = false;
 			switch(mouse_)
 			{
-			case mouse_left:
-				popup = (ei.mouse.left_button);
+			case mouse::left_button:
+				popup = ei.mouse.left_button;
 				break;
-			case mouse_middle:
+			case mouse::middle_button:
 				popup = ei.mouse.mid_button;
 				break;
-			case mouse_right:
+			case mouse::right_button:
 				popup = ei.mouse.right_button;
 				break;
-			case mouse_all:
+			case mouse::any_button:
 				popup = true;
 			}
-
 			if(popup)
 				mobj_.popup(owner_, pos_.x, pos_.y, false);
 		}
 	//end class
+	}//end namespace detail
 }//end namespace gui
 }//end namespace nana

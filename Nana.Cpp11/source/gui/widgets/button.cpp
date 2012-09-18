@@ -181,8 +181,8 @@ namespace drawerbase
 			make_drawer_event<events::focus>(wd);
 
 			API::tabstop(wd);
-			effects::edge_nimbus(wd, effects::edge_nimbus_active);
-			effects::edge_nimbus(wd, effects::edge_nimbus_over);
+			API::effects_edge_nimbus(wd, effects::edge_nimbus::active);
+			API::effects_edge_nimbus(wd, effects::edge_nimbus::over);
 
 			graph_ = &graph;
 		}
@@ -434,7 +434,7 @@ namespace drawerbase
 							_m_draw_background(graph);
 							_m_draw_border(graph);
 						}
-						bgimage_->image.paste(bgimage_->block_size, graph, block.pos);
+						bgimage_->image.paste(nana::rectangle(block.pos, bgimage_->block_size), graph, nana::point());
 					}
 				}
 			}

@@ -1510,7 +1510,7 @@ namespace nana{ namespace gui{
 					if(essence_->pointer_where.x == essence_->WhereHeader && (item_spliter_ == npos))
 						state = essence_->ptr_state;
 
-					int bottom_y = static_cast<int>(rect.y, rect.height - 2);
+					int bottom_y = static_cast<int>(rect.y + rect.height - 2);
 					for(auto & i: cont)
 					{
 						if(i.visible)

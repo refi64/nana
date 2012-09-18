@@ -86,7 +86,7 @@ namespace gui
 		void transparent(bool value);
 		bool transparent() const;
 		void open_check_image(const nana::paint::image&);
-		void set_check_image(mouse_action_t, checker_t, bool checked, const nana::rectangle& r);
+		void set_check_image(mouse_action::t, checker_t, bool checked, const nana::rectangle& r);
 	};//end class checkbox
 
 	class radio_group

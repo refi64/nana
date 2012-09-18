@@ -1516,6 +1516,7 @@ namespace nana{ namespace gui{
 					if(essence_->pointer_where.x == essence_->WhereHeader && (item_spliter_ == npos))
 						state = essence_->ptr_state;
 
+					int bottom_y = static_cast<int>(rect.y + rect.height - 2);
 					for(typename Container::const_iterator i = cont.begin(); i != cont.end(); ++i)
 					{
 						if(i->visible)
@@ -1524,7 +1525,7 @@ namespace nana{ namespace gui{
 							{
 								_m_draw_item(graph, x, rect.y, height, txtop, txtcolor, *i, (i->index == essence_->pointer_where.y ? state : essence_->StateNormal));
 
-								essence_->graph->line(x - 1 + i->pixels, rect.y, x - 1 + i->pixels, static_cast<int>(rect.y + rect.height - 2), 0xDEDFE1);
+								essence_->graph->line(x - 1 + i->pixels, rect.y, x - 1 + i->pixels, bottom_y, 0xDEDFE1);
 							}
 							x += i->pixels;
 
@@ -1752,7 +1753,7 @@ namespace nana{ namespace gui{
 								ext_w = 18;
 								nana::rectangle chkarea = essence_->checkarea(item_xpos, y);
 
-								mouse_action_t act = mouse_action_normal;
+								mouse_action::t act = mouse_action::normal;
 
 								if(essence_->pointer_where.x == essence_->WhereChecker)
 								{
@@ -1761,10 +1762,10 @@ namespace nana{ namespace gui{
 									case essence_t::StateNormal:
 										break;
 									case essence_t::StateHighlight:
-										act = mouse_action_over;
+										act = mouse_action::over;
 										break;
 									case essence_t::StateGrab:
-										act = mouse_action_pressed;
+										act = mouse_action::pressed;
 										break;
 									default:	break;
 									}

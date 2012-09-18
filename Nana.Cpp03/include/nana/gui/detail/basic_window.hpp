@@ -380,7 +380,7 @@ namespace detail
 			this->flags.dropable = false;
 			this->flags.fullscreen = false;
 			this->flags.tab = nana::gui::detail::tab_type::none;
-			this->flags.action = mouse_action_normal;
+			this->flags.action = mouse_action::normal;
 			
 			this->visible = false;
 
@@ -388,7 +388,7 @@ namespace detail
 			this->color.background = nana::gui::color::button_face;
 			this->color.active = 0x60C8FD;
 
-			this->effect.edge_nimbus = effects::edge_nimbus_none;
+			this->effect.edge_nimbus = effects::edge_nimbus::none;
 
 			this->together.caret = 0;
 			this->flags.refreshing = false;
@@ -441,7 +441,7 @@ namespace detail
 			bool fullscreen	:1;	//When the window is maximizing whether it fit for fullscreen.
 			unsigned Reserved: 22;
 			unsigned char tab;		//indicate a window that can receive the keyboard TAB
-			mouse_action_t	action;
+			mouse_action::t	action;
 		}flags;
 
 		struct
@@ -458,7 +458,7 @@ namespace detail
 
 		struct
 		{
-			effects::edge_nimbus_t	edge_nimbus;
+			effects::edge_nimbus::t	edge_nimbus;
 		}effect;
 		
 		struct other_tag

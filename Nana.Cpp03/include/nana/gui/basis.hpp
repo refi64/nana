@@ -49,9 +49,9 @@ namespace gui
 
 	struct mouse
 	{
-		enum
+		enum t
 		{
-			left_button = 1, middle_button, right_button
+			any_button, left_button, middle_button, right_button
 		};
 	};
 

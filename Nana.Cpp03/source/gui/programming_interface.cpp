@@ -25,9 +25,9 @@ namespace nana{	namespace gui{
 		gui::detail::bedrock::window_manager_t& window_manager = bedrock.wd_manager;
 	}
 
-namespace effects
+namespace API
 {
-	void edge_nimbus(window wd, edge_nimbus_t en)
+	void effects_edge_nimbus(window wd, effects::edge_nimbus::t en)
 	{
 		if(wd)
 		{
@@ -38,13 +38,13 @@ namespace effects
 				restrict::core_window_t::edge_nimbus_container & cont = iwd->root_widget->other.attribute.root->effects_edge_nimbus;
 				if(en)
 				{
-					if(iwd->effect.edge_nimbus == effects::edge_nimbus_none)
+					if(iwd->effect.edge_nimbus == effects::edge_nimbus::none)
 					{
 						restrict::core_window_t::edge_nimbus_action act = {iwd};
 						cont.push_back(act);
 					}
 
-					iwd->effect.edge_nimbus = static_cast<effects::edge_nimbus_t>(iwd->effect.edge_nimbus | en);
+					iwd->effect.edge_nimbus = static_cast<effects::edge_nimbus::t>(iwd->effect.edge_nimbus | en);
 				}
 				else
 				{
@@ -59,13 +59,13 @@ namespace effects
 							}
 						}						
 					}
-					iwd->effect.edge_nimbus = effects::edge_nimbus_none;
+					iwd->effect.edge_nimbus = effects::edge_nimbus::none;
 				}
 			}
 		}
 	}
 
-	edge_nimbus_t edge_nimbus(window wd)
+	effects::edge_nimbus::t effects_edge_nimbus(window wd)
 	{
 		if(wd)
 		{
@@ -74,12 +74,9 @@ namespace effects
 			if(restrict::window_manager.available(iwd))
 				return iwd->effect.edge_nimbus;
 		}
-		return effects::edge_nimbus_none;
+		return effects::edge_nimbus::none;
 	}
-}
 
-namespace API
-{
 	namespace dev
 	{
 		void attach_drawer(window wd, nana::gui::drawer_trigger& dr)
@@ -1188,13 +1185,13 @@ namespace API
 		return false;
 	}
 
-	mouse_action_t mouse_action(window wd)
+	nana::gui::mouse_action::t mouse_action(window wd)
 	{
 		nana::gui::internal_scope_guard isg;
 		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 		if(restrict::window_manager.available(iwd))
 			return iwd->flags.action;
-		return mouse_action_normal;
+		return mouse_action::normal;
 	}
 }//end namespace API
 }//end namespace gui

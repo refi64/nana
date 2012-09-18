@@ -218,7 +218,7 @@ namespace gui
 			return create(wd, rectangle(), visible);
 		}
 
-		bool create(window wd, const rectangle& r = rectangle(), bool visible = false)
+		bool create(window wd, const rectangle& r = rectangle(), bool visible = true)
 		{
 			if(wd && this->empty())
 			{

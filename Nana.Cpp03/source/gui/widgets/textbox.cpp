@@ -70,8 +70,8 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 			API::tabstop(wd);
 			API::eat_tabstop(wd, true);
-			effects::edge_nimbus(wd, effects::edge_nimbus_active);
-			effects::edge_nimbus(wd, effects::edge_nimbus_over);
+			API::effects_edge_nimbus(wd, effects::edge_nimbus::active);
+			API::effects_edge_nimbus(wd, effects::edge_nimbus::over);
 		}
 
 		void drawer::detached()

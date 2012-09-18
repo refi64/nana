@@ -96,9 +96,9 @@ namespace nana{	namespace gui{
 		private:
 			static bool _m_edge_nimbus(core_window_t * focused_wd, core_window_t * wd)
 			{
-				if((focused_wd == wd) && (wd->effect.edge_nimbus & effects::edge_nimbus_active))
+				if((focused_wd == wd) && (wd->effect.edge_nimbus & effects::edge_nimbus::active))
 					return true;
-				else if((wd->effect.edge_nimbus & effects::edge_nimbus_over) && (wd->flags.action == mouse_action_over))
+				else if((wd->effect.edge_nimbus & effects::edge_nimbus::over) && (wd->flags.action == mouse_action::over))
 					return true;
 				return false;
 			}

@@ -41,24 +41,24 @@ namespace gadget
 	class check_renderer
 	{
 	public:
-		typedef nana::gui::mouse_action_t mouse_action_t;
+		typedef nana::gui::mouse_action mouse_action;
 		enum checker_t{radio, clasp, blocker, checker_end};
 
 		check_renderer();
 
-		void render(graphics&, int x, int y, uint32_t width, uint32_t height, mouse_action_t, checker_t, bool checked);
+		void render(graphics&, int x, int y, uint32_t width, uint32_t height, mouse_action::t, checker_t, bool checked);
 		void open_background_image(const paint::image&);
-		void set_image_state(mouse_action_t, checker_t, bool checked, const nana::rectangle& r);
+		void set_image_state(mouse_action::t, checker_t, bool checked, const nana::rectangle& r);
 		void clear_image_state();
 		bool has_background_image() const;
-		bool in_use(mouse_action_t, checker_t, bool checked) const;
+		bool in_use(mouse_action::t, checker_t, bool checked) const;
 	private:
 		struct img_state_t
 		{
 			bool in_use;
 			int x, y;
 			uint32_t width, height;
-		}imgstate_[checker_end][nana::gui::mouse_action_end][2];
+		}imgstate_[checker_end][nana::gui::mouse_action::end][2];
 
 		paint::image image_;
 	};

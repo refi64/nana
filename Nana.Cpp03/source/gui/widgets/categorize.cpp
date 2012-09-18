@@ -62,15 +62,15 @@ namespace nana{	namespace gui{
 					graph.rectangle(r, style_.bgcolor, true);
 				}
 
-				virtual void root_arrow(graph_reference graph, const nana::rectangle& r, mouse_action_t state)
+				virtual void root_arrow(graph_reference graph, const nana::rectangle& r, mouse_action::t state)
 				{
 					int x = r.x + (r.width - 16) / 2;
 					int y = r.y + (r.height - 16) / 2;
 					if(ui_el_.what == ui_el_.item_root)
 					{
-						_m_item_bground(graph, r.x + 1, r.y, r.width - 2, r.height, (state == mouse_action_pressed ? mouse_action_pressed : mouse_action_over));
+						_m_item_bground(graph, r.x + 1, r.y, r.width - 2, r.height, (state == mouse_action::pressed ? mouse_action::pressed : mouse_action::over));
 						graph.rectangle(r, 0x3C7FB1, false);
-						if(state == mouse_action_pressed)
+						if(state == mouse_action::pressed)
 						{
 							++x;
 							++y;
@@ -83,21 +83,21 @@ namespace nana{	namespace gui{
 						style_.fgcolor, 3, nana::paint::gadget::directions::to_west);
 				}
 
-				void item(graph_reference graph, const nana::rectangle& r, std::size_t index, const nana::string& name, unsigned txtheight, bool has_child, mouse_action_t state)
+				void item(graph_reference graph, const nana::rectangle& r, std::size_t index, const nana::string& name, unsigned txtheight, bool has_child, mouse_action::t state)
 				{
 					nana::point strpos(r.x + 5, r.y + static_cast<int>(r.height - txtheight) / 2);
 
 					if((ui_el_.what == ui_el_.item_arrow || ui_el_.what == ui_el_.item_name) && (ui_el_.index == index))
 					{
-						mouse_action_t state_arrow, state_name;
-						if(mouse_action_pressed != state)
+						mouse_action::t state_arrow, state_name;
+						if(mouse_action::pressed != state)
 						{
-							state_arrow = (ui_el_.what == ui_el_.item_arrow ? mouse_action_over : mouse_action_normal);
-							state_name = (ui_el_.what == ui_el_.item_name ? mouse_action_over : mouse_action_normal);
+							state_arrow = (ui_el_.what == ui_el_.item_arrow ? mouse_action::over : mouse_action::normal);
+							state_name = (ui_el_.what == ui_el_.item_name ? mouse_action::over : mouse_action::normal);
 						}
 						else
 						{
-							state_name = state_arrow = mouse_action_pressed;
+							state_name = state_arrow = mouse_action::pressed;
 							++strpos.x;
 							++strpos.y;
 						}
@@ -141,7 +141,7 @@ namespace nana{	namespace gui{
 				}
 
 			private:
-				void _m_item_bground(graph_reference graph, int x, int y, unsigned width, unsigned height, mouse_action_t state)
+				void _m_item_bground(graph_reference graph, int x, int y, unsigned width, unsigned height, mouse_action::t state)
 				{
 					const unsigned half = (height - 2) / 2;
 					int left = x + 1;
@@ -149,17 +149,17 @@ namespace nana{	namespace gui{
 					nana::color_t upcol, downcol;
 					switch(state)
 					{
-					case mouse_action_over:
+					case mouse_action::over:
 						upcol = 0x0DFF2FC;
 						downcol = 0xA9DAF5;
 						break;
-					case mouse_action_pressed:
+					case mouse_action::pressed:
 						upcol = 0xA6D7F2;
 						downcol = 0x92C4F6;
 						++left;
 						++top;
 						break;
-					case mouse_action_normal:
+					case mouse_action::normal:
 					default:
 						upcol = 0xEAEAEA;
 						downcol = 0xDCDCDC;
@@ -168,7 +168,7 @@ namespace nana{	namespace gui{
 
 					graph.rectangle(left, top, width - 2, half, upcol, true);
 					graph.rectangle(left, top + static_cast<int>(half), width - 2, (height - 2) - half, downcol, true);
-					if(mouse_action_pressed == state)
+					if(mouse_action::pressed == state)
 					{
 						int bottom = y + height - 1;
 						int right = x + width - 1;
@@ -495,7 +495,7 @@ namespace nana{	namespace gui{
 
 				void mouse_pressed()
 				{
-					style_.state = mouse_action_pressed;
+					style_.state = mouse_action::pressed;
 					switch(ui_el_.what)
 					{
 					case ui_element::item_root:
@@ -511,7 +511,7 @@ namespace nana{	namespace gui{
 				{
 					if(style_.mode != scheme::mode_floatlist)
 					{
-						style_.state = mouse_action_normal;
+						style_.state = mouse_action::normal;
 						switch(ui_el_.what)
 						{
 						case ui_element::item_name:
@@ -583,7 +583,7 @@ namespace nana{	namespace gui{
 				void _m_list_closed()
 				{
 					style_.mode = scheme::mode_normal;
-					style_.state = mouse_action_normal;
+					style_.state = mouse_action::normal;
 
 					bool is_draw = false;
 					if(style_.module.index != style_.module.npos)
@@ -781,7 +781,7 @@ namespace nana{	namespace gui{
 					nana::gui::float_listbox::module_type module;
 					nana::gui::float_listbox * listbox;
 					mode_t	mode;
-					mouse_action_t state;	//The state of mouse
+					mouse_action::t state;	//The state of mouse
 				}style_;
 
 				struct proto_tag

@@ -290,7 +290,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 				const unsigned line_pixels = line_height();
 
-				int pos_y = static_cast<int>((y - points_.offset.y) * line_pixels + text_area_.area.y);
+				int pos_y = static_cast<int>((y - points_.offset.y) * line_pixels + _m_text_top_base());
 				int end_y = pos_y + static_cast<int>(line_pixels);
 				int pos_x = static_cast<int>(x - points_.offset.x);
 				bool visible = true;
@@ -472,7 +472,7 @@ namespace nana{	namespace gui{	namespace widgets
 			if(attributes_.counterpart && text_area_.area.width && text_area_.area.height)
 				attributes_.counterpart.bitblt(0, 0, text_area_.area.width, text_area_.area.height, graph_, text_area_.area.x, text_area_.area.y);
 
-			int y = text_area_.area.y;
+			int y = _m_text_top_base();
 
 			if((false == textbase_.empty()) || has_focus)
 			{
@@ -1190,6 +1190,17 @@ namespace nana{	namespace gui{	namespace widgets
 			return false;
 		}
 
+		int text_editor::_m_text_top_base() const
+		{
+			if(attributes_.multi_lines)
+				return text_area_.area.y;
+
+			unsigned px = line_height();
+			if(text_area_.area.height > px)
+				return text_area_.area.y + static_cast<int>((text_area_.area.height - px) >> 1);
+			return text_area_.area.y;
+		}
+
 		//_m_endx
 		//@brief: Get the right point of text area
 		int text_editor::_m_endx() const
@@ -1211,7 +1222,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::_m_update_line(std::size_t textline) const
 		{
-			int top = text_area_.area.y + line_height() * textline;
+			int top = _m_text_top_base() + line_height() * textline;
 			graph_.rectangle(text_area_.area.x, top, text_area_.area.width, line_height(), API::background(window_), true);
 			_m_draw_string(top, API::foreground(window_), textline, true);
 		}

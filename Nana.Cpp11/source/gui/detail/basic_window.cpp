@@ -320,7 +320,7 @@ namespace nana{	namespace gui{
 				this->color.background = nana::gui::color::button_face;
 				this->color.active = 0x60C8FD;
 
-				this->effect.edge_nimbus = effects::edge_nimbus_none;
+				this->effect.edge_nimbus = effects::edge_nimbus::none;
 
 				this->together.caret = 0;
 				this->flags.refreshing = false;

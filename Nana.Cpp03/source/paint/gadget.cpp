@@ -402,9 +402,9 @@ namespace gadget
 		this->clear_image_state();
 	}
 
-	void check_renderer::render(graphics& graph, int x, int y, uint32_t width, uint32_t height, mouse_action_t act, check_renderer::checker_t chk, bool checked)
+	void check_renderer::render(graphics& graph, int x, int y, uint32_t width, uint32_t height, mouse_action::t act, check_renderer::checker_t chk, bool checked)
 	{
-		if(0 <= act && act < nana::gui::mouse_action_end && 0 <= chk && chk < checker_end)
+		if(0 <= act && act < nana::gui::mouse_action::end && 0 <= chk && chk < checker_end)
 		{
 			img_state_t & is = imgstate_[chk][act][checked ? 0 : 1];
 			if(is.in_use && image_)
@@ -494,13 +494,13 @@ namespace gadget
 
 					switch(act)
 					{
-					case nana::gui::mouse_action_normal:
+					case nana::gui::mouse_action::normal:
 						colormap = (checked ? &bmp_checked : &bmp_unchecked);
 						break;
-					case nana::gui::mouse_action_over:
+					case nana::gui::mouse_action::over:
 						colormap = (checked ? &bmp_checked_highlight : &bmp_unchecked_highlight);
 						break;
-					case nana::gui::mouse_action_pressed:
+					case nana::gui::mouse_action::pressed:
 						colormap = &bmp_checked_press;
 						break;
 					default:
@@ -569,9 +569,9 @@ namespace gadget
 		this->image_ = img;
 	}
 
-	void check_renderer::set_image_state(mouse_action_t act, checker_t chk, bool checked, const nana::rectangle& r)
+	void check_renderer::set_image_state(mouse_action::t act, checker_t chk, bool checked, const nana::rectangle& r)
 	{
-		if(0 <= act && act < nana::gui::mouse_action_end && 0 <= chk && chk < checker_end)
+		if(0 <= act && act < nana::gui::mouse_action::end && 0 <= chk && chk < checker_end)
 		{
 			img_state_t & is = imgstate_[chk][act][checked ? 0 : 1];
 
@@ -585,7 +585,7 @@ namespace gadget
 
 	void check_renderer::clear_image_state()
 	{
-		for(int i = 0 ; i < nana::gui::mouse_action_end; ++i)
+		for(int i = 0 ; i < nana::gui::mouse_action::end; ++i)
 		{
 			for(int u = 0; u < checker_end; ++u)
 			{
@@ -599,11 +599,11 @@ namespace gadget
 		return (image_.empty() == false);
 	}
 
-	bool check_renderer::in_use(mouse_action_t act, checker_t chk, bool checked) const
+	bool check_renderer::in_use(mouse_action::t act, checker_t chk, bool checked) const
 	{
 		if(false == image_.empty())
 		{
-			if(0 <= act && act < nana::gui::mouse_action_end && 0 <= chk && chk < checker_end)
+			if(0 <= act && act < nana::gui::mouse_action::end && 0 <= chk && chk < checker_end)
 				return imgstate_[chk][act][checked ? 0 : 1].in_use;
 		}
 		return false;

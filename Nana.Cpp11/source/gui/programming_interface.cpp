@@ -25,9 +25,9 @@ namespace nana{	namespace gui{
 		gui::detail::bedrock::window_manager_t& window_manager = bedrock.wd_manager;
 	}
 
-namespace effects
+namespace API
 {
-	void edge_nimbus(window wd, edge_nimbus_t en)
+	void effects_edge_nimbus(window wd, effects::edge_nimbus en)
 	{
 		if(wd)
 		{
@@ -36,19 +36,18 @@ namespace effects
 			if(restrict::window_manager.available(iwd))
 			{
 				auto & cont = iwd->root_widget->other.attribute.root->effects_edge_nimbus;
-				if(en)
+				if(effects::edge_nimbus::none != en)
 				{
-					if(iwd->effect.edge_nimbus == effects::edge_nimbus_none)
+					if(iwd->effect.edge_nimbus == effects::edge_nimbus::none)
 					{
 						restrict::core_window_t::edge_nimbus_action act = {iwd};
 						cont.push_back(act);
 					}
-
-					iwd->effect.edge_nimbus = static_cast<effects::edge_nimbus_t>(iwd->effect.edge_nimbus | en);
+					iwd->effect.edge_nimbus = static_cast<effects::edge_nimbus>(static_cast<unsigned>(en) | static_cast<unsigned>(iwd->effect.edge_nimbus));
 				}
 				else
 				{
-					if(iwd->effect.edge_nimbus)
+					if(effects::edge_nimbus::none != iwd->effect.edge_nimbus)
 					{
 						for(auto i = cont.begin(); i != cont.end(); ++i)
 							if(i->window == iwd)
@@ -57,13 +56,13 @@ namespace effects
 								break;
 							}
 					}
-					iwd->effect.edge_nimbus = effects::edge_nimbus_none;
+					iwd->effect.edge_nimbus = effects::edge_nimbus::none;
 				}
 			}
 		}
 	}
 
-	edge_nimbus_t edge_nimbus(window wd)
+	effects::edge_nimbus effects_edge_nimbus(window wd)
 	{
 		if(wd)
 		{
@@ -72,12 +71,9 @@ namespace effects
 			if(restrict::window_manager.available(iwd))
 				return iwd->effect.edge_nimbus;
 		}
-		return effects::edge_nimbus_none;
+		return effects::edge_nimbus::none;
 	}
-}
 
-namespace API
-{
 	namespace dev
 	{
 		void attach_drawer(window wd, nana::gui::drawer_trigger& dr)

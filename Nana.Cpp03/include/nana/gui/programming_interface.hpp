@@ -18,14 +18,10 @@
 
 namespace nana{	namespace gui{
 
-namespace effects
-{
-	void edge_nimbus(window wd, edge_nimbus_t);
-	edge_nimbus_t edge_nimbus(window wd);
-}
-
 namespace API
 {
+	void effects_edge_nimbus(window, effects::edge_nimbus::t);
+	effects::edge_nimbus::t effects_edge_nimbus(window);
 
 	//namespace dev
 	//@brief: The interfaces defined in namespace dev are used for developing the nana.gui
@@ -227,7 +223,7 @@ namespace API
 
 	bool is_window_zoomed(window, bool ask_for_max);
 
-	mouse_action_t mouse_action(window);
+	nana::gui::mouse_action::t mouse_action(window);
 }//end namespace API
 }//end namespace gui
 }//end namespace nana

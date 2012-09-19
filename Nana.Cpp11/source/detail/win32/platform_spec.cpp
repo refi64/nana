@@ -20,6 +20,7 @@ namespace nana
 namespace detail
 {
 	drawable_impl_type::drawable_impl_type()
+		: fgcolor_(0xFFFFFFFF)
 	{
 		pen.handle = 0;
 		pen.color = nana::null_color;

@@ -271,7 +271,6 @@ namespace paint
 
 					dw->context = cdc;
 					dw->pixmap = bmp;
-					::SetTextColor(cdc, 0);
 					::SetBkMode(cdc, TRANSPARENT);
 					dw->brush.set(cdc, dw->brush.Solid, 0xFFFFFF);
 				}
@@ -296,6 +295,7 @@ namespace paint
 #endif
 				if(dw)
 				{
+					dw->fgcolor(0);
 					ref_ = dw;
 					handle_ = dw;
 					size_.width = width;

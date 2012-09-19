@@ -344,6 +344,10 @@ namespace drawerbase
 				x = static_cast<int>(icon_sz.width);
 
 			unsigned omitted_pixels = graph.width() - icon_sz.width;
+
+			std::size_t txtlen = str.size();
+			const nana::char_t* txtptr = str.c_str();
+
 			if(ts.width)
 			{
 				nana::paint::text_renderer tr(graph);
@@ -356,14 +360,14 @@ namespace drawerbase
 					}
 					color_t fgcolor = (attr_.focus_color ? (attr_.focused ? 0xFF : attr_.fgcolor) : attr_.fgcolor);
 					if(attr_.omitted)
-						tr.render(x, y, fgcolor, str.c_str(), str.size(), omitted_pixels, true);
+						tr.render(x, y, fgcolor, txtptr, txtlen, omitted_pixels, true);
 					else
-						graph.bidi_string(x, y, fgcolor, str.c_str(), str.size());
+						graph.bidi_string(x, y, fgcolor, txtptr, txtlen);
 
 					if(shortkey)
 					{
 						unsigned off_w = (shortkey_pos ? graph.text_extent_size(str, static_cast<unsigned>(shortkey_pos)).width : 0);
-						nana::size shortkey_size = graph.text_extent_size(str.c_str() + shortkey_pos, 1);
+						nana::size shortkey_size = graph.text_extent_size(txtptr + shortkey_pos, 1);
 						x += off_w;
 						y += shortkey_size.height;
 						graph.line(x, y, x + shortkey_size.width - 1, y, 0x0);
@@ -373,13 +377,13 @@ namespace drawerbase
 				{
 					if(attr_.omitted)
 					{
-						tr.render(x + 1, y + 1, 0xFFFFFF, str.c_str(), str.size(), omitted_pixels, true);
-						tr.render(x, y, 0x808080, str.c_str(), str.size(), omitted_pixels, true);
+						tr.render(x + 1, y + 1, 0xFFFFFF, txtptr, txtlen, omitted_pixels, true);
+						tr.render(x, y, 0x808080, txtptr, txtlen, omitted_pixels, true);
 					}
 					else
 					{
-						graph.bidi_string(x + 1, y + 1, 0xFFFFFF, str.c_str(), str.size());
-						graph.bidi_string(x, y, 0x808080, str.c_str(), str.size());
+						graph.bidi_string(x + 1, y + 1, 0xFFFFFF, txtptr, txtlen);
+						graph.bidi_string(x, y, 0x808080, txtptr, txtlen);
 					}
 				}
 			}

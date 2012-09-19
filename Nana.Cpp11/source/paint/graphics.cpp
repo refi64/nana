@@ -296,6 +296,7 @@ namespace paint
 #endif
 				if(dw)
 				{
+					dw->fgcolor(0);
 					ref_ = dw;
 					handle_ = dw;
 					size_.width = width;
@@ -433,9 +434,9 @@ namespace paint
 				std::vector<unicode_bidi::entity> reordered;
 				unicode_bidi bidi;
 				bidi.linestr(str.c_str(), str.size(), reordered);
-				for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
+				for(auto & i: reordered)
 				{
-					nana::size t = this->text_extent_size(i->begin, i->end - i->begin);
+					nana::size t = this->text_extent_size(i.begin, i.end - i.begin);
 					sz.width += t.width;
 					if(sz.height < t.height)
 						sz.height = t.height;
@@ -494,10 +495,10 @@ namespace paint
 			unicode_bidi bidi;
 			std::vector<unicode_bidi::entity> reordered;
 			bidi.linestr(str, len, reordered);
-			for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
+			for(auto & i : reordered)
 			{
-				this->string(x, y, col, i->begin, i->end - i->begin);
-				x += static_cast<int>(this->text_extent_size(i->begin, i->end - i->begin).width);
+				this->string(x, y, col, i.begin, i.end - i.begin);
+				x += static_cast<int>(this->text_extent_size(i.begin, i.end - i.begin).width);
 			}
 			return static_cast<unsigned>(x - origin_x);
 		}

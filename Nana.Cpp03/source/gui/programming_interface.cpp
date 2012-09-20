@@ -1191,7 +1191,7 @@ namespace API
 		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 		if(restrict::window_manager.available(iwd))
 			return iwd->flags.action;
-		return mouse_action::normal;
+		return nana::gui::mouse_action::normal;
 	}
 }//end namespace API
 }//end namespace gui

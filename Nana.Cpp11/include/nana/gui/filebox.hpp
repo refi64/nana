@@ -9,7 +9,7 @@ namespace nana{	namespace gui
 	{
 		struct implement;
 	public:
-		filebox(window owner, bool open);
+		filebox(window owner, bool for_open);
 		~filebox();
 
 		void title(const nana::string& s);

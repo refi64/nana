@@ -1217,7 +1217,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::_m_update_line(std::size_t textline) const
 		{
-			int top = _m_text_top_base() + line_height() * textline;
+			int top = _m_text_top_base() + static_cast<int>(line_height() * textline);
 			graph_.rectangle(text_area_.area.x, top, text_area_.area.width, line_height(), API::background(window_), true);
 			_m_draw_string(top, API::foreground(window_), textline, true);
 		}
@@ -1301,7 +1301,7 @@ namespace nana{	namespace gui{	namespace widgets
 							}
 							else if(pos <= a.x && a.x < pos + len)
 							{	//Partial selected
-								int endpos = (b.x < pos + len ? b.x : pos + len);
+								int endpos = static_cast<int>(b.x < pos + len ? b.x : pos + len);
 								unsigned * pxbuf = new unsigned[len];
 								if(graph_.glyph_pixels(i->begin, len, pxbuf))
 								{

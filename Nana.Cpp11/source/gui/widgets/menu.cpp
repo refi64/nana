@@ -78,7 +78,7 @@ namespace nana{ namespace gui{
 					root_.items.clear();
 				}
 
-				void menu_builder::check_style(unsigned index, int style)
+				void menu_builder::check_style(std::size_t index, int style)
 				{
 					if(gui::menu::check_none <= style && style <= gui::menu::check_highlight)
 					{
@@ -87,7 +87,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void menu_builder::checked(unsigned index, bool check)
+				void menu_builder::checked(std::size_t index, bool check)
 				{
 					if(root_.items.size() > index)
 					{
@@ -617,7 +617,7 @@ namespace nana{ namespace gui{
 						}
 
 						size.width += (35 + 40);
-						size.height = static_cast<unsigned>(menu_->items.size() - size.height) * _m_item_height() + size.height + (menu_->items.size() - 1);
+						size.height = static_cast<unsigned>(menu_->items.size() - size.height) * _m_item_height() + size.height + static_cast<unsigned>(menu_->items.size() - 1);
 					}
 
 					if(size.width > menu_->max_pixels)

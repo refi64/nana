@@ -29,7 +29,7 @@ namespace nana
 					};
 
 					table_t table;
-					interface_t* fast;
+					interface_t* employee;
 				}stretch_;
 
 				struct blend_tag
@@ -45,7 +45,7 @@ namespace nana
 					};
 
 					table_t	table;
-					interface_t	* fast;
+					interface_t	* employee;
 				}blend_;
 
 				struct line_tag
@@ -61,7 +61,7 @@ namespace nana
 					};
 
 					table_t	table;
-					interface_t * fast;
+					interface_t * employee;
 				}line_;
 			public:
 
@@ -69,15 +69,15 @@ namespace nana
 				static image_process_provider & instance();
 
 				stretch_tag & ref_stretch_tag();
-				paint::image_process::stretch_interface * stretch() const;
+				paint::image_process::stretch_interface * const * stretch() const;
 				paint::image_process::stretch_interface * ref_stretch(const std::string& name) const;
 
 				blend_tag & ref_blend_tag();
-				paint::image_process::blend_interface * blend() const;
+				paint::image_process::blend_interface * const * blend() const;
 				paint::image_process::blend_interface * ref_blend(const std::string& name) const;
 
 				line_tag & ref_line_tag();
-				paint::image_process::line_interface * line() const;
+				paint::image_process::line_interface * const * line() const;
 				paint::image_process::line_interface * ref_line(const std::string& name) const;
 			public:
 				template<typename Tag>
@@ -85,7 +85,7 @@ namespace nana
 				{
 					typename Tag::table_t::iterator i = tag.table.find(name);
 					if(i != tag.table.end())
-						tag.fast = &(i->second->refer());
+						tag.employee = &(i->second->refer());
 				}
 
 				//add
@@ -99,8 +99,8 @@ namespace nana
 					{
 						typename Tag::cloneable_t * obj = typename Tag::template generator<ImageProcessor>::type().clone();
 						tag.table[name] = obj;
-						if(0 == tag.fast)
-							tag.fast = &(obj->refer());
+						if(0 == tag.employee)
+							tag.employee = &(obj->refer());
 					}
 				}
 			private:
@@ -108,7 +108,7 @@ namespace nana
 				typename Tag::interface_t* _m_read(const Tag& tag, const std::string& name) const
 				{
 					typename Tag::table_t::const_iterator i = tag.table.find(name);
-					return (i != tag.table.end() ? &(i->second->refer()) : tag.fast);
+					return (i != tag.table.end() ? &(i->second->refer()) : tag.employee);
 				}
 
 				template<typename Tag>

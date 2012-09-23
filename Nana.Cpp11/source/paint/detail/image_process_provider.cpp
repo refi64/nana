@@ -41,9 +41,9 @@ namespace paint
 			return stretch_;
 		}
 
-		paint::image_process::stretch_interface * image_process_provider::stretch() const
+		paint::image_process::stretch_interface * const * image_process_provider::stretch() const
 		{
-			return stretch_.fast;
+			return &stretch_.employee;
 		}
 
 		paint::image_process::stretch_interface * image_process_provider::ref_stretch(const std::string& name) const
@@ -57,9 +57,9 @@ namespace paint
 			return blend_;
 		}
 
-		paint::image_process::blend_interface * image_process_provider::blend() const
+		paint::image_process::blend_interface * const * image_process_provider::blend() const
 		{
-			return blend_.fast;
+			return &blend_.employee;
 		}
 
 		paint::image_process::blend_interface * image_process_provider::ref_blend(const std::string& name) const
@@ -72,9 +72,9 @@ namespace paint
 			return line_;
 		}
 
-		paint::image_process::line_interface * image_process_provider::line() const
+		paint::image_process::line_interface * const * image_process_provider::line() const
 		{
-			return line_.fast;
+			return &line_.employee;
 		}
 
 		paint::image_process::line_interface * image_process_provider::ref_line(const std::string& name) const

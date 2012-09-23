@@ -78,8 +78,8 @@ namespace nana{	namespace gui{
 
 						r.x = el->root_x - static_cast<int>(pixels);
 						r.y = el->root_y - static_cast<int>(pixels);
-						r.width = el->rect.width + (pixels << 1);
-						r.height = el->rect.height + (pixels << 1);
+						r.width = static_cast<unsigned>(el->rect.width + (pixels << 1));
+						r.height = static_cast<unsigned>(el->rect.height + (pixels << 1));
 						graph->paste(native, r, r.x, r.y);
 					}
 

@@ -27,13 +27,21 @@ namespace nana{	namespace paint
 
 		struct image_processor_tag
 		{
-			paint::image_process::stretch_interface * stretch;
-			paint::image_process::blend_interface * blend;
-			paint::image_process::line_interface * line;
+			paint::image_process::stretch_interface * stretch_receptacle;
+			paint::image_process::stretch_interface * const * stretch;
+			paint::image_process::blend_interface * blend_receptacle;
+			paint::image_process::blend_interface * const * blend;
+			paint::image_process::line_interface * line_receptacle;
+			paint::image_process::line_interface * const * line;
 
 			image_processor_tag()
-				: stretch(0), blend(0), line(0)
-			{}
+				: stretch_receptacle(0), blend_receptacle(0), line_receptacle(0)
+			{
+				detail::image_process_provider & provider = detail::image_process_provider::instance();
+				stretch = provider.stretch();
+				blend = provider.blend();
+				line = provider.line();
+			}
 		}img_pro;
 
 		pixel_buffer_storage(std::size_t width, std::size_t height)
@@ -471,28 +479,34 @@ namespace nana{	namespace paint
 
 	void pixel_buffer::line(const std::string& name)
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
-		if(sp)
-			sp->img_pro.line = (name.size() ? detail::image_process_provider::instance().ref_line(name) : 0);
+		if(sp && name.size())
+		{
+			sp->img_pro.line_receptacle = detail::image_process_provider::instance().ref_line(name);
+			if(sp->img_pro.line_receptacle == *detail::image_process_provider::instance().line())
+				sp->img_pro.line = detail::image_process_provider::instance().line();
+			else
+				sp->img_pro.line = & sp->img_pro.line_receptacle;
+		}
 	}
 
 	void pixel_buffer::line(const nana::point &pos_beg, const nana::point &pos_end, nana::color_t color, double fade_rate)
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
 		if(0 == sp)	return;
 
 		//Test if the line intersects the rectangle, and retrive the two points that
 		//are always in the area of rectangle, good_pos_beg is left point, good_pos_end is right.
 		nana::point good_pos_beg, good_pos_end;
-		if(false == nana::gui::intersection(nana::rectangle(sp->pixel_size), pos_beg, pos_end, good_pos_beg, good_pos_end))
-			return;
-
-		(sp->img_pro.line ? sp->img_pro.line : detail::image_process_provider::instance().line())
-			->process(*this, good_pos_beg, good_pos_end, color, fade_rate);
+		if(nana::gui::intersection(nana::rectangle(sp->pixel_size), pos_beg, pos_end, good_pos_beg, good_pos_end))
+			(*(sp->img_pro.line))->process(*this, good_pos_beg, good_pos_end, color, fade_rate);
 	}
 
 	void pixel_buffer::rectangle(const nana::rectangle &r, nana::color_t col, double fade_rate, bool solid)
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
 		if((0 == sp) || (fade_rate == 1.0)) return;
 
@@ -733,9 +747,16 @@ namespace nana{	namespace paint
 	//stretch
 	void pixel_buffer::stretch(const std::string& name)
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
-		if(sp)
-			sp->img_pro.stretch = (name.size() ? detail::image_process_provider::instance().ref_stretch(name) : 0);
+		if(sp && name.size())
+		{
+			sp->img_pro.stretch_receptacle = detail::image_process_provider::instance().ref_stretch(name);
+			if(sp->img_pro.stretch_receptacle == *detail::image_process_provider::instance().stretch())
+				sp->img_pro.stretch = detail::image_process_provider::instance().stretch();
+			else
+				sp->img_pro.stretch = & sp->img_pro.stretch_receptacle;
+		}
 	}
 
 	void pixel_buffer::stretch(const nana::rectangle& src_r, drawable_type drawable, const nana::rectangle& r) const
@@ -744,34 +765,36 @@ namespace nana{	namespace paint
 		if(sp == 0) return;
 
 		nana::rectangle good_src_r, good_dst_r;
-		if(nana::gui::overlap(src_r, sp->pixel_size, r, paint::detail::drawable_size(drawable), good_src_r, good_dst_r) == false)
-			return;
-
-		(sp->img_pro.stretch ? sp->img_pro.stretch : detail::image_process_provider::instance().stretch())
-			->process(*this, good_src_r, drawable, good_dst_r);
+		if(nana::gui::overlap(src_r, sp->pixel_size, r, paint::detail::drawable_size(drawable), good_src_r, good_dst_r))
+			(*(sp->img_pro.stretch))->process(*this, good_src_r, drawable, good_dst_r);
 	}
 
 	//blend
 	void pixel_buffer::blend(const std::string& name)
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
-		if(sp)
-			sp->img_pro.blend = (name.size() ? detail::image_process_provider::instance().ref_blend(name) : 0);
+		if(sp && name.size())
+		{
+			sp->img_pro.blend_receptacle = detail::image_process_provider::instance().ref_blend(name);
+			if(sp->img_pro.blend_receptacle == *detail::image_process_provider::instance().blend())
+				sp->img_pro.blend = detail::image_process_provider::instance().blend();
+			else
+				sp->img_pro.blend = & sp->img_pro.blend_receptacle;
+		}
 	}
 
 	void pixel_buffer::blend(const nana::point& s_pos, drawable_type dw_dst, const nana::rectangle& r_dst, double fade_rate) const
 	{
+		if(storage_ref_.empty()) return;
 		pixel_buffer_storage * sp = storage_ref_.handle();
 		if(sp == 0) return;
 
 		nana::rectangle s_r(s_pos.x, s_pos.y, r_dst.width, r_dst.height);
 
 		nana::rectangle s_good_r, d_good_r;
-		if(nana::gui::overlap(s_r, sp->pixel_size, r_dst, paint::detail::drawable_size(dw_dst), s_good_r, d_good_r) == false)
-			return;
-
-		(sp->img_pro.blend ? sp->img_pro.blend : detail::image_process_provider::instance().blend())
-			->process(dw_dst, d_good_r, *this, nana::point(s_good_r.x, s_good_r.y), fade_rate);
+		if(nana::gui::overlap(s_r, sp->pixel_size, r_dst, paint::detail::drawable_size(dw_dst), s_good_r, d_good_r))
+			(*(sp->img_pro.blend))->process(dw_dst, d_good_r, *this, nana::point(s_good_r.x, s_good_r.y), fade_rate);
 	}
 }//end namespace paint
 }//end namespace nana

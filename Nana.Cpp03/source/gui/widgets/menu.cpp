@@ -620,7 +620,7 @@ namespace nana{ namespace gui{
 						}
 
 						size.width += (35 + 40);
-						size.height = static_cast<unsigned>(menu_->items.size() - size.height) * _m_item_height() + size.height + (menu_->items.size() - 1);
+						size.height = static_cast<unsigned>(menu_->items.size() - size.height) * _m_item_height() + size.height + static_cast<unsigned>(menu_->items.size() - 1);
 					}
 
 					if(size.width > menu_->max_pixels)

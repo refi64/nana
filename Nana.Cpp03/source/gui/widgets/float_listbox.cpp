@@ -206,7 +206,7 @@ namespace nana{ namespace gui{
 								}
 
 								if(state_.index >= state_.offset_y + module_->max_items)
-									state_.offset_y = state_.index - module_->max_items + 1;
+									state_.offset_y = static_cast<unsigned>(state_.index - module_->max_items + 1);
 							}
 						}
 						else

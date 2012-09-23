@@ -88,7 +88,7 @@ namespace nana{ namespace gui{
 				if(scale > fixedsize * 2)
 				{
 					int pos = mouse_pos - metrics_.scroll_mouse_offset;
-					const unsigned scroll_area = scale - fixedsize * 2 - metrics_.scroll_length;
+					const unsigned scroll_area = static_cast<unsigned>(scale - fixedsize * 2 - metrics_.scroll_length);
 
 					if(pos < 0)
 						pos = 0;

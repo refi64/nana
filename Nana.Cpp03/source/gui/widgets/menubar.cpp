@@ -151,12 +151,12 @@ namespace gui
 					return items_->cont().size();
 				}
 
-				void trigger::bind_window(trigger::widget_reference widget)
+				void trigger::bind_window(widget_reference widget)
 				{
 					widget_ = &widget;
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
 					graph_ = &graph;
 					window wd = widget_->handle();

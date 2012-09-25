@@ -4,10 +4,16 @@
 #include <nana/pat/cloneable.hpp>
 
 namespace nana{ namespace gui{
+	class slider;
 	namespace drawerbase
 	{
 		namespace slider
 		{
+			struct extra_events
+			{
+				nana::fn_group<void(nana::gui::slider&)> value_changed;
+			};
+
 			struct seekdir
 			{
 				enum t{bilateral, forward, backward};
@@ -92,6 +98,7 @@ namespace nana{ namespace gui{
 		typedef drawerbase::slider::renderer renderer;
 		typedef drawerbase::slider::provider provider;
 		typedef drawerbase::slider::seekdir seekdir;
+		typedef drawerbase::slider::extra_events ext_event_type;
 
 		template<typename ExtRenderer>
 		class renderer_cloneable
@@ -118,6 +125,7 @@ namespace nana{ namespace gui{
 		slider();
 		slider(window, bool visible);
 		slider(window, const rectangle& = rectangle(), bool visible = true);
+		ext_event_type& ext_event() const;
 		void seek(seekdir::t);
 		void vertical(bool);
 		bool vertical() const;

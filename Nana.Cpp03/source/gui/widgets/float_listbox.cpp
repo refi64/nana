@@ -424,12 +424,12 @@ namespace nana{ namespace gui{
 					return *drawer_;
 				}
 
-				void trigger::bind_window(trigger::widget_reference widget)
+				void trigger::bind_window(widget_reference widget)
 				{
 					drawer_->attach(&widget, 0);
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
 					drawer_->attach(0, &graph);
 					window wd = *drawer_->widget_ptr();
@@ -444,12 +444,12 @@ namespace nana{ namespace gui{
 					API::dev::umake_drawer_event(*drawer_->widget_ptr());
 				}
 
-				void trigger::refresh(trigger::graph_reference)
+				void trigger::refresh(graph_reference)
 				{
 					drawer_->draw();
 				}
 
-				void trigger::mouse_move(trigger::graph_reference graph, const eventinfo& ei)
+				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
 				{
 					if(drawer_->set_mouse(graph, ei.mouse.x, ei.mouse.y))
 					{

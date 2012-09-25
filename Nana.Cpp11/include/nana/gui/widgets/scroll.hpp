@@ -21,6 +21,11 @@ namespace nana{ namespace gui{
 	{
 		namespace scroll
 		{
+			struct extra_events
+			{
+				nana::fn_group<void(widget&)> value_changed;
+			};
+
 			enum class buttons
 			{
 				none, forward, backward, scroll, first, second
@@ -79,6 +84,7 @@ namespace nana{ namespace gui{
 			{
 			public:
 				typedef metrics_type::size_type size_type;
+				mutable extra_events ext_event;
 
 				trigger()
 					: graph_(nullptr), drawer_(metrics_)
@@ -102,10 +108,14 @@ namespace nana{ namespace gui{
 
 				void value(size_type s)
 				{
+					if(s + metrics_.range > metrics_.peak)
+						s = metrics_.peak - metrics_.range;
+
 					if(graph_ && (metrics_.value != s))
 					{
 						metrics_.value = s;
-						API::refresh_window(widget_->handle());
+						ext_event.value_changed(*widget_);
+						API::refresh_window(*widget_);
 					}
 				}
 
@@ -149,7 +159,12 @@ namespace nana{ namespace gui{
 						}
 						size_type cmpvalue = metrics_.value;
 						metrics_.value = value;
-						return (value != cmpvalue);
+						if(value != cmpvalue)
+						{
+							ext_event.value_changed(*widget_);
+							return true;
+						}
+						return false;
 					}
 					return false;
 				}
@@ -207,8 +222,10 @@ namespace nana{ namespace gui{
 					bool redraw = false;
 					if(metrics_.pressed && (metrics_.what == buttons::scroll))
 					{
-						redraw = true;
+						size_type cmpvalue = metrics_.value;
 						drawer_.scroll_delta_pos(graph, (Vertical ? ei.mouse.y : ei.mouse.x));
+						if(cmpvalue != metrics_.value)
+							ext_event.value_changed(*widget_);
 					}
 					else
 					{
@@ -246,7 +263,12 @@ namespace nana{ namespace gui{
 							break;
 						case buttons::forward:
 						case buttons::backward:
-							drawer_.auto_scroll();
+							{
+								size_type cmpvalue = metrics_.value;
+								drawer_.auto_scroll();
+								if(cmpvalue != metrics_.value)
+									ext_event.value_changed(*widget_);
+							}
 							break;
 						default:	//Ignore buttons::none
 							break;
@@ -309,6 +331,7 @@ namespace nana{ namespace gui{
 	{
 		typedef widget_object<category::widget_tag, drawerbase::scroll::trigger<Vertical> > base_type;
 	public:
+		typedef drawerbase::scroll::extra_events ext_event_type;
 		typedef std::size_t size_type;
 
 		scroll(){}
@@ -321,6 +344,11 @@ namespace nana{ namespace gui{
 		scroll(window wd, const rectangle& r, bool visible = true)
 		{
 			this->create(wd, r, visible);
+		}
+
+		ext_event_type& ext_event() const
+		{
+			return this->get_drawer_trigger().ext_event;
 		}
 
 		size_type amount() const

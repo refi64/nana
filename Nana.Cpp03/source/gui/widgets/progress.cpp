@@ -30,7 +30,7 @@ namespace gui
 				widget_ = &wd;
 			}
 
-			void trigger::attached(trigger::graph_reference graph)
+			void trigger::attached(graph_reference graph)
 			{
 				graph_ = &graph;
 			}
@@ -101,7 +101,7 @@ namespace gui
 				return unknown_;
 			}
 
-			void trigger::refresh(trigger::graph_reference)
+			void trigger::refresh(graph_reference)
 			{
 				_m_draw();
 			}
@@ -115,7 +115,7 @@ namespace gui
 				_m_draw_progress(*graph_);
 			}
 
-			void trigger::_m_draw_box(trigger::graph_reference graph)
+			void trigger::_m_draw_box(graph_reference graph)
 			{
 				unsigned width = graph.width();
 				unsigned height = graph.height();
@@ -129,7 +129,7 @@ namespace gui
 				graph.line(right, 0, right, bottom, 0xFFFFFF);
 			}
 
-			void trigger::_m_draw_progress(trigger::graph_reference graph)
+			void trigger::_m_draw_progress(graph_reference graph)
 			{
 				unsigned width = graph.width() - border * 2;
 				unsigned height = graph.height() - border * 2;

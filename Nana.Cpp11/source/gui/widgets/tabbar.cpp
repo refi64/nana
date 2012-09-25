@@ -1274,12 +1274,12 @@ namespace nana{ namespace gui{
 					return (tb != toolbox::ButtonSize ? tbobj.enable(tb, enable) : false);
 				}
 			//private:
-				void trigger::bind_window(trigger::widget_reference wd)
+				void trigger::bind_window(widget_reference wd)
 				{
 					layouter_->bind(wd);
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
 					layouter_->attach(graph);
 					window wd = layouter_->widget();
@@ -1296,12 +1296,12 @@ namespace nana{ namespace gui{
 					API::dev::umake_drawer_event(layouter_->widget());
 				}
 
-				void trigger::refresh(trigger::graph_reference)
+				void trigger::refresh(graph_reference)
 				{
 					layouter_->render();
 				}
 
-				void trigger::mouse_down(trigger::graph_reference, const eventinfo& ei)
+				void trigger::mouse_down(graph_reference, const eventinfo& ei)
 				{
 					if(layouter_->press())
 					{
@@ -1312,7 +1312,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_up(trigger::graph_reference, const eventinfo& ei)
+				void trigger::mouse_up(graph_reference, const eventinfo& ei)
 				{
 					bool rd = layouter_->release();
 					rd |= layouter_->toolbox_answer(ei);
@@ -1323,7 +1323,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_move(trigger::graph_reference, const eventinfo& ei)
+				void trigger::mouse_move(graph_reference, const eventinfo& ei)
 				{
 					if(layouter_->trace(ei.mouse.x, ei.mouse.y))
 					{
@@ -1332,7 +1332,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_leave(trigger::graph_reference, const eventinfo& ei)
+				void trigger::mouse_leave(graph_reference, const eventinfo& ei)
 				{
 					if(layouter_->leave())
 					{

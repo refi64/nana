@@ -79,10 +79,12 @@ namespace nana{ namespace gui{
 				enum where_t{WhereNone, WhereBar, WhereSlider};
 				
 				typedef nana::gui::drawer_trigger::graph_reference graph_reference;
+				mutable extra_events ext_event;
 
 				controller()
 				{
 					other_.wd = 0;
+					other_.widget = 0;
 					other_.graph = 0;
 
 					proto_.renderer = nana::gui::slider::renderer_cloneable<interior_renderer>().clone();
@@ -111,9 +113,11 @@ namespace nana{ namespace gui{
 					attr_.skdir = sd;
 				}
 
-				void bind(widget& wd)
+				void bind(nana::gui::slider& wd)
 				{
 					other_.wd = wd.handle();
+					other_.widget = &wd;
+
 				}
 
 				window handle() const
@@ -211,8 +215,10 @@ namespace nana{ namespace gui{
 					{
 						attr_.vmax = m;
 						if(attr_.vcur > m)
+						{
 							attr_.vcur = m;
-
+							ext_event.value_changed(*other_.widget);
+						}
 						_m_mk_slider_pos_by_value();
 						draw();
 					}
@@ -231,6 +237,7 @@ namespace nana{ namespace gui{
 					if(attr_.vcur != v)
 					{
 						attr_.vcur = v;
+						ext_event.value_changed(*other_.widget);
 						this->_m_mk_slider_pos_by_value();
 						draw();
 					}
@@ -380,7 +387,7 @@ namespace nana{ namespace gui{
 
 				unsigned move_step(bool forward)
 				{
-					unsigned result = attr_.vcur;
+					unsigned cmpvalue = attr_.vcur;
 					if(forward)
 					{
 						if(attr_.vcur)
@@ -389,13 +396,13 @@ namespace nana{ namespace gui{
 					else if(attr_.vcur < attr_.vmax)
 						++attr_.vcur;
 
-					if(result != attr_.vcur)
+					if(cmpvalue != attr_.vcur)
 					{
 						this->_m_mk_slider_pos_by_value();
 						this->draw();
+						ext_event.value_changed(*other_.widget);
 					}
-
-					return result;
+					return cmpvalue;
 				}
 
 				unsigned adorn() const
@@ -478,7 +485,12 @@ namespace nana{ namespace gui{
 				unsigned _m_mk_slider_value_by_pos()
 				{
 					if(_m_scale())
+					{
+						unsigned cmpvalue = attr_.vcur;
 						attr_.vcur = static_cast<unsigned>(attr_.pos * attr_.vmax / _m_scale());
+						if(cmpvalue != attr_.vcur)
+							ext_event.value_changed(*other_.widget);
+					}
 					return attr_.vcur;
 				}
 
@@ -578,6 +590,7 @@ namespace nana{ namespace gui{
 				struct other_tag
 				{
 					window wd;
+					nana::gui::slider * widget;
 					paint::graphics * graph;
 				}other_;
 				
@@ -629,10 +642,10 @@ namespace nana{ namespace gui{
 
 				void trigger::bind_window(trigger::widget_reference wd)
 				{
-					impl_->bind(wd);
+					impl_->bind(static_cast<nana::gui::slider&>(wd));
 				}
 
-				void trigger::attached(trigger::graph_reference graph)
+				void trigger::attached(graph_reference graph)
 				{
 					impl_->attached(graph);
 					window wd = impl_->handle();
@@ -650,12 +663,12 @@ namespace nana{ namespace gui{
 					impl_->detached();
 				}
 
-				void trigger::refresh(trigger::graph_reference)
+				void trigger::refresh(graph_reference)
 				{
 					impl_->draw();
 				}
 
-				void trigger::mouse_down(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::mouse_down(graph_reference, const eventinfo& ei)
 				{
 					controller_t::where_t what = impl_->seek_where(ei.mouse.x, ei.mouse.y);
 					if(controller_t::WhereBar == what || controller_t::WhereSlider == what)
@@ -670,7 +683,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_up(trigger::graph_reference, const eventinfo&)
+				void trigger::mouse_up(graph_reference, const eventinfo&)
 				{
 					bool mkdraw = impl_->release_slider();
 					if(mkdraw)
@@ -680,7 +693,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_move(trigger::graph_reference, const nana::gui::eventinfo& ei)
+				void trigger::mouse_move(graph_reference, const eventinfo& ei)
 				{
 					bool mkdraw = false;
 					if(impl_->if_trace_slider())
@@ -703,7 +716,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_leave(trigger::graph_reference, const nana::gui::eventinfo&)
+				void trigger::mouse_leave(graph_reference, const eventinfo&)
 				{
 					if(impl_->reset_adorn())
 					{
@@ -712,7 +725,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::resize(trigger::graph_reference, const eventinfo&)
+				void trigger::resize(graph_reference, const eventinfo&)
 				{
 					impl_->resize();
 					impl_->draw();
@@ -733,6 +746,11 @@ namespace nana{ namespace gui{
 		slider::slider(window wd, const rectangle& r, bool visible)
 		{
 			create(wd, r, visible);
+		}
+
+		slider::ext_event_type& slider::ext_event() const
+		{
+			return get_drawer_trigger().ctrl()->ext_event;
 		}
 
 		void slider::seek(slider::seekdir::t sd)

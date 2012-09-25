@@ -864,12 +864,12 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 		return impl_;
 	}
 
-	void trigger::bind_window(trigger::widget_reference wd)
+	void trigger::bind_window(widget_reference wd)
 	{
 		impl_->bind(wd);
 	}
 
-	void trigger::attached(trigger::graph_reference graph)
+	void trigger::attached(graph_reference graph)
 	{
 		impl_->attached(graph);
 		window wd = impl_->widget()->handle();
@@ -885,12 +885,12 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 		impl_->detached();
 	}
 
-	void trigger::refresh(trigger::graph_reference)
+	void trigger::refresh(graph_reference)
 	{
 		impl_->draw();
 	}
 
-	void trigger::mouse_move(trigger::graph_reference, const gui::eventinfo& ei)
+	void trigger::mouse_move(graph_reference, const eventinfo& ei)
 	{
 		if(impl_->trace_by_mouse(ei.mouse.x, ei.mouse.y))
 		{
@@ -899,7 +899,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 		}
 	}
 
-	void trigger::mouse_up(trigger::graph_reference, const gui::eventinfo& ei)
+	void trigger::mouse_up(graph_reference, const eventinfo& ei)
 	{
 		if(impl_->active())
 		{
@@ -908,7 +908,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 		}
 	}
 
-	void trigger::mouse_leave(trigger::graph_reference, const gui::eventinfo& ei)
+	void trigger::mouse_leave(graph_reference, const eventinfo& ei)
 	{
 		if(impl_->cancel_highlight())
 		{

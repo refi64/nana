@@ -96,7 +96,6 @@ namespace nana{ namespace gui{
 						pos = static_cast<int>(scroll_area);
 
 					metrics_.scroll_pos = pos;
-
 					metrics_.value = pos * (metrics_.peak - metrics_.range) / scroll_area;
 					if(metrics_.value < metrics_.peak - metrics_.range)
 					{
@@ -106,6 +105,8 @@ namespace nana{ namespace gui{
 						if(selfpos != nextpos && (pos - selfpos > nextpos - pos))
 							++metrics_.value;
 					}
+					else
+						metrics_.value = metrics_.peak = metrics_.range;
 				}
 			}
 

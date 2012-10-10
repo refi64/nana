@@ -73,9 +73,7 @@ namespace gui
 				void (drawer::* routine_)(const eventinfo&);
 			};
 
-		//template<typename Bedrock>
 		//class drawer
-
 		drawer::drawer():realizer_(0), refreshing_(false)
 		{
 		}
@@ -236,18 +234,18 @@ namespace gui
 			}
 		}
 
-		void drawer::map(nana::gui::window window, const nana::rectangle& vr)	//Copy the root buffer to screen
+		void drawer::map(window wd, const nana::rectangle& vr)	//Copy the root buffer to screen
 		{
-			if(window)
+			if(wd)
 			{
-				bedrock_type::core_window_t* wd = reinterpret_cast<bedrock_type::core_window_t*>(window);
-				const bool caret = (wd->together.caret && wd->together.caret->visible());
-				if(caret) wd->together.caret->visible(false);
+				bedrock_type::core_window_t* iwd = reinterpret_cast<bedrock_type::core_window_t*>(wd);
+				const bool caret = (iwd->together.caret && iwd->together.caret->visible());
+				if(caret) iwd->together.caret->visible(false);
 
-				if(false == edge_nimbus_renderer_t::instance().render(wd))
-					wd->root_graph->paste(wd->root, vr, vr.x, vr.y);
+				if(false == edge_nimbus_renderer_t::instance().render(iwd))
+					iwd->root_graph->paste(iwd->root, vr, vr.x, vr.y);
 
-				if(caret) wd->together.caret->visible(true);
+				if(caret) iwd->together.caret->visible(true);
 			}
 		}
 
@@ -291,53 +289,59 @@ namespace gui
 			for(auto p : dynamic_drawing_objects_)
 				delete p;
 
-			std::vector<nana::gui::detail::dynamic_drawing::object*>().swap(dynamic_drawing_objects_);
+			std::vector<dynamic_drawing::object*>().swap(dynamic_drawing_objects_);
+		}
+
+		void drawer::draw(std::function<void(paint::graphics&)> && f)
+		{
+			if(f)
+				dynamic_drawing_objects_.push_back(new dynamic_drawing::user_draw_function(std::move(f)));
 		}
 
 		void drawer::string(int x, int y, unsigned color, const nana::char_t* text)
 		{
 			if(text)
 			{
-				dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::string(x, y, color, text));
+				dynamic_drawing_objects_.push_back(new dynamic_drawing::string(x, y, color, text));
 			}
 		}
 
 		void drawer::line(int x, int y, int x2, int y2, unsigned color)
 		{
-			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::line(x, y, x2, y2, color));
+			dynamic_drawing_objects_.push_back(new dynamic_drawing::line(x, y, x2, y2, color));
 		}
 
 		void drawer::rectangle(int x, int y, unsigned width, unsigned height, unsigned color, bool issolid)
 		{
-			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::rectangle(x, y, width, height, color, issolid));
+			dynamic_drawing_objects_.push_back(new dynamic_drawing::rectangle(x, y, width, height, color, issolid));
 		}
 
 		void drawer::shadow_rectangle(int x, int y, unsigned width, unsigned height, nana::color_t beg, nana::color_t end, bool vertical)
 		{
-			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::shadow_rectangle(x, y, width, height, beg, end, vertical));
+			dynamic_drawing_objects_.push_back(new dynamic_drawing::shadow_rectangle(x, y, width, height, beg, end, vertical));
 		}
 
-		void drawer::bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& graph, int srcx, int srcy)
+		void drawer::bitblt(int x, int y, unsigned width, unsigned height, const paint::graphics& graph, int srcx, int srcy)
 		{
-			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::bitblt(x, y, width, height, graph, srcx, srcy));
+			dynamic_drawing_objects_.push_back(new dynamic_drawing::bitblt(x, y, width, height, graph, srcx, srcy));
 		}
 
-		void drawer::bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::image& img, int srcx, int srcy)
+		void drawer::bitblt(int x, int y, unsigned width, unsigned height, const paint::image& img, int srcx, int srcy)
 		{
-			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::bitblt_image(x, y, width, height, img, srcx, srcy));
+			dynamic_drawing_objects_.push_back(new dynamic_drawing::bitblt_image(x, y, width, height, img, srcx, srcy));
 		}
 
-		void drawer::stretch(const nana::rectangle & r_dst, const nana::paint::graphics& graph, const nana::rectangle& r_src)
+		void drawer::stretch(const nana::rectangle & r_dst, const paint::graphics& graph, const nana::rectangle& r_src)
 		{
-			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::stretch(r_dst, graph, r_src));
+			dynamic_drawing_objects_.push_back(new dynamic_drawing::stretch(r_dst, graph, r_src));
 		}
 
-		void drawer::stretch(const nana::rectangle & r_dst, const nana::paint::image& img, const nana::rectangle& r_src)
+		void drawer::stretch(const nana::rectangle & r_dst, const paint::image& img, const nana::rectangle& r_src)
 		{
-			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::stretch(r_dst, img, r_src));
+			dynamic_drawing_objects_.push_back(new dynamic_drawing::stretch(r_dst, img, r_src));
 		}
 
-		nana::gui::event_handle drawer::make_event(int event_id, nana::gui::window trigger, nana::gui::window listener)
+		nana::gui::event_handle drawer::make_event(int event_id, window trigger, window listener)
 		{
 			bedrock_type & bedrock = bedrock_type::instance();
 			void (drawer::*answer)(const eventinfo&) = 0;
@@ -385,9 +389,8 @@ namespace gui
 
 		void drawer::_m_draw_dynamic_drawing_object()
 		{
-			auto i = dynamic_drawing_objects_.begin(), end = dynamic_drawing_objects_.end();
-			for(; i != end; ++i)
-				(*i)->draw(graphics);
+			for(auto * dw : dynamic_drawing_objects_)
+				dw->draw(graphics);
 		}
 	}//end namespace detail
 }//end namespace gui

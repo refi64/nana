@@ -65,6 +65,12 @@ namespace gui
 			restrict::get_drawer(window_).bitblt(x, y, width, height, source, srcx, srcy);
 		}
 
+		void drawing::draw(const draw_fn_t & f)
+		{
+			if(API::empty_window(window_))	return;
+			restrict::get_drawer(window_).draw(f);			
+		}
+
 
 		void drawing::line(int x, int y, int x2, int y2, unsigned color)
 		{

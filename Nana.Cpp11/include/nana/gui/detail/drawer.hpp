@@ -16,6 +16,7 @@
 #include "eventinfo.hpp"
 #include <nana/paint/graphics.hpp>
 #include <nana/paint/image.hpp>
+#include <functional>
 
 namespace nana
 {
@@ -103,6 +104,7 @@ namespace gui
 			drawer_trigger* detached();
 		public:
 			void clear();
+			void draw(std::function<void(paint::graphics&)> &&);
 			void string(int x, int y, unsigned color, const nana::char_t*);
 			void line(int x, int y, int x2, int y2, unsigned color);
 			void rectangle(int x, int y, unsigned width, unsigned height, unsigned color, bool issolid);

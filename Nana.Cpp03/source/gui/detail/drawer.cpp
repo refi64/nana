@@ -295,6 +295,12 @@ namespace gui
 			std::vector<nana::gui::detail::dynamic_drawing::object*>().swap(dynamic_drawing_objects_);
 		}
 
+		void drawer::draw(const nana::functor<void(paint::graphics&)> & f)
+		{
+			if(f)
+				dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::user_draw_function(f));
+		}
+
 		void drawer::string(int x, int y, unsigned color, const nana::char_t* text)
 		{
 			if(text)

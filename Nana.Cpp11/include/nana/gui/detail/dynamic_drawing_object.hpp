@@ -34,6 +34,23 @@ namespace dynamic_drawing
 		virtual void draw(nana::paint::graphics&) const = 0;
 	};
 
+	//user_draw_function
+	class user_draw_function
+		: public object
+	{
+	public:
+		user_draw_function(std::function<void(paint::graphics&)> && f)
+			: fn_(std::move(f))
+		{}
+
+		void draw(paint::graphics& graph) const
+		{
+			fn_(graph);
+		}
+	private:
+		std::function<void(paint::graphics&)> fn_;
+	};
+
 	//string
 	class string
 		: public object

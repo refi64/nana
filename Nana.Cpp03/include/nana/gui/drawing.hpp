@@ -21,7 +21,9 @@ namespace gui
 		:private nana::noncopyable
 	{
 	public:
-		drawing(const nana::gui::widget& widget);
+		typedef nana::functor<void(paint::graphics&)> draw_fn_t;
+
+		drawing(const nana::gui::widget&);
 		//Just for polymorphism
 		virtual ~drawing();
 
@@ -30,6 +32,7 @@ namespace gui
 		void string(int x, int y, unsigned color, const nana::char_t* text);
 		void bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& source, int srcx, int srcy);
 		void bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::image& source, int srcx, int srcy);
+		void draw(const draw_fn_t&);
 		void line(int x, int y, int x2, int y2, unsigned color);
 		void rectangle(int x, int y, unsigned width, unsigned height, unsigned color, bool issolid);
 		void shadow_rectangle(int x, int y, unsigned width, unsigned height, nana::color_t beg, nana::color_t end, bool vertical);

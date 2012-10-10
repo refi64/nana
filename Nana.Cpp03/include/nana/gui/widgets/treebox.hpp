@@ -33,7 +33,7 @@ namespace gui
 			class tooltip_window;
 
 			template<typename NodeType>
-			struct ext_event_tag
+			struct extra_events
 			{
 				typedef NodeType node_type;
 
@@ -69,7 +69,7 @@ namespace gui
 
 				typedef nana::gui::widgets::detail::tree_cont<treebox_node_type> tree_cont_type;
 				typedef tree_cont_type::node_type	node_type;
-				typedef ext_event_tag<pseudo_node_type*>	ext_event_type;
+				typedef extra_events<pseudo_node_type*>	ext_event_type;
 
 				trigger();
 				void auto_draw(bool);

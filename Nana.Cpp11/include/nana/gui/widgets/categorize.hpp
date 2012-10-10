@@ -23,7 +23,7 @@ namespace nana{	namespace gui
 		namespace categorize
 		{
 			template<typename CategObj>
-			struct ext_event_tag
+			struct extra_events
 			{
 				typedef CategObj categorize_type;
 				typedef typename categorize_type::value_type value_type;
@@ -47,7 +47,7 @@ namespace nana{	namespace gui
 					: categ_obj_(obj)
 				{}
 
-				ext_event_tag<CategObj>& ext_event() const
+				extra_events<CategObj>& ext_event() const
 				{
 					return ext_event_;
 				}
@@ -65,7 +65,7 @@ namespace nana{	namespace gui
 				}
 			private:
 				CategObj & categ_obj_;
-				mutable ext_event_tag<CategObj> ext_event_;
+				mutable extra_events<CategObj> ext_event_;
 			};
 
 			class renderer
@@ -155,7 +155,7 @@ namespace nana{	namespace gui
 	{
 	public:
 		typedef T value_type;
-		typedef drawerbase::categorize::ext_event_tag<categorize> ext_event_type;
+		typedef drawerbase::categorize::extra_events<categorize> ext_event_type;
 		typedef drawerbase::categorize::renderer renderer;
 
 		template<typename ExtRenderer>

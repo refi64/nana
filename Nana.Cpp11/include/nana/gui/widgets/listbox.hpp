@@ -17,11 +17,19 @@
 #include <nana/concepts.hpp>
 
 namespace nana{ namespace gui{
+	class listbox;
 	namespace drawerbase
 	{
 		namespace listbox
 		{
 			typedef std::size_t size_type;
+
+			struct extra_events
+			{
+				nana::fn_group<void(gui::listbox&, size_type, size_type, bool)> checked;
+				nana::fn_group<void(gui::listbox&, size_type, size_type, bool)> selected;
+			};
+
 			//struct essence_t
 			//@brief:	this struct gives many data for listbox,
 			//			the state of the struct does not effect on member funcions, therefore all data members are public.
@@ -72,6 +80,7 @@ namespace nana{ namespace gui{
 	public:
 		typedef drawerbase::listbox::size_type size_type;
 		typedef std::pair<size_type, size_type>	index_pair_t;
+		typedef drawerbase::listbox::extra_events ext_event_type;
 
 		template<typename T>
 		class resolver_interface
@@ -106,6 +115,8 @@ namespace nana{ namespace gui{
 		listbox();
 		listbox(window, bool visible);
 		listbox(window, const rectangle& = rectangle(), bool visible = true);
+
+		ext_event_type& ext_event() const;
 
 		void auto_draw(bool);
 		void append_categ(const nana::string& text);

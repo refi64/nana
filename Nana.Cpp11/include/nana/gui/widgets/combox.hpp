@@ -22,7 +22,7 @@ namespace nana{ namespace gui
 	{
 		namespace combox
 		{
-			struct ext_event_tag
+			struct extra_events
 			{
 				nana::fn_group<void(nana::gui::combox&)> selected;
 			};
@@ -33,7 +33,7 @@ namespace nana{ namespace gui
 				: public nana::gui::drawer_trigger
 			{
 			public:
-				typedef ext_event_tag ext_event_type;
+				typedef extra_events ext_event_type;
 
 				trigger();
 				~trigger();
@@ -66,7 +66,7 @@ namespace nana{ namespace gui
 	{
 	public:
 		typedef float_listbox::item_renderer item_renderer;
-		typedef drawerbase::combox::ext_event_tag ext_event_type;
+		typedef drawerbase::combox::extra_events ext_event_type;
 
 		combox();
 		combox(window, bool visible);

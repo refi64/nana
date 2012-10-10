@@ -226,7 +226,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			}
 		};
 
-		mutable ext_event_tag ext_event;
+		mutable extra_events ext_event;
 
 		drawer()
 		{
@@ -696,7 +696,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 				_m_enable(m, false);
 				btn_login_.enabled(false);
 
-				ext_event_tag::flags_t fg;
+				extra_events::flags_t fg;
 				fg.remember_user = m->remember_user.checked();
 				fg.remember_password = m->remember_password.checked();
 				ext_event.verify(*other_.login_object, user, pass, fg);

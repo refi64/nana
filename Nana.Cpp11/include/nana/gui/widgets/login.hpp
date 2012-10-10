@@ -11,7 +11,7 @@ namespace nana{ namespace gui{
 	{
 		namespace login
 		{
-			struct ext_event_tag
+			struct extra_events
 			{
 				struct flags_t
 				{
@@ -66,7 +66,7 @@ namespace nana{ namespace gui{
 	{
 	public:
 		typedef drawer_trigger_t::label_strings label_strings_t;
-		typedef drawerbase::login::ext_event_tag ext_event_type;
+		typedef drawerbase::login::extra_events ext_event_type;
 
 		login();
 		login(window, bool visible);

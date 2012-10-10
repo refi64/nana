@@ -30,7 +30,7 @@ namespace nana{ namespace gui{
 				enum{WhereUnknown, WhereText, WherePushButton};
 				enum{StateNone, StateMouseOver, StatePress};
 
-				mutable ext_event_tag ext_event;
+				mutable extra_events ext_event;
 
 				typedef drawerbase::float_listbox::module_def::item_type item_type;
 

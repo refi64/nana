@@ -296,12 +296,27 @@ namespace nana{ namespace gui{
 			public:
 				typedef std::size_t size_type;
 				typedef std::list<category> container;
+				mutable extra_events ext_event;
 
 				es_lister()
+					: widget_(nullptr)
 				{
 					category cg;
 					cg.expand = true;
 					list_.push_back(cg);
+				}
+
+
+				void bind(widget& wd)
+				{
+					widget_ = dynamic_cast<gui::listbox*>(&wd);
+					if(nullptr == widget_)
+						throw std::bad_cast("Nana.GUI.Listbox: The widget is not a Listbox");
+				}
+
+				gui::listbox* wd_ptr() const
+				{
+					return widget_;
 				}
 
 				nana::any * anyobj(size_type cat, size_type index, bool allocate_if_empty) const
@@ -542,7 +557,7 @@ namespace nana{ namespace gui{
 					return list_;
 				}
 
-				size_type numbers() const
+				size_type the_number_of_expanded() const
 				{
 					size_type n = list_.size() - 1;
 					for(auto & i : list_)
@@ -555,12 +570,21 @@ namespace nana{ namespace gui{
 
 				void check_for_all(bool chk)
 				{
+					size_type icat = 0;
 					for(auto & cat : list_)
+					{
+						size_type index = 0;
 						for(auto & m : cat.items)
 						{
 							if(m.flags.checked != chk)
+							{
 								m.flags.checked = chk;
+								ext_event.checked(*widget_, icat, index, chk);
+							}
+							++index;
 						}
+						++icat;
+					}
 				}
 
 				void item_checked(std::vector<std::pair<size_type, size_type> >& vec) const
@@ -582,13 +606,22 @@ namespace nana{ namespace gui{
 				bool select_for_all(bool sel)
 				{
 					bool changed = false;
+					size_type icat = 0;
 					for(auto & cat : list_)
+					{
+						size_type index = 0;
 						for(auto & m : cat.items)
+						{
 							if(m.flags.selected != sel)
 							{
 								changed = true;
 								m.flags.selected = sel;
+								ext_event.selected(*widget_, icat, index, sel);
 							}
+							++index;
+						}
+						++icat;
+					}
 					return changed;
 				}
 
@@ -688,6 +721,7 @@ namespace nana{ namespace gui{
 							{
 								item_ptr = & at(spos.first, spos.second);
 								item_ptr->flags.selected = true;
+								ext_event.selected(*widget_, spos.first, spos.second, true);
 							}
 						}
 					}while(nullptr == item_ptr);
@@ -730,12 +764,17 @@ namespace nana{ namespace gui{
 				{
 					bool changed = false;
 					auto & items = _m_at(cat)->items;
+					size_type index = 0;
 					for(auto & m : items)
+					{
 						if(m.flags.checked != chk)
 						{
 							m.flags.checked = chk;
+							ext_event.checked(*widget_, cat, index, chk);
 							changed = true;
 						}
+						++index;
+					}
 					return changed;
 				}
 
@@ -759,13 +798,16 @@ namespace nana{ namespace gui{
 				{
 					bool changed = false;
 					auto & items = _m_at(cat)->items;
+					size_type index = 0;
 					for(auto & m : items)
 					{
 						if(m.flags.selected != sel)
 						{
 							m.flags.selected = sel;
+							ext_event.selected(*widget_, cat, index, sel);
 							changed = true;
 						}
+						++index;
 					}
 					return changed;
 				}
@@ -976,8 +1018,9 @@ namespace nana{ namespace gui{
 					return i;
 				}
 			private:
+				nana::gui::listbox * widget_;
 				container list_;
-			};
+			};//end class es_lister
 
 			//struct essence_t
 			//@brief:	this struct gives many data for listbox,
@@ -989,7 +1032,6 @@ namespace nana{ namespace gui{
 				enum state_t{StateNormal, StateHighlight, StateGrab, StateFloat};
 				enum where_t{WhereUnknown = -1, WhereHeader, WhereLister, WhereChecker};
 
-				widget * window;
 				nana::paint::graphics *graph;
 				bool auto_draw;
 				bool checkable;
@@ -1020,7 +1062,7 @@ namespace nana{ namespace gui{
 				}scroll;
 
 				essence_t()
-					:	window(nullptr), graph(nullptr), auto_draw(true), checkable(false), if_image(false),
+					:	graph(nullptr), auto_draw(true), checkable(false), if_image(false),
 						header_size(25), item_size(24), text_height(0), suspension_width(0),
 						ptr_state(StateNormal)
 				{
@@ -1113,7 +1155,7 @@ namespace nana{ namespace gui{
 					{
 						unsigned height = 2 + (scroll.h.empty() ? 0 : scroll.scale);
 						if(height >= graph->width()) return;
-						scroll.v.amount(lister.numbers());
+						scroll.v.amount(lister.the_number_of_expanded());
 						scroll.v.range(number_of_lister_items(false));
 						size_type off = lister.distance(0, 0, scroll.offset_y.x, scroll.offset_y.y);
 						scroll.v.value(off);
@@ -1124,6 +1166,7 @@ namespace nana{ namespace gui{
 				{
 					const nana::size sz = graph->size();
 					unsigned header_s = header.pixels();
+					window wd = lister.wd_ptr()->handle();
 		
 					//H scroll enabled
 					bool h = (header_s > sz.width - 4);
@@ -1132,7 +1175,7 @@ namespace nana{ namespace gui{
 					size_type screen_number = (lister_s / item_size);
 
 					//V scroll enabled
-					bool v = (lister.numbers() > screen_number);
+					bool v = (lister.the_number_of_expanded() > screen_number);
 
 					if(v == true && h == false)
 						h = (header_s > (sz.width - 2 - scroll.scale));
@@ -1145,8 +1188,8 @@ namespace nana{ namespace gui{
 						rectangle r(1, sz.height - scroll.scale - 1, width, scroll.scale);
 						if(scroll.h.empty())
 						{
-							scroll.h.create(window->handle(), r);
-							API::take_active(scroll.h.handle(), false, window->handle());
+							scroll.h.create(wd, r);
+							API::take_active(scroll.h.handle(), false, wd);
 							scroll.h.make_event<events::mouse_move>(*this, &essence_t::_m_answer_scroll);
 							scroll.h.make_event<events::mouse_up>(*this, &essence_t::_m_answer_scroll);
 						}
@@ -1161,8 +1204,8 @@ namespace nana{ namespace gui{
 						rectangle r(sz.width - 1 - scroll.scale, 1, scroll.scale, height);
 						if(scroll.v.empty())
 						{
-							scroll.v.create(window->handle(), r);
-							API::take_active(scroll.v.handle(), false, window->handle());
+							scroll.v.create(wd, r);
+							API::take_active(scroll.v.handle(), false, wd);
 							scroll.v.make_event<events::mouse_move>(*this, &essence_t::_m_answer_scroll);
 							scroll.v.make_event<events::mouse_up>(*this, &essence_t::_m_answer_scroll);
 						}
@@ -1198,7 +1241,7 @@ namespace nana{ namespace gui{
 						if(ad)
 						{
 							adjust_scroll_life();
-							API::refresh_window(window->handle());
+							API::refresh_window(lister.wd_ptr()->handle());
 						}
 					}
 				}
@@ -1357,7 +1400,7 @@ namespace nana{ namespace gui{
 					}
 
 					if(update)
-						API::refresh_window(window->handle());
+						API::refresh_window(lister.wd_ptr()->handle());
 				}
 			};
 
@@ -1502,7 +1545,7 @@ namespace nana{ namespace gui{
 					unsigned height = rect.height - 1;
 
 					int txtop = (rect.height - essence_->text_height) / 2 + rect.y;
-					nana::color_t txtcolor = essence_->window->foreground();
+					nana::color_t txtcolor = essence_->lister.wd_ptr()->foreground();
 
 					int state = essence_->StateNormal;
 
@@ -1589,8 +1632,9 @@ namespace nana{ namespace gui{
 
 					size_type n = essence_->number_of_lister_items(true);
 					if(0 == n)return;
-					nana::color_t bkcolor = essence_->window->background();
-					nana::color_t txtcolor = essence_->window->foreground();
+					widget * wdptr = essence_->lister.wd_ptr();
+					nana::color_t bkcolor = wdptr->background();
+					nana::color_t txtcolor = wdptr->foreground();
 
 					unsigned header_w = essence_->header.pixels();
 					if(header_w - essence_->scroll.offset_x < rect.width)
@@ -1856,7 +1900,7 @@ namespace nana{ namespace gui{
 					if(essence_->auto_draw)
 					{
 						essence_->adjust_scroll_life();
-						API::refresh_window(essence_->window->handle());
+						API::refresh_window(*(essence_->lister.wd_ptr()));
 					}
 				}
 
@@ -1872,9 +1916,9 @@ namespace nana{ namespace gui{
 						graph->rectangle(graph->width() - 1 - essence_->scroll.scale, graph->height() - 1 - essence_->scroll.scale, essence_->scroll.scale, essence_->scroll.scale, nana::gui::color::button_face, true);
 				}
 
-				void trigger::bind_window(trigger::widget_reference wd)
+				void trigger::bind_window(widget_reference wd)
 				{
-					essence_->window = &wd;
+					essence_->lister.bind(wd);
 					wd.background(0xFFFFFF);
 				}
 
@@ -1883,7 +1927,7 @@ namespace nana{ namespace gui{
 					essence_->graph = &graph;
 					typeface_changed(graph);
 
-					window wd = essence_->window->handle();
+					window wd = essence_->lister.wd_ptr()->handle();
 					using namespace API::dev;
 					make_drawer_event<events::mouse_move>(wd);
 					make_drawer_event<events::mouse_leave>(wd);
@@ -1898,7 +1942,7 @@ namespace nana{ namespace gui{
 				void trigger::detached()
 				{
 					essence_->graph = 0;
-					API::dev::umake_drawer_event(essence_->window->handle());
+					API::dev::umake_drawer_event(essence_->lister.wd_ptr()->handle());
 				}
 
 				void trigger::typeface_changed(graph_reference graph)
@@ -1940,15 +1984,15 @@ namespace nana{ namespace gui{
 							if(drawer_header_->mouse_spliter(r, ei.mouse.x))
 							{
 								set_spliter = true;
-								essence_->window->cursor(cursor::size_we);
+								essence_->lister.wd_ptr()->cursor(cursor::size_we);
 							}
 						}
 					}
 					if(set_spliter == false && essence_->ptr_state != essence_->StateGrab)
 					{
-						if((drawer_header_->item_spliter() != npos) || (essence_->window->cursor() == cursor::size_we))
+						if((drawer_header_->item_spliter() != npos) || (essence_->lister.wd_ptr()->cursor() == cursor::size_we))
 						{
-							essence_->window->cursor(cursor::arrow);
+							essence_->lister.wd_ptr()->cursor(cursor::arrow);
 							drawer_header_->cancel_spliter();
 							update = 2;
 						}
@@ -1957,7 +2001,7 @@ namespace nana{ namespace gui{
 					switch(update)
 					{
 					case 1:
-						API::update_window(essence_->window->handle());
+						API::update_window(essence_->lister.wd_ptr()->handle());
 						break;
 					case 2:
 						draw();
@@ -1989,7 +2033,7 @@ namespace nana{ namespace gui{
 						nana::point pos(ei.mouse.x, ei.mouse.y);
 						essence_->widget_to_header(pos);
 						drawer_header_->grab(pos, true);
-						API::capture_window(essence_->window->handle(), true);
+						API::capture_window(essence_->lister.wd_ptr()->handle(), true);
 						update = true;
 					}
 					else if(essence_->pointer_where.x == essence_->WhereLister || essence_->pointer_where.x == essence_->WhereChecker)
@@ -2003,14 +2047,20 @@ namespace nana{ namespace gui{
 							{
 								lister.select_for_all(false);
 								if(item_ptr)
+								{
 									item_ptr->flags.selected = true;
+									lister.ext_event.selected(*lister.wd_ptr(), item.first, item.second, true);
+								}
 								else
 									lister.categ_selected(item.first, true);
 							}
 							else
 							{
 								if(item_ptr)
+								{
 									item_ptr->flags.checked = ! item_ptr->flags.checked;
+									lister.ext_event.checked(*lister.wd_ptr(), item.first, item.second, item_ptr->flags.checked);
+								}
 								else
 									lister.categ_checked_reverse(item.first);
 							}
@@ -2046,7 +2096,7 @@ namespace nana{ namespace gui{
 						drawer_header_->grab(pos, false);
 						draw();
 						API::lazy_refresh();
-						API::capture_window(essence_->window->handle(), false);
+						API::capture_window(essence_->lister.wd_ptr()->handle(), false);
 					}
 				}
 
@@ -2127,6 +2177,11 @@ namespace nana{ namespace gui{
 			create(wd, r, visible);
 		}
 
+		listbox::ext_event_type& listbox::ext_event() const
+		{
+			return get_drawer_trigger().essence().lister.ext_event;
+		}
+
 		void listbox::auto_draw(bool ad)
 		{
 			get_drawer_trigger().essence().set_auto_draw(ad);
@@ -2205,10 +2260,12 @@ namespace nana{ namespace gui{
 
 		void listbox::checked(size_type cat, size_type i, bool value)
 		{
-			auto & item = get_drawer_trigger().essence().lister.at(cat, i);
+			auto & lister = get_drawer_trigger().essence().lister;
+			auto & item = lister.at(cat, i);
 			if(item.flags.checked != value)
 			{
 				item.flags.checked = value;
+				lister.ext_event.checked(*lister.wd_ptr(), cat, i, value);
 				get_drawer_trigger().update();
 			}
 		}
@@ -2328,10 +2385,12 @@ namespace nana{ namespace gui{
 
 		void listbox::selected(size_type cat, size_type i, bool value)
 		{
-			auto & item = get_drawer_trigger().essence().lister.at(cat, i);
+			auto & lister = get_drawer_trigger().essence().lister;
+			auto & item = lister.at(cat, i);
 			if(item.flags.selected != value)
 			{
 				item.flags.selected = value;
+				lister.ext_event.selected(*lister.wd_ptr(), cat, i, value);
 				get_drawer_trigger().update();
 			}
 		}

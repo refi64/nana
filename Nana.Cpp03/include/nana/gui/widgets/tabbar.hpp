@@ -23,7 +23,7 @@ namespace nana{ namespace gui{
 		namespace tabbar
 		{
 			template<typename Tabbar>
-			struct ext_event_tag
+			struct extra_events
 			{
 				typedef Tabbar tabbar;
 				typedef typename tabbar::value_type value_type;
@@ -79,7 +79,7 @@ namespace nana{ namespace gui{
 
 				const static std::size_t npos = static_cast<size_t>(-1);
 
-				mutable ext_event_tag<tabbar> ext_event;
+				mutable extra_events<tabbar> ext_event;
 
 				event_adapter(tabbar& tb, drawer_trigger & dtr)
 					: tabbar_(tb), drawer_trigger_(dtr)
@@ -157,7 +157,7 @@ namespace nana{ namespace gui{
 	public:
 		typedef Type value_type;
 		typedef drawerbase::tabbar::item_renderer item_renderer;
-		typedef drawerbase::tabbar::ext_event_tag<tabbar> ext_event_type;
+		typedef drawerbase::tabbar::extra_events<tabbar> ext_event_type;
 
 		struct button_add{};
 		struct button_scroll{};

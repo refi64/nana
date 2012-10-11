@@ -454,7 +454,7 @@ namespace detail
 			{
 				if(visible != wd->visible)
 				{
-					nana::gui::native_window_type nv = nullptr;
+					native_window_type nv = nullptr;
 					switch(wd->other.category)
 					{
 					case category::root_tag::value:
@@ -467,9 +467,10 @@ namespace detail
 
 					//Don't set the visible attr of a window if it is a root.
 					//The visible attr of a root will be set in the expose event.
-					if(nullptr == nv)
+					if(category::root_tag::value != wd->other.category)
 						bedrock::instance().event_expose(wd, visible);
-					else
+
+					if(nv)
 						native_interface::show_window(nv, visible, wd->flags.take_active);
 				}
 				return true;

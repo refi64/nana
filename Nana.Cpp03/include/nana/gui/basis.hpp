@@ -88,7 +88,7 @@ namespace gui
 
 	struct z_order_action
 	{
-		enum inner_t
+		enum t
 		{
 			none, bottom, top, topmost, foreground
 		};

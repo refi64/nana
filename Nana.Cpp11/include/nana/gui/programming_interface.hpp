@@ -130,7 +130,7 @@ namespace API
 	nana::point window_position(window);
 	void move_window(window, int x, int y);
 	void move_window(window, int x, int y, unsigned width, unsigned height);
-	bool set_window_z_order(window wd, window wd_after, z_order_action::inner_t action_if_no_wd_after);
+	bool set_window_z_order(window wd, window wd_after, z_order_action action_if_no_wd_after);
 
 	nana::size window_size(window);
 	void window_size(window, unsigned width, unsigned height);

@@ -447,7 +447,7 @@ namespace API
 		}
 	}
 
-	bool set_window_z_order(window wd, window wd_after, z_order_action::inner_t action_if_no_wd_after)
+	bool set_window_z_order(window wd, window wd_after, z_order_action action_if_no_wd_after)
 	{
 		if(wd)
 		{

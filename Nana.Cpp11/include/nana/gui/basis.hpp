@@ -49,9 +49,9 @@ namespace gui
 	typedef detail::window_handle_impl*	window;
 	typedef detail::event_handle_impl*	event_handle;
 
-	struct keyboard
+	namespace keyboard
 	{
-		enum keys
+		enum
 		{
 			select_all = 0x1,
 			alt = 18,
@@ -64,9 +64,18 @@ namespace gui
 		};
 	};
 
-	enum class mouse
+	namespace color
 	{
-		any_button, left_button, middle_button, right_button
+		enum
+		{
+			white = 0xFFFFFF,
+			button_face_shadow_start = 0xF5F4F2,
+			button_face_shadow_end = 0xD5D2CA,
+			button_face = 0xD4D0C8,
+			dark_border	= 0x404040,
+			gray_border	= 0x808080,
+			highlight = 0x1CC4F7
+		};
 	};
 
 	enum class cursor
@@ -83,26 +92,14 @@ namespace gui
 		size_bottom_right = 14
 	};
 
-	namespace color
+	enum class mouse
 	{
-		enum
-		{
-			white = 0xFFFFFF,
-			button_face_shadow_start = 0xF5F4F2,
-			button_face_shadow_end = 0xD5D2CA,
-			button_face = 0xD4D0C8,
-			dark_border	= 0x404040,
-			gray_border	= 0x808080,
-			highlight = 0x1CC4F7,
-		};
+		any_button, left_button, middle_button, right_button
 	};
 
-	struct z_order_action
+	enum class z_order_action
 	{
-		enum inner_t
-		{
-			none, bottom, top, topmost, foreground
-		};
+		none, bottom, top, topmost, foreground
 	};
 
 	//Window appearance structure

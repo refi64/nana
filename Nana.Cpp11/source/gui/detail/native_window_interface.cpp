@@ -719,7 +719,7 @@ namespace nana{
 #endif
 		}
 
-		void native_interface::set_window_z_order(native_window_type wd, native_window_type wd_after, z_order_action::inner_t action_if_no_wd_after)
+		void native_interface::set_window_z_order(native_window_type wd, native_window_type wd_after, z_order_action action_if_no_wd_after)
 		{
 #if defined(NANA_WINDOWS)
 			HWND wa = reinterpret_cast<HWND>(wd_after);

@@ -758,13 +758,15 @@ namespace detail
 				break;
 			case WM_LBUTTONDOWN: case WM_MBUTTONDOWN: case WM_RBUTTONDOWN:
 				msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);
+				if(0 == msgwnd)	break;
+
 				//if event on the menubar, just remove the menu if it is not associating with the menubar
-				if(msgwnd && (msgwnd == msgwnd->root_widget->other.attribute.root->menubar) && bedrock.get_menu(msgwnd->root, true))
+				if((msgwnd == msgwnd->root_widget->other.attribute.root->menubar) && bedrock.get_menu(msgwnd->root, true))
 					bedrock.remove_menu();
 				else
 					bedrock.close_menu_if_focus_other_window(msgwnd->root);
 
-				if(msgwnd && msgwnd->flags.enabled)
+				if(msgwnd->flags.enabled)
 				{
 					mouse_window = msgwnd;
 					wnd_type new_focus = (msgwnd->flags.take_active ? msgwnd : msgwnd->other.active_window);
@@ -857,7 +859,7 @@ namespace detail
 					if(wd)
 						msgwnd = wd;
 				}
-				else
+				else if(msgwnd)
 				{
 					make_eventinfo(ei, msgwnd, message, pmdec);
 					bool prev_captured_inside;

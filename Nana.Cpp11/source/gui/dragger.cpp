@@ -30,14 +30,14 @@ namespace nana{ namespace gui{
 			_m_clear_triggers();
 		}
 
-		void drag_target(nana::gui::window wd)
+		void drag_target(window wd)
 		{
 			drag_target_t dt;
 			dt.wd = wd;
 			targets_.push_back(dt);
 		}
 
-		void trigger(nana::gui::window wd)
+		void trigger(window wd)
 		{
 			trigger_t tg;
 			tg.wd = wd;
@@ -52,12 +52,12 @@ namespace nana{ namespace gui{
 	private:
 		void _m_clear_triggers()
 		{
-			for(std::vector<trigger_t>::iterator i = triggers_.begin(); i != triggers_.end(); ++i)
+			for(auto & t : triggers_)
 			{
-				API::umake_event(i->press);
-				API::umake_event(i->over);
-				API::umake_event(i->release);
-				API::umake_event(i->destroy);
+				API::umake_event(t.press);
+				API::umake_event(t.over);
+				API::umake_event(t.release);
+				API::umake_event(t.destroy);
 			}
 			triggers_.clear();
 		}
@@ -82,12 +82,12 @@ namespace nana{ namespace gui{
 				dragging_ = true;
 				API::capture_window(ei.window, true);
 				origin_ = API::cursor_position();
-				for(auto i = targets_.begin(); i != targets_.end(); ++i)
+				for(auto & t : targets_)
 				{
-					i->origin = API::window_position(i->wd);
-					nana::gui::window owner = API::get_owner_window(i->wd);
+					t.origin = API::window_position(t.wd);
+					window owner = API::get_owner_window(t.wd);
 					if(owner)
-						API::calc_screen_point(owner, i->origin);
+						API::calc_screen_point(owner, t.origin);
 				}
 				break;
 			case events::mouse_move::identifier:
@@ -96,21 +96,21 @@ namespace nana{ namespace gui{
 					nana::point pos = API::cursor_position();
 					pos.x -= origin_.x;
 					pos.y -= origin_.y;
-					for(auto i = targets_.begin(); i != targets_.end(); ++i)
+					for(auto & t : targets_)
 					{
-						if(API::is_window_zoomed(i->wd, true) == false)
+						if(API::is_window_zoomed(t.wd, true) == false)
 						{
-							nana::gui::window owner = API::get_owner_window(i->wd);
+							window owner = API::get_owner_window(t.wd);
 							if(owner)
 							{
-								nana::point t = i->origin;
-								API::calc_window_point(owner, t);
-								t.x += pos.x;
-								t.y += pos.y;
-								API::move_window(i->wd, t.x, t.y);
+								nana::point wdps = t.origin;
+								API::calc_window_point(owner, wdps);
+								wdps.x += pos.x;
+								wdps.y += pos.y;
+								API::move_window(t.wd, wdps.x, wdps.y);
 							}
 							else
-								API::move_window(i->wd, i->origin.x + pos.x, i->origin.y + pos.y);
+								API::move_window(t.wd, t.origin.x + pos.x, t.origin.y + pos.y);
 						}
 					}
 				}
@@ -140,12 +140,12 @@ namespace nana{ namespace gui{
 			delete impl_;
 		}
 
-		void dragger::drag_target(nana::gui::window wd)
+		void dragger::target(window wd)
 		{
 			impl_->drag_target(wd);
 		}
 
-		void dragger::trigger(nana::gui::window tg)
+		void dragger::trigger(window tg)
 		{
 			impl_->trigger(tg);
 		}

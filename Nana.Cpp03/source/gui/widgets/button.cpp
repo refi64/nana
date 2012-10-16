@@ -254,6 +254,9 @@ namespace drawerbase
 
 		void trigger::mouse_leave(graph_reference graph, const eventinfo&)
 		{
+			if(attr_.enable_pushed && attr_.pressed)
+				return;
+
 			attr_.act_state = (attr_.focused ? state::focused : state::normal);
 			_m_draw(graph);
 			API::lazy_refresh();

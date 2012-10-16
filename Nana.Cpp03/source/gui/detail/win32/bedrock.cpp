@@ -760,13 +760,15 @@ namespace detail
 				break;
 			case WM_LBUTTONDOWN: case WM_MBUTTONDOWN: case WM_RBUTTONDOWN:
 				msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);
+				if(0 == msgwnd) break;
+
 				//if event on the menubar, just remove the menu if it is not associating with the menubar
-				if(msgwnd && (msgwnd == msgwnd->root_widget->other.attribute.root->menubar) && bedrock.get_menu(msgwnd->root, true))
+				if((msgwnd == msgwnd->root_widget->other.attribute.root->menubar) && bedrock.get_menu(msgwnd->root, true))
 					bedrock.remove_menu();
 				else
 					bedrock.close_menu_if_focus_other_window(msgwnd->root);
 
-				if(msgwnd && msgwnd->flags.enabled)
+				if(msgwnd->flags.enabled)
 				{
 					mouse_window = msgwnd;
 					wnd_type new_focus = (msgwnd->flags.take_active ? msgwnd : msgwnd->other.active_window);
@@ -842,58 +844,56 @@ namespace detail
 				break;
 			case WM_MOUSEMOVE:
 				msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);
+				if(mousemove_window && (msgwnd != mousemove_window))
 				{
-					if(mousemove_window && (msgwnd != mousemove_window))
-					{
-						wnd_type leave_wd = mousemove_window;
-						root_runtime->condition.mousemove_window = 0;
-						mousemove_window = 0;
-						 //if current window is not the previous mouse event window
-						make_eventinfo(ei, leave_wd, message, pmdec);
-						leave_wd->flags.action = mouse_action::normal;
-						bedrock.raise_event(event_tag::mouse_leave, leave_wd, ei, true);
+					wnd_type leave_wd = mousemove_window;
+					root_runtime->condition.mousemove_window = 0;
+					mousemove_window = 0;
+					 //if current window is not the previous mouse event window
+					make_eventinfo(ei, leave_wd, message, pmdec);
+					leave_wd->flags.action = mouse_action::normal;
+					bedrock.raise_event(event_tag::mouse_leave, leave_wd, ei, true);
 
-						//if msgwnd is neither captured window nor the child of captured window,
-						//redirect the msgwnd to the captured window.
-						wnd_type wd = bedrock.wd_manager.capture_redirect(msgwnd);
-						if(wd)
-							msgwnd = wd;
-					}
-					else
+					//if msgwnd is neither captured window nor the child of captured window,
+					//redirect the msgwnd to the captured window.
+					wnd_type wd = bedrock.wd_manager.capture_redirect(msgwnd);
+					if(wd)
+						msgwnd = wd;
+				}
+				else if(msgwnd)
+				{
+					make_eventinfo(ei, msgwnd, message, pmdec);
+					bool prev_captured_inside;
+					if(bedrock.wd_manager.capture_window_entered(pmdec.mouse.x, pmdec.mouse.y, prev_captured_inside))
 					{
-						make_eventinfo(ei, msgwnd, message, pmdec);
-						bool prev_captured_inside;
-						if(bedrock.wd_manager.capture_window_entered(pmdec.mouse.x, pmdec.mouse.y, prev_captured_inside))
+						unsigned eid;
+						if(prev_captured_inside)
 						{
-							unsigned eid;
-							if(prev_captured_inside)
-							{
-								eid = event_tag::mouse_leave;
-								msgwnd->flags.action = mouse_action::normal;
-							}
-							else
-							{
-								eid = event_tag::mouse_enter;
-								msgwnd->flags.action = mouse_action::over;
-							}
-							bedrock.raise_event(eid, msgwnd, ei, true);
+							eid = event_tag::mouse_leave;
+							msgwnd->flags.action = mouse_action::normal;
 						}
+						else
+						{
+							eid = event_tag::mouse_enter;
+							msgwnd->flags.action = mouse_action::over;
+						}
+						bedrock.raise_event(eid, msgwnd, ei, true);
 					}
+				}
 
-					if(msgwnd)
+				if(msgwnd)
+				{
+					make_eventinfo(ei, msgwnd, message, pmdec);
+					msgwnd->flags.action = mouse_action::over;
+					if(mousemove_window != msgwnd)
 					{
-						make_eventinfo(ei, msgwnd, message, pmdec);
-						msgwnd->flags.action = mouse_action::over;
-						if(mousemove_window != msgwnd)
-						{
-							root_runtime->condition.mousemove_window = msgwnd;
-							mousemove_window = msgwnd;
-							bedrock.raise_event(event_tag::mouse_enter, msgwnd, ei, true);
-						}
-						bedrock.raise_event(event_tag::mouse_move, msgwnd, ei, true);
-						track.hwndTrack = native_window;
-						restrict::track_mouse_event(&track);
+						root_runtime->condition.mousemove_window = msgwnd;
+						mousemove_window = msgwnd;
+						bedrock.raise_event(event_tag::mouse_enter, msgwnd, ei, true);
 					}
+					bedrock.raise_event(event_tag::mouse_move, msgwnd, ei, true);
+					track.hwndTrack = native_window;
+					restrict::track_mouse_event(&track);
 				}
 				break;
 			case WM_MOUSELEAVE:

@@ -1031,19 +1031,18 @@ namespace detail
 			return prev_focus;
 		}
 
-		core_window_t* capture_redirect(core_window_t* msgwnd)
+		core_window_t* capture_redirect(core_window_t* wd)
 		{
-			if(attr_.capture.window && (attr_.capture.ignore_children == false) && (attr_.capture.window != msgwnd))
+			if(attr_.capture.window && (attr_.capture.ignore_children == false) && (attr_.capture.window != wd))
 			{
 				//Tests if the msgwnd is a child of captured window,
 				//and returns the msgwnd if it is.
-				for(core_window_t * child = msgwnd; child; child = child->parent)
+				for(core_window_t * child = wd; child; child = child->parent)
 				{
 					if(child->parent == attr_.capture.window)
-						return msgwnd;
+						return wd;
 				}
 			}
-
 			return attr_.capture.window;
 		}
 

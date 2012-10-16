@@ -19,20 +19,18 @@ namespace nana{namespace gui{
 	{
 		namespace form
 		{
-			class trigger: public nana::gui::drawer_trigger
+			class trigger: public drawer_trigger
 			{
 			public:
 				trigger();
-				void bind_window(nana::gui::widget& widget);
-				void attached(nana::paint::graphics&);
+				void bind_window(widget_reference);
+				void attached(graph_reference);
 				void detached();
-				void refresh(nana::paint::graphics&);
-				void resize(nana::paint::graphics&, const nana::gui::eventinfo&);
+				void refresh(graph_reference);
+				void resize(graph_reference, const eventinfo&);
 			private:
-				nana::gui::event_handle event_size_;
-
-				nana::paint::graphics* graph_;
-				nana::gui::widget*	widget_;
+				event_handle event_size_;
+				widget*	wd_;
 			};
 		}//end namespace form
 	}//end namespace drawerbase

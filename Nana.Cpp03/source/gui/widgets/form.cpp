@@ -11,38 +11,39 @@
 
 #include <nana/gui/widgets/form.hpp>
 
-namespace nana{ namespace gui{
+namespace nana{ namespace gui
+{
 	namespace drawerbase
 	{
 		namespace form
 		{
 		//class trigger
-			trigger::trigger():graph_(0){}
+			trigger::trigger():wd_(0){}
 
-			void trigger::bind_window(nana::gui::widget& widget)
+			void trigger::bind_window(widget_reference wd)
 			{
-				widget_ = & widget;
+				wd_ = &wd;
 			}
 
-			void trigger::attached(nana::paint::graphics& graph)
+			void trigger::attached(graph_reference graph)
 			{
-				graph_ = &graph;
-				event_size_ = API::dev::make_drawer_event<events::size>(widget_->handle());
+				event_size_ = API::dev::make_drawer_event<events::size>(*wd_);
 			}
 
 			void trigger::detached()
 			{
-				API::umake_event(widget_->handle());
+				API::umake_event(event_size_);
+				event_size_ = 0;
 			}
 
-			void trigger::refresh(nana::paint::graphics& graph)
+			void trigger::refresh(graph_reference graph)
 			{
-				graph.rectangle(API::background(widget_->handle()), true);
+				graph.rectangle(API::background(*wd_), true);
 			}
 
-			void trigger::resize(nana::paint::graphics& graph, const nana::gui::eventinfo& ei)
+			void trigger::resize(graph_reference graph, const eventinfo&)
 			{
-				graph.rectangle(0, 0, ei.size.width, ei.size.height, API::background(widget_->handle()), true);
+				graph.rectangle(API::background(*wd_), true);
 				API::lazy_refresh();
 			}
 		}//end namespace form

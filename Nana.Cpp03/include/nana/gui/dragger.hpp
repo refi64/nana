@@ -1,10 +1,9 @@
 #ifndef NANA_GUI_DRAGGER_HPP
 #define NANA_GUI_DRAGGER_HPP
-
 #include "programming_interface.hpp"
 
-namespace nana{ namespace gui{
-
+namespace nana{ namespace gui
+{
 	class dragger
 		: nana::noncopyable
 	{
@@ -12,8 +11,8 @@ namespace nana{ namespace gui{
 	public:
 		dragger();
 		~dragger();
-		void drag_target(nana::gui::window wd);
-		void trigger(nana::gui::window wd);
+		void target(window);
+		void trigger(window);
 	private:
 		dragger_impl_t * impl_;
 	};

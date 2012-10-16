@@ -1,23 +1,22 @@
 
 #include <nana/gui/dragger.hpp>
 
-namespace nana{ namespace gui{
-
-
+namespace nana{ namespace gui
+{
 	class dragger::dragger_impl_t
 	{
 		struct drag_target_t
 		{
-			nana::gui::window wd;
+			window wd;
 			nana::point origin;
 		};
 
 		struct trigger_t
 		{
-			nana::gui::window wd;
-			nana::gui::event_handle press;
-			nana::gui::event_handle over;
-			nana::gui::event_handle release;
+			window wd;
+			event_handle press;
+			event_handle over;
+			event_handle release;
 			event_handle destroy;
 		};
 	public:
@@ -30,14 +29,14 @@ namespace nana{ namespace gui{
 			_m_clear_triggers();
 		}
 
-		void drag_target(nana::gui::window wd)
+		void drag_target(window wd)
 		{
 			drag_target_t dt;
 			dt.wd = wd;
 			targets_.push_back(dt);
 		}
 
-		void trigger(nana::gui::window wd)
+		void trigger(window wd)
 		{
 			trigger_t tg;
 			tg.wd = wd;
@@ -85,7 +84,7 @@ namespace nana{ namespace gui{
 				for(std::vector<drag_target_t>::iterator i = targets_.begin(); i != targets_.end(); ++i)
 				{
 					i->origin = API::window_position(i->wd);
-					nana::gui::window owner = API::get_owner_window(i->wd);
+					window owner = API::get_owner_window(i->wd);
 					if(owner)
 						API::calc_screen_point(owner, i->origin);
 				}
@@ -100,7 +99,7 @@ namespace nana{ namespace gui{
 					{
 						if(API::is_window_zoomed(i->wd, true) == false)
 						{
-							nana::gui::window owner = API::get_owner_window(i->wd);
+							window owner = API::get_owner_window(i->wd);
 							if(owner)
 							{
 								nana::point t = i->origin;
@@ -132,20 +131,19 @@ namespace nana{ namespace gui{
 	//class dragger
 		dragger::dragger()
 			: impl_(new dragger_impl_t)
-		{
-		}
+		{}
 
 		dragger::~dragger()
 		{
 			delete impl_;
 		}
 
-		void dragger::drag_target(nana::gui::window wd)
+		void dragger::target(window wd)
 		{
 			impl_->drag_target(wd);
 		}
 
-		void dragger::trigger(nana::gui::window tg)
+		void dragger::trigger(window tg)
 		{
 			impl_->trigger(tg);
 		}

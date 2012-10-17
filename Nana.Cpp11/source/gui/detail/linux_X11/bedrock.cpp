@@ -552,10 +552,10 @@ namespace detail
 					break;
 					
 				msgwnd = bedrock.wd_manager.find_window(native_window, xevent.xbutton.x, xevent.xbutton.y);
-				if(msgwnd && (msgwnd == msgwnd->root_widget->other.attribute.root->menubar) && bedrock.get_menu(msgwnd->root, true))
-				{
+				if(nullptr == msgwnd) break;
+					
+				if((msgwnd == msgwnd->root_widget->other.attribute.root->menubar) && bedrock.get_menu(msgwnd->root, true))
 					bedrock.remove_menu();
-				}
 				else
 					bedrock.close_menu_if_focus_other_window(msgwnd->root);
 
@@ -583,17 +583,22 @@ namespace detail
 					msgwnd->flags.action = mouse_action::pressed;
 					if(bedrock.raise_event(dbl_click ? event_tag::dbl_click : event_tag::mouse_down, msgwnd, ei, true))
 					{
-						//If a root window is created during the mouse_down event, Nana.GUI will ignore the mouse_up event.
-						if(msgwnd->root_widget->other.attribute.root->context.focus_changed)
+						if(bedrock.wd_manager.available(mouse_window))
 						{
-							//call the drawer mouse up event for restoring the surface graphics
-							msgwnd->flags.action = mouse_action::normal;
-							bedrock.fire_event_for_drawer(event_tag::mouse_up, msgwnd, ei, &context);
-							bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+							//If a root window is created during the mouse_down event, Nana.GUI will ignore the mouse_up event.
+							if(msgwnd->root_widget->other.attribute.root->context.focus_changed)
+							{
+								//call the drawer mouse up event for restoring the surface graphics
+								msgwnd->flags.action = mouse_action::normal;
+								bedrock.fire_event_for_drawer(event_tag::mouse_up, msgwnd, ei, &context);
+								bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+							}
 						}
+						else
+							mouse_window = nullptr;
 					}
 					else
-						mouse_window = 0;
+						mouse_window = nullptr;
 				}
 				break;
 			case ButtonRelease:
@@ -606,7 +611,7 @@ namespace detail
 						bedrock.raise_event(event_tag::mouse_wheel, msgwnd, ei, true);
 					}
 				}
-				else if(mouse_window && mouse_window->flags.enabled)
+				else if(bedrock.wd_manager.available(mouse_window) && mouse_window->flags.enabled)
 				{
 					make_eventinfo(ei, mouse_window, message, xevent);
 					msgwnd = bedrock.wd_manager.find_window(native_window, xevent.xbutton.x, xevent.xbutton.y);
@@ -639,7 +644,7 @@ namespace detail
 					bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
 					bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
 
-					mouse_window = 0;
+					mouse_window = nullptr;
 				}
 				break;
 			case DestroyNotify:
@@ -714,8 +719,9 @@ namespace detail
 						bedrock.raise_event(event_tag::mouse_enter, msgwnd, ei, true);
 					}
 					bedrock.raise_event(event_tag::mouse_move, msgwnd, ei, true);
-					mousemove_window = msgwnd;
 				}
+				if(false == bedrock.wd_manager.available(mousemove_window))
+					mousemove_window = nullptr;
 				break;
 			case MapNotify:
 			case UnmapNotify:

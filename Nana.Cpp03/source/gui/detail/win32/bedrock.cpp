@@ -750,7 +750,13 @@ namespace detail
 						bedrock.wd_manager.set_focus(msgwnd);
 
 					make_eventinfo(ei, msgwnd, message, pmdec);
-					if(false == bedrock.raise_event(msgwnd->flags.dbl_click?event_tag::dbl_click:event_tag::mouse_down, msgwnd, ei, true))
+					//After event, the mouse_window may be deleted.
+					if(bedrock.raise_event(msgwnd->flags.dbl_click?event_tag::dbl_click:event_tag::mouse_down, msgwnd, ei, true))
+					{
+						if(false == bedrock.wd_manager.available(msgwnd))
+							mouse_window = 0;
+					}
+					else
 						mouse_window = 0;
 				}
 				break;
@@ -809,7 +815,7 @@ namespace detail
 			case WM_LBUTTONUP:
 			case WM_MBUTTONUP:
 			case WM_RBUTTONUP:
-				if(mouse_window && mouse_window->flags.enabled)
+				if(bedrock.wd_manager.available(mouse_window) && mouse_window->flags.enabled)
 				{
 					make_eventinfo(ei, mouse_window, message, pmdec);
 					msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);
@@ -838,18 +844,17 @@ namespace detail
 
 					bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
 					bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
-
 					mouse_window = 0;
 				}
 				break;
 			case WM_MOUSEMOVE:
 				msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);
-				if(mousemove_window && (msgwnd != mousemove_window))
+				if(bedrock.wd_manager.available(mousemove_window) && (msgwnd != mousemove_window))
 				{
 					wnd_type leave_wd = mousemove_window;
 					root_runtime->condition.mousemove_window = 0;
 					mousemove_window = 0;
-					 //if current window is not the previous mouse event window
+					//if current window is not the previous mouse event window
 					make_eventinfo(ei, leave_wd, message, pmdec);
 					leave_wd->flags.action = mouse_action::normal;
 					bedrock.raise_event(event_tag::mouse_leave, leave_wd, ei, true);
@@ -895,6 +900,8 @@ namespace detail
 					track.hwndTrack = native_window;
 					restrict::track_mouse_event(&track);
 				}
+				if(false == bedrock.wd_manager.available(mousemove_window))
+					mousemove_window = 0;
 				break;
 			case WM_MOUSELEAVE:
 				if(bedrock.wd_manager.available(mousemove_window) && mousemove_window->flags.enabled)

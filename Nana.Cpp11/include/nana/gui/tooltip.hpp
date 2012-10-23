@@ -13,16 +13,16 @@
 #define NANA_GUI_WIDGETS_TOOLTIP_HPP
 #include "widgets/widget.hpp"
 
-namespace nana{ namespace gui{
-
+namespace nana{ namespace gui
+{
 	class tooltip
 	{
 	public:
 		tooltip();
 		~tooltip();
 
-		void set(nana::gui::window, const nana::string&);
-		void show(nana::gui::window, int x, int y, const nana::string&);
+		void set(window, const nana::string&);
+		void show(window, int x, int y, const nana::string&);
 		void close();
 	};//class tooltip
 

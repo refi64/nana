@@ -27,11 +27,11 @@ namespace gui
 			kind_t kind;
 			union
 			{
-				nana::gui::window ref_wnd;
+				window ref_wnd;
 				gird * ref_gird;
 			}u;
 
-			element_tag(nana::gui::window wd, unsigned blank, unsigned scale)
+			element_tag(window wd, unsigned blank, unsigned scale)
 				:blank(blank), scale(scale), kind(kind_window)
 			{
 				u.ref_wnd = wd;
@@ -79,15 +79,16 @@ namespace gui
 			owner_.u.ref_widget = 0;
 		}
 
-		gird::gird(widget& wd)
+		gird::gird(window wd)
 		{
 			owner_.kind = kind_window;
-			event_handle_ = wd.make_event<events::size>(*this, &gird::_m_resize);
+			event_handle_ = API::make_event<events::size>(wd, nana::make_fun(*this, &gird::_m_resize));
 			if(event_handle_)
 			{
-				owner_.u.ref_widget = &wd;
-				area_.width = wd.size().width;
-				area_.height = wd.size().height;
+				owner_.u.ref_widget = wd;
+				nana::size sz = API::window_size(wd);
+				area_.width = sz.width;
+				area_.height = sz.height;
 			}
 			else
 				owner_.u.ref_widget = 0;
@@ -104,17 +105,18 @@ namespace gui
 				delete (*i);
 		}
 
-		void gird::bind(widget& wd)
+		void gird::bind(window wd)
 		{
 			if(owner_.u.ref_widget == 0)
 			{
 				owner_.kind = kind_window;
-				event_handle_ = wd.make_event<events::size>(*this, &gird::_m_resize);
+				event_handle_ = API::make_event<events::size>(wd, nana::make_fun(*this, &gird::_m_resize));
 				if(event_handle_)
 				{
-					owner_.u.ref_widget = &wd;
-					area_.width = wd.size().width;
-					area_.height = wd.size().height;
+					owner_.u.ref_widget = wd;
+					nana::size sz = API::window_size(wd);
+					area_.width = sz.width;
+					area_.height = sz.height;
 				}
 				else
 					owner_.u.ref_widget = 0;
@@ -158,7 +160,7 @@ namespace gui
 
 		void gird::_m_resize()
 		{
-			nana::size sz = owner_.u.ref_widget->size();
+			nana::size sz = API::window_size(owner_.u.ref_widget);
 			area_.width = sz.width;
 			area_.height = sz.height;
 			_m_adjust_children();

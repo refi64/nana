@@ -21,16 +21,16 @@ namespace nana
 namespace gui
 {
 	class gird
-		: nana::noncopyable
+		: noncopyable
 	{
 		enum kind_t{kind_window, kind_gird};
 		struct element_tag;
 		gird(gird * owner, unsigned scale);
 	public:
 		gird();
-		gird(widget&);
+		gird(window);
 		~gird();
-		void bind(widget&);
+		void bind(window);
 		gird * push(unsigned blank, unsigned scale);
 		void push(window, unsigned blank, unsigned scale);
 		gird * add(unsigned blank, unsigned scale);
@@ -46,12 +46,12 @@ namespace gui
 			kind_t kind;
 			union
 			{
-				widget * ref_widget;
+				window ref_widget;
 				gird * ref_gird;
 			}u;
 		}owner_;
 
-		nana::gui::event_handle event_handle_;
+		event_handle event_handle_;
 		nana::rectangle area_;
 		std::vector<element_tag*> child_;
 		std::vector<element_tag*> elements_;

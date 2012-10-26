@@ -27,11 +27,11 @@ namespace gui
 			kind_t kind;
 			union
 			{
-				nana::gui::window ref_wnd;
+				window ref_wnd;
 				gird * ref_gird;
 			}u;
 
-			element_tag(nana::gui::window wd, unsigned blank, unsigned scale)
+			element_tag(window wd, unsigned blank, unsigned scale)
 				:blank(blank), scale(scale), kind(kind_window)
 			{
 				u.ref_wnd = wd;
@@ -79,14 +79,14 @@ namespace gui
 			owner_.u.ref_widget = nullptr;
 		}
 
-		gird::gird(widget& wd)
+		gird::gird(window wd)
 		{
 			owner_.kind = kind_window;
-			event_handle_ = wd.make_event<events::size>(*this, &gird::_m_resize);
+			event_handle_ = API::make_event<events::size>(wd, nana::make_fun(*this, &gird::_m_resize));
 			if(event_handle_)
 			{
-				owner_.u.ref_widget = &wd;
-				area_ = wd.size();
+				owner_.u.ref_widget = wd;
+				area_ = API::window_size(wd);
 			}
 			else
 				owner_.u.ref_widget = nullptr;
@@ -103,16 +103,16 @@ namespace gui
 				delete i;
 		}
 
-		void gird::bind(widget& wd)
+		void gird::bind(window wd)
 		{
 			if(nullptr == owner_.u.ref_widget)
 			{
 				owner_.kind = kind_window;
-				event_handle_ = wd.make_event<events::size>(*this, &gird::_m_resize);
+				event_handle_ = API::make_event<events::size>(wd, nana::make_fun(*this, &gird::_m_resize));
 				if(event_handle_)
 				{
-					owner_.u.ref_widget = &wd;
-					area_ = wd.size();
+					owner_.u.ref_widget = wd;
+					area_ = API::window_size(wd);
 				}
 			}
 		}
@@ -125,7 +125,7 @@ namespace gui
 			return p->u.ref_gird;
 		}
 
-		void gird::push(nana::gui::window wd, unsigned blank, unsigned scale)
+		void gird::push(window wd, unsigned blank, unsigned scale)
 		{
 			child_.push_back(new element_tag(wd, blank, scale));
 			_m_adjust_children();
@@ -139,7 +139,7 @@ namespace gui
 			return p->u.ref_gird;
 		}
 
-		void gird::add(nana::gui::window wd, unsigned blank, unsigned scale)
+		void gird::add(window wd, unsigned blank, unsigned scale)
 		{
 			elements_.push_back(new element_tag(wd, blank, scale));
 			_m_adjust_elements();
@@ -153,7 +153,7 @@ namespace gui
 
 		void gird::_m_resize()
 		{
-			area_ = owner_.u.ref_widget->size();
+			area_ = API::window_size(owner_.u.ref_widget);
 			_m_adjust_children();
 		}
 

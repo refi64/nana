@@ -148,7 +148,7 @@ namespace nana{ namespace gui{
 
 				bool editable() const
 				{
-					return (editor_ ? editor_->editable() : false);
+					return (editor_ ? editor_->attr().editable : false);
 				}
 
 				bool calc_where(graph_reference graph, int x, int y)
@@ -157,7 +157,7 @@ namespace nana{ namespace gui{
 
 					if(1 < x && x < static_cast<int>(graph.width()) - 2 && 1 < y && y < static_cast<int>(graph.height()) - 2)
 					{
-						if((editor_->editable() == false) || (static_cast<int>(graph.width()) - 22 <= x))
+						if((editor_->attr().editable == false) || (static_cast<int>(graph.width()) - 22 <= x))
 							new_where = WherePushButton;
 						else
 							new_where = WhereText;
@@ -187,7 +187,7 @@ namespace nana{ namespace gui{
 					if(editor_)
 					{
 						state_.focused = f;
-						if(editor_->editable())
+						if(editor_->attr().editable)
 							editor_->select(f);
 					}
 				}
@@ -579,7 +579,7 @@ namespace nana{ namespace gui{
 								drawer_->open_lister();
 
 						drawer_->draw();
-						if(editor->editable())
+						if(editor->attr().editable)
 							editor->reset_caret();
 
 						API::lazy_refresh();
@@ -649,7 +649,7 @@ namespace nana{ namespace gui{
 				void trigger::key_char(graph_reference graph, const eventinfo& ei)
 				{
 					widgets::skeletons::text_editor * editor = drawer_->editor();
-					if(drawer_->widget_ptr()->enabled() && editor->editable())
+					if(drawer_->widget_ptr()->enabled() && editor->attr().editable)
 					{
 						switch(ei.keyboard.key)
 						{

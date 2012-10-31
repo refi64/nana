@@ -81,41 +81,41 @@ namespace detail
 	class event_manager
 	{
 	public:
-		struct event_kind
+		enum class event_kind
 		{
-			enum t{both, trigger, user};
+			both, trigger, user
 		};
 
 		typedef nana::gui::detail::handle_manager<abstract_handler*, nana::null_type> handle_manager_type;
 
 		template<typename Function>
-		event_handle make_for_drawer(unsigned event_id, window wnd, category::flags categ, Function function, window listener = 0)
+		event_handle make_for_drawer(unsigned evtid, window wd, category::flags categ, Function function)
 		{
-			return (event_tag::accept(event_id, categ) ?
-				_m_make(event_id, wnd, handler_factory<Function>::build(function), true, listener) : 0);
+			return (event_tag::accept(evtid, categ) ?
+				_m_make(evtid, wd, handler_factory<Function>::build(function), true, nullptr) : nullptr);
 		}
 
 		template<typename Function>
-		event_handle make(unsigned event_id, window wnd, category::flags categ, Function function)
+		event_handle make(unsigned evtid, window wd, category::flags categ, Function function)
 		{
-			return  (event_tag::accept(event_id, categ) ?
-				_m_make(event_id, wnd, handler_factory<Function>::build(function), false) : 0);
+			return  (event_tag::accept(evtid, categ) ?
+				_m_make(evtid, wd, handler_factory<Function>::build(function), false, nullptr) : nullptr);
 		}
 
 		template<typename Function>
-		event_handle bind(unsigned event_id, window trig_wnd, window listener, category::flags categ, Function function)
+		event_handle bind(unsigned evtid, window trig_wd, window listener, category::flags categ, Function function)
 		{
-			return (event_tag::accept(event_id, categ) ?
-				_m_make(event_id, trig_wnd, handler_factory<Function>::build(function), false, listener) : 0);
+			return (event_tag::accept(evtid, categ) ?
+				_m_make(evtid, trig_wd, handler_factory<Function>::build(function), false, listener) : 0);
 		}
 
 		//delete a handler
 		void umake(event_handle);
+		//umake
 		//delete user event and drawer event handlers of a specified window.
-		void umake(window);
-		//delete drawer event handlers of a specified window.
-		void umake_for_drawer(window);
-		bool answer(unsigned eventid, window, const eventinfo&, event_kind::t);
+		//If only_for_drawer is true, it only deletes user events.
+		void umake(window, bool only_for_drawer);
+		bool answer(unsigned eventid, window, const eventinfo&, event_kind);
 		void remove_trash_handle(unsigned tid);
 
 		void write_off_bind(event_handle);
@@ -218,15 +218,7 @@ namespace detail
 			}
 		};
 	private:
-		/*
-		 * _m_make
-		 * @brief: _m_make insert a handler into callback storage through an given event_id and window
-		 * @eventid, the event type identifier
-		 * @wnd, the triggering window
-		 * @abs_handler, the handle of event object handler
-		 * @drawer_handler, whether the event is installing for drawer or user callback
-		 */
-		event_handle _m_make(unsigned event_id, window wnd, abstract_handler* abs_handler, bool drawer_handler, window listener = 0);
+		event_handle _m_make(unsigned evtid, window, abstract_handler* abs_handler, bool drawer_handler, window listener);
 	private:
 		static std::recursive_mutex mutex_;
 		handle_manager_type handle_manager_;

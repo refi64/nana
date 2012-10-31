@@ -85,9 +85,9 @@ namespace API
 				if(restrict::window_manager.available(iwd))
 				{
 					iwd->drawer.graphics.make(iwd->rect.width, iwd->rect.height);
-					iwd->drawer.graphics.rectangle(0, 0, iwd->rect.width, iwd->rect.height, iwd->color.background, true);
+					iwd->drawer.graphics.rectangle(iwd->color.background, true);
 					iwd->drawer.attached(dr);
-					restrict::window_manager.make_drawer_event(nana::gui::events::size::identifier, iwd);
+					make_drawer_event<events::size>(wd);
 					iwd->drawer.refresh();	//Always redrawe no matter it is visible or invisible. This can make the graphics data correctly.
 				}
 			}
@@ -105,7 +105,7 @@ namespace API
 
 		void umake_drawer_event(window wd)
 		{
-			restrict::bedrock.evt_manager.umake_for_drawer(wd);
+			restrict::bedrock.evt_manager.umake(wd, true);
 		}
 
 		void window_caption(window wd, const nana::string& title)
@@ -400,7 +400,7 @@ namespace API
 
 	void umake_event(window wd)
 	{
-		restrict::bedrock.evt_manager.umake(wd);
+		restrict::bedrock.evt_manager.umake(wd, false);
 	}
 
 	void umake_event(event_handle eh)

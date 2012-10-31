@@ -658,7 +658,7 @@ namespace detail
 
 						spec.remove(native_window);
 						bedrock.wd_manager.destroy(msgwnd);
-						bedrock.evt_manager.umake(reinterpret_cast<gui::window>(msgwnd));
+						bedrock.evt_manager.umake(reinterpret_cast<gui::window>(msgwnd), false);
 
 						bedrock.rt_manager.remove_if_exists(msgwnd);
 						bedrock.wd_manager.destroy_handle(msgwnd);

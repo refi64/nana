@@ -113,7 +113,7 @@ namespace gui
 			void bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::image& img, int srcx, int srcy);
 			void stretch(const nana::rectangle& r_dst, const nana::paint::graphics& graph, const nana::rectangle& r_src);
 			void stretch(const nana::rectangle& r_dst, const nana::paint::image& img, const nana::rectangle& r_src);
-			nana::gui::event_handle make_event(int event_id, nana::gui::window trigger, nana::gui::window listener = 0);
+			event_handle make_event(int evtid, window wd);
 		private:
 			void _m_draw_dynamic_drawing_object();
 		public:

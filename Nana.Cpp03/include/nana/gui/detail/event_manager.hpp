@@ -87,32 +87,30 @@ namespace detail
 		typedef nana::gui::detail::handle_manager<abstract_handler*, nana::null_type> handle_manager_type;
 
 		template<typename Function>
-		event_handle make_for_drawer(unsigned event_id, window wnd, unsigned category, Function function, window listener = 0)
+		event_handle make_for_drawer(unsigned evtid, window wd, unsigned category, Function function)
 		{
-			return (event_tag::accept(event_id, category) ?
-				_m_make(event_id, wnd, handler_factory<Function>::build(function), true, listener) : 0);
+			return (event_tag::accept(evtid, category) ?
+				_m_make(evtid, wd, handler_factory<Function>::build(function), true, 0) : 0);
 		}
 
 		template<typename Function>
-		event_handle make(unsigned event_id, window wnd, unsigned category, Function function)
+		event_handle make(unsigned evtid, window wd, unsigned category, Function function)
 		{
-			return  (event_tag::accept(event_id, category) ?
-				_m_make(event_id, wnd, handler_factory<Function>::build(function), false) : 0);
+			return  (event_tag::accept(evtid, category) ?
+				_m_make(evtid, wd, handler_factory<Function>::build(function), false, 0) : 0);
 		}
 
 		template<typename Function>
-		event_handle bind(unsigned event_id, window trig_wnd, window listener, unsigned category, Function function)
+		event_handle bind(unsigned evtid, window trig_wnd, window listener, unsigned category, Function function)
 		{
-			return (event_tag::accept(event_id, category) ?
-				_m_make(event_id, trig_wnd, handler_factory<Function>::build(function), false, listener) : 0);
+			return (event_tag::accept(evtid, category) ?
+				_m_make(evtid, trig_wnd, handler_factory<Function>::build(function), false, listener) : 0);
 		}
 
 		//delete a handler
 		void umake(event_handle);
 		//delete user event and drawer event handlers of a specified window.
-		void umake(window);
-		//delete drawer event handlers of a specified window.
-		void umake_for_drawer(window);
+		void umake(window, bool only_for_drawer);
 		bool answer(unsigned eventid, window, const eventinfo&, event_kind::t);
 		void remove_trash_handle(unsigned tid);
 

@@ -57,6 +57,11 @@ namespace nana{	namespace gui{	namespace widgets
 			return true;
 		}
 
+		const text_editor::attributes& text_editor::attr() const
+		{
+			return attributes_;
+		}
+
 		bool text_editor::multi_lines(bool ml)
 		{
 			if((ml == false) && attributes_.multi_lines)
@@ -79,16 +84,6 @@ namespace nana{	namespace gui{	namespace widgets
 			return false;
 		}
 
-		bool text_editor::multi_lines() const
-		{
-			return attributes_.multi_lines;
-		}
-
-		bool text_editor::editable() const
-		{
-			return attributes_.editable;
-		}
-
 		void text_editor::editable(bool v)
 		{
 			attributes_.editable = v;
@@ -97,11 +92,6 @@ namespace nana{	namespace gui{	namespace widgets
 		void text_editor::enable_background(bool enb)
 		{
 			attributes_.enable_background = enb;
-		}
-
-		bool text_editor::enable_background() const
-		{
-			return attributes_.enable_background;
 		}
 
 		void text_editor::enable_background_counterpart(bool enb)
@@ -393,15 +383,14 @@ namespace nana{	namespace gui{	namespace widgets
 		bool text_editor::move_select()
 		{
 			nana::upoint a, b;
-			this->_m_get_sort_select_points(a, b);
+			_m_get_sort_select_points(a, b);
 
 			if(this->hit_select_area(points_.caret) || (select_.b == points_.caret))
 			{
 				points_.caret = select_.b;
-				if(this->_m_adjust_caret_into_screen())
+				if(_m_adjust_caret_into_screen())
 					redraw(true);
 				this->reset_caret();
-
 				return true;
 			}
 
@@ -1109,11 +1098,11 @@ namespace nana{	namespace gui{	namespace widgets
 				{
 				case 1:
 					points_.caret = a;
-					this->_m_move_offset_x_while_over_border(-2);
+					_m_move_offset_x_while_over_border(-2);
 					break;
 				case 2:
 					points_.caret = b;
-					this->_m_move_offset_x_while_over_border(2);
+					_m_move_offset_x_while_over_border(2);
 					break;
 				}
 				select_.a = select_.b = points_.caret;
@@ -1187,12 +1176,12 @@ namespace nana{	namespace gui{	namespace widgets
 
 		int text_editor::_m_text_top_base() const
 		{
-			if(attributes_.multi_lines)
-				return text_area_.area.y;
-
-			unsigned px = line_height();
-			if(text_area_.area.height > px)
-				return text_area_.area.y + static_cast<int>((text_area_.area.height - px) >> 1);
+			if(false == attributes_.multi_lines)
+			{
+				unsigned px = line_height();
+				if(text_area_.area.height > px)
+					return text_area_.area.y + static_cast<int>((text_area_.area.height - px) >> 1);
+			}
 			return text_area_.area.y;
 		}
 
@@ -1256,10 +1245,10 @@ namespace nana{	namespace gui{	namespace widgets
 			if((select_.a == select_.b) || (select_.a.y != textline && select_.b.y != textline))
 			{
 				bool selected = (a.y < textline && textline < b.y);
-				for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
+				for(auto & ent : reordered)
 				{
-					std::size_t len = i->end - i->begin;
-					unsigned str_w = graph_.text_extent_size(i->begin, len).width;
+					std::size_t len = ent.end - ent.begin;
+					unsigned str_w = graph_.text_extent_size(ent.begin, len).width;
 
 					if((x + static_cast<int>(str_w) > text_area_.area.x) && (x < xend))
 					{
@@ -1268,7 +1257,7 @@ namespace nana{	namespace gui{	namespace widgets
 							graph_.rectangle(x, top, str_w, line_h_pixels, 0x3399FF, true);
 						else
 							txt_color = color;
-						graph_.string(x, top, txt_color, i->begin, len);
+						graph_.string(x, top, txt_color, ent.begin, len);
 					}
 					x += static_cast<int>(str_w);
 				}
@@ -1280,30 +1269,30 @@ namespace nana{	namespace gui{	namespace widgets
 				const nana::char_t * strbeg = linestr.c_str();
 				if(a.y == b.y)
 				{
-					for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
+					for(auto & ent: reordered)
 					{
-						std::size_t len = i->end - i->begin;
-						unsigned str_w = graph_.text_extent_size(i->begin, len).width;
+						std::size_t len = ent.end - ent.begin;
+						unsigned str_w = graph_.text_extent_size(ent.begin, len).width;
 						if((x + static_cast<int>(str_w) > text_area_.area.x) && (x < xend))
 						{
-							std::size_t pos = i->begin - strbeg;
+							std::size_t pos = ent.begin - strbeg;
 
 							if(pos + len <= a.x || pos >= b.x)
 							{
 								//NOT selected
-								graph_.string(x, top, color, i->begin, len);
+								graph_.string(x, top, color, ent.begin, len);
 							}
 							else if(a.x <= pos && pos + len <= b.x)
 							{
 								//Whole selected
 								graph_.rectangle(x, top, str_w, line_h_pixels, 0x3399FF, true);
-								graph_.string(x, top, 0xFFFFFF, i->begin, len);
+								graph_.string(x, top, 0xFFFFFF, ent.begin, len);
 							}
 							else if(pos <= a.x && a.x < pos + len)
 							{	//Partial selected
 								int endpos = static_cast<int>(b.x < pos + len ? b.x : pos + len);
 								unsigned * pxbuf = new unsigned[len];
-								if(graph_.glyph_pixels(i->begin, len, pxbuf))
+								if(graph_.glyph_pixels(ent.begin, len, pxbuf))
 								{
 									unsigned head_w = 0;
 									for(std::size_t u = 0; u < a.x - pos; ++u)
@@ -1313,26 +1302,26 @@ namespace nana{	namespace gui{	namespace widgets
 									for(std::size_t u = a.x - pos; u < endpos - pos; ++u)
 										sel_w += pxbuf[u];
 
-									if(_m_is_right_text(*i))
+									if(_m_is_right_text(ent))
 									{	//RTL
-										graph_.string(x, top, color, i->begin, len);
+										graph_.string(x, top, color, ent.begin, len);
 										nana::paint::graphics graph(str_w, line_h_pixels);
 										graph.typeface(graph_.typeface());
 										graph.rectangle(0x3399FF, true);
-										graph.string(0, 0, 0xFFFFFF, i->begin, len);
+										graph.string(0, 0, 0xFFFFFF, ent.begin, len);
 
 										int sel_xpos = static_cast<int>(str_w - head_w - sel_w);
 										graph_.bitblt(x + sel_xpos, top, sel_w, line_h_pixels, graph, sel_xpos, 0);
 									}
 									else
 									{	//LTR
-										graph_.string(x, top, color, i->begin, a.x - pos);
+										graph_.string(x, top, color, ent.begin, a.x - pos);
 
 										graph_.rectangle(x + head_w, top, sel_w, line_h_pixels, 0x3399FF, true);
-										graph_.string(x + head_w, top, 0xFFFFFF, i->begin + (a.x - pos), endpos - a.x);
+										graph_.string(x + head_w, top, 0xFFFFFF, ent.begin + (a.x - pos), endpos - a.x);
 
 										if(static_cast<size_t>(endpos) < pos + len)
-											graph_.string(x + static_cast<int>(head_w + sel_w), top, color, i->begin + (endpos - pos), pos + len - endpos);
+											graph_.string(x + static_cast<int>(head_w + sel_w), top, color, ent.begin + (endpos - pos), pos + len - endpos);
 									}
 								}
 								delete [] pxbuf;
@@ -1340,23 +1329,22 @@ namespace nana{	namespace gui{	namespace widgets
 							else if(pos <= b.x && b.x < pos + len)
 							{	//Partial selected
 								int endpos = b.x;
-								unsigned sel_w = graph_.glyph_extent_size(i->begin, len, 0, endpos - pos).width;
-								if(_m_is_right_text(*i))
+								unsigned sel_w = graph_.glyph_extent_size(ent.begin, len, 0, endpos - pos).width;
+								if(_m_is_right_text(ent))
 								{	//RTL
-									graph_.string(x, top, color, i->begin, len);
+									graph_.string(x, top, color, ent.begin, len);
 									nana::paint::graphics graph(str_w, line_h_pixels);
 									graph.typeface(graph_.typeface());
 									graph.rectangle(0x3399FF, true);
-									graph.string(0, 0, 0xFFFFFF, i->begin, len);
+									graph.string(0, 0, 0xFFFFFF, ent.begin, len);
 									graph_.bitblt(x + (str_w - sel_w), top, sel_w, line_h_pixels, graph, str_w - sel_w, 0);
 								}
 								else
 								{	//LTR
 									graph_.rectangle(x, top, sel_w, line_h_pixels, 0x3399FF, true);
-									graph_.string(x, top, 0xFFFFFF, i->begin, endpos - pos);
-									graph_.string(x + sel_w, top, color, i->begin + (endpos - pos), pos + len - endpos);
+									graph_.string(x, top, 0xFFFFFF, ent.begin, endpos - pos);
+									graph_.string(x + sel_w, top, color, ent.begin + (endpos - pos), pos + len - endpos);
 								}
-
 							}
 						}
 						x += static_cast<int>(str_w);
@@ -1364,41 +1352,41 @@ namespace nana{	namespace gui{	namespace widgets
 				}
 				else if(a.y == textline)
 				{
-					for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
+					for(auto & ent: reordered)
 					{
-						std::size_t len = i->end - i->begin;
-						unsigned str_w = graph_.text_extent_size(i->begin, len).width;
+						std::size_t len = ent.end - ent.begin;
+						unsigned str_w = graph_.text_extent_size(ent.begin, len).width;
 						if((x + static_cast<int>(str_w) > text_area_.area.x) && (x < xend))
 						{
-							std::size_t pos = i->begin - strbeg;
+							std::size_t pos = ent.begin - strbeg;
 							if(pos + len <= a.x)
 							{
 								//Not selected
-								graph_.string(x, top, color, i->begin, len);
+								graph_.string(x, top, color, ent.begin, len);
 							}
 							else if(a.x < pos)
 							{
 								//Whole selected
 								graph_.rectangle(x, top, str_w, line_h_pixels, 0x3399FF, true);
-								graph_.string(x, top, 0xFFFFFF, i->begin, len);
+								graph_.string(x, top, 0xFFFFFF, ent.begin, len);
 							}
 							else
 							{
-								unsigned head_w = graph_.glyph_extent_size(i->begin, len, 0, a.x - pos).width;
-								if(_m_is_right_text(*i))
+								unsigned head_w = graph_.glyph_extent_size(ent.begin, len, 0, a.x - pos).width;
+								if(_m_is_right_text(ent))
 								{	//RTL
-									graph_.string(x, top, color, i->begin, len);
+									graph_.string(x, top, color, ent.begin, len);
 									nana::paint::graphics graph(str_w, line_h_pixels);
 									graph.typeface(graph_.typeface());
 									graph.rectangle(0x3399FF, true);
-									graph.string(0, 0, 0xFFFFFF, i->begin, len);
+									graph.string(0, 0, 0xFFFFFF, ent.begin, len);
 									graph_.bitblt(x, top, str_w - head_w, line_h_pixels, graph, 0, 0);
 								}
 								else
 								{	//LTR
-									graph_.string(x, top, color, i->begin, a.x - pos);
+									graph_.string(x, top, color, ent.begin, a.x - pos);
 									graph_.rectangle(x + head_w, top, str_w - head_w, line_h_pixels, 0x3399FF, true);
-									graph_.string(x + head_w, top, 0xFFFFFF, i->begin + a.x - pos, len - (a.x - pos));
+									graph_.string(x + head_w, top, 0xFFFFFF, ent.begin + a.x - pos, len - (a.x - pos));
 								}
 							}
 						}
@@ -1410,46 +1398,45 @@ namespace nana{	namespace gui{	namespace widgets
 				}
 				else if(b.y == textline)
 				{
-					for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
+					for(auto & ent : reordered)
 					{
-						std::size_t len = i->end - i->begin;
-						unsigned str_w = graph_.text_extent_size(i->begin, len).width;
+						std::size_t len = ent.end - ent.begin;
+						unsigned str_w = graph_.text_extent_size(ent.begin, len).width;
 						if((x + static_cast<int>(str_w) > text_area_.area.x) && (x < xend))
 						{
-							std::size_t pos = i->begin - strbeg;
+							std::size_t pos = ent.begin - strbeg;
 
 							if(pos + len <= b.x)
 							{
 								graph_.rectangle(x, top, str_w, line_h_pixels, 0x3399FF, true);
-								graph_.string(x, top, 0xFFFFFF, i->begin, len);
+								graph_.string(x, top, 0xFFFFFF, ent.begin, len);
 							}
 							else if(pos <= b.x && b.x < pos + len)
 							{
-								unsigned sel_w = graph_.glyph_extent_size(i->begin, len, 0, b.x - pos).width;
-								if(_m_is_right_text(*i))
+								unsigned sel_w = graph_.glyph_extent_size(ent.begin, len, 0, b.x - pos).width;
+								if(_m_is_right_text(ent))
 								{
 									nana::paint::graphics graph(str_w, line_h_pixels);
 									graph.typeface(graph_.typeface());
 									graph.rectangle(0x3399FF, true);
-									graph.string(0, 0, 0xFFFFFF, i->begin, len);
-									graph_.string(x, top, color, i->begin, len);
+									graph.string(0, 0, 0xFFFFFF, ent.begin, len);
+									graph_.string(x, top, color, ent.begin, len);
 
 									graph_.bitblt(x + (str_w - sel_w), top, sel_w, line_h_pixels, graph, str_w - sel_w, 0);
 								}
 								else
 								{
 									graph_.rectangle(x, top, sel_w, line_h_pixels, 0x3399FF, true);
-									graph_.string(x, top, 0xFFFFFF, i->begin, b.x - pos);
-									graph_.string(x + sel_w, top, color, i->begin + b.x - pos, len - (b.x - pos));
+									graph_.string(x, top, 0xFFFFFF, ent.begin, b.x - pos);
+									graph_.string(x + sel_w, top, color, ent.begin + b.x - pos, len - (b.x - pos));
 								}
 							}
 							else
-								graph_.string(x, top, color, i->begin, len);
+								graph_.string(x, top, color, ent.begin, len);
 						}
 						x += static_cast<int>(str_w);
 					}
 				}
-
 			}
 		}
 
@@ -1458,14 +1445,14 @@ namespace nana{	namespace gui{	namespace widgets
 		//@return: true if beyond the border
 		bool text_editor::_m_draw(nana::char_t c)
 		{
-			if(this->_m_adjust_caret_into_screen())
-				return true;
-
-			const nana::string & lnstr = textbase_.getline(points_.caret.y);
-			if(text_area_.area.x + static_cast<int>(graph_.bidi_extent_size(lnstr).width) < _m_endx())
+			if(false == _m_adjust_caret_into_screen())
 			{
-				_m_update_line(points_.caret.y);
-				return false;
+				const nana::string & lnstr = textbase_.getline(points_.caret.y);
+				if(text_area_.area.x + static_cast<int>(graph_.bidi_extent_size(lnstr).width) < _m_endx())
+				{
+					_m_update_line(points_.caret.y);
+					return false;
+				}
 			}
 			return true;
 		}
@@ -1517,25 +1504,27 @@ namespace nana{	namespace gui{	namespace widgets
 			else
 				adjusted = false;
 
+			int value = points_.offset.y;
 			if(screen_lines && (points_.caret.y >= points_.offset.y + screen_lines))
 			{
-				_m_offset_y(static_cast<int>(points_.caret.y - screen_lines) + 1);
+				value = static_cast<int>(points_.caret.y - screen_lines) + 1;
 				adjusted = true;
 			}
 			else if(static_cast<int>(points_.caret.y) < points_.offset.y)
 			{
 				if(screen_lines >= static_cast<unsigned>(points_.offset.y))
-					_m_offset_y(0);
+					value = 0;
 				else
-					_m_offset_y(static_cast<int>(points_.offset.y - screen_lines));
+					value = static_cast<int>(points_.offset.y - screen_lines);
 				adjusted = true;
 			}
 			else if(points_.offset.y && (textbase_.lines() <= screen_lines))
 			{
-				_m_offset_y(0);
+				value = 0;
 				adjusted = true;
 			}
 
+			_m_offset_y(value);
 			_m_scrollbar();
 			return adjusted;
 		}
@@ -1566,7 +1555,7 @@ namespace nana{	namespace gui{	namespace widgets
 			res.x = static_cast<int>(lnstr.size());
 			if(res.x)
 			{
-				x = x - text_area_.area.x + points_.offset.x;
+				x -= (text_area_.area.x + points_.offset.x);
 				if(x > 0)
 				{
 					unicode_bidi bidi;
@@ -1574,17 +1563,17 @@ namespace nana{	namespace gui{	namespace widgets
 					bidi.linestr(lnstr.c_str(), lnstr.size(), reordered);
 
 					int xbeg = 0;
-					for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
+					for(auto & ent : reordered)
 					{
-						std::size_t len = i->end - i->begin;
-						unsigned str_w = _m_text_extent_size(i->begin, len).width;
+						std::size_t len = ent.end - ent.begin;
+						unsigned str_w = _m_text_extent_size(ent.begin, len).width;
 						if(xbeg <= x && x < xbeg + static_cast<int>(str_w))
 						{
 							unsigned * pxbuf = new unsigned[len];
-							if(graph_.glyph_pixels(i->begin, len, pxbuf))
+							if(graph_.glyph_pixels(ent.begin, len, pxbuf))
 							{
 								x -= xbeg;
-								if(_m_is_right_text(*i))
+								if(_m_is_right_text(ent))
 								{	//RTL
 									for(std::size_t u = 0; u < len; ++u)
 									{
@@ -1616,7 +1605,7 @@ namespace nana{	namespace gui{	namespace widgets
 										x -= pxbuf[u];
 									}
 								}
-								res.x += static_cast<unsigned>(i->begin - lnstr.c_str());
+								res.x += static_cast<unsigned>(ent.begin - lnstr.c_str());
 							}
 							delete [] pxbuf;
 							return res;
@@ -1641,18 +1630,18 @@ namespace nana{	namespace gui{	namespace widgets
 			const nana::char_t * ch = (pos <= lnstr.size() ? lnstr.c_str() + pos : 0);
 
 			unsigned text_w = 0;
-			for(std::vector<unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
+			for(auto & ent: reordered)
 			{
-				std::size_t len = i->end - i->begin;
-				if(i->begin <= ch && ch <= i->end)
+				std::size_t len = ent.end - ent.begin;
+				if(ent.begin <= ch && ch <= ent.end)
 				{
-					if(_m_is_right_text(*i))
+					if(_m_is_right_text(ent))
 					{
 						//RTL
 						unsigned * pxbuf = new unsigned[len];
-						graph_.glyph_pixels(i->begin, len, pxbuf);
+						graph_.glyph_pixels(ent.begin, len, pxbuf);
 						unsigned * end = pxbuf + len;
-						for(unsigned * u = pxbuf + (ch - i->begin); u != end; ++u)
+						for(unsigned * u = pxbuf + (ch - ent.begin); u != end; ++u)
 							text_w += *u;
 
 						delete [] pxbuf;
@@ -1660,12 +1649,12 @@ namespace nana{	namespace gui{	namespace widgets
 					else
 					{
 						//LTR
-						text_w += _m_text_extent_size(i->begin, ch - i->begin).width;
+						text_w += _m_text_extent_size(ent.begin, ch - ent.begin).width;
 					}
 					break;
 				}
 				else
-					text_w += _m_text_extent_size(i->begin, len).width;
+					text_w += _m_text_extent_size(ent.begin, len).width;
 			}
 			return text_w;
 		}

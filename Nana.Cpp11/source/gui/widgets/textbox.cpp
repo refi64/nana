@@ -44,9 +44,9 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			return editor_;
 		}
 	//private:
-		void drawer::bind_window(nana::gui::widget& widget)
+		void drawer::bind_window(widget_reference wd)
 		{
-			widget_ = &widget;
+			widget_ = &wd;
 		}
 
 		void drawer::attached(nana::paint::graphics& graph)
@@ -86,7 +86,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			editor_->redraw(status_.has_focus);
 		}
 
-		void drawer::focus(nana::paint::graphics& graph, const nana::gui::eventinfo& ei)
+		void drawer::focus(nana::paint::graphics& graph, const eventinfo& ei)
 		{
 			status_.has_focus = ei.focus.getting;
 			refresh(graph);
@@ -96,13 +96,13 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			API::lazy_refresh();
 		}
 
-		void drawer::mouse_down(graph_reference graph, const nana::gui::eventinfo& ei)
+		void drawer::mouse_down(graph_reference, const eventinfo& ei)
 		{
 			if(editor_->mouse_down(ei.mouse.left_button, ei.mouse.x, ei.mouse.y))
 				API::lazy_refresh();
 		}
 
-		void drawer::mouse_move(graph_reference graph, const nana::gui::eventinfo& ei)
+		void drawer::mouse_move(graph_reference, const eventinfo& ei)
 		{
 			if(editor_->mouse_move(ei.mouse.left_button, ei.mouse.x, ei.mouse.y))
 				API::lazy_refresh();
@@ -114,7 +114,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 				API::lazy_refresh();
 		}
 
-		void drawer::mouse_wheel(graph_reference graph, const nana::gui::eventinfo& ei)
+		void drawer::mouse_wheel(graph_reference, const eventinfo& ei)
 		{
 			if(editor_->scroll(ei.wheel.upwards, true))
 			{
@@ -123,19 +123,19 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			}
 		}
 
-		void drawer::mouse_enter(graph_reference graph, const nana::gui::eventinfo&)
+		void drawer::mouse_enter(graph_reference, const eventinfo&)
 		{
 			if(editor_->mouse_enter(true))
 				API::lazy_refresh();
 		}
 
-		void drawer::mouse_leave(graph_reference graph, const nana::gui::eventinfo&)
+		void drawer::mouse_leave(graph_reference, const nana::gui::eventinfo&)
 		{
 			if(editor_->mouse_enter(false))
 				API::lazy_refresh();
 		}
 
-		void drawer::key_down(graph_reference graph, const nana::gui::eventinfo& ei)
+		void drawer::key_down(graph_reference, const eventinfo& ei)
 		{
 			if(editor_->move(ei.keyboard.key))
 			{
@@ -144,11 +144,11 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			}
 		}
 
-		void drawer::key_char(graph_reference graph, const nana::gui::eventinfo& ei)
+		void drawer::key_char(graph_reference, const eventinfo& ei)
 		{
 			using namespace nana::gui;
 
-			if(editor_->editable())
+			if(editor_->attr().editable)
 			{
 				switch(ei.keyboard.key)
 				{
@@ -178,7 +178,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 				editor_->copy();
 		}
 
-		void drawer::resize(graph_reference graph, const nana::gui::eventinfo& ei)
+		void drawer::resize(graph_reference graph, const eventinfo& ei)
 		{
 			_m_text_area(ei.size.width, ei.size.height);
 			refresh(graph);
@@ -230,13 +230,13 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		bool textbox::getline(std::size_t n, nana::string& text) const
 		{
-			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			return (editor ? editor->getline(n, text) : false);
 		}
 
 		textbox& textbox::append(const nana::string& text, bool at_caret)
 		{
-			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			if(editor)
 			{
 				if(at_caret == false)
@@ -252,22 +252,22 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		{
 			if(get_drawer_trigger().border(has_border))
 			{
-				drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+				auto editor = get_drawer_trigger().editor();
 				if(editor)
-					API::refresh_window(this->handle());
+					API::refresh_window(handle());
 			}
 			return *this;
 		}
 
 		bool textbox::multi_lines() const
 		{
-			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
-			return (editor ? editor->multi_lines() : false);
+			auto editor = get_drawer_trigger().editor();
+			return (editor ? editor->attr().multi_lines : false);
 		}
 
 		textbox& textbox::multi_lines(bool ml)
 		{
-			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			if(editor && editor->multi_lines(ml))
 				API::update_window(handle());
 			return *this;
@@ -275,13 +275,13 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		bool textbox::editable() const
 		{
-			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
-			return (editor ? editor->editable() : false);
+			auto editor = get_drawer_trigger().editor();
+			return (editor ? editor->attr().editable : false);
 		}
 
 		textbox& textbox::editable(bool able)
 		{
-			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			if(editor)
 				editor->editable(able);
 			return *this;
@@ -290,24 +290,24 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		textbox& textbox::tip_string(const nana::string& str)
 		{
 			internal_scope_guard isg;
-			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			if(editor && editor->tip_string(str))
-				API::refresh_window(this->handle());
+				API::refresh_window(handle());
 			return *this;
 		}
 
 		textbox& textbox::mask(nana::char_t ch)
 		{
-			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			if(editor && editor->mask(ch))
-				API::refresh_window(this->handle());
+				API::refresh_window(handle());
 			return *this;
 		}
 
 		bool textbox::selected() const
 		{
 			internal_scope_guard isg;
-			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			return (editor ? editor->selected() : false);
 		}
 
@@ -322,7 +322,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		void textbox::copy() const
 		{
 			internal_scope_guard isg;
-			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			if(editor)
 				editor->copy();
 		}
@@ -330,7 +330,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		void textbox::paste()
 		{
 			internal_scope_guard isg;
-			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			if(editor)
 			{
 				editor->paste();
@@ -341,7 +341,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		void textbox::del()
 		{
 			internal_scope_guard isg;
-			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			if(editor)
 			{
 				editor->del();
@@ -353,14 +353,14 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		nana::string textbox::_m_caption() const
 		{
 			internal_scope_guard isg;
-			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			return (editor ? editor->text() : nana::string());
 		}
 
 		void textbox::_m_caption(const nana::string& str)
 		{
 			internal_scope_guard isg;
-			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			if(editor)
 			{
 				editor->text(str);
@@ -372,7 +372,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		void textbox::_m_typeface(const nana::paint::font& font)
 		{
 			widget::_m_typeface(font);
-			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
+			auto editor = get_drawer_trigger().editor();
 			if(editor)
 				editor->reset_caret_height();
 		}

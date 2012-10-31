@@ -148,7 +148,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		{
 			using namespace nana::gui;
 
-			if(editor_->editable())
+			if(editor_->attr().editable)
 			{
 				switch(ei.keyboard.key)
 				{
@@ -263,7 +263,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		bool textbox::multi_lines() const
 		{
 			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
-			return (editor ? editor->multi_lines() : false);
+			return (editor ? editor->attr().multi_lines : false);
 		}
 
 		textbox& textbox::multi_lines(bool ml)
@@ -277,7 +277,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		bool textbox::editable() const
 		{
 			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
-			return (editor ? editor->editable() : false);
+			return (editor ? editor->attr().editable : false);
 		}
 
 		textbox& textbox::editable(bool able)

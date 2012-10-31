@@ -405,13 +405,13 @@ namespace nana{
 				bedrock.empty_menu();
 
 			restrict::spec.remove(wd);
-			nana::gui::detail::bedrock::core_window_t * msgwnd = bedrock.wd_manager.root(wd);
-			if(msgwnd)
+			nana::gui::detail::bedrock::core_window_t * iwd = bedrock.wd_manager.root(wd);
+			if(iwd)
 			{
-				bedrock.wd_manager.destroy(msgwnd);
-				bedrock.evt_manager.umake(reinterpret_cast<gui::window>(msgwnd));
-				bedrock.rt_manager.remove_if_exists(msgwnd);
-				bedrock.wd_manager.destroy_handle(msgwnd);
+				bedrock.wd_manager.destroy(iwd);
+				bedrock.evt_manager.umake(reinterpret_cast<gui::window>(iwd), false);
+				bedrock.rt_manager.remove_if_exists(iwd);
+				bedrock.wd_manager.destroy_handle(iwd);
 			}
 
 			nana::detail::platform_scope_guard psg;

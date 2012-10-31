@@ -42,17 +42,21 @@ namespace API
 		}
 
 		template<typename Event>
-		nana::gui::event_handle make_drawer_event(window trigger, window listener = 0)
+		event_handle make_drawer_event(window wd)
 		{
 			using namespace gui::detail;
 			typedef typename std::remove_pointer<typename std::remove_reference<Event>::type>::type event_t;
 			if(std::is_base_of<detail::event_type_tag, event_t>::value)
-				return bedrock::instance().wd_manager.make_drawer_event(event_t::identifier, reinterpret_cast<bedrock::core_window_t*>(trigger), reinterpret_cast<bedrock::core_window_t*>(listener));
-			else
-				return 0;
+			{
+				auto & wd_manager = bedrock::instance().wd_manager;
+				nana::gui::internal_scope_guard isg;
+				if(wd_manager.available(reinterpret_cast<bedrock::core_window_t*>(wd)))
+					return reinterpret_cast<bedrock::core_window_t*>(wd)->drawer.make_event(event_t::identifier, wd);
+			}
+			return nullptr;
 		}
 
-		void attach_drawer(window, nana::gui::drawer_trigger&);
+		void attach_drawer(window, drawer_trigger&);
 		void detach_drawer(window);
 		void umake_drawer_event(window);
 		void window_caption(window, const nana::string& str);

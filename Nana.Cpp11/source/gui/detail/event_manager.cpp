@@ -57,7 +57,7 @@ namespace detail
 					queue_ = newbuf;
 				}
 
-				typename Container::iterator iter = container.begin();
+				auto iter = container.begin();
 				abstract_handler * *i = queue_ + size_;
 				abstract_handler * * const end = i + size;
 				while(i < end)
@@ -154,101 +154,97 @@ namespace detail
 				}
 			}
 		}
-
-		//umake_handle_deleter_wrapper
-		//@brief: a handle_manager overloaded operator() for deleting a handle,
-		//it is a functor for easy-to-use to STL algorithms. but these algorithms
-		//functor is value-copy semantic, but handle_manager could not be copyable,
-		//so, employing umake_handle_deleter_wrapper for change it into refer-copy semantic
-		class umake_handle_deleter_wrapper
-		{
-		public:
-			umake_handle_deleter_wrapper(event_manager& evt_mgr, event_manager::handle_manager_type& mgr)
-				:evt_mgr_(evt_mgr), mgr_(mgr)
-			{}
-
-			template<typename HandleType>
-			void operator()(HandleType h)
-			{
-				evt_mgr_.write_off_bind(reinterpret_cast<nana::gui::event_handle>(h));
-				mgr_(h);
-			}
-		private:
-			event_manager&	evt_mgr_;
-			event_manager::handle_manager_type& mgr_;
-		};
-
-		void event_manager::umake_for_drawer(window wnd)
+		/*
+		void event_manager::umake_for_drawer(window wd)
 		{
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-			typedef callback_storage::event_table_type table_t;
-
-			table_t::iterator element;
-			table_t * const end = nana_runtime::callbacks.table + event_tag::count;
-			
-			umake_handle_deleter_wrapper deleter_wrapper(*this, handle_manager_);
-			for(table_t* i = nana_runtime::callbacks.table; i != end; ++i)
+			auto * const end = nana_runtime::callbacks.table + event_tag::count;
+			for(auto* i = nana_runtime::callbacks.table; i != end; ++i)
 			{
-				element = i->find(wnd);
+				auto element = i->find(wd);
 				if(element != i->end())
 				{
-					std::for_each(element->second.first.rbegin(), element->second.first.rend(), deleter_wrapper);
+					auto & cont = element->second.first;
+					std::for_each(cont.rbegin(), cont.rend(),
+						[this](abstract_handler * handler)
+							{
+								this->write_off_bind(reinterpret_cast<event_handle>(handler));
+								this->handle_manager_(handler);
+							});
 					//if the general event container is empty, erase the container!
-					if(element->second.second.size() == 0)
+					if(element->second.second.size())
+						cont.clear();
+					else
 						i->erase(element);
 				}
 			}
 
 			//delete the bind handler that the window had created.
-			auto itbind = bind_cont_.find(wnd);
-			if(itbind != bind_cont_.end())
+			auto bi = bind_cont_.find(wd);
+			if(bi != bind_cont_.end())
 			{
-				for(auto i = itbind->second.begin(); i != itbind->second.end(); ++i)
+				for(auto handler : bi->second)
 				{
-					abstract_handler* abs_handler = reinterpret_cast<abstract_handler*>(*i);
-					auto elem = std::find(abs_handler->container->begin(), abs_handler->container->end(), abs_handler);
-					if(elem != abs_handler->container->end())
-						abs_handler->container->erase(elem);
+					auto cont = reinterpret_cast<abstract_handler*>(handler)->container;
+					auto elem = std::find(cont->begin(), cont->end(), reinterpret_cast<abstract_handler*>(handler));
+					if(elem != cont->end())
+						cont->erase(elem);
 				}
-				bind_cont_.erase(itbind);
+				bind_cont_.erase(bi);
 			}
 		}
+		*/
 
-		void event_manager::umake(window wnd)
+		void event_manager::umake(window wd, bool only_for_drawer)
 		{
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-			typedef callback_storage::event_table_type table_t;
-
-			table_t::iterator element;
-			table_t *end = nana_runtime::callbacks.table + event_tag::count;
-			umake_handle_deleter_wrapper deleter_wrapper(*this, handle_manager_);
-			for(table_t* i = nana_runtime::callbacks.table; i != end; ++i)
+			auto *end = nana_runtime::callbacks.table + event_tag::count;
+			
+			auto deleter_wrapper = [this](abstract_handler * handler)
 			{
-				element = i->find(wnd);
+				this->write_off_bind(reinterpret_cast<event_handle>(handler));
+				this->handle_manager_(handler);
+			};
+
+			for(auto* i = nana_runtime::callbacks.table; i != end; ++i)
+			{
+				auto element = i->find(wd);
 				if(element != i->end())
 				{
-					std::for_each(element->second.first.rbegin(), element->second.first.rend(), deleter_wrapper);
-					std::for_each(element->second.second.rbegin(), element->second.second.rend(), deleter_wrapper);
-					i->erase(element);
+					auto & hdpair = element->second;
+					std::for_each(hdpair.first.rbegin(), hdpair.first.rend(), deleter_wrapper);
+					if(only_for_drawer)
+					{
+						hdpair.first.clear();
+						if(0 == hdpair.second.size())
+							i->erase(element);
+					}
+					else
+					{
+						std::for_each(hdpair.second.rbegin(), hdpair.second.rend(), deleter_wrapper);
+						i->erase(element);
+					}
 				}
 			}
 
-			//delete the bind handler that the window had created.
-			auto itbind = bind_cont_.find(wnd);
-			if(itbind != bind_cont_.end())
+			if(false == only_for_drawer)
 			{
-				for(auto i = itbind->second.begin(); i != itbind->second.end(); ++i)
-					handle_manager_(reinterpret_cast<abstract_handler*>(*i));
-
-				bind_cont_.erase(itbind);
+				//delete the bind handler that the window had created.
+				auto bi = bind_cont_.find(wd);
+				if(bi != bind_cont_.end())
+				{
+					for(auto handler : bi->second)
+						handle_manager_(reinterpret_cast<abstract_handler*>(handler));
+					bind_cont_.erase(bi);
+				}
 			}
 		}
 
-		bool event_manager::answer(unsigned eventid, window wd, const eventinfo& ei, event_kind::t evtkind)
+		bool event_manager::answer(unsigned eventid, window wd, const eventinfo& ei, event_kind evtkind)
 		{
 			if(eventid >= event_tag::count)	return false;
 			
@@ -257,10 +253,8 @@ namespace detail
 				//Thread-Safe Required!
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-				typedef callback_storage::event_table_type table_t;
-
-				table_t* evtobj = nana_runtime::callbacks.table + eventid;
-				table_t::iterator element = evtobj->find(wd);
+				auto * evtobj = nana_runtime::callbacks.table + eventid;
+				auto element = evtobj->find(wd);
 				
 				if(element != evtobj->end()) //Test if the window installed event_id event
 				{
@@ -317,10 +311,7 @@ namespace detail
 			{
 				//Thread-Safe Required!
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
-
-				typedef callback_storage::event_table_type table_t;
-
-				table_t* evtobj = nana_runtime::callbacks.table + eventid;
+				auto* evtobj = nana_runtime::callbacks.table + eventid;
 				auto element = evtobj->find(wd);
 				if(element != evtobj->end()) //Test if the window installed event_id event
 					return (is_for_drawer ? element->second.first : element->second.second).size();
@@ -334,9 +325,14 @@ namespace detail
 		//@param:wd, the triggering window
 		//@param:abs_handler, the handle of event object handler
 		//@param:drawer_handler, whether the event is installing for drawer or user callback
+		//@param:listener, a listener for the event, it is ignored when drawer_handler is true
 		event_handle event_manager::_m_make(unsigned eventid, window wd, abstract_handler* abs_handler, bool drawer_handler, window listener)
 		{
-			if(abs_handler == 0)	return 0;
+			if(nullptr == abs_handler)	return nullptr;
+
+			//The bind event is only avaiable for non-drawer handler.
+			if(drawer_handler)
+				listener = nullptr;
 
 			abs_handler->window = wd;
 			abs_handler->listener = listener;
@@ -345,7 +341,6 @@ namespace detail
 			{
 				//Thread-Safe Required!
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
-
 				abs_handler->container = (drawer_handler ?
 												&(nana_runtime::callbacks.table[eventid][wd].first) :
 												&(nana_runtime::callbacks.table[eventid][wd].second));
@@ -353,20 +348,18 @@ namespace detail
 				abs_handler->container->push_back(abs_handler);
 				handle_manager_.insert(abs_handler, 0);
 
-				if(listener)	bind_cont_[listener].push_back(reinterpret_cast<event_handle>(abs_handler));
+				if(listener)
+					bind_cont_[listener].push_back(reinterpret_cast<event_handle>(abs_handler));
 			}
 
 			if(drawer_handler == false)
 				bedrock::instance().wd_manager.event_filter(reinterpret_cast<bedrock::core_window_t*>(wd), true, eventid);
 			//call the event_register
 			nana::detail::platform_spec::instance().event_register_filter(
-					bedrock::instance().root(reinterpret_cast<bedrock::core_window_t*>(wd)),
-					eventid);
-
+					bedrock::instance().root(reinterpret_cast<bedrock::core_window_t*>(wd)), eventid);
 			return reinterpret_cast<event_handle>(abs_handler);
 		}
 	//end class event_manager
-
 }//mespace detail
 }//end namespace gui
 }//end namespace nana

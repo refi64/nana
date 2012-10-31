@@ -34,17 +34,17 @@ namespace gui
 
 		bool frame::insert(native_window_type wd)
 		{
-			return API::insert_frame(this->handle(), wd);
+			return API::insert_frame(handle(), wd);
 		}
 
 		native_window_type frame::element(unsigned index)
 		{
-			return API::frame_element(this->handle(), index);
+			return API::frame_element(handle(), index);
 		}
 
 		native_window_type frame::container() const
 		{
-			return API::frame_container(this->handle());
+			return API::frame_container(handle());
 		}
 
 	//end class frame

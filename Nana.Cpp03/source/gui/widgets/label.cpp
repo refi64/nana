@@ -605,8 +605,9 @@ namespace gui
 						for(content::line_container::const_iterator u = line->begin(); u != line->end(); ++u)
 						{
 							if(pos.y > static_cast<int>(bounds)) return;
+
 							_m_change_font(graph, font, *u);
-							pos = _m_draw_string(px, pos.x, pos.y, graph, (*u)->str, (*u));
+							pos = _m_draw_string(px, pos.x, pos.y, graph, (*u)->str, *u);
 						}
 						pos.y += px;
 						pos.x = 0;
@@ -732,12 +733,13 @@ namespace gui
 
 				void _m_change_font(nana::paint::graphics& graph, nana::paint::font& font, const content::line_container::value_type s) const
 				{
-					if((s->font.size() && s->font != font.name()) || (s->size != nsize && s->size != font.size()) || (s->bold != font.bold()))
+					if((s->font.size() && (s->font != font.name())) || (s->size != nsize && s->size != font.size()) || (s->bold != font.bold()))
 					{
 						nana::string name = (s->font.size() ? s->font : font.name());
 						unsigned size = (s->size != nsize ? s->size : font.size());
 						nana::paint::font f(name.c_str(), size, s->bold);
 						graph.typeface(f);
+						font = f;
 					}
 				}
 

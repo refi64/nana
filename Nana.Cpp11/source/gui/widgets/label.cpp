@@ -730,12 +730,13 @@ namespace gui
 
 				void _m_change_font(nana::paint::graphics& graph, nana::paint::font& font, const content::line_container::value_type s) const
 				{
-					if((s->font.size() && s->font != font.name()) || (s->size != nsize && s->size != font.size()) || (s->bold != font.bold()))
+					if((s->font.size() && (s->font != font.name())) || (s->size != nsize && s->size != font.size()) || (s->bold != font.bold()))
 					{
 						nana::string name = (s->font.size() ? s->font : font.name());
 						unsigned size = (s->size != nsize ? s->size : font.size());
 						nana::paint::font f(name.c_str(), size, s->bold);
 						graph.typeface(f);
+						font = f;
 					}
 				}
 

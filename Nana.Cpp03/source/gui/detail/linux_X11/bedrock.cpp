@@ -584,7 +584,7 @@ namespace detail
 					msgwnd->flags.action = mouse_action::pressed;
 					if(bedrock.raise_event(dbl_click ? event_tag::dbl_click : event_tag::mouse_down, msgwnd, ei, true))
 					{
-						if(bedrock.wd_manager.avaiable(msgwnd))
+						if(bedrock.wd_manager.available(msgwnd))
 						{
 							//If a root window is created during the mouse_down event, Nana.GUI will ignore the mouse_up event.
 							if(msgwnd->root_widget->other.attribute.root->context.focus_changed)
@@ -659,7 +659,7 @@ namespace detail
 
 						spec.remove(native_window);
 						bedrock.wd_manager.destroy(msgwnd);
-						bedrock.evt_manager.umake(reinterpret_cast<gui::window>(msgwnd));
+						bedrock.evt_manager.umake(reinterpret_cast<gui::window>(msgwnd), false);
 
 						bedrock.rt_manager.remove_if_exists(msgwnd);
 						bedrock.wd_manager.destroy_handle(msgwnd);

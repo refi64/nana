@@ -549,7 +549,7 @@ namespace drawerbase
 				{
 					internal_scope_guard isg;
 					get_drawer_trigger().image(img);
-					API::refresh_window(this->handle());
+					API::refresh_window(handle());
 				}
 			}
 
@@ -557,7 +557,7 @@ namespace drawerbase
 			{
 				internal_scope_guard isg;
 				get_drawer_trigger().image(img);
-				API::refresh_window(this->handle());
+				API::refresh_window(handle());
 			}
 
 			void button::image_enable(state sta, bool eb)
@@ -565,7 +565,7 @@ namespace drawerbase
 				internal_scope_guard isg;
 				drawerbase::button::trigger::bgimage_tag * bgi = get_drawer_trigger().ref_bgimage();
 				if(bgi && bgi->enable(sta, eb))
-					API::refresh_window(this->handle());
+					API::refresh_window(handle());
 			}
 
 			void button::image_valid_area(nana::arrange arg, const nana::rectangle& r)
@@ -576,7 +576,7 @@ namespace drawerbase
 				{
 					bgi->set_valid_area(arg, r);
 					bgi->update_blocks();
-					API::refresh_window(this->handle());
+					API::refresh_window(handle());
 				}
 			}
 
@@ -585,7 +585,7 @@ namespace drawerbase
 				internal_scope_guard isg;
 				drawerbase::button::trigger::bgimage_tag * bgi = get_drawer_trigger().ref_bgimage();
 				if(bgi && bgi->join(target, from))
-					API::refresh_window(this->handle());
+					API::refresh_window(handle());
 			}
 
 			void button::image_stretch(nana::arrange arg, int beg, int end)
@@ -595,7 +595,7 @@ namespace drawerbase
 				if(bgi)
 				{
 					bgi->set_stretch(arg, beg, end);
-					API::refresh_window(this->handle());
+					API::refresh_window(handle());
 				}
 			}
 
@@ -603,7 +603,7 @@ namespace drawerbase
 			{
 				internal_scope_guard isg;
 				if(get_drawer_trigger().enable_pushed(eb))
-					API::refresh_window(this->handle());
+					API::refresh_window(handle());
 			}
 
 			bool button::pushed() const
@@ -635,7 +635,7 @@ namespace drawerbase
 			void button::_m_shortkey()
 			{
 				eventinfo ei;
-				API::raise_event<nana::gui::events::click>(this->handle(), ei);
+				API::raise_event<nana::gui::events::click>(handle(), ei);
 			}
 
 			void button::_m_complete_creation()
@@ -645,12 +645,12 @@ namespace drawerbase
 
 			void button::_m_caption(const nana::string& text)
 			{
-				API::unregister_shortkey(this->handle());
+				API::unregister_shortkey(handle());
 
 				nana::string::value_type shortkey;
 				API::transform_shortkey_text(text, shortkey, 0);
 				if(shortkey)
-					API::register_shortkey(this->handle(), shortkey);
+					API::register_shortkey(handle(), shortkey);
 
 				base_type::_m_caption(text);
 			}

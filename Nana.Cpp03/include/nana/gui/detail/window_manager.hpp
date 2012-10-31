@@ -104,32 +104,32 @@ namespace detail
 		template<typename Class>
 		bool make(identifier id, Class& object, void (Class::* f)(int, const signals&))
 		{
-			if(id == 0)	return false;
-
-			inner_invoker * & invk = manager_[id];
-			end_ = manager_.end();
-			if(invk == 0)
+			if(id)
 			{
-				invk = new (std::nothrow) extend_memfun<Class>(object, f);
-				if(invk)	return true;
+				inner_invoker * & invk = manager_[id];
+				end_ = manager_.end();
+				if(invk == 0)
+				{
+					invk = new (std::nothrow) extend_memfun<Class>(object, f);
+					if(invk)	return true;
+				}
 			}
-
 			return false;
 		}
 
 		template<typename Function>
 		bool make(identifier id, Function f)
 		{
-			if(id == 0)	return false;
-
-			inner_invoker * & invk = manager_[id];
-			end_ = manager_.end();
-			if(invk == 0)
+			if(id)
 			{
-				invk = new (std::nothrow) extend<Function>(f);
-				if(invk)	return true;
+				inner_invoker * & invk = manager_[id];
+				end_ = manager_.end();
+				if(invk == 0)
+				{
+					invk = new (std::nothrow) extend<Function>(f);
+					if(invk)	return true;
+				}
 			}
-
 			return false;
 		}
 
@@ -180,14 +180,14 @@ namespace detail
 	{
 		struct item_type
 		{
-			nana::gui::window window;
+			window handle;
 			std::vector<unsigned long> keys;
 		};
 	public:
 		void clear();
-		bool make(nana::gui::window, unsigned long key);
-		void umake(nana::gui::window);
-		nana::gui::window find(unsigned long key);
+		bool make(window, unsigned long key);
+		void umake(window);
+		window find(unsigned long key) const;
 	private:
 		std::vector<item_type> keybase_;
 	};
@@ -234,7 +234,6 @@ namespace detail
 	template<typename NativeHWND, typename Bedrock, typename NativeAPI>
 	class window_manager
 	{
-		typedef window_manager self_type;
 	public:
 		typedef NativeHWND	native_window;
 		typedef Bedrock		bedrock_type;
@@ -748,24 +747,6 @@ namespace detail
 				cache.first = wd;
 				cache.second = rrt->window;
 				return cache.second;
-			}
-			return 0;
-		}
-
-		nana::gui::event_handle make_drawer_event(int event_id, core_window_t* wd, core_window_t* listener = 0)
-		{
-			if(wd)
-			{
-				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
-
-				if(handle_manager_.available(wd))
-				{
-					if(handle_manager_.available(listener))
-						return listener->drawer.make_event(event_id, reinterpret_cast<nana::gui::window>(wd), reinterpret_cast<nana::gui::window>(listener));
-					else
-						return wd->drawer.make_event(event_id, reinterpret_cast<nana::gui::window>(wd));
-				}
 			}
 			return 0;
 		}
@@ -1406,7 +1387,7 @@ namespace detail
 				}
 			}
 
-			bedrock.evt_manager.umake(reinterpret_cast<nana::gui::window>(wd));
+			bedrock.evt_manager.umake(reinterpret_cast<nana::gui::window>(wd), false);
 			wd->drawer.detached();
 			signal_manager_.fireaway(wd, signals::destroy, signals_);
 			detach_signal(wd);
@@ -1490,7 +1471,7 @@ namespace detail
 		}
 
 	private:
-		handle_manager<core_window_t*, self_type>	handle_manager_;
+		handle_manager<core_window_t*, window_manager>	handle_manager_;
 
 		mutable NANA_CONCURRENT_DECLARE(nana::threads::token, wnd_mgr_lock_)
 		root_table_type			root_table_;

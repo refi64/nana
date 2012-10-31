@@ -1165,7 +1165,7 @@ namespace detail
 				if(msgwnd->root == bedrock.get_menu())
 					bedrock.empty_menu();
 				bedrock.wd_manager.destroy(msgwnd);
-				bedrock.evt_manager.umake(reinterpret_cast<gui::window>(msgwnd));
+				bedrock.evt_manager.umake(reinterpret_cast<window>(msgwnd), false);
 				nana::detail::platform_spec::instance().release_window_icon(msgwnd->root);
 				break;
 			case WM_NCDESTROY:

@@ -195,45 +195,7 @@ namespace detail
 			event_manager::handle_manager_type& mgr_;
 		};
 
-		void event_manager::umake_for_drawer(window wnd)
-		{
-			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(callback_table_lock_);
-
-			typedef callback_storage::event_table_type table_t;
-
-			table_t::iterator element;
-			table_t * const end = nana_runtime::callbacks.table + event_tag::count;
-			
-			umake_handle_deleter_wrapper deleter_wrapper(*this, handle_manager_);
-			for(table_t* i = nana_runtime::callbacks.table; i != end; ++i)
-			{
-				element = i->find(wnd);
-				if(element != i->end())
-				{
-					std::for_each(element->second.first.rbegin(), element->second.first.rend(), deleter_wrapper);
-					//if the general event container is empty, erase the container!
-					if(element->second.second.size() == 0)
-						i->erase(element);
-				}
-			}
-
-			//delete the bind handler that the window had created.
-			std::map<window, std::vector<event_handle> >::iterator itbind = bind_cont_.find(wnd);
-			if(itbind != bind_cont_.end())
-			{
-				for(std::vector<event_handle>::iterator i = itbind->second.begin(); i != itbind->second.end(); ++i)
-				{
-					abstract_handler* abs_handler = reinterpret_cast<abstract_handler*>(*i);
-					std::vector<abstract_handler*>::iterator elem = std::find(abs_handler->container->begin(), abs_handler->container->end(), abs_handler);
-					if(elem != abs_handler->container->end())
-						abs_handler->container->erase(elem);
-				}
-				bind_cont_.erase(itbind);
-			}
-		}
-
-		void event_manager::umake(window wnd)
+		void event_manager::umake(window wd, bool only_for_drawer)
 		{
 			//Thread-Safe Required!
 			NANA_SCOPE_GUARD(callback_table_lock_);
@@ -245,23 +207,38 @@ namespace detail
 			umake_handle_deleter_wrapper deleter_wrapper(*this, handle_manager_);
 			for(table_t* i = nana_runtime::callbacks.table; i != end; ++i)
 			{
-				element = i->find(wnd);
+				element = i->find(wd);
 				if(element != i->end())
 				{
-					std::for_each(element->second.first.rbegin(), element->second.first.rend(), deleter_wrapper);
-					std::for_each(element->second.second.rbegin(), element->second.second.rend(), deleter_wrapper);
-					i->erase(element);
+					std::pair<std::vector<abstract_handler*>, std::vector<abstract_handler*> > & hdpair = element->second;
+					std::for_each(hdpair.first.rbegin(), hdpair.first.rend(), deleter_wrapper);
+					if(only_for_drawer)
+					{
+						//Check if user event container is empty, then remove the containers.
+						if(0 == hdpair.second.size())
+							i->erase(element);
+						else
+							hdpair.first.clear();
+					}
+					else
+					{
+						std::for_each(hdpair.second.rbegin(), hdpair.second.rend(), deleter_wrapper);
+						i->erase(element);
+					}
 				}
 			}
 
-			//delete the bind handler that the window had created.
-			std::map<window, std::vector<event_handle> >::iterator itbind = bind_cont_.find(wnd);
-			if(itbind != bind_cont_.end())
+			if(false == only_for_drawer)
 			{
-				for(std::vector<event_handle>::iterator i = itbind->second.begin(); i != itbind->second.end(); ++i)
-					handle_manager_(reinterpret_cast<abstract_handler*>(*i));
+				//delete the bind handler that the window had created.
+				std::map<window, std::vector<event_handle> >::iterator itbind = bind_cont_.find(wd);
+				if(itbind != bind_cont_.end())
+				{
+					for(std::vector<event_handle>::iterator i = itbind->second.begin(); i != itbind->second.end(); ++i)
+						handle_manager_(reinterpret_cast<abstract_handler*>(*i));
 
-				bind_cont_.erase(itbind);
+					bind_cont_.erase(itbind);
+				}
 			}
 		}
 
@@ -359,6 +336,10 @@ namespace detail
 		{
 			if(abs_handler == 0)	return 0;
 
+			//The bind event is only avaiable for non-drawer handler.
+			if(drawer_handler)
+				listener = 0;
+
 			abs_handler->window = wd;
 			abs_handler->listener = listener;
 			abs_handler->event_identifier = eventid;
@@ -374,7 +355,8 @@ namespace detail
 				abs_handler->container->push_back(abs_handler);
 				handle_manager_.insert(abs_handler, 0);
 
-				if(listener)	bind_cont_[listener].push_back(reinterpret_cast<event_handle>(abs_handler));
+				if(listener)
+					bind_cont_[listener].push_back(reinterpret_cast<event_handle>(abs_handler));
 			}
 
 			if(drawer_handler == false)

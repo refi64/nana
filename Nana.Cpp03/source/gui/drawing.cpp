@@ -30,82 +30,82 @@ namespace gui
 	}
     
     //class drawing
-  		drawing::drawing(const nana::gui::widget& widget)
-			:window_(widget.handle())
+  		drawing::drawing(window wd)
+			:handle_(wd)
   		{}
   		
   		drawing::~drawing(){} //Just for polymorphism
 
 		bool drawing::empty() const
 		{
-			return API::empty_window(window_) ||  reinterpret_cast<restrict::core_window_t*>(window_)->root_graph->empty();
+			return API::empty_window(handle_) ||  reinterpret_cast<restrict::core_window_t*>(handle_)->root_graph->empty();
 		}
 
 		void drawing::update() const
 		{
-			if(API::empty_window(window_))	return;
-			nana::gui::API::refresh_window(window_);
+			if(API::empty_window(handle_))	return;
+			nana::gui::API::refresh_window(handle_);
 		}
 
 		void drawing::string(int x, int y, unsigned color, const nana::char_t* text)
 		{
-			if(API::empty_window(window_))	return;
-			restrict::get_drawer(window_).string(x, y, color, text);
+			if(API::empty_window(handle_))	return;
+			restrict::get_drawer(handle_).string(x, y, color, text);
 		}
 
 		void drawing::bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& source, int srcx, int srcy)
 		{
-			if(API::empty_window(window_))	return;
-			restrict::get_drawer(window_).bitblt(x, y, width, height, source, srcx, srcy);
+			if(API::empty_window(handle_))	return;
+			restrict::get_drawer(handle_).bitblt(x, y, width, height, source, srcx, srcy);
 		}
 
 		void drawing::bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::image& source, int srcx, int srcy)
 		{
-			if(API::empty_window(window_))	return;
-			restrict::get_drawer(window_).bitblt(x, y, width, height, source, srcx, srcy);
+			if(API::empty_window(handle_))	return;
+			restrict::get_drawer(handle_).bitblt(x, y, width, height, source, srcx, srcy);
 		}
 
 		void drawing::draw(const draw_fn_t & f)
 		{
-			if(API::empty_window(window_))	return;
-			restrict::get_drawer(window_).draw(f);			
+			if(API::empty_window(handle_))	return;
+			restrict::get_drawer(handle_).draw(f);			
 		}
 
 
 		void drawing::line(int x, int y, int x2, int y2, unsigned color)
 		{
-			if(API::empty_window(window_))	return;
-			restrict::get_drawer(window_).line(x, y, x2, y2, color);
+			if(API::empty_window(handle_))	return;
+			restrict::get_drawer(handle_).line(x, y, x2, y2, color);
 		}
 
 		void drawing::rectangle(int x, int y, unsigned width, unsigned height, unsigned color, bool issolid)
 		{
-			if(API::empty_window(window_))	return;
-			restrict::get_drawer(window_).rectangle(x, y, width, height, color, issolid);
+			if(API::empty_window(handle_))	return;
+			restrict::get_drawer(handle_).rectangle(x, y, width, height, color, issolid);
 		}
 
 		void drawing::shadow_rectangle(int x, int y, unsigned width, unsigned height, nana::color_t beg, nana::color_t end, bool vertical)
 		{
-			if(API::empty_window(window_))	return;
-			restrict::get_drawer(window_).shadow_rectangle(x, y, width, height, beg, end, vertical);
+			if(API::empty_window(handle_))	return;
+			restrict::get_drawer(handle_).shadow_rectangle(x, y, width, height, beg, end, vertical);
 		}
 
 		void drawing::stretch(const nana::rectangle& r_dst, const nana::paint::graphics & src, const nana::rectangle& r_src)
 		{
-			if(API::empty_window(window_)) return;
-			restrict::get_drawer(window_).stretch(r_dst, src, r_src);
+			if(API::empty_window(handle_)) return;
+			restrict::get_drawer(handle_).stretch(r_dst, src, r_src);
 		}
 
 		void drawing::stretch(const nana::rectangle& r_dst, const nana::paint::image & src, const nana::rectangle& r_src)
 		{
-			if(API::empty_window(window_)) return;
-			restrict::get_drawer(window_).stretch(r_dst, src, r_src);
+			if(API::empty_window(handle_)) return;
+			restrict::get_drawer(handle_).stretch(r_dst, src, r_src);
 		}
 
 		void drawing::clear()
 		{
-			if(API::empty_window(window_))	return;
-			restrict::get_drawer(window_).clear();
+			if(API::empty_window(handle_))	return;
+			restrict::get_drawer(handle_).clear();
 		}
 	//end class drawing
 }//end namespace gui

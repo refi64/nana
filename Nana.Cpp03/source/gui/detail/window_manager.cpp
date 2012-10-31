@@ -56,14 +56,14 @@ namespace detail
 			if(key < 0x61) key += (0x61 - 0x41);
 
 			for(std::vector<item_type>::iterator i = keybase_.begin(); i != keybase_.end(); ++i)
-				if(i->window == wd)
+				if(i->handle == wd)
 				{
 					i->keys.push_back(key);
 					return true;
 				}
 
 			item_type m;
-			m.window = wd;
+			m.handle = wd;
 			m.keys.push_back(key);
 			keybase_.push_back(m);
 			return true;
@@ -74,26 +74,27 @@ namespace detail
 			keybase_.clear();
 		}
 
-		void shortkey_container::umake(nana::gui::window wd)
+		void shortkey_container::umake(window wd)
 		{
 			if(wd == 0) return;
 			for(std::vector<item_type>::iterator i = keybase_.begin(); i != keybase_.end(); ++i)
-				if(i->window == wd)
+				if(i->handle == wd)
 				{
 					keybase_.erase(i);
 					return;
 				}
 		}
 
-		nana::gui::window shortkey_container::find(unsigned long key)
+		window shortkey_container::find(unsigned long key) const
 		{
 			if(key < 0x61) key += (0x61 - 0x41);
 
-			for(std::vector<item_type>::iterator i = keybase_.begin(); i != keybase_.end(); ++i)
+			for(std::vector<item_type>::const_iterator i = keybase_.begin(); i != keybase_.end(); ++i)
 			{
-				for(std::vector<unsigned long>::iterator n = i->keys.begin(); n != i->keys.end(); ++n)
-					if(key == *n)
-						return i->window;
+				const item_type & m = *i;
+				for(std::vector<unsigned long>::const_iterator u = m.keys.begin(); u != m.keys.end(); ++u)
+					if(key == *u)
+						return m.handle;
 			}
 			return 0;
 		}

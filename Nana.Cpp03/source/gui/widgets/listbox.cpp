@@ -308,7 +308,7 @@ namespace nana{ namespace gui{
 				{
 					widget_ = dynamic_cast<gui::listbox*>(&wd);
 					if(0 == widget_)
-						throw std::bad_cast("Nana.GUI.Listbox: The widget is not a Listbox");
+						throw std::bad_cast();
 				}
 
 				gui::listbox* wd_ptr() const
@@ -542,11 +542,6 @@ namespace nana{ namespace gui{
 					if(cat)
 						return _m_at(cat)->expand;
 					return false;
-				}
-
-				const category& at(size_type i) const
-				{
-					return *_m_at(i);
 				}
 
 				const std::list<category>& cat_container() const

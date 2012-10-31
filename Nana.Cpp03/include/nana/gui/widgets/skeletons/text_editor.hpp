@@ -22,17 +22,18 @@ namespace nana{	namespace gui{	namespace widgets
 	{
 		class text_editor
 		{
+			struct attributes;
 		public:
+			typedef nana::char_t	char_type;
+			typedef textbase<char_type>::size_type size_type;
+			typedef textbase<char_type>::string_type string_type;
+
 			typedef nana::paint::graphics & graph_reference;
 
 			struct ext_renderer_tag
 			{
 				nana::functor<void(graph_reference, const nana::rectangle& text_area, nana::color_t)> background;
 			};
-		public:
-			typedef nana::char_t	char_type;
-			typedef textbase<char_type>::size_type size_type;
-			typedef textbase<char_type>::string_type string_type;
 
 			text_editor(window, graph_reference);
 			~text_editor();
@@ -44,14 +45,10 @@ namespace nana{	namespace gui{	namespace widgets
 			bool text_area(const nana::rectangle&);
 			bool tip_string(const nana::string&);
 
-			bool multi_lines(bool ml);
-			bool multi_lines() const;
-
-			bool editable() const;
+			const attributes& attr() const;
+			bool multi_lines(bool);
 			void editable(bool);
-
 			void enable_background(bool);
-			bool enable_background() const;
 			void enable_background_counterpart(bool);
 
 			ext_renderer_tag& ext_renderer() const;

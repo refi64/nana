@@ -31,16 +31,16 @@ namespace nana{ namespace gui{
 				void attached(graph_reference);
 				void detached();
 				void refresh(graph_reference);
-				void focus(graph_reference, const nana::gui::eventinfo&);
-				void mouse_down(graph_reference, const nana::gui::eventinfo&);
-				void mouse_move(graph_reference, const nana::gui::eventinfo&);
-				void mouse_up(graph_reference, const nana::gui::eventinfo&);
-				void mouse_enter(graph_reference, const nana::gui::eventinfo&);
-				void mouse_leave(graph_reference, const nana::gui::eventinfo&);
-				void key_down(graph_reference, const nana::gui::eventinfo&);
-				void key_char(graph_reference, const nana::gui::eventinfo&);
-				void mouse_wheel(graph_reference, const nana::gui::eventinfo&);
-				void resize(graph_reference, const nana::gui::eventinfo&);
+				void focus(graph_reference, const eventinfo&);
+				void mouse_down(graph_reference, const eventinfo&);
+				void mouse_move(graph_reference, const eventinfo&);
+				void mouse_up(graph_reference, const eventinfo&);
+				void mouse_enter(graph_reference, const eventinfo&);
+				void mouse_leave(graph_reference, const eventinfo&);
+				void key_down(graph_reference, const eventinfo&);
+				void key_char(graph_reference, const eventinfo&);
+				void mouse_wheel(graph_reference, const eventinfo&);
+				void resize(graph_reference, const eventinfo&);
 			private:
 				void _m_text_area(unsigned width, unsigned height);
 				void _m_draw_border(graph_reference);

@@ -23,7 +23,7 @@ namespace gui
 	public:
 		typedef nana::functor<void(paint::graphics&)> draw_fn_t;
 
-		drawing(const nana::gui::widget&);
+		drawing(window);
 		//Just for polymorphism
 		virtual ~drawing();
 
@@ -40,7 +40,7 @@ namespace gui
 		void stretch(const nana::rectangle & r_dst, const nana::paint::image& src, const nana::rectangle& r_src);
 		void clear();
 	private:
-		nana::gui::window window_;
+		window handle_;
 	};//end class drawing
 
 }//end namespace gui

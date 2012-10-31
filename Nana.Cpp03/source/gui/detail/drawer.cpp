@@ -75,7 +75,6 @@ namespace gui
 
 		//template<typename Bedrock>
 		//class drawer
-
 		drawer::drawer():realizer_(0), refreshing_(false)
 		{
 		}
@@ -344,11 +343,11 @@ namespace gui
 			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::stretch(r_dst, img, r_src));
 		}
 
-		nana::gui::event_handle drawer::make_event(int event_id, nana::gui::window trigger, nana::gui::window listener)
+		event_handle drawer::make_event(int evtid, window wd)
 		{
 			bedrock_type & bedrock = bedrock_type::instance();
 			void (drawer::*answer)(const eventinfo&) = 0;
-			switch(event_id)
+			switch(evtid)
 			{
 			case event_tag::click:
 				answer = &drawer::click;	break;
@@ -382,9 +381,9 @@ namespace gui
 				answer = &drawer::shortkey;	break;
 			}
 
-			if(answer && (0 == bedrock.evt_manager.the_number_of_handles(trigger, event_id, true) || listener))
+			if(answer && (0 == bedrock.evt_manager.the_number_of_handles(wd, evtid, true)))
 			{
-				return bedrock.evt_manager.make_for_drawer(event_id, trigger, bedrock.category(reinterpret_cast<bedrock::core_window_t*>(trigger)), drawer_binder(*this, answer), listener);
+				return bedrock.evt_manager.make_for_drawer(evtid, wd, bedrock.category(reinterpret_cast<bedrock::core_window_t*>(wd)), drawer_binder(*this, answer));
 			}
 
 			return 0;

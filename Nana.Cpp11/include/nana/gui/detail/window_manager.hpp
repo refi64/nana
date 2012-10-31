@@ -28,10 +28,7 @@
 #include <functional>
 #include <mutex>
 
-namespace nana
-{
-namespace gui
-{
+namespace nana{	namespace gui{
 namespace detail
 {
 	template<typename Key, typename Value>
@@ -106,32 +103,32 @@ namespace detail
 		template<typename Class>
 		bool make(identifier id, Class& object, void (Class::* f)(int, const signals&))
 		{
-			if(id == 0)	return false;
-
-			inner_invoker * & invk = manager_[id];
-			end_ = manager_.end();
-			if(invk == 0)
+			if(id)
 			{
-				invk = new (std::nothrow) extend_memfun<Class>(object, f);
-				if(invk)	return true;
+				inner_invoker * & invk = manager_[id];
+				end_ = manager_.end();
+				if(invk == 0)
+				{
+					invk = new (std::nothrow) extend_memfun<Class>(object, f);
+					if(invk)	return true;
+				}
 			}
-
 			return false;
 		}
 
 		template<typename Function>
 		bool make(identifier id, Function f)
 		{
-			if(id == 0)	return false;
-
-			inner_invoker * & invk = manager_[id];
-			end_ = manager_.end();
-			if(invk == 0)
+			if(id)
 			{
-				invk = new (std::nothrow) extend<Function>(f);
-				if(invk)	return true;
+				inner_invoker * & invk = manager_[id];
+				end_ = manager_.end();
+				if(invk == 0)
+				{
+					invk = new (std::nothrow) extend<Function>(f);
+					if(invk)	return true;
+				}
 			}
-
 			return false;
 		}
 
@@ -182,14 +179,14 @@ namespace detail
 	{
 		struct item_type
 		{
-			nana::gui::window window;
+			window handle;
 			std::vector<unsigned long> keys;
 		};
 	public:
 		void clear();
-		bool make(nana::gui::window, unsigned long key);
-		void umake(nana::gui::window);
-		nana::gui::window find(unsigned long key);
+		bool make(window, unsigned long key);
+		void umake(window);
+		window find(unsigned long key) const;
 	private:
 		std::vector<item_type> keybase_;
 	};
@@ -230,7 +227,25 @@ namespace detail
 	//class window_manager
 	class window_manager
 	{
-		typedef window_manager self_type;
+		/*
+		class revertible_mutex
+			: public std::recursive_mutex
+		{
+		public:
+			revertible_mutex();
+
+			void lock();
+			bool try_lock();
+			void unlock();
+
+			std::size_t revert();
+			void forward(std::size_t);
+		private:
+			unsigned tid_;
+			std::size_t ref_counter_;
+			bool reverted_;
+		};
+		*/
 	public:
 		typedef nana::gui::native_window_type	native_window;
 
@@ -267,7 +282,7 @@ namespace detail
 
 		bool available(core_window_t*);
 		bool available(core_window_t *, core_window_t*);
-		bool available(nana::gui::native_window_type);
+		bool available(native_window_type);
 
 		core_window_t* create_root(core_window_t* owner, bool nested, rectangle, const appearance&);
 		core_window_t* create_widget(core_window_t* parent, const rectangle&, bool is_lite);
@@ -290,48 +305,26 @@ namespace detail
 		//@brief: show or hide a window
 		bool show(core_window_t* wd, bool visible);
 
-		core_window_t* find_window(nana::gui::native_window_type root, int x, int y);
+		core_window_t* find_window(native_window_type root, int x, int y);
 
 		//move the wnd and its all children window, x and y is a relatively coordinate for wnd's parent window
 		bool move(core_window_t*, int x, int y);
 		bool move(core_window_t*, int x, int y, unsigned width, unsigned height);
 
-		//size
-		//@brief: Size a window
-		//@param: passive, if it is true, the function would not change the size if wd is a root_widget.
-		//			e.g, when the size of window is changed by OS/user, the function should not resize the
-		//			window again, otherwise, it causes an infinite loop, because when a root_widget is resized,
-		//			window_manager will call the function.
-		//
+
 		bool size(core_window_t*, unsigned width, unsigned height, bool passive, bool ask_update);
 
-		core_window_t* root(nana::gui::native_window_type) const;
-
-		nana::gui::event_handle make_drawer_event(int event_id, core_window_t* wd, core_window_t* listener = 0);
+		core_window_t* root(native_window_type) const;
 
 		//Copy the root buffer that wnd specified into DeviceContext
 		void map(core_window_t*);
 
 		bool belong_to_lazy(core_window_t *) const;
 
-		//update
-		//@brief:	update is used for displaying the screen-off buffer.
-		//			Because of a good efficiency, if it is called in an event procedure and the event procedure window is the
-		//			same as update's, update would not map the screen-off buffer and just set the window for lazy refresh
 		bool update(core_window_t*, bool redraw, bool force);
-
 		void refresh(core_window_t*);
-
-		//do_lazy_refresh
-		//@brief: defined a behavior of flush the screen
-		//@return: it returns true if the wnd is available
 		bool do_lazy_refresh(core_window_t*, bool force_copy_to_screen);
 
-		//get_graphics
-		//@brief: Get a copy of the graphics object of a window.
-		//	the copy of the graphics object has a same buf handle with the graphics object's, they are count-refered
-		//	here returns a reference that because the framework does not guarantee the wnd's
-		//	graphics object available after a get_graphics call.
 		bool get_graphics(core_window_t*, nana::paint::graphics&);
 		bool get_visual_rectangle(core_window_t*, nana::rectangle&);
 
@@ -339,26 +332,14 @@ namespace detail
 		void tray_umake_event(native_window_type);
 		void tray_fire(native_window_type, unsigned identifier, const eventinfo&);
 
-		//set_focus
-		//@brief: Set a keyboard focus to a window. this may fire a focus event.
 		core_window_t* set_focus(core_window_t*);
 
 		core_window_t* capture_redirect(core_window_t*);
 		void capture_ignore_children(bool ignore);
 		bool capture_window_entered(int root_x, int root_y, bool& prev);
 		core_window_t * capture_window() const;
-
-		//capture_window
-		//@brief:	set a window that always captures the mouse event if it is not in the range of window
-		//@return:	this function dose return the previous captured window. If the wnd set captured twice,
-		//			the return value is NULL
 		core_window_t* capture_window(core_window_t*, bool value);
 
-		//tabstop
-		//@brief: when users press a TAB, the focus should move to the next widget.
-		//	this method insert a window which catchs an user TAB into a TAB window container
-		//	the TAB window container is held by a wnd's root widget. Not every widget has a TAB window container,
-		//	the container is created while a first Tab Window is setting
 		void tabstop(core_window_t*);
 		core_window_t* tabstop_prev(core_window_t*) const;
 		core_window_t* tabstop_next(core_window_t*) const;
@@ -370,32 +351,26 @@ namespace detail
 
 		bool calc_window_point(core_window_t*, nana::point& pos);
 
-		root_table_type::value_type* root_runtime(nana::gui::native_window_type root) const;
+		root_table_type::value_type* root_runtime(native_window_type root) const;
 
 		bool register_shortkey(core_window_t*, unsigned long key);
 		void unregister_shortkey(core_window_t*);
 
-		core_window_t* find_shortkey(nana::gui::native_window_type, unsigned long key);
+		core_window_t* find_shortkey(native_window_type, unsigned long key);
 	private:
 		void _m_destroy(core_window_t*);
 		void _m_move_core(core_window_t*, int delta_x, int delta_y);
-
-		//_m_find
-		//@brief: find a window on root window through a given root coordinate.
-		//		the given root coordinate must be in the rectangle of wnd.
 		core_window_t* _m_find(core_window_t*, int x, int y);
-
-		//_m_effective, test if the window is a handle of window that specified by (root_x, root_y)
 		static bool _m_effective(core_window_t*, int root_x, int root_y);
 	private:
 		mutable std::recursive_mutex mutex_;
-		handle_manager<core_window_t*, self_type>	handle_manager_;
+		handle_manager<core_window_t*, window_manager>	handle_manager_;
 		root_table_type			root_table_;
 		signals					signals_;
 		signal_manager	signal_manager_;
 		tray_event_manager	tray_event_manager_;
 
-		nana::paint::image default_icon_;
+		paint::image default_icon_;
 
 		struct attribute
 		{
@@ -410,8 +385,8 @@ namespace detail
 
 		struct menu_tag
 		{
-			nana::gui::native_window_type window;
-			nana::gui::native_window_type owner;
+			native_window_type window;
+			native_window_type owner;
 			bool has_keyboard;
 		}menu_;
 	};//end class window_manager

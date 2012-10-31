@@ -109,7 +109,6 @@ namespace nana{ namespace gui{
 						if(m.index == index)
 							return m;
 					}
-
 					throw std::out_of_range("Nana.GUI.Listbox: invalid header index.");
 				}
 
@@ -185,9 +184,9 @@ namespace nana{ namespace gui{
 
 				size_type last() const
 				{
-					for(auto & m : cont_)
+					for(auto i = cont_.rbegin(); i != cont_.rend(); ++i)
 					{
-						if(m.visible) return m.index;
+						if(i->visible) return i->index;
 					}
 					return npos;
 				}
@@ -311,7 +310,7 @@ namespace nana{ namespace gui{
 				{
 					widget_ = dynamic_cast<gui::listbox*>(&wd);
 					if(nullptr == widget_)
-						throw std::bad_cast("Nana.GUI.Listbox: The widget is not a Listbox");
+						throw std::bad_cast();
 				}
 
 				gui::listbox* wd_ptr() const
@@ -545,11 +544,6 @@ namespace nana{ namespace gui{
 					if(cat)
 						return _m_at(cat)->expand;
 					return false;
-				}
-
-				const category& at(size_type cat) const
-				{
-					return *_m_at(cat);
 				}
 
 				const std::list<category>& cat_container() const
@@ -1331,12 +1325,13 @@ namespace nana{ namespace gui{
 					unsigned width = 4 + (scroll.v.empty() ? 0 : scroll.scale - 1);
 					unsigned height = 2 + (scroll.h.empty() ? 0 : scroll.scale) + (header.visible() ? header_size : 0);
 
-					if(graph->width() <= width || graph->height() <= height) return false;
+					nana::size gsz = graph->size();
+					if(gsz.width <= width || gsz.height <= height) return false;
 
 					r.x = 2;
 					r.y = (header.visible() ? header_size + 1 : 1);
-					r.width = graph->width() - width;
-					r.height = graph->height() - height;
+					r.width = gsz.width - width;
+					r.height = gsz.height - height;
 					return true;
 				}
 

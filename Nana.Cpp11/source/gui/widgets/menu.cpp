@@ -56,9 +56,12 @@ namespace nana{ namespace gui{
 			{
 				void background(graph_reference graph, window)
 				{
+					nana::size sz = graph.size();
+					sz.width -= 30;
+					sz.height -= 2;
 					graph.rectangle(nana::gui::color::gray_border, false);
-					graph.rectangle(1, 1, 28, graph.height() - 2, 0xF6F6F6, true);
-					graph.rectangle(29, 1, graph.width() - 30, graph.height() - 2, 0xFFFFFF, true);
+					graph.rectangle(1, 1, 28, sz.height, 0xF6F6F6, true);
+					graph.rectangle(29, 1, sz.width, sz.height, 0xFFFFFF, true);
 				}
 
 				void item(graph_reference graph, const nana::rectangle& r, const attr& at)
@@ -103,7 +106,6 @@ namespace nana{ namespace gui{
 					nana::paint::gadget::arrow_16_pixels(graph, pos.x, pos.y + static_cast<int>(pixels - 16) / 2, 0x0, 0, nana::paint::gadget::directions::to_east);
 				}
 			};
-
 
 			//class renderer_interface
 				renderer_interface::~renderer_interface()
@@ -309,14 +311,9 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void mouse_leave(graph_reference, const eventinfo& ei)
+				void mouse_leave(graph_reference graph, const eventinfo& ei)
 				{
-					state_.nullify_mouse = false;
-					if(track_mouse(ei.mouse.x, ei.mouse.y))
-					{
-						draw();
-						API::lazy_refresh();
-					}
+					mouse_move(graph, ei);
 				}
 
 				void mouse_down(graph_reference, const eventinfo&)
@@ -494,12 +491,12 @@ namespace nana{ namespace gui{
 
 					renderer->background(*graph_, *widget_);
 
-					nana::rectangle item_r(2, 2, graph_->width() - 4, _m_item_height());
-
+					const unsigned item_h_px = _m_item_height();
+					nana::rectangle item_r(2, 2, graph_->width() - 4, item_h_px);
+					
 					unsigned strpixels = item_r.width - 60;
 
-					unsigned item_height = _m_item_height();
-					int text_top_off = (_m_item_height() - graph_->text_extent_size(STR("jh({[")).height) / 2;
+					int text_top_off = (item_h_px - graph_->text_extent_size(STR("jh({[")).height) / 2;
 
 					unsigned long index = 0;
 					for(auto & m : menu_->items)
@@ -516,7 +513,7 @@ namespace nana{ namespace gui{
 							nana::string text = API::transform_shortkey_text(m.text, hotkey, &hotkey_pos);
 
 							if(m.image.empty() == false)
-								renderer->item_image(*graph_, nana::point(item_r.x + 5, item_r.y + (item_height - m.image.size().height) / 2), m.image);
+								renderer->item_image(*graph_, nana::point(item_r.x + 5, item_r.y + (item_h_px - m.image.size().height) / 2), m.image);
 
 							renderer->item_text(*graph_, nana::point(item_r.x + 40, item_r.y + text_top_off), text, attr, strpixels);
 
@@ -534,7 +531,7 @@ namespace nana{ namespace gui{
 							}
 
 							if(m.sub_menu)
-								renderer->sub_arrow(*graph_, nana::point(graph_->width() - 20, item_r.y), _m_item_height(), attr);
+								renderer->sub_arrow(*graph_, nana::point(graph_->width() - 20, item_r.y), item_h_px, attr);
 
 							item_r.y += item_r.height + 1;
 						}
@@ -758,7 +755,7 @@ namespace nana{ namespace gui{
 				}
 			private:
 				//_m_destroy just destroys the children windows.
-				//If the all window including parent windows want to be closed call the _m_close_all() instead of close()
+				//The all window including parent windows want to be closed by calling the _m_close_all() instead of close()
 				void _m_destroy()
 				{
 					if(this->submenu_.parent)
@@ -861,7 +858,7 @@ namespace nana{ namespace gui{
 								//may create a window, which make a killing focus for menu window, if so the close_all
 								//operation preformences after item.functor.operator()(ip), that would be deleting this object twice!
 
-								if(call_functor && item.flags.enabled)
+								if(call_functor && item.flags.enabled && item.functor)
 								{
 									item_type::item_proxy ip(active, item);
 									item.functor.operator()(ip);
@@ -1021,7 +1018,7 @@ namespace nana{ namespace gui{
 
 		menu::~menu()
 		{
-			for(std::map<std::size_t, implement::info>::reverse_iterator i = impl_->sub_container.rbegin(); i != impl_->sub_container.rend(); ++i)
+			for(auto i = impl_->sub_container.rbegin(); i != impl_->sub_container.rend(); ++i)
 			{
 				if(i->second.kill)
 					delete i->second.handle;

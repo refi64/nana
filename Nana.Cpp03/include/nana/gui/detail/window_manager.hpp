@@ -230,6 +230,28 @@ namespace detail
 		{}
 	};
 	
+	class reversible_mutex
+		: public nana::threads::token
+	{
+		struct thr_refcnt
+		{
+			unsigned tid;
+			std::size_t refcnt;
+		};
+	public:
+		reversible_mutex();
+
+		bool lock() const volatile;
+		bool try_lock() const volatile;
+		void unlock() const volatile;
+
+		void revert();
+		void forward();
+	private:
+		mutable thr_refcnt thr_;
+		mutable std::vector<thr_refcnt> stack_;
+	};
+
 	//class window_manager
 	template<typename NativeHWND, typename Bedrock, typename NativeAPI>
 	class window_manager
@@ -253,7 +275,7 @@ namespace detail
 			return this->handle_manager_.size();
 		}
 
-		nana::threads::detail::superlock& internal_lock()
+		reversible_mutex& internal_lock()
 		{
 			return wnd_mgr_lock_;
 		}
@@ -1473,7 +1495,8 @@ namespace detail
 	private:
 		handle_manager<core_window_t*, window_manager>	handle_manager_;
 
-		mutable NANA_CONCURRENT_DECLARE(nana::threads::token, wnd_mgr_lock_)
+		mutable reversible_mutex wnd_mgr_lock_;
+		//mutable NANA_CONCURRENT_DECLARE(nana::threads::token, wnd_mgr_lock_)
 		root_table_type			root_table_;
 		signals					signals_;
 		signal_manager	signal_manager_;

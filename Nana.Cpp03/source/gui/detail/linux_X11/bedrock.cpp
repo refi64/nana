@@ -926,7 +926,7 @@ namespace detail
 		}
 	}
 
-	void bedrock::pump_event(nana::gui::window modal_window)
+	void bedrock::pump_event(window modal_window)
 	{
 		thread_context * context = this->open_thread_context();
 		if(0 == context->window_count)
@@ -938,15 +938,14 @@ namespace detail
 		}
 
 		++(context->event_pump_ref_count);
-
+		wd_manager.internal_lock().revert();
 		nana::detail::platform_spec::instance().msg_dispatch(modal_window ? reinterpret_cast<core_window_t*>(modal_window)->root : 0);
-
+		wd_manager.internal_lock().forward();
 		if(0 == --(context->event_pump_ref_count))
 		{
 			if(0 == modal_window || 0 == context->window_count)
 				this->remove_thread_context();
 		}
-
 	}//end bedrock::event_loop
 
 	void make_eventinfo_for_mouse(nana::gui::eventinfo& ei, nana::gui::detail::bedrock::core_window_t* wnd, unsigned int msg, const event_mask& lparam)

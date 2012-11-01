@@ -338,57 +338,65 @@ namespace detail
 
 		++(context->event_pump_ref_count);
 
-		MSG msg;
-		if(modal_window)
+		wd_manager.internal_lock().revert();
+
+		try
 		{
-			HWND ntv_modal = reinterpret_cast<HWND>(
-								this->root(reinterpret_cast<core_window_t*>(modal_window)));
-
-			HWND owner = ::GetWindow(ntv_modal, GW_OWNER);
-			if(owner && owner != ::GetDesktopWindow())
-				::EnableWindow(owner, false);
-
-			while(IsWindow(ntv_modal))
+			MSG msg;
+			if(modal_window)
 			{
-				::WaitMessage();
-				while(::PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-				{
-					if(msg.message == WM_QUIT)	break;
+				HWND ntv_modal = reinterpret_cast<HWND>(
+									this->root(reinterpret_cast<core_window_t*>(modal_window)));
 
-					if((msg.message == WM_CHAR || msg.message == WM_KEYDOWN || msg.message == WM_KEYUP) || !::IsDialogMessage(ntv_modal, &msg))
+				HWND owner = ::GetWindow(ntv_modal, GW_OWNER);
+				if(owner && owner != ::GetDesktopWindow())
+					::EnableWindow(owner, false);
+
+				while(IsWindow(ntv_modal))
+				{
+					::WaitMessage();
+					while(::PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+					{
+						if(msg.message == WM_QUIT)	break;
+
+						if((msg.message == WM_CHAR || msg.message == WM_KEYDOWN || msg.message == WM_KEYUP) || !::IsDialogMessage(ntv_modal, &msg))
+						{
+							nana::gui::native_window_type menu = get_menu(reinterpret_cast<nana::gui::native_window_type>(msg.hwnd), true);
+							if(menu) interior_helper_for_menu(msg, menu);
+
+							::TranslateMessage(&msg);
+							::DispatchMessage(&msg);
+
+							this->wd_manager.remove_trash_handle(tid);
+							this->evt_manager.remove_trash_handle(0);
+						}
+					}
+				}
+			}
+			else
+			{
+				while(context->window_count)
+				{
+					if(-1 != ::GetMessage(&msg, 0, 0, 0))
 					{
 						nana::gui::native_window_type menu = get_menu(reinterpret_cast<nana::gui::native_window_type>(msg.hwnd), true);
 						if(menu) interior_helper_for_menu(msg, menu);
 
 						::TranslateMessage(&msg);
 						::DispatchMessage(&msg);
-
-						this->wd_manager.remove_trash_handle(tid);
-						this->evt_manager.remove_trash_handle(0);
 					}
-				}
+
+					this->wd_manager.remove_trash_handle(tid);
+					this->evt_manager.remove_trash_handle(0);
+				}//end while
+
+				//Empty these rest messages, there is not a window to process these messages.
+				while(::PeekMessage(&msg, 0, 0, 0, PM_REMOVE));
 			}
-		}
-		else
-		{
-			while(context->window_count)
-			{
-				if(-1 != ::GetMessage(&msg, 0, 0, 0))
-				{
-					nana::gui::native_window_type menu = get_menu(reinterpret_cast<nana::gui::native_window_type>(msg.hwnd), true);
-					if(menu) interior_helper_for_menu(msg, menu);
+		}catch(...)
+		{}
 
-					::TranslateMessage(&msg);
-					::DispatchMessage(&msg);
-				}
-
-				this->wd_manager.remove_trash_handle(tid);
-				this->evt_manager.remove_trash_handle(0);
-			}//end while
-
-			//Empty these rest messages, there is not a window to process these messages.
-			while(::PeekMessage(&msg, 0, 0, 0, PM_REMOVE));
-		}
+		wd_manager.internal_lock().forward();
 
 		if(0 == --(context->event_pump_ref_count))
 		{

@@ -227,10 +227,14 @@ namespace detail
 	//class window_manager
 	class window_manager
 	{
-		/*
 		class revertible_mutex
 			: public std::recursive_mutex
 		{
+			struct thr_refcnt
+			{
+				unsigned tid;
+				std::size_t refcnt;
+			};
 		public:
 			revertible_mutex();
 
@@ -238,16 +242,15 @@ namespace detail
 			bool try_lock();
 			void unlock();
 
-			std::size_t revert();
-			void forward(std::size_t);
+			void revert();
+			void forward();
 		private:
-			unsigned tid_;
-			std::size_t ref_counter_;
-			bool reverted_;
+			thr_refcnt thr_;
+			std::vector<thr_refcnt> stack_;
 		};
-		*/
 	public:
-		typedef nana::gui::native_window_type	native_window;
+		typedef native_window_type	native_window;
+		typedef revertible_mutex mutex_type;
 
 		typedef basic_window core_window_t;
 		typedef std::vector<core_window_t*> cont_type;
@@ -260,7 +263,7 @@ namespace detail
 
 		static bool is_queue(core_window_t*);
 		std::size_t number_of_core_window() const;
-		std::recursive_mutex& internal_lock() const;
+		mutex_type & internal_lock() const;
 		void all_handles(std::vector<core_window_t*> &v) const;
 
 		template<typename Class>
@@ -363,7 +366,7 @@ namespace detail
 		core_window_t* _m_find(core_window_t*, int x, int y);
 		static bool _m_effective(core_window_t*, int root_x, int root_y);
 	private:
-		mutable std::recursive_mutex mutex_;
+		mutable mutex_type mutex_;
 		handle_manager<core_window_t*, window_manager>	handle_manager_;
 		root_table_type			root_table_;
 		signals					signals_;

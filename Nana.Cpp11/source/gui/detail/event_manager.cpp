@@ -87,7 +87,7 @@ namespace detail
 	//@brief: This is a class defines a data structure about the event callbacks mapping
 	struct callback_storage
 	{
-		typedef std::map<nana::gui::window, std::pair<std::vector<abstract_handler*>, std::vector<abstract_handler*> > > event_table_type;
+		typedef std::map<window, std::pair<std::vector<abstract_handler*>, std::vector<abstract_handler*> > > event_table_type;
 
 		event_table_type table[event_tag::count];
 	};
@@ -154,48 +154,6 @@ namespace detail
 				}
 			}
 		}
-		/*
-		void event_manager::umake_for_drawer(window wd)
-		{
-			//Thread-Safe Required!
-			std::lock_guard<decltype(mutex_)> lock(mutex_);
-
-			auto * const end = nana_runtime::callbacks.table + event_tag::count;
-			for(auto* i = nana_runtime::callbacks.table; i != end; ++i)
-			{
-				auto element = i->find(wd);
-				if(element != i->end())
-				{
-					auto & cont = element->second.first;
-					std::for_each(cont.rbegin(), cont.rend(),
-						[this](abstract_handler * handler)
-							{
-								this->write_off_bind(reinterpret_cast<event_handle>(handler));
-								this->handle_manager_(handler);
-							});
-					//if the general event container is empty, erase the container!
-					if(element->second.second.size())
-						cont.clear();
-					else
-						i->erase(element);
-				}
-			}
-
-			//delete the bind handler that the window had created.
-			auto bi = bind_cont_.find(wd);
-			if(bi != bind_cont_.end())
-			{
-				for(auto handler : bi->second)
-				{
-					auto cont = reinterpret_cast<abstract_handler*>(handler)->container;
-					auto elem = std::find(cont->begin(), cont->end(), reinterpret_cast<abstract_handler*>(handler));
-					if(elem != cont->end())
-						cont->erase(elem);
-				}
-				bind_cont_.erase(bi);
-			}
-		}
-		*/
 
 		void event_manager::umake(window wd, bool only_for_drawer)
 		{

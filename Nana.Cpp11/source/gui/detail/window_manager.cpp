@@ -14,6 +14,7 @@
 #include GUI_BEDROCK_HPP
 #include <nana/gui/detail/window_manager.hpp>
 #include <nana/gui/detail/native_window_interface.hpp>
+#include <stdexcept>
 
 namespace nana
 {
@@ -79,7 +80,7 @@ namespace detail
 			keybase_.clear();
 		}
 
-		void shortkey_container::umake(nana::gui::window wd)
+		void shortkey_container::umake(window wd)
 		{
 			if(wd == nullptr) return;
 			auto i = std::find_if(keybase_.begin(), keybase_.end(), [wd](const item_type& m){
@@ -148,28 +149,28 @@ namespace detail
 	//end class root_window_runtime
 
 	//class window_manager
-		/*
 		//class revertible_mutex
 			window_manager::revertible_mutex::revertible_mutex()
-				: tid_(0), ref_counter_(0), reverted_(false)
-			{}
-
+			{
+				thr_.tid = 0;
+				thr_.refcnt = 0;
+			}
 
 			void window_manager::revertible_mutex::lock()
 			{
 				std::recursive_mutex::lock();
-				if(0 == ref_counter_)
-					tid_ = nana::system::this_thread_id();
-				++ref_counter_;
+				if(0 == thr_.tid)
+					thr_.tid = nana::system::this_thread_id();
+				++thr_.refcnt;
 			}
 
 			bool window_manager::revertible_mutex::try_lock()
 			{
 				if(std::recursive_mutex::try_lock())
 				{
-					if(0 == ref_counter_)
-						tid_ = nana::system::this_thread_id();
-					++ref_counter_;
+					if(0 == thr_.tid)
+						thr_.tid = nana::system::this_thread_id();
+					++thr_.refcnt;
 					return true;
 				}
 				return false;
@@ -177,37 +178,46 @@ namespace detail
 
 			void window_manager::revertible_mutex::unlock()
 			{
-				if(tid_ && ref_counter_)
-				{
-					if(0 == --ref_counter_)
-						tid_ = 0;
-				}
+				if(thr_.tid == nana::system::this_thread_id())
+					if(0 == --thr_.refcnt)
+						thr_.tid = 0;
 				std::recursive_mutex::unlock();
 			}
 
-			std::size_t window_manager::revertible_mutex::revert()
+			void window_manager::revertible_mutex::revert()
 			{
-				if(tid_ == nana::system::this_thread_id())
+				if(thr_.refcnt && (thr_.tid == nana::system::this_thread_id()))
 				{
-					for(std::size_t i = 0; i < ref_counter_; ++i)
+					std::size_t cnt = thr_.refcnt;
+					
+					stack_.push_back(thr_);
+					thr_.tid = 0;
+					thr_.refcnt = 0;
+
+					for(std::size_t i = 0; i < cnt; ++i)
 						std::recursive_mutex::unlock();
-					reverted_ = true;
-					return ref_counter_;
 				}
-				return 0;
 			}
 
-			void window_manager::revertible_mutex::forward(std::size_t n)
+			void window_manager::revertible_mutex::forward()
 			{
-				if(reverted_)
+				std::recursive_mutex::lock();
+				if(stack_.size())
 				{
-					for(std::size_t i = 0; i < n; ++i)
-						std::recursive_mutex::lock();
-					reverted_ = false;
+					auto thr = stack_.back();
+					if(thr.tid == nana::system::this_thread_id())
+					{
+						stack_.pop_back();
+						for(std::size_t i = 0; i < thr.refcnt; ++i)
+							std::recursive_mutex::lock();
+						thr_ = thr;
+					}
+					else
+						throw std::runtime_error("Nana.GUI: The forward is not matched.");
 				}
+				std::recursive_mutex::unlock();
 			}
 		//end class revertible_mutex
-		*/
 
 		window_manager::window_manager()
 		{
@@ -229,7 +239,7 @@ namespace detail
 			return this->handle_manager_.size();
 		}
 
-		std::recursive_mutex& window_manager::internal_lock() const
+		window_manager::mutex_type& window_manager::internal_lock() const
 		{
 			return mutex_;
 		}
@@ -251,12 +261,12 @@ namespace detail
 			signal_manager_.fireaway(wd, detail::signals::caption, sig);
 		}
 
-		void window_manager::event_filter(core_window_t* wd, bool is_make, unsigned eventid)
+		void window_manager::event_filter(core_window_t* wd, bool is_make, unsigned evtid)
 		{
-			switch(eventid)
+			switch(evtid)
 			{
 			case events::mouse_drop::identifier:
-				wd->flags.dropable = (is_make ? true : (bedrock::instance().evt_manager.the_number_of_handles(reinterpret_cast<nana::gui::window>(wd), eventid, false) != 0));
+				wd->flags.dropable = (is_make ? true : (bedrock::instance().evt_manager.the_number_of_handles(reinterpret_cast<nana::gui::window>(wd), evtid, false) != 0));
 				break;
 			}
 		}
@@ -308,7 +318,7 @@ namespace detail
 			native_interface::window_result result = native_interface::create_window(native, nested, r, app);
 			if(result.handle)
 			{
-				core_window_t* wd = new core_window_t(owner, (nana::gui::category::root_tag**)0);
+				core_window_t* wd = new core_window_t(owner, (category::root_tag**)nullptr);
 				wd->flags.take_active = !app.no_activate;
 				wd->title = native_interface::window_caption(result.handle);
 
@@ -540,7 +550,7 @@ namespace detail
 			{
 				//Thread-Safe Required!
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
-				root_table_type::value_type* rrt = root_runtime(root);
+				auto rrt = root_runtime(root);
 				if(rrt && _m_effective(rrt->window, x, y))
 					return _m_find(rrt->window, x, y);
 			}
@@ -919,12 +929,12 @@ namespace detail
 		//@brief: set a keyboard focus to a window. this may fire a focus event.
 		window_manager::core_window_t* window_manager::set_focus(core_window_t* wd)
 		{
-			if(nullptr == wd) return 0;
+			if(nullptr == wd) return nullptr;
 
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-			core_window_t * prev_focus = 0;
+			core_window_t * prev_focus = nullptr;
 			if(handle_manager_.available(wd))
 			{
 				core_window_t* root_wd = wd->root_widget;

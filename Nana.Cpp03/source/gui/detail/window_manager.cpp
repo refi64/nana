@@ -11,6 +11,7 @@
  */
 
 #include <nana/gui/detail/window_manager.hpp>
+#include <stdexcept>
 
 namespace nana
 {
@@ -130,6 +131,80 @@ namespace detail
 			maptable_.erase(wd);
 		}
 	//end class tray_event_manager
+
+		//class revertible_mutex
+			reversible_mutex::reversible_mutex()
+			{
+				thr_.tid = 0;
+				thr_.refcnt = 0;
+			}
+
+			bool reversible_mutex::lock() const volatile
+			{
+				if(token::lock())
+				{
+					if(0 == thr_.tid)
+						thr_.tid = nana::system::this_thread_id();
+					++thr_.refcnt;
+					return true;
+				}
+				return false;
+			}
+
+			bool reversible_mutex::try_lock() const volatile
+			{
+				if(token::try_lock())
+				{
+					if(0 == thr_.tid)
+						thr_.tid = nana::system::this_thread_id();
+					++thr_.refcnt;
+					return true;
+				}
+				return false;
+			}
+
+			void reversible_mutex::unlock() const volatile
+			{
+				if(thr_.tid == nana::system::this_thread_id())
+					if(0 == --thr_.refcnt)
+						thr_.tid = 0;
+				token::unlock();
+			}
+
+			void reversible_mutex::revert()
+			{
+				if(thr_.refcnt && (thr_.tid == nana::system::this_thread_id()))
+				{
+					std::size_t cnt = thr_.refcnt;
+					
+					stack_.push_back(thr_);
+					thr_.tid = 0;
+					thr_.refcnt = 0;
+
+					for(std::size_t i = 0; i < cnt; ++i)
+						token::unlock();
+				}
+			}
+
+			void reversible_mutex::forward()
+			{
+				token::lock();
+				if(stack_.size())
+				{
+					thr_refcnt thr = stack_.back();
+					if(thr.tid == nana::system::this_thread_id())
+					{
+						stack_.pop_back();
+						for(std::size_t i = 0; i < thr.refcnt; ++i)
+							token::lock();
+						thr_ = thr;
+					}
+					else
+						throw std::runtime_error("Nana.GUI: The forward is not matched.");
+				}
+				token::unlock();
+			}
+		//end class revertible_mutex
 }//end namespace detail
 }//end namespace gui
 }//end namespace nana

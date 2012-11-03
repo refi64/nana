@@ -226,6 +226,7 @@ namespace nana{ namespace gui{
 						drawer_.scroll_delta_pos(graph, (Vertical ? ei.mouse.y : ei.mouse.x));
 						if(cmpvalue != metrics_.value)
 							ext_event.value_changed(*widget_);
+						redraw = true;
 					}
 					else
 					{

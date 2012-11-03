@@ -96,17 +96,18 @@ namespace nana{ namespace gui{
 						pos = static_cast<int>(scroll_area);
 
 					metrics_.scroll_pos = pos;
-					metrics_.value = pos * (metrics_.peak - metrics_.range) / scroll_area;
+					const metrics_type::size_type value_max = metrics_.peak - metrics_.range;
+					metrics_.value = pos * value_max / scroll_area;
 					if(metrics_.value < metrics_.peak - metrics_.range)
 					{
-						int selfpos = static_cast<int>(metrics_.value * scroll_area / (metrics_.peak - metrics_.range));
-						int nextpos = static_cast<int>((metrics_.value + 1) * scroll_area / (metrics_.peak - metrics_.range));
+						int selfpos = static_cast<int>(metrics_.value * scroll_area / value_max);
+						int nextpos = static_cast<int>((metrics_.value + 1) * scroll_area / value_max);
 
 						if(selfpos != nextpos && (pos - selfpos > nextpos - pos))
 							++metrics_.value;
 					}
 					else
-						metrics_.value = metrics_.peak = metrics_.range;
+						metrics_.value = value_max;
 				}
 			}
 

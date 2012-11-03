@@ -1314,6 +1314,7 @@ namespace nana{ namespace gui{
 					}
 					return false;
 				}
+
 				bool rect_lister(nana::rectangle& r) const
 				{
 					unsigned width = 4 + (scroll.v.empty() ? 0 : scroll.scale - 1);

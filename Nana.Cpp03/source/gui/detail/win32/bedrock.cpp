@@ -584,10 +584,8 @@ namespace detail
 		case WM_KILLFOCUS:
 		case WM_PAINT:
 		case WM_CLOSE:
-		case WM_SHOWWINDOW:
 		case WM_MOUSEACTIVATE:
 		case WM_GETMINMAXINFO:
-		case WM_WINDOWPOSCHANGING:
 		case WM_WINDOWPOSCHANGED:
 		case WM_NCDESTROY:
 		case WM_NCLBUTTONDOWN:
@@ -642,7 +640,7 @@ namespace detail
 			switch(message)
 			{
 			case WM_IME_STARTCOMPOSITION:
-				if(msgwnd && msgwnd->other.attribute.root->ime_enabled)
+				if(msgwnd->other.attribute.root->ime_enabled)
 				{
 					nana::paint::native_font_type native_font = msgwnd->drawer.graphics.typeface().handle();
 					LOGFONTW logfont;
@@ -697,15 +695,10 @@ namespace detail
 					}
 				}
 				break;
-			case WM_SHOWWINDOW:
-				bedrock.event_expose(msgwnd, wParam == TRUE);
-				def_window_proc = true;
-				break;
-			case WM_WINDOWPOSCHANGING:
 			case WM_WINDOWPOSCHANGED:
 				if((reinterpret_cast<WINDOWPOS*>(lParam)->flags & SWP_SHOWWINDOW) && (msgwnd->visible == false))
 					bedrock.event_expose(msgwnd, true);
-				else if(reinterpret_cast<WINDOWPOS*>(lParam)->flags & SWP_HIDEWINDOW)
+				else if((reinterpret_cast<WINDOWPOS*>(lParam)->flags & SWP_HIDEWINDOW) && msgwnd->visible)
 					bedrock.event_expose(msgwnd, false);
 				def_window_proc = true;
 				break;

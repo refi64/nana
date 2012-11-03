@@ -43,15 +43,20 @@ namespace gui
 	//overlap, compute the overlap area between r1 and r2. the rect is for root
 	bool overlap(const rectangle& r1,
 						const rectangle& r2,
-						rectangle& rect)
+						rectangle& r)
 	{
 		if(overlap(r1, r2))
 		{
-			rect.x = r1.x < r2.x ? r2.x : r1.x;
-			rect.y = r1.y < r2.y ? r2.y : r1.y;
-			rect.width = r1.x + r1.width < r2.x + r2.width? r1.x + r1.width - rect.x: r2.x + r2.width - rect.x;
-			rect.height = r1.y + r1.height < r2.y + r2.height ? r1.y + r1.height - rect.y: r2.y + r2.height - rect.y;
+			r.x = r1.x < r2.x ? r2.x : r1.x;
+			r.y = r1.y < r2.y ? r2.y : r1.y;
 
+			long_long_t li1 = long_long_t(r1.x) + r1.width;
+			long_long_t li2 = long_long_t(r2.x) + r2.width;
+			r.width = static_cast<unsigned>(li1 < li2 ? li1 - r.x: li2 - r.x);
+
+			li1 = long_long_t(r1.y) + r1.height;
+			li2 = long_long_t(r2.y) + r2.height;
+			r.height = static_cast<unsigned>(li1 < li2 ? li1 - r.y: li2 - r.y);
 			return true;
 		}
 		return false;
@@ -59,14 +64,20 @@ namespace gui
 
 	bool overlap(int x, int y, unsigned width, unsigned height,
 				 int x2, int y2, unsigned width2, unsigned height2,
-				 rectangle& rect)
+				 rectangle& r)
 	{
 		if(overlap(x, y, width, height, x2, y2, width2, height2))
 		{
-			rect.x = x < x2 ? x2 : x;
-			rect.y = y < y2 ? y2 : y;
-			rect.width = x + width < x2 + width2? x + width - rect.x: x2 + width2 - rect.x;
-			rect.height = y + height < y2 + height2 ? y + height - rect.y: y2 + height2 - rect.y;
+			r.x = x < x2 ? x2 : x;
+			r.y = y < y2 ? y2 : y;
+
+			long_long_t li1 = long_long_t(x) + width;
+			long_long_t li2 = long_long_t(x2) + width2;
+			r.width = static_cast<unsigned>(li1 < li2 ? li1 - r.x: li2 - r.x);
+
+			li1 = long_long_t(y) + height;
+			li2 = long_long_t(y2) + height2;
+			r.height = static_cast<unsigned>(li1 < li2 ? li1 - r.y: li2 - r.y);
 
 			return true;
 		}

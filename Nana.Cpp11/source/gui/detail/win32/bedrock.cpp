@@ -125,9 +125,9 @@ namespace detail
 		}cursor;
 
 		thread_context()
-			: event_pump_ref_count(0), window_count(0), event_window(0)
+			: event_pump_ref_count(0), window_count(0), event_window(nullptr)
 		{
-			cursor.window = 0;
+			cursor.window = nullptr;
 			cursor.predef_cursor = nana::gui::cursor::arrow;
 		}
 	};
@@ -149,7 +149,7 @@ namespace detail
 			cache_type()
 			{
 				tcontext.tid = 0;
-				tcontext.object = 0;
+				tcontext.object = nullptr;
 			}
 		}cache;
 
@@ -525,7 +525,7 @@ namespace detail
 		case nana::detail::messages::tray:
 			if(wd)
 			{
-				nana::gui::eventinfo ei;
+				eventinfo ei;
 				switch(lParam)
 				{
 				case WM_LBUTTONDBLCLK:
@@ -582,10 +582,8 @@ namespace detail
 		case WM_KILLFOCUS:
 		case WM_PAINT:
 		case WM_CLOSE:
-		case WM_SHOWWINDOW:
 		case WM_MOUSEACTIVATE:
 		case WM_GETMINMAXINFO:
-		case WM_WINDOWPOSCHANGING:
 		case WM_WINDOWPOSCHANGED:
 		case WM_NCDESTROY:
 		case WM_NCLBUTTONDOWN:
@@ -640,7 +638,7 @@ namespace detail
 			switch(message)
 			{
 			case WM_IME_STARTCOMPOSITION:
-				if(msgwnd && msgwnd->other.attribute.root->ime_enabled)
+				if(msgwnd->other.attribute.root->ime_enabled)
 				{
 					nana::paint::native_font_type native_font = msgwnd->drawer.graphics.typeface().handle();
 					LOGFONTW logfont;
@@ -695,15 +693,10 @@ namespace detail
 					}
 				}
 				break;
-			case WM_SHOWWINDOW:
-				bedrock.event_expose(msgwnd, wParam == TRUE);
-				def_window_proc = true;
-				break;
-			case WM_WINDOWPOSCHANGING:
 			case WM_WINDOWPOSCHANGED:
 				if((reinterpret_cast<WINDOWPOS*>(lParam)->flags & SWP_SHOWWINDOW) && (msgwnd->visible == false))
 					bedrock.event_expose(msgwnd, true);
-				else if(reinterpret_cast<WINDOWPOS*>(lParam)->flags & SWP_HIDEWINDOW)
+				else if((reinterpret_cast<WINDOWPOS*>(lParam)->flags & SWP_HIDEWINDOW) && msgwnd->visible)
 					bedrock.event_expose(msgwnd, false);
 				def_window_proc = true;
 				break;

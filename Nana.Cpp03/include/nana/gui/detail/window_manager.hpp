@@ -1494,9 +1494,7 @@ namespace detail
 
 	private:
 		handle_manager<core_window_t*, window_manager>	handle_manager_;
-
 		mutable reversible_mutex wnd_mgr_lock_;
-		//mutable NANA_CONCURRENT_DECLARE(nana::threads::token, wnd_mgr_lock_)
 		root_table_type			root_table_;
 		signals					signals_;
 		signal_manager	signal_manager_;

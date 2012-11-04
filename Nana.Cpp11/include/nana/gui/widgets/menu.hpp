@@ -31,12 +31,12 @@ namespace nana{ namespace gui{
 					: noncopyable
 				{
 				public:
-					item_proxy(unsigned long id, menu_item_type &);
+					item_proxy(std::size_t n, menu_item_type &);
 					void enabled(bool v);
 					bool enabled() const;
-					unsigned long index() const;
+					std::size_t index() const;
 				private:
-					unsigned long index_;
+					std::size_t index_;
 					menu_item_type &item_;
 				};
 
@@ -97,7 +97,7 @@ namespace nana{ namespace gui{
 				virtual void background(graph_reference, window) = 0;
 				virtual void item(graph_reference, const nana::rectangle&, const attr&) = 0;
 				virtual void item_image(graph_reference, const nana::point&, const paint::image&) = 0;
-				virtual void item_text(graph_reference, const nana::point&, const nana::string&, const attr&, unsigned text_px) = 0;
+				virtual void item_text(graph_reference, const nana::point&, const nana::string&, unsigned text_pixels, const attr&) = 0;
 				virtual void sub_arrow(graph_reference, const nana::point&, unsigned item_pixels, const attr&) = 0;
 			};
 		}//end namespace menu
@@ -121,31 +121,31 @@ namespace nana{ namespace gui{
 		void append_splitter();
 		void clear();
 		void close();
-		void image(std::size_t index, const paint::image&);
-		void check_style(std::size_t index, check_t style);
-		void checked(std::size_t index, bool check);
-		bool checked(std::size_t index) const;
-		void enabled(std::size_t index, bool enable);
-		bool enabled(std::size_t index) const;
-		void erase(std::size_t index);
-		bool link(std::size_t index, menu& menu_obj);
-		menu * link(std::size_t index);
-		menu *create_sub_menu(std::size_t index);
+		void image(std::size_t n, const paint::image&);
+		void check_style(std::size_t n, check_t style);
+		void checked(std::size_t n, bool);
+		bool checked(std::size_t n) const;
+		void enabled(std::size_t n, bool);
+		bool enabled(std::size_t n) const;
+		void erase(std::size_t n);
+		bool link(std::size_t n, menu& menu_obj);
+		menu * link(std::size_t n);
+		menu *create_sub_menu(std::size_t n);
 		void popup(window, int x, int y, bool owner_menubar);
-		void answerer(std::size_t index, const event_fn_t&);
+		void answerer(std::size_t n, const event_fn_t&);
 		void destroy_answer(const std::function<void()>&);
+		void gaps(const nana::point&);
 		void goto_next(bool forward);
 		bool goto_submen();
 		bool exit_submenu();
 		std::size_t size() const;
 		int send_shortkey(nana::char_t key);
+
 		menu& max_pixels(unsigned);
 		unsigned max_pixels() const;
 
 		menu& item_pixels(unsigned);
 		unsigned item_pixels() const;
-
-		void menu_gaps(const nana::point& pos);
 
 		template<typename Renderer>
 		void renderer(const Renderer& rd)

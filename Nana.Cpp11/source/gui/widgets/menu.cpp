@@ -13,7 +13,7 @@ namespace nana{ namespace gui{
 			//struct menu_item_type
 				//class item_proxy
 				//@brief: this class is used as parameter of menu event function.
-					menu_item_type::item_proxy::item_proxy(unsigned long index, menu_item_type &item)
+					menu_item_type::item_proxy::item_proxy(std::size_t index, menu_item_type &item)
 						:index_(index), item_(item)
 					{}
 
@@ -27,7 +27,7 @@ namespace nana{ namespace gui{
 						return item_.flags.enabled;
 					}
 
-					unsigned long menu_item_type::item_proxy::index() const
+					std::size_t menu_item_type::item_proxy::index() const
 					{
 						return index_;
 					}
@@ -95,7 +95,7 @@ namespace nana{ namespace gui{
 					img.paste(graph, pos.x, pos.y);
 				}
 
-				void item_text(graph_reference graph, const nana::point& pos, const nana::string& text, const attr& at, unsigned text_pixels)
+				void item_text(graph_reference graph, const nana::point& pos, const nana::string& text, unsigned text_pixels, const attr& at)
 				{
 					nana::paint::text_renderer tr(graph);
 					tr.render(pos.x, pos.y, (at.enabled ? 0x0 : nana::gui::color::gray_border), text.c_str(), text.length(), text_pixels, true);
@@ -515,7 +515,7 @@ namespace nana{ namespace gui{
 							if(m.image.empty() == false)
 								renderer->item_image(*graph_, nana::point(item_r.x + 5, item_r.y + (item_h_px - m.image.size().height) / 2), m.image);
 
-							renderer->item_text(*graph_, nana::point(item_r.x + 40, item_r.y + text_top_off), text, attr, strpixels);
+							renderer->item_text(*graph_, nana::point(item_r.x + 40, item_r.y + text_top_off), text, strpixels, attr);
 
 							if(hotkey)
 							{
@@ -1145,6 +1145,11 @@ namespace nana{ namespace gui{
 			impl_->destroy_answer = f;
 		}
 
+		void menu::gaps(const nana::point& pos)
+		{
+			impl_->mbuilder.data().gaps = pos;
+		}
+
 		void menu::goto_next(bool forward)
 		{
 			if(impl_->uiobj)
@@ -1193,11 +1198,6 @@ namespace nana{ namespace gui{
 			return impl_->mbuilder.data().item_pixels;
 		}
 
-		void menu::menu_gaps(const nana::point& pos)
-		{
-			impl_->mbuilder.data().gaps = pos;
-		}
-
 		pat::cloneable_interface<menu::renderer_interface> * menu::renderer() const
 		{
 			return impl_->mbuilder.renderer();
@@ -1217,12 +1217,12 @@ namespace nana{ namespace gui{
 		}
 	//end class menu
 
-		detail::popuper menu_popuper(menu& mobj, mouse ms)
+	detail::popuper menu_popuper(menu& mobj, mouse ms)
 	{
 		return detail::popuper(mobj, ms);
 	}
 
-		detail::popuper menu_popuper(menu& mobj, window owner, const point& pos, mouse ms)
+	detail::popuper menu_popuper(menu& mobj, window owner, const point& pos, mouse ms)
 	{
 		return detail::popuper(mobj, owner, pos, ms);
 	}

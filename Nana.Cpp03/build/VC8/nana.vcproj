@@ -483,7 +483,11 @@
 					Name="threads"
 					>
 					<File
-						RelativePath="..\..\source\threads\locks.cpp"
+						RelativePath="..\..\source\threads\condition_variable.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\source\threads\mutex.cpp"
 						>
 					</File>
 					<File

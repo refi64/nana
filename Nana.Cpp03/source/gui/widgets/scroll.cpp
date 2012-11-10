@@ -256,7 +256,7 @@ namespace nana{ namespace gui{
 				if(scale > fixedsize * 2)
 				{
 					scale -= (fixedsize * 2);
-					len = (scale * metrics_.range / metrics_.peak);
+					len = static_cast<unsigned>(scale * metrics_.range / metrics_.peak);
 					
 					if(len < fixedsize)
 						len = fixedsize;

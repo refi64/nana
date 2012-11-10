@@ -101,7 +101,8 @@
 		<Unit filename="..\..\source\system\platform.cpp" />
 		<Unit filename="..\..\source\system\shared_wrapper.cpp" />
 		<Unit filename="..\..\source\system\timepiece.cpp" />
-		<Unit filename="..\..\source\threads\locks.cpp" />
+		<Unit filename="..\..\source\threads\condition_variable.cpp" />
+		<Unit filename="..\..\source\threads\mutex.cpp" />
 		<Unit filename="..\..\source\threads\pool.cpp" />
 		<Unit filename="..\..\source\threads\thread.cpp" />
 		<Unit filename="..\..\source\traits.cpp" />

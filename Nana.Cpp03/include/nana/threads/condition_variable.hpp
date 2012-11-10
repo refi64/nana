@@ -37,7 +37,6 @@ namespace nana{
 			condition_variable();
 			~condition_variable();
 
-
 			void notify_one();
 			void notify_all();
 

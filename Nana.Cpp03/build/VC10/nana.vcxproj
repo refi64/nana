@@ -217,7 +217,8 @@
     <ClCompile Include="..\..\source\system\platform.cpp" />
     <ClCompile Include="..\..\source\system\shared_wrapper.cpp" />
     <ClCompile Include="..\..\source\system\timepiece.cpp" />
-    <ClCompile Include="..\..\source\threads\locks.cpp" />
+    <ClCompile Include="..\..\source\threads\condition_variable.cpp" />
+    <ClCompile Include="..\..\source\threads\mutex.cpp" />
     <ClCompile Include="..\..\source\threads\pool.cpp" />
     <ClCompile Include="..\..\source\threads\thread.cpp" />
     <ClCompile Include="..\..\source\traits.cpp" />

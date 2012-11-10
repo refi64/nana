@@ -19,7 +19,7 @@
 	<File name="..\..\source\gui\detail\native_window_interface.cpp" open="0" top="0" tabpos="0">
 		<Cursor position="4808" topLine="172" />
 	</File>
-	<File name="..\..\source\gui\detail\win32\bedrock.cpp" open="1" top="0" tabpos="1">
+	<File name="..\..\source\gui\detail\win32\bedrock.cpp" open="0" top="0" tabpos="1">
 		<Cursor position="47434" topLine="1492" />
 	</File>
 	<File name="..\..\source\gui\layout.cpp" open="0" top="0" tabpos="8">
@@ -34,7 +34,7 @@
 	<File name="..\..\source\gui\widgets\button.cpp" open="0" top="0" tabpos="10">
 		<Cursor position="3339" topLine="134" />
 	</File>
-	<File name="..\..\source\gui\widgets\categorize.cpp" open="1" top="0" tabpos="2">
+	<File name="..\..\source\gui\widgets\categorize.cpp" open="0" top="0" tabpos="2">
 		<Cursor position="5949" topLine="190" />
 	</File>
 	<File name="..\..\source\gui\widgets\checkbox.cpp" open="0" top="0" tabpos="3">
@@ -88,8 +88,8 @@
 	<File name="..\..\source\paint\gadget.cpp" open="0" top="0" tabpos="10">
 		<Cursor position="4541" topLine="147" />
 	</File>
-	<File name="..\..\source\paint\graphics.cpp" open="1" top="1" tabpos="3">
-		<Cursor position="32020" topLine="1045" />
+	<File name="..\..\source\paint\graphics.cpp" open="0" top="0" tabpos="3">
+		<Cursor position="32012" topLine="1048" />
 	</File>
 	<File name="..\..\source\paint\image.cpp" open="0" top="0" tabpos="2">
 		<Cursor position="2893" topLine="91" />

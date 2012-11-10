@@ -44,7 +44,7 @@ namespace nana{
 			mutex::mutex()
 				: impl_(new impl)
 			{
-				impl_->tid = -1;
+				impl_->tid = static_cast<unsigned>(-1);
 #if defined(NANA_WINDOWS)
 				impl_->native_mutex = ::CreateEventW(0, FALSE, TRUE, 0);
 #elif defined(NANA_LINUX)
@@ -103,7 +103,7 @@ namespace nana{
 
 			void mutex::unlock()
 			{
-				impl_->tid = -1;
+				impl_->tid = static_cast<unsigned>(-1);
 #if defined(NANA_WINDOWS)
 				if(impl_->native_mutex)
 					::SetEvent(impl_->native_mutex);
@@ -112,7 +112,6 @@ namespace nana{
 #endif			
 			}
 
-			typedef void * native_handle_type;
 			mutex::native_handle_type mutex::native_handle()
 			{
 				return (impl_ ? & impl_->native_mutex : 0);
@@ -265,6 +264,11 @@ namespace nana{
 #elif defined(NANA_LINUX)
 				pthread_mutex_unlock(&(impl_->native_mutex));
 #endif
+			}
+
+			timed_mutex::native_handle_type timed_mutex::native_handle()
+			{
+				return (impl_ ? & impl_->native_mutex : 0);
 			}
 		//end class timed_mutex
 	}//end namespace threads

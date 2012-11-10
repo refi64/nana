@@ -186,6 +186,9 @@ namespace nana{
 			bool try_lock_for(std::size_t milliseconds);
 
 			void unlock();
+
+			typedef void* native_handle_type;
+			native_handle_type native_handle();
 		private:
 			impl * impl_;
 		};

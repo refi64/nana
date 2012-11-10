@@ -180,9 +180,6 @@
     <ClCompile Include="..\..\source\system\timepiece.cpp">
       <Filter>Source Files\nana\system</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\threads\locks.cpp">
-      <Filter>Source Files\nana\threads</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\threads\pool.cpp">
       <Filter>Source Files\nana\threads</Filter>
     </ClCompile>
@@ -278,6 +275,12 @@
     </ClCompile>
     <ClCompile Include="..\..\source\audio\player.cpp">
       <Filter>Source Files\nana\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\threads\condition_variable.cpp">
+      <Filter>Source Files\nana\threads</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\threads\mutex.cpp">
+      <Filter>Source Files\nana\threads</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

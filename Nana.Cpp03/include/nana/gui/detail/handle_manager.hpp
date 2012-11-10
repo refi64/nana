@@ -16,7 +16,7 @@
 #define NANA_GUI_DETAIL_HANDLE_MANAGER_HPP
 #include <map>
 #include <nana/traits.hpp>
-#include <nana/threads/locks.hpp>
+#include <nana/threads/mutex.hpp>
 #include <iterator>
 
 namespace nana
@@ -178,7 +178,7 @@ namespace gui
 
 			void insert(handle_type handle, unsigned tid)
 			{
-				nana::threads::scope_guard sg(lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 				holder_[handle] = tid;
 
@@ -193,7 +193,7 @@ namespace gui
 
 			void remove(const handle_type handle)
 			{
-				nana::threads::scope_guard sg(lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 				typename holder_map::iterator i = holder_.find(handle);
 				if(holder_.end() != i)
@@ -207,7 +207,7 @@ namespace gui
 
 			void delete_trash(unsigned tid)
 			{
-				nana::threads::scope_guard sg(lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 				if(trash_.size())
 				{
@@ -236,7 +236,7 @@ namespace gui
 
 			handle_type last() const
 			{
-				nana::threads::scope_guard sg(lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 				if(queue_.size())
 					return *(queue_.end() - 1);
 
@@ -250,7 +250,7 @@ namespace gui
 
 			handle_type get(unsigned index) const
 			{
-				nana::threads::scope_guard sg(lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 				if(index < queue_.size())
 					return *(queue_.begin() + index);
 				return handle_type();
@@ -258,7 +258,8 @@ namespace gui
 
 			bool available(const handle_type handle)	const
 			{
-				nana::threads::scope_guard sg(lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(mutex_);
+
 				bool * v = cacher_.get(handle);
 				if(v) return *v;
 				return cacher_.insert(handle, (holder_.count(handle) != 0));
@@ -266,7 +267,7 @@ namespace gui
 
 			void all(std::vector<handle_type> & v) const
 			{
-				nana::threads::scope_guard sg(lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 				std::copy(queue_.begin(), queue_.end(), std::back_inserter(v));
 			}
 		private:
@@ -301,8 +302,8 @@ namespace gui
 			};
 			
 		private:
+			mutable threads::recursive_mutex mutex_;
 			mutable cache<const handle_type, bool, 5> cacher_;
-			nana::threads::token lock_;
 			std::map<handle_type, unsigned>	holder_;
 			std::vector<handle_type>	queue_;
 			std::vector<holder_pair>	trash_;

@@ -39,4 +39,5 @@ $(BIN): $(LINKOBJ)
 
 clean:
 	rm -f $(LINKOBJ)
+	rm -f ../bin/$(BIN)
 

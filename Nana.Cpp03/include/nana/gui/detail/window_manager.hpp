@@ -231,7 +231,7 @@ namespace detail
 	};
 	
 	class reversible_mutex
-		: public nana::threads::token
+		: public nana::threads::recursive_mutex
 	{
 		struct thr_refcnt
 		{
@@ -241,9 +241,9 @@ namespace detail
 	public:
 		reversible_mutex();
 
-		bool lock() const volatile;
-		bool try_lock() const volatile;
-		void unlock() const volatile;
+		void lock();
+		bool try_lock();
+		void unlock();
 
 		void revert();
 		void forward();
@@ -338,7 +338,7 @@ namespace detail
 		{
 			if(wd)
 			{
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				return (root_table_.find(wd) != 0);
 			}
 			return false;
@@ -351,7 +351,7 @@ namespace detail
 			if(owner)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 
 				if(handle_manager_.available(owner))
 				{
@@ -372,7 +372,7 @@ namespace detail
 				wd->title = interface_type::window_caption(result.handle);
 
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 
 				//create Root graphics Buffer and manage it
 				typename root_table_type::value_type rt_window_data(wd, result.width, result.height);
@@ -401,7 +401,7 @@ namespace detail
 		{
 			if(parent == 0) return 0;
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 
 			if(handle_manager_.available(parent) == false)	return 0;
 
@@ -419,7 +419,7 @@ namespace detail
 			if(frame)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(frame->other.category == category::frame_tag::value)
 					frame->other.attribute.frame->attach.push_back(wd);
 				return true;
@@ -432,7 +432,7 @@ namespace detail
 			if(frame)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(frame->other.category == category::frame_tag::value)
 				{
 					if(handle_manager_.available(wd) && wd->other.category == category::root_tag::value && wd->root != frame->root)
@@ -449,7 +449,8 @@ namespace detail
 		{
 			if(parent == 0)	return 0;
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
+
 			if(handle_manager_.available(parent) == false)	return 0;
 			core_window_t * wd;
 			if(is_lite)
@@ -464,7 +465,7 @@ namespace detail
 		{
 			if(wd == 0) return;
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wd) == false)	return;
 
 			if(wd->other.category == category::root_tag::value)
@@ -502,7 +503,7 @@ namespace detail
 			core_window_t* parent = 0;
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd) == false)	return;
 
 				parent = wd->parent;
@@ -541,7 +542,7 @@ namespace detail
 			if(wd == 0) return;
 
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wd) == false)	return;
 
 			if(wd->other.category == category::root_tag::value || wd->other.category != category::frame_tag::value)
@@ -555,7 +556,7 @@ namespace detail
 		{
 			if(false == img.empty())
 			{
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
 					if(wd->other.category == category::root_tag::value)
@@ -569,7 +570,7 @@ namespace detail
 		bool show(core_window_t* wd, bool visible)
 		{
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wd))
 			{
 				if(visible != wd->visible)
@@ -601,7 +602,7 @@ namespace detail
 			if((false == attr_.capture.ignore_children) || (0 == attr_.capture.window) || (attr_.capture.window->root != root))
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				typename root_table_type::value_type* rrt = root_runtime(root);
 				if(rrt && _m_effective(rrt->window, x, y))
 					return _m_find(rrt->window, x, y);
@@ -615,7 +616,7 @@ namespace detail
 			if(wd)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
 					if(wd->other.category != category::root_tag::value)
@@ -642,7 +643,7 @@ namespace detail
 			if(wd)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
 					bool moved = false;
@@ -701,7 +702,7 @@ namespace detail
 			if(wd)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
 					if(wd->rect.width != width || wd->rect.height != height)
@@ -761,7 +762,7 @@ namespace detail
 			if(cache.first == wd) return cache.second;
 
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 
 			typename root_table_type::value_type* rrt = root_runtime(wd);
 			if(rrt)
@@ -779,7 +780,7 @@ namespace detail
 			if(wd)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
 #if defined(NANA_LINUX)
@@ -819,7 +820,7 @@ namespace detail
 			if(wd == 0) return false;
 
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 
 			if(handle_manager_.available(wd) == false) return false;
 
@@ -854,7 +855,7 @@ namespace detail
 		{
 			if(wd == 0)	return;
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 
 			//It's not worthy to redraw if visible is false
 			if(handle_manager_.available(wd) == false)
@@ -887,7 +888,7 @@ namespace detail
 		{
 			if(wd == 0)	return false;
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 
 			//It's not worthy to redraw if visible is false
 			if(handle_manager_.available(wd) == false)
@@ -931,7 +932,7 @@ namespace detail
 			if(wd)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
 					result.make(wd->drawer.graphics.width(), wd->drawer.graphics.height());
@@ -948,7 +949,7 @@ namespace detail
 			if(wnd)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wnd))
 					return wndlayout_type::read_visual_rectangle(wnd, rect);
 			}
@@ -960,7 +961,7 @@ namespace detail
 			if(interface_type::is_window(wd))
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				return tray_event_manager_.make(wd, identifier, f);
 			}
 			return false;
@@ -969,14 +970,14 @@ namespace detail
 		void tray_umake_event(native_window_type wd)
 		{
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			tray_event_manager_.umake(wd);
 		}
 
 		void tray_fire(native_window_type wd, unsigned identifier, const eventinfo& ei)
 		{
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			tray_event_manager_.fire(wd, identifier, ei);
 		}
 
@@ -989,7 +990,7 @@ namespace detail
 			if(wd == 0) return 0;
 
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 
 			core_window_t * prev_focus = 0;
 
@@ -1086,7 +1087,7 @@ namespace detail
 				if(wd != attr_.capture.window)
 				{
 					//Thread-Safe Required!
-					NANA_SCOPE_GUARD(wnd_mgr_lock_);
+					threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 
 					if(handle_manager_.available(wd))
 					{
@@ -1156,13 +1157,13 @@ namespace detail
 			if(wd == 0) return;
 
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wd) == false)	return;
 
-			if(nana::gui::detail::tab_type::none == wd->flags.tab)
+			if(detail::tab_type::none == wd->flags.tab)
 			{
 				wd->root_widget->other.attribute.root->tabstop.push_back(wd);
-				wd->flags.tab |= nana::gui::detail::tab_type::tabstop;
+				wd->flags.tab |= detail::tab_type::tabstop;
 			}
 		}
 
@@ -1171,7 +1172,7 @@ namespace detail
 			if(wd)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
 					typedef typename core_window_t::tabstop_container_type tabstop_cont_t;
@@ -1198,7 +1199,7 @@ namespace detail
 			if(wd == 0) return 0;
 
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wd) == false)	return 0;
 
 			core_window_t * root_wd = wd->root_widget;
@@ -1239,7 +1240,7 @@ namespace detail
 			if(wd)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 					return wndlayout_type::glass_window(wd, isglass);
 			}
@@ -1251,7 +1252,7 @@ namespace detail
 			if(wd)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 					wndlayout_type::make_glass(wd, true, true);
 			}
@@ -1262,7 +1263,7 @@ namespace detail
 			if(wd)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
 					if(interface_type::calc_window_point(wd->root, pos))
@@ -1286,7 +1287,7 @@ namespace detail
 			if(wd == 0) return false;
 
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wd) == false) return false;
 
 			typename root_table_type::value_type* object = root_runtime(wd->root);
@@ -1301,7 +1302,7 @@ namespace detail
 			if(wnd == 0) return;
 
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(wnd_mgr_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wnd) == false) return;
 
 			typename root_table_type::value_type * object = root_runtime(wnd->root);
@@ -1313,7 +1314,7 @@ namespace detail
 			if(native_window)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(wnd_mgr_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				typename root_table_type::value_type* object = root_runtime(native_window);
 				if(object)
 					return reinterpret_cast<core_window_t*>(object->shortkeys.find(key));

@@ -479,12 +479,12 @@ namespace detail
 
 	void platform_spec::lock_xlib()
 	{
-		xlib_locker_.lock();
+		mutex_xlib_.lock();
 	}
 
 	void platform_spec::unlock_xlib()
 	{
-		xlib_locker_.unlock();
+		mutex_xlib_.unlock();
 	}
 
 	Window platform_spec::root_window()
@@ -860,13 +860,13 @@ namespace detail
 	{
 		while(true)
 		{
-			if(xlib_locker_.try_lock())
+			if(mutex_xlib_.try_lock())
 			{
 				for(std::map<nana::gui::native_window_type, caret_tag*>::iterator i = caret_holder_.carets.begin(); i != caret_holder_.carets.end(); ++i)
 				{
 					caret_flash(i->first);
 				}
-				xlib_locker_.unlock();
+				mutex_xlib_.unlock();
 			}
 			for(int i = 0; i < 5; ++i)
 			{
@@ -899,7 +899,7 @@ namespace detail
 
 	void platform_spec::set_timer(std::size_t id, std::size_t interval, void (*timer_proc)(std::size_t))
 	{
-		nana::threads::scope_guard sg(timer_.token);
+		nana::threads::lock_guard<nana::threads::recursive_mutex> lock(timer_.mutex);
 		if(0 == timer_.runner)
 			timer_.runner = new timer_runner;
 		timer_.runner->set(id, interval, timer_proc);
@@ -910,7 +910,7 @@ namespace detail
 	{
 		if(timer_.runner == 0) return;
 
-		nana::threads::scope_guard sg(timer_.token);
+		nana::threads::lock_guard<nana::threads::recursive_mutex> lock(timer_.mutex);
 		timer_.runner->kill(id);
 		if(timer_.runner->empty())
 		{
@@ -926,7 +926,7 @@ namespace detail
 
 	void platform_spec::timer_proc(unsigned tid)
 	{
-		nana::threads::scope_guard sg(timer_.token);
+		nana::threads::lock_guard<nana::threads::recursive_mutex> lock(timer_.mutex);
 		if(timer_.runner)
 		{
 			timer_.runner->timer_proc(tid);
@@ -959,7 +959,7 @@ namespace detail
 		if(requestor)
 		{
 			Atom clipboard = atombase_.clipboard;
-			xlib_locker_.lock();
+			mutex_xlib_.lock();
 			Window owner = ::XGetSelectionOwner(display_, clipboard);
 			if(owner)
 			{
@@ -973,17 +973,17 @@ namespace detail
 				::XConvertSelection(display_, clipboard, type, clipboard,
 							reinterpret_cast<Window>(requestor), CurrentTime);
 				::XFlush(display_);
-				xlib_locker_.unlock();
+				mutex_xlib_.unlock();
 
-				nana::threads::scope_guard sg(selim->cond_lock);
-				selim->cond.wait(selim->cond_lock);
+				nana::threads::unique_lock<nana::threads::mutex> lock(selim->cond_mutex);
+				selim->cond.wait(lock);
 
 				size = selim->bufsize;
 				void * retbuf = selim->buffer;
 				delete selim;
 				return retbuf;
 			}
-			xlib_locker_.unlock();
+			mutex_xlib_.unlock();
 		}
 		return 0;
 	}
@@ -1057,8 +1057,8 @@ namespace detail
 
 						self.selection_.items.erase(self.selection_.items.begin());
 
-						nana::threads::scope_guard sg(im->cond_lock);
-						im->cond.signal();
+						nana::threads::lock_guard<nana::threads::mutex> lock(im->cond_mutex);
+						im->cond.notify_one();
 					}
 				}
 				else if(evt.xselection.property == self.atombase_.xdnd_selection)

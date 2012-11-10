@@ -139,9 +139,18 @@ namespace detail
 				thr_.refcnt = 0;
 			}
 
-			bool reversible_mutex::lock() const volatile
+			void reversible_mutex::lock()
 			{
-				if(token::lock())
+				recursive_mutex::lock();
+
+				if(0 == thr_.tid)
+					thr_.tid = nana::system::this_thread_id();
+				++thr_.refcnt;
+			}
+
+			bool reversible_mutex::try_lock()
+			{
+				if(recursive_mutex::try_lock())
 				{
 					if(0 == thr_.tid)
 						thr_.tid = nana::system::this_thread_id();
@@ -151,24 +160,12 @@ namespace detail
 				return false;
 			}
 
-			bool reversible_mutex::try_lock() const volatile
-			{
-				if(token::try_lock())
-				{
-					if(0 == thr_.tid)
-						thr_.tid = nana::system::this_thread_id();
-					++thr_.refcnt;
-					return true;
-				}
-				return false;
-			}
-
-			void reversible_mutex::unlock() const volatile
+			void reversible_mutex::unlock()
 			{
 				if(thr_.tid == nana::system::this_thread_id())
 					if(0 == --thr_.refcnt)
 						thr_.tid = 0;
-				token::unlock();
+				recursive_mutex::unlock();
 			}
 
 			void reversible_mutex::revert()
@@ -182,13 +179,13 @@ namespace detail
 					thr_.refcnt = 0;
 
 					for(std::size_t i = 0; i < cnt; ++i)
-						token::unlock();
+						recursive_mutex::unlock();
 				}
 			}
 
 			void reversible_mutex::forward()
 			{
-				token::lock();
+				recursive_mutex::lock();
 				if(stack_.size())
 				{
 					thr_refcnt thr = stack_.back();
@@ -196,13 +193,13 @@ namespace detail
 					{
 						stack_.pop_back();
 						for(std::size_t i = 0; i < thr.refcnt; ++i)
-							token::lock();
+							recursive_mutex::lock();
 						thr_ = thr;
 					}
 					else
 						throw std::runtime_error("Nana.GUI: The forward is not matched.");
 				}
-				token::unlock();
+				recursive_mutex::unlock();
 			}
 		//end class revertible_mutex
 }//end namespace detail

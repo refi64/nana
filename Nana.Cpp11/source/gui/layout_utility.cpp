@@ -50,12 +50,12 @@ namespace gui
 			r.x = r1.x < r2.x ? r2.x : r1.x;
 			r.y = r1.y < r2.y ? r2.y : r1.y;
 
-			long long li1 = long long(r1.x) + r1.width;
-			long long li2 = long long(r2.x) + r2.width;
+			long long li1 = static_cast<long long>(r1.x) + r1.width;
+			long long li2 = static_cast<long long>(r2.x) + r2.width;
 			r.width = static_cast<unsigned>(li1 < li2 ? li1 - r.x: li2 - r.x);
 
-			li1 = long long(r1.y) + r1.height;
-			li2 = long long(r2.y) + r2.height;
+			li1 = static_cast<long long>(r1.y) + r1.height;
+			li2 = static_cast<long long>(r2.y) + r2.height;
 			r.height = static_cast<unsigned>(li1 < li2 ? li1 - r.y: li2 - r.y);
 
 			return true;
@@ -72,12 +72,12 @@ namespace gui
 			r.x = x < x2 ? x2 : x;
 			r.y = y < y2 ? y2 : y;
 
-			long long li1 = long long(x) + width;
-			long long li2 = long long(x2) + width2;
+			long long li1 = static_cast<long long>(x) + width;
+			long long li2 = static_cast<long long>(x2) + width2;
 			r.width = static_cast<unsigned>(li1 < li2 ? li1 - r.x: li2 - r.x);
 
-			li1 = long long(y) + height;
-			li2 = long long(y2) + height2;
+			li1 = static_cast<long long>(y) + height;
+			li2 = static_cast<long long>(y2) + height2;
 			r.height = static_cast<unsigned>(li1 < li2 ? li1 - r.y: li2 - r.y);
 
 			return true;

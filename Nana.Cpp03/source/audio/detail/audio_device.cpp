@@ -182,7 +182,7 @@ namespace nana{namespace audio
 			void audio_device::write(buffer_preparation::meta * m)
 			{
 #if defined(NANA_WINDOWS)
-				nana::threads::scope_guard lock(queue_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(queue_mutex_);
 				done_queue_.push_back(m);
 				if(m->dwFlags & WHDR_PREPARED)
 					wave_native_if.out_unprepare(handle_, m, sizeof(WAVEHDR));
@@ -225,7 +225,7 @@ namespace nana{namespace audio
 				{
 					buffer_preparation::meta * m;
 					{
-						nana::threads::scope_guard lock(self->queue_lock_);
+						threads::lock_guard<threads::recursive_mutex> lock(self->queue_mutex_);
 						m = self->done_queue_.front();
 						self->done_queue_.erase(self->done_queue_.begin());
 					}

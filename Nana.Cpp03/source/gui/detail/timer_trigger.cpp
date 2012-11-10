@@ -37,12 +37,14 @@ namespace detail
 	void timer_trigger_proc(std::size_t id);
 #endif
 	//class timer_trigger
-		NANA_CONCURRENT_STATIC_DEFINE(threads::token, timer_trigger, lock_)
+		nana::threads::recursive_mutex  timer_trigger::mutex_;
+		timer_trigger::holder_timer_type	timer_trigger::holder_timer_;
+		timer_trigger::holder_handle_type	timer_trigger::holder_handle_;
 
-		void timer_trigger::create_timer(timer_trigger::timer_object timer, unsigned interval)
+		void timer_trigger::create_timer(timer_object timer, unsigned interval)
 		{
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(lock_)
+			threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 			if(_m_find_by_timer_object(timer) == 0)
 			{
@@ -57,10 +59,10 @@ namespace detail
 			}
 		}
 
-		void timer_trigger::kill_timer(timer_trigger::timer_object timer)
+		void timer_trigger::kill_timer(timer_object timer)
 		{
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(lock_)
+			threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 			timer_handle* ptr = _m_find_by_timer_object(timer);
 			if(ptr)
@@ -75,10 +77,10 @@ namespace detail
 			}
 		}
 
-		void timer_trigger::set_interval(timer_trigger::timer_object timer, unsigned interval)
+		void timer_trigger::set_interval(timer_object timer, unsigned interval)
 		{
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(lock_)
+			threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 			timer_handle* old = _m_find_by_timer_object(timer);
 			if(old)
@@ -96,15 +98,15 @@ namespace detail
 			}
 		}
 
-		void timer_trigger::fire(timer_trigger::timer_object object)
+		void timer_trigger::fire(timer_object object)
 		{
-			nana::gui::eventinfo ei;
+			eventinfo ei;
 			ei.elapse.timer = object;
 			nana::gui::detail::bedrock& bedrock = nana::gui::detail::bedrock::instance();
 			bedrock.evt_manager.answer(detail::event_tag::elapse, reinterpret_cast<nana::gui::window>(object), ei, event_manager::event_kind::user);
 		}
 
-		timer_trigger::timer_handle* timer_trigger::_m_find_by_timer_object(timer_trigger::timer_object t)
+		timer_trigger::timer_handle* timer_trigger::_m_find_by_timer_object(timer_object t)
 		{
 			std::map<timer_object, timer_handle>::iterator it = holder_timer_.find(t);
 			if(it != holder_timer_.end())
@@ -113,10 +115,10 @@ namespace detail
 			return 0;
 		}
 
-		timer_trigger::timer_object* timer_trigger::find_by_timer_handle(timer_trigger::timer_handle h)
+		timer_trigger::timer_object* timer_trigger::find_by_timer_handle(timer_handle h)
 		{
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(lock_)
+			threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 			std::map<timer_handle, timer_object>::iterator it = holder_handle_.find(h);
 			if(it != holder_handle_.end())
@@ -139,9 +141,6 @@ namespace detail
 			timer_trigger::fire(*ptr);
 		}
 	}
-
-	timer_trigger::holder_timer_type	timer_trigger::holder_timer_;
-	timer_trigger::holder_handle_type	timer_trigger::holder_handle_;
 }//end namespace detail
 }//end namespace gui
 }//end namespace nana

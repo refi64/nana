@@ -15,6 +15,7 @@
 #include <nana/gui/detail/event_manager.hpp>
 #include <map>
 #include <algorithm>
+#include <nana/threads/mutex.hpp>
 
 namespace nana
 {
@@ -116,7 +117,7 @@ namespace detail
 
 	abstract_handler::~abstract_handler(){}
 
-	NANA_CONCURRENT_STATIC_DEFINE(threads::token, event_manager, callback_table_lock_)
+	nana::threads::recursive_mutex event_manager::mutex_;
 
 	unsigned event_tag::event_category[event_tag::count] = {
 		category::flags::widget,	//click
@@ -149,7 +150,7 @@ namespace detail
 			abstract_handler* abs_handler = reinterpret_cast<abstract_handler*>(eh);
 
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(callback_table_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 			if(handle_manager_.available(abs_handler))
 			{
@@ -198,7 +199,7 @@ namespace detail
 		void event_manager::umake(window wd, bool only_for_drawer)
 		{
 			//Thread-Safe Required!
-			NANA_SCOPE_GUARD(callback_table_lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 			typedef callback_storage::event_table_type table_t;
 
@@ -249,7 +250,7 @@ namespace detail
 			inner_event_manager::handler_queue queue;
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(callback_table_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 				typedef callback_storage::event_table_type table_t;
 
@@ -311,7 +312,7 @@ namespace detail
 			if(eventid < event_tag::count)
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(callback_table_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 				typedef callback_storage::event_table_type table_t;
 
@@ -346,7 +347,7 @@ namespace detail
 			
 			{
 				//Thread-Safe Required!
-				NANA_SCOPE_GUARD(callback_table_lock_);
+				threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 				abs_handler->container = (drawer_handler ?
 												&(nana_runtime::callbacks.table[eventid][wd].first) :

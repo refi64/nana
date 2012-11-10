@@ -52,13 +52,13 @@ namespace nana
 			//class thread_holder
 				void thread_holder::insert(unsigned tid, thread* obj)
 				{
-					threads::scope_guard sg(lock_);
+					lock_guard<recursive_mutex> lock(mutex_);
 					map_[tid] = obj;
 				}
 
 				thread* thread_holder::get(unsigned tid)
 				{
-					threads::scope_guard sg(lock_);
+					lock_guard<recursive_mutex> lock(mutex_);
 					std::map<unsigned, thread*>::iterator it = map_.find(tid);
 					if(it != map_.end())
 					{
@@ -70,7 +70,7 @@ namespace nana
 
 				void thread_holder::remove(unsigned tid)
 				{
-					threads::scope_guard sg(lock_);
+					lock_guard<recursive_mutex> lock(mutex_);
 					map_.erase(tid);
 				}
 			//end class thread_holder

@@ -11,8 +11,12 @@
  */
 
 #include <nana/threads/pool.hpp>
-#include <time.h>
 #include <nana/system/platform.hpp>
+#include <time.h>
+#include <deque>
+#include <vector>
+#include <condition_variable>
+
 #if defined(NANA_WINDOWS)
 	#include <windows.h>
 	#include <process.h>
@@ -24,327 +28,333 @@ namespace nana
 {
 namespace threads
 {
-	namespace detail
-	{
-#if defined(NANA_WINDOWS)
-		typedef HANDLE thread_t;
-#elif defined(NANA_LINUX)
-		typedef pthread_t thread_t;
-#endif
-		//begin class task_object
-		task_object::task_object(task_object::kind tsk)
-			: tsk_kind(tsk)
-		{}
+	//class pool
+		//struct task
+			pool::task::task(t k) : kind(k){}
+			pool::task::~task(){}
+		//end struct task
 
-		task_object::~task_object(){}
-		//end class task_object
-
-		class task_signal
-			: public task_object
+		//struct task_signal
+		struct pool::task_signal
+			: task
 		{
-		public:
-			task_signal(): task_object(task_object::signal)
+			task_signal()
+				: task(task::signal)
 			{}
 
-			void exec(){}
-		};
+			void run()
+			{}
+		};//end struct task_signal
 
-		struct pool_thread_object
+		class pool::impl
 		{
-			enum state_t
+			enum class state{init, idle, run, finished};
+
+			struct pool_throbj
 			{
-				stop, run
+#if defined(NANA_WINDOWS)
+				typedef HANDLE thread_t;
+#elif defined(NANA_LINUX)
+				typedef pthread_t thread_t;
+#endif
+				impl * pool_ptr;
+				task * task_ptr;
+				thread_t	handle;
+				volatile state	thr_state;
+				time_t	timestamp;
+#if defined(NANA_LINUX)
+				std::mutex wait_mutex;
+				std::condition_variable wait_cond;
+				volatile bool suspended;
+#endif
 			};
-
-			volatile threads::pool * owner;
-			unsigned (*routine)(pool_thread_object*);
-			thread_t handle;
-			unsigned tid;
-			state_t state;
-			time_t task_timestamp;
-#ifdef NANA_LINUX
-			std::mutex cond_mutex;
-			std::condition_variable cond;
-#endif
-		};
-
-#if defined(NANA_WINDOWS)
-		typedef unsigned (__stdcall* thread_starter_t)(void*);
-		unsigned __stdcall thread_starter(pool_thread_object* pto)
-		{
-			unsigned r = pto->routine(pto);
-			::_endthreadex(r);
-			return r;
-		}
-#elif defined(NANA_LINUX)
-		typedef void* (* thread_starter_t)(void*);
-		void* thread_starter(pool_thread_object* pto)
-		{
-			return reinterpret_cast<void*>(pto->routine(pto));
-		}
-#endif
-	}//end namespace detail
-
-	//begin class pool
-		pool::pool()
-			:tpool_running_(true)
-		{
-			_m_start_threads(0);
-		}
-
-		pool::pool(unsigned tsize)
-			:tpool_running_(true)
-		{
-			_m_start_threads(tsize);
-		}
-
-		pool::~pool()
-		{
-			close();
-			std::lock_guard<decltype(locks_.task)> lock(locks_.task);
-			for(std::vector<detail::task_object*>::iterator i = task_container_.begin(); i != task_container_.end(); ++i)
-				delete *i;
-		}
-
-		void pool::close() volatile
-		{
-			pool * self = const_cast<pool*>(this);
-			std::vector<detail::pool_thread_object*> dup;
-
+		public:
+			impl(std::size_t thr_number)
+				: runflag_(true)
 			{
-				std::lock_guard<decltype(locks_.thread)> lock(self->locks_.thread);
-				tpool_running_ = false;
+				if(0 == thr_number) thr_number = 4;
 
-				for(auto thr : self->threads_)
+				for(; thr_number; --thr_number)
 				{
-					if(thr->state == detail::pool_thread_object::stop)
-					{
+					pool_throbj * pto = new pool_throbj;
+					pto->pool_ptr = this;
+					pto->thr_state = state::init;
+					pto->task_ptr = nullptr;
 #if defined(NANA_WINDOWS)
-						while(true)
+					pto->handle = (HANDLE)::_beginthreadex(0, 0, reinterpret_cast<unsigned(__stdcall*)(void*)>(&impl::_m_thr_starter), pto, 0, 0);
+#elif defined(NANA_LINUX)
+					pto->suspended = false;
+					::pthread_create(&(pto->handle), 0, reinterpret_cast<void*(*)(void*)>(&impl::_m_thr_starter), pto);
+#endif
+					container_.threads.push_back(pto);
+				}
+			}
+
+			~impl()
+			{
+				runflag_ = false;
+
+				while(true)
+				{
+					bool all_finished = true;
+					{
+						for(auto thr: container_.threads)
 						{
-							unsigned long susp_n = ::ResumeThread(thr->handle);
-							if(susp_n == 1 || susp_n == static_cast<unsigned long>(-1))
+							if(state::finished != thr->thr_state)
+							{
+								all_finished = false;
 								break;
+							}
 						}
-#elif defined(NANA_LINUX)
-						thr->cond.notify_one();
-#endif
 					}
-				}
-				dup.swap(self->threads_);
-			}
 
-			for(auto thr : dup)
-			{
-#if defined(NANA_WINDOWS)
-				::WaitForSingleObject(thr->handle, INFINITE);
-				::CloseHandle(thr->handle);
-#elif defined(NANA_LINUX)
-				::pthread_join(thr->handle, 0);
-				::pthread_detach(thr->handle);
-#endif
-				delete thr;
-			}
-		}
-
-		void pool::signal() volatile
-		{
-			detail::task_object* tkob = nullptr;
-			try
-			{
-				tkob = new detail::task_signal;
-				_m_push(tkob);
-			}
-			catch(std::bad_alloc&)
-			{
-				delete tkob;
-			}
-		}
-
-		void pool::wait_for_signal() volatile
-		{
-			std::unique_lock<decltype(locks_.signal)> lock(const_cast<pool*>(this)->locks_.signal);
-			const_cast<pool*>(this)->locks_.signal_cond.wait(lock);
-		}
-
-		void pool::_m_push(detail::task_object* task) volatile
-		{
-			std::lock_guard<decltype(locks_.task)> lock(const_cast<pool*>(this)->locks_.task);
-			const_cast<pool*>(this)->task_container_.push_back(task);
-			_m_wakeup();
-		}
-
-		void pool::_m_start_threads(unsigned size) volatile
-		{
-			close();
-
-			tpool_running_ = true;
-			if(size == 0)	size = 4;
-
-			for(unsigned i = 0; i < size; ++i)
-			{
-				detail::pool_thread_object * pto = new detail::pool_thread_object;
-				pto->owner = this;
-				pto->state = detail::pool_thread_object::stop;
-				pto->routine = pool::_m_job_routine;
-				const_cast<pool*>(this)->threads_.push_back(pto);
-#if defined(NANA_WINDOWS)
-				pto->handle = (HANDLE)::_beginthreadex(0, 0, reinterpret_cast<unsigned(__stdcall*)(void*)>(&self_t::_m_job_routine), pto, 0, &(pto->tid));
-#elif defined(NANA_LINUX)
-				::pthread_create(&(pto->handle), 0, reinterpret_cast<detail::thread_starter_t>(detail::thread_starter), pto);
-#endif
-			}
-		}
-
-		void pool::_m_wakeup() volatile
-		{
-			detail::pool_thread_object * pto = 0;
-			{
-				pool * self = const_cast<pool*>(this);
-				std::lock_guard<decltype(locks_.thread)> lock(self->locks_.thread);
-				if(tpool_running_)
-				{
-					for(auto thr : self->threads_)
+					if(all_finished)
+						break;
+					
+					while(true)
 					{
-						if(thr->state == detail::pool_thread_object::stop)	//sleep
-						{
-							pto = thr;
-							pto->state = detail::pool_thread_object::run;
+						auto idle_thr = _m_pick_up_an_idle();
+						if(idle_thr)
+							_m_resume(idle_thr);
+						else
 							break;
-						}
 					}
+					nana::system::sleep(100);
+				}
+
+				std::vector<pool_throbj*> dup(std::move(container_.threads));
+
+				for(auto thr: dup)
+				{
+#if defined(NANA_WINDOWS)
+					::WaitForSingleObject(thr->handle, INFINITE);
+					::CloseHandle(thr->handle);
+#elif defined(NANA_LINUX)
+					::pthread_join(thr->handle, 0);
+					::pthread_detach(thr->handle);
+#endif
+				}
+
+				std::lock_guard<decltype(mutex_)> lock(mutex_);
+				for(auto task_ptr : container_.tasks)
+				{
+					delete task_ptr;
 				}
 			}
 
-			if(pto && pto->handle)
+			void push(task * taskptr)
+			{
+				if(false == runflag_)
+				{
+					delete taskptr;
+					throw std::runtime_error("Nana.Pool: Do not accept task now");
+				}
+
+				pool_throbj * pto = _m_pick_up_an_idle();
+				
+				if(pto)
+				{
+					pto->task_ptr = taskptr;
+					_m_resume(pto);
+				}
+				else
+				{
+					std::lock_guard<decltype(mutex_)> lock(mutex_);
+					container_.tasks.push_back(taskptr);
+				}
+			}
+
+			void wait_for_signal()
+			{
+				std::unique_lock<std::mutex> lock(signal_.mutex);
+				signal_.cond.wait(lock);
+			}
+		private:
+			pool_throbj* _m_pick_up_an_idle()
+			{
+				for(auto thr : container_.threads)
+					if(state::idle == thr->thr_state)
+					{
+						std::lock_guard<decltype(mutex_)> lock(mutex_);
+						if(state::idle == thr->thr_state)
+						{
+							thr->thr_state = state::run;
+							return thr;
+						}
+					}
+				return nullptr;
+			}
+
+			void _m_suspend(pool_throbj* pto)
+			{
+				pto->thr_state = state::idle;
+#if defined(NANA_WINDOWS)
+				::SuspendThread(pto->handle);
+#elif defined(NANA_LINUX)
+				std::unique_lock<std::mutex> lock(pto->wait_mutex);
+				pto->suspended = true;
+				pto->wait_cond.wait(lock);
+				pto->suspended = false;
+#endif
+			}
+
+			void _m_resume(pool_throbj* pto)
 			{
 #if defined(NANA_WINDOWS)
 				while(true)
 				{
-					unsigned long susp_n = ::ResumeThread(pto->handle);
-					if(susp_n == 1)
+					DWORD n = ::ResumeThread(pto->handle);
+					if(n == 1 || n == static_cast<DWORD>(-1))
 						break;
-					else if(susp_n == static_cast<unsigned long>(-1))
+				}
+#elif defined(NANA_LINUX)
+				while(false == pto->suspended)
+					;
+				std::unique_lock<std::mutex> lock(pto->wait_mutex);
+				pto->wait_cond.notify_one();
+#endif
+			}
+
+			bool _m_read(pool_throbj* pto)
+			{
+				pto->task_ptr = nullptr;
+				if(runflag_)
+				{
+					std::lock_guard<decltype(mutex_)> lock(mutex_);
+					if(container_.tasks.size())
 					{
-						//For debug
-						susp_n = ::GetLastError();
-						susp_n = 0;
-						break;
+						pto->task_ptr = container_.tasks.front();
+						container_.tasks.erase(container_.tasks.begin());
 					}
 				}
-#elif defined(NANA_LINUX)
-				pto->cond.notify_one();
-#endif
-			}
-		}
-
-		void pool::_m_job_suspend(detail::pool_thread_object * thr) volatile
-		{
-			{
-				//lock threads
-				pool * self = const_cast<pool*>(this);
-				std::lock_guard<decltype(locks_.thread)> lock(self->locks_.thread);
-
-				//when the pool is closing, pool should not suspend this job routine,
-				//if the routine is continue, it will close automatically.
-				if(tpool_running_)
-					thr->state = detail::pool_thread_object::stop;
 				else
-					thr = 0;
-			}
+					return false;
 
-			if(thr && thr->handle)
-			{
-#if defined(NANA_WINDOWS)
-				::SuspendThread(thr->handle);
-#elif defined(NANA_LINUX)
-				std::unique_lock<decltype(thr->cond_mutex)> lock(thr->cond_mutex);
-				thr->cond.wait(lock);
-#endif
-			}
-		}
-
-		detail::task_object* pool::_m_job_read_task(detail::pool_thread_object * thr) volatile
-		{
-			pool * self = const_cast<pool*>(this);
-			while(tpool_running_)
-			{
-				detail::task_object* task = 0;
-
+				if(nullptr == pto->task_ptr)
 				{
-					std::lock_guard<decltype(locks_.task)> lock(self->locks_.task);
-
-					if(self->task_container_.size())
-					{
-						task = *(self->task_container_.begin());
-						self->task_container_.erase(self->task_container_.begin());
-					}
+					//The task queue is empty, so that
+					//suspend and wait for a task.
+					_m_suspend(pto);
 				}
 
-				if(task)
-				{
-					thr->task_timestamp = time(nullptr);
-					return task;
-				}
-				else
-					_m_job_suspend(thr);
+				return (nullptr != pto->task_ptr);
 			}
 
-			return 0;
-		}
-
-		unsigned pool::_m_job_routine(detail::pool_thread_object * thr)
-		{
-			nana::threads::pool * owner = const_cast<pool*>(thr->owner);
-#if defined(NANA_WINDOWS)
-			::SuspendThread(::GetCurrentThread());
-#elif defined(NANA_LINUX)
-			std::unique_lock<decltype(thr->cond_mutex)> lock(thr->cond_mutex);
-			thr->cond.wait(lock);
-#endif
-			while(owner->tpool_running_)
+			void _m_thr_runner(pool_throbj* pto)
 			{
-				detail::task_object* task = owner->_m_job_read_task(thr);
-				if(task)
+				while(_m_read(pto))
 				{
-					switch(task->tsk_kind)
+					pto->timestamp = time(nullptr);
+					switch(pto->task_ptr->kind)
 					{
-					case detail::task_object::general:
+					case task::general:
 						try
 						{
-							task->exec();
+							pto->task_ptr->run();
 						}catch(...){}
 						break;
-					case detail::task_object::signal:
+					case task::signal:
 						while(true)
 						{
-							bool await = false;
-							owner->locks_.thread.lock();
-							for(auto i : owner->threads_)
+							bool finished = true;
 							{
-								if((i != thr) && (i->state == i->run) && (i->task_timestamp <= thr->task_timestamp))
+								std::lock_guard<decltype(mutex_)> lock(mutex_);
+								for(auto thr : container_.threads)
 								{
-									await = true;
-									break;
+									if((thr != pto) && (state::run == thr->thr_state) && (thr->timestamp <= pto->timestamp))
+									{
+										finished = false;
+										break;
+									}
 								}
 							}
-							owner->locks_.thread.unlock();
-							if(await)
-								nana::system::sleep(300);
-							else
+
+							if(finished)
 								break;
+							nana::system::sleep(100);
 						}
-						owner->locks_.signal_cond.notify_one();
+
+						//wait till the cond is waiting.
+						signal_.cond.notify_one();
 						break;
 					}
-
-					delete task;
+					delete pto->task_ptr;
+					pto->task_ptr = nullptr;
 				}
-				else
-					break;
 
+				pto->thr_state = state::finished;
 			}
-			return 0;
+
+			//Here defines the a function used to creating a thread.
+			//This is platform-specified.
+#if defined(NANA_WINDOWS)
+			static unsigned __stdcall _m_thr_starter(pool_throbj * pto)
+			{
+				pto->pool_ptr->_m_thr_runner(pto);
+				::_endthreadex(0);
+				return 0;
+			}
+#elif defined(NANA_LINUX)
+			static void * _m_thr_starter(pool_throbj * pto)
+			{
+				pto->pool_ptr->_m_thr_runner(pto);
+				return nullptr;
+			}
+#endif
+		private:
+			volatile bool runflag_;
+			std::recursive_mutex mutex_;
+
+			struct signal
+			{
+				std::mutex mutex;
+				std::condition_variable cond;
+			}signal_;
+
+			struct container
+			{
+				std::deque<task*> tasks;
+				std::vector<pool_throbj*> threads;
+			}container_;
+		};//end class impl
+
+		pool::pool()
+			: impl_(new impl(4))
+		{
+		}
+
+		pool::pool(std::size_t thread_number)
+			: impl_(new impl(thread_number))
+		{
+		}
+
+		pool::~pool()
+		{
+			delete impl_;
+		}
+
+		void pool::signal()
+		{
+			task * task_ptr = nullptr;
+			try
+			{
+				task_ptr = new task_signal;
+				_m_push(task_ptr);
+			}
+			catch(std::bad_alloc&)
+			{
+				delete task_ptr;
+			}
+		}
+
+		void pool::wait_for_signal()
+		{
+			impl_->wait_for_signal();
+		}
+
+		void pool::_m_push(task* task_ptr)
+		{
+			impl_->push(task_ptr);
 		}
 	//end class pool
 

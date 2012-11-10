@@ -193,7 +193,7 @@ namespace detail
 	private:
 		handle_manager_type handle_manager_;
 		std::map<window, std::vector<event_handle> >	bind_cont_;
-		NANA_CONCURRENT_STATIC_DECLARE(threads::token, callback_table_lock_)
+		static nana::threads::recursive_mutex mutex_;
 	};
 }//end namespace detail
 

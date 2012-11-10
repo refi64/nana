@@ -1,6 +1,6 @@
 Building Nana C++ Library
 requires:
-X11, pthread, Xpm, rt, dl, freetype2, Xft, fontconfig, ALSA.
+X11, pthread, Xpm, rt, dl, freetype2, Xft, fontconfig, ALSA
 
 Writing a makefile for creating applications with Nana C++ Library
 -------------------

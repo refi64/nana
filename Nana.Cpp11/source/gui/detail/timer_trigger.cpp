@@ -39,8 +39,10 @@ namespace detail
 #endif
 	//class timer_trigger
 		std::recursive_mutex timer_trigger::mutex_;
+		timer_trigger::holder_timer_type	timer_trigger::holder_timer_;
+		timer_trigger::holder_handle_type	timer_trigger::holder_handle_;
 
-		void timer_trigger::create_timer(timer_trigger::timer_object timer, unsigned interval)
+		void timer_trigger::create_timer(timer_object timer, unsigned interval)
 		{
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
@@ -58,7 +60,7 @@ namespace detail
 			}
 		}
 
-		void timer_trigger::kill_timer(timer_trigger::timer_object timer)
+		void timer_trigger::kill_timer(timer_object timer)
 		{
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
@@ -76,7 +78,7 @@ namespace detail
 			}
 		}
 
-		void timer_trigger::set_interval(timer_trigger::timer_object timer, unsigned interval)
+		void timer_trigger::set_interval(timer_object timer, unsigned interval)
 		{
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
@@ -97,9 +99,9 @@ namespace detail
 			}
 		}
 
-		void timer_trigger::fire(timer_trigger::timer_object object)
+		void timer_trigger::fire(timer_object object)
 		{
-			nana::gui::eventinfo ei;
+			eventinfo ei;
 			ei.elapse.timer = object;
 			nana::gui::detail::bedrock::instance().evt_manager.answer(
 				detail::event_tag::elapse,
@@ -107,13 +109,13 @@ namespace detail
 				event_manager::event_kind::user);
 		}
 
-		timer_trigger::timer_handle* timer_trigger::_m_find_by_timer_object(timer_trigger::timer_object t)
+		timer_trigger::timer_handle* timer_trigger::_m_find_by_timer_object(timer_object t)
 		{
 			auto i = holder_timer_.find(t);
 			return (i != holder_timer_.end() ? &(i->second) : nullptr);
 		}
 
-		timer_trigger::timer_object* timer_trigger::find_by_timer_handle(timer_trigger::timer_handle h)
+		timer_trigger::timer_object* timer_trigger::find_by_timer_handle(timer_handle h)
 		{
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
@@ -135,9 +137,6 @@ namespace detail
 			timer_trigger::fire(*ptr);
 		}
 	}
-
-	timer_trigger::holder_timer_type	timer_trigger::holder_timer_;
-	timer_trigger::holder_handle_type	timer_trigger::holder_handle_;
 }//end namespace detail
 }//end namespace gui
 }//end namespace nana

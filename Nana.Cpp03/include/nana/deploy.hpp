@@ -40,27 +40,6 @@
 	#define STR(string)	L##string
 #endif
 
-#if defined(NANA_CONCURRENT)
-	#include "threads/locks.hpp"
-	#define NANA_MAKE_LOCK(Lock)	(Lock).lock();
-	#define NANA_MAKE_UNLOCK(Lock)	(Lock).unlock();
-	#define NANA_SCOPE_GUARD(Lock)	nana::threads::scope_guard scope_guard##Lock(Lock);
-
-	#define NANA_CONCURRENT_EXEC(Expression)	Expression;
-	#define NANA_CONCURRENT_DECLARE(Type, Object)	Type	Object;
-	#define NANA_CONCURRENT_STATIC_DECLARE(Type, Object)	static	Type	Object;
-	#define NANA_CONCURRENT_STATIC_DEFINE(Type, Parent, Object)	Type Parent::Object;
-#else
-	#define NANA_MAKE_LOCK(Lock)
-	#define NANA_MAKE_UNLOCK(Lock)
-	#define NANA_SCOPE_GUARD(Lock)
-
-	#define NANA_CONCURRENT_EXEC(Expression)
-	#define NANA_CONCURRENT_DECLARE(Type, Object)
-	#define NANA_CONCURRENT_STATIC_DECLARE(Type, Object)
-	#define NANA_CONCURRENT_STATIC_DEFINE(Type, Parent, Object)
-#endif
-
 namespace nana
 {
 	std::size_t strlen(const char_t* str);

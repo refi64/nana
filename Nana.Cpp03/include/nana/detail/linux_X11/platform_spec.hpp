@@ -22,7 +22,8 @@
 #include <nana/gui/basis.hpp>
 #include <nana/refer.hpp>
 #include <nana/threads/thread.hpp>
-#include <nana/threads/locks.hpp>
+#include <nana/threads/mutex.hpp>
+#include <nana/threads/condition_variable.hpp>
 #include <nana/paint/image.hpp>
 #include <nana/paint/graphics.hpp>
 #include <vector>
@@ -252,7 +253,7 @@ namespace detail
 		XKeyEvent	key_state_;
 		int (*def_X11_error_handler_)(Display*, XErrorEvent*);
 		Window grab_;
-		nana::threads::token xlib_locker_;
+		nana::threads::recursive_mutex mutex_xlib_;
 		struct caret_holder_tag
 		{
 			nana::threads::thread thr;
@@ -265,7 +266,7 @@ namespace detail
 		struct timer_runner_tag
 		{
 			timer_runner * runner;
-			nana::threads::token token;
+			nana::threads::recursive_mutex mutex;
 			bool delete_declared;
 			timer_runner_tag();
 		}timer_;
@@ -278,8 +279,8 @@ namespace detail
 				Window	requestor;
 				void*	buffer;
 				size_t	bufsize;
-				nana::threads::token cond_lock;
-				nana::threads::condition cond;
+				nana::threads::mutex cond_mutex;
+				nana::threads::condition_variable cond;
 			};
 
 			std::vector<item_t*> items;

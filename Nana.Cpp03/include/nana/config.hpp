@@ -25,7 +25,7 @@
 	#define GUI_BEDROCK_HPP <nana/gui/detail/bedrock.hpp>
 #endif
 
-#define NANA_CONCURRENT 1
+
 #define NANA_UNICODE 1
 //Support for PNG
 //Comment it to disable the feature of support for PNG.
@@ -35,6 +35,9 @@
 	#define NANA_LIBPNG 1
 #endif
 
+//If Boost C++ Library is installed in current system. Nana recommends
+//enabling Boost mutex and condition_variable instead of the mutex
+//and condition_variable that provided by Nana.
+//#define NANA_USE_BOOST_MUTEX_CONDITION_VARIABLE 1
 
 #endif
-

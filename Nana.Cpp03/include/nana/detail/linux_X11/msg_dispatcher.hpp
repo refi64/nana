@@ -18,10 +18,13 @@
 #ifndef NANA_DETAIL_MSG_DISPATCHER_HPP
 #define NANA_DETAIL_MSG_DISPATCHER_HPP
 #include "msg_packet.hpp"
-#include <nana/threads/locks.hpp>
+#include <nana/threads/thread.hpp>
+#include <nana/threads/mutex.hpp>
+#include <nana/threads/condition_variable.hpp>
 #include <nana/system/platform.hpp>
 #include <list>
 #include <set>
+#include <map>
 
 namespace nana
 {
@@ -32,9 +35,9 @@ namespace detail
 		struct thread_binder
 		{
 			unsigned tid;
-			nana::threads::token	lock;
-			nana::threads::condition	cond;
-			std::list<msg_packet_tag>	msg_queue;
+			nana::threads::mutex			mutex;
+			nana::threads::condition_variable	cond;
+			std::list<msg_packet_tag>		msg_queue;
 			std::set<Window> window;
 		};
 
@@ -68,7 +71,7 @@ namespace detail
 			bool start_driver;
 
 			{
-				nana::threads::scope_guard sg(table_.lock);
+				nana::threads::lock_guard<nana::threads::recursive_mutex> lock(table_.mutex);
 
 				//No thread is running, so msg dispatcher should start the msg driver.
 				start_driver = (0 == table_.thr_table.size());
@@ -84,9 +87,9 @@ namespace detail
 				else
 					thr = i->second;
 
-				thr->lock.lock();
+				thr->mutex.lock();
 				thr->window.insert(wd);
-				thr->lock.unlock();
+				thr->mutex.unlock();
 			
 				table_.wnd_table[wd] = thr;
 			}
@@ -103,13 +106,14 @@ namespace detail
 
 		void erase(Window wd)
 		{
-			nana::threads::scope_guard sg(table_.lock);
+			using namespace nana::threads;
+			lock_guard<recursive_mutex> lock(table_.mutex);
 			
 			std::map<Window, thread_binder*>::iterator i = table_.wnd_table.find(wd);
 			if(i != table_.wnd_table.end())
 			{
 				thread_binder * const thr = i->second;
-				nana::threads::scope_guard sg(thr->lock);
+				lock_guard<mutex> lock(thr->mutex);
 				for(msg_queue_type::iterator li = thr->msg_queue.begin(); li != thr->msg_queue.end();)
 				{
 					if(wd == _m_window(*li))
@@ -227,14 +231,15 @@ namespace detail
 
 		void _m_msg_dispatch(const msg_packet_tag &msg)
 		{
-			nana::threads::scope_guard sg(table_.lock);
+			using namespace nana::threads;
+			lock_guard<recursive_mutex> lock(table_.mutex);
 			std::map<Window, thread_binder*>::iterator i = table_.wnd_table.find(_m_window(msg));
 			if(i != table_.wnd_table.end())
 			{
 				thread_binder * const thr = i->second;
-				nana::threads::scope_guard sg(thr->lock);
+				lock_guard<mutex> lock(thr->mutex);
 				thr->msg_queue.push_back(msg);
-				thr->cond.signal();
+				thr->cond.notify_one();
 			}
 		}
 
@@ -246,7 +251,7 @@ namespace detail
 			bool stop_driver = false;
 
 			{
-				nana::threads::scope_guard sg(table_.lock);
+				nana::threads::lock_guard<nana::threads::recursive_mutex> lock(table_.mutex);
 				//Find the thread whether it is registered for the window.
 				std::map<unsigned, thread_binder*>::iterator i = table_.thr_table.find(tid);
 				if(i != table_.thr_table.end())
@@ -289,9 +294,10 @@ namespace detail
 		//return@ it returns true if the queue is not empty, otherwise the wait is timeout.
 		bool _m_wait_for_queue(unsigned tid)
 		{
+			using namespace nana::threads;
 			thread_binder * thr;
 			{
-				nana::threads::scope_guard sg(table_.lock);
+				lock_guard<recursive_mutex> lock(table_.mutex);
 				std::map<unsigned, thread_binder*>::iterator i = table_.thr_table.find(tid);
 				if(i != table_.thr_table.end())
 				{
@@ -301,8 +307,13 @@ namespace detail
 				}
 			}
 
-			nana::threads::scope_guard sg(thr->lock);
-			return (false == thr->cond.wait_for(thr->lock, 10));
+			//Waits for notifying the condition variable, it indicates a new msg is pushing into the queue.
+			unique_lock<mutex> lock(thr->mutex);
+#if NANA_USE_BOOST_MUTEX_CONDITION_VARIABLE
+			return (boost::cv_status::timeout != thr->cond.wait_for(lock, boost::chrono::milliseconds(10)));
+#else
+			return (false == thr->cond.wait_for(lock, 10));
+#endif
 		}
 		
 	private:
@@ -312,7 +323,7 @@ namespace detail
 
 		struct table_tag
 		{
-			nana::threads::token lock;
+			nana::threads::recursive_mutex mutex;
 			std::map<unsigned, thread_binder*> thr_table;
 			std::map<Window, thread_binder*> wnd_table;
 		}table_;

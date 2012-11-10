@@ -21,7 +21,11 @@
 #include <nana/system/platform.hpp>
 #include <list>
 #include <set>
+#include <map>
 #include <mutex>
+#include <condition_variable>
+#include <memory>
+#include <thread>
 
 namespace nana
 {
@@ -306,7 +310,7 @@ namespace detail
 				}
 			}
 			
-			//By notifying the condition variable it indicates a new msg is pushing into the queue.
+			//Waits for notifying the condition variable, it indicates a new msg is pushing into the queue.
 			std::unique_lock<decltype(thr->mutex)> lock(thr->mutex);
 			return (thr->cond.wait_for(lock, std::chrono::milliseconds(10)) != std::cv_status::timeout);
 		}

@@ -37,8 +37,8 @@ namespace nana{	namespace audio
 			{
 				running_ = false;
 
-				cond_prepared_.signal();
-				cond_buffer_.signal();
+				cond_prepared_.notify_one();
+				cond_buffer_.notify_one();
 
 				thr_.close();
 
@@ -51,7 +51,7 @@ namespace nana{	namespace audio
 
 			buffer_preparation::meta * buffer_preparation::read()
 			{
-				nana::threads::scope_guard lock(token_buffer_);
+				threads::unique_lock<threads::mutex> lock(mutex_buffer_);
 
 				//Wait for the buffer
 				if(0 == buffer_.size())
@@ -62,7 +62,7 @@ namespace nana{	namespace audio
 						return 0;
 
 					wait_for_buffer_ = true;
-					cond_buffer_.wait(token_buffer_);
+					cond_buffer_.wait(lock);
 
 					//NO more buffers
 					if(0 == buffer_.size())
@@ -76,16 +76,16 @@ namespace nana{	namespace audio
 			//Revert the meta that returned by read()
 			void buffer_preparation::revert(meta * m)
 			{
-				nana::threads::scope_guard lock(token_prepared_);
+				threads::lock_guard<threads::mutex> lock(mutex_prepared_);
 				bool if_signal = prepared_.empty();
 				prepared_.push_back(m);
 				if(if_signal)
-					cond_prepared_.signal();
+					cond_prepared_.notify_one();
 			}
 
 			bool buffer_preparation::data_finished() const
 			{
-				nana::threads::scope_guard lock(token_prepared_);
+				threads::lock_guard<threads::mutex> lock(mutex_prepared_);
 				return ((prepared_.size() == prepared_.capacity()) && (running_ == false));
 			}
 
@@ -99,12 +99,11 @@ namespace nana{	namespace audio
 				{
 					meta * m = 0;
 					{
-						nana::threads::scope_guard lock(token_prepared_);
+						threads::unique_lock<threads::mutex> lock(mutex_prepared_);
 
 						if(prepared_.size() == 0)
 						{
-							cond_prepared_.wait(token_prepared_);
-
+							cond_prepared_.wait(lock);
 							if(false == running_)
 								return;
 						}
@@ -133,8 +132,8 @@ namespace nana{	namespace audio
 							if(buffered == 0)
 							{
 								//PCM data is drained
-								nana::threads::scope_guard lock(token_buffer_);
-								cond_buffer_.signal();
+								threads::lock_guard<threads::mutex> lock(mutex_buffer_);
+								cond_buffer_.notify_one();
 								running_ = false;
 								return;
 							}
@@ -146,11 +145,11 @@ namespace nana{	namespace audio
 #elif defined(NANA_LINUX)
 					m->bufsize = buffered;
 #endif
-					nana::threads::scope_guard lock(token_buffer_);
+					threads::lock_guard<threads::mutex> lock(mutex_buffer_);
 					buffer_.push_back(m);
 					if(wait_for_buffer_)
 					{
-						cond_buffer_.signal();
+						cond_buffer_.notify_one();
 						wait_for_buffer_ = false;
 					}
 

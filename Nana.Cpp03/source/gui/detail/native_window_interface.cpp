@@ -14,7 +14,7 @@
 #include <nana/gui/detail/native_window_interface.hpp>
 #if defined(NANA_WINDOWS)
 	#include <nana/paint/detail/image_ico.hpp>
-	#include <nana/threads/locks.hpp>
+	#include <nana/threads/mutex.hpp>
 	#include <map>
 #elif defined(NANA_X11)
 	#include <nana/system/platform.hpp>
@@ -75,7 +75,7 @@ namespace nana{
 
 		bool remove(native_window_type wd, extra_t & ext)
 		{
-			nana::threads::scope_guard sg(lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 			map_t::iterator i = map_.find(wd);
 			if(i != map_.end())
@@ -89,7 +89,7 @@ namespace nana{
 
 		HICON set_icon(native_window_type wd, HICON ico)
 		{
-			nana::threads::scope_guard sg(lock_);
+			threads::lock_guard<threads::recursive_mutex> lock(mutex_);
 
 			map_t::iterator i = map_.find(wd);
 			if(i != map_.end())
@@ -103,7 +103,7 @@ namespace nana{
 			return 0;
 		}
 	private:
-		nana::threads::token lock_;
+		threads::recursive_mutex mutex_;
 		map_t map_;
 	};
 #elif defined(NANA_X11)
@@ -151,8 +151,7 @@ namespace nana{
 				::ClientToScreen(reinterpret_cast<HWND>(owner), &pt);
 
 			HWND wnd = ::CreateWindowEx(style_ex, STR("NanaWindowInternal"), STR("Nana Window"),
-											style,
-											pt.x, pt.y, 100, 100,
+											style, pt.x, pt.y, 100, 100,
 											reinterpret_cast<HWND>(owner), 0, ::GetModuleHandle(0), 0);
 
 			//A window may have a border, this should be adjusted the client area fit for the specified size.

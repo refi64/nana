@@ -87,7 +87,7 @@ namespace detail
 	struct bedrock::private_impl
 	{
 		typedef std::map<unsigned, thread_context> thr_context_container;
-		nana::threads::token token;
+		nana::threads::recursive_mutex mutex;
 		thr_context_container thr_contexts;
 
 		struct cache_type
@@ -177,7 +177,7 @@ namespace detail
 	int bedrock::inc_window(unsigned tid)
 	{
 		private_impl * impl = instance().impl_;
-		nana::threads::scope_guard sg(impl->token);
+		threads::lock_guard<threads::recursive_mutex> lock(impl->mutex);
 
 		int & cnt = (impl->thr_contexts[tid ? tid : nana::system::this_thread_id()].window_count);
 		return (cnt < 0 ? cnt = 1 : ++cnt);
@@ -186,7 +186,7 @@ namespace detail
 	bedrock::thread_context* bedrock::open_thread_context(unsigned tid)
 	{
 		if(0 == tid) tid = nana::system::this_thread_id();
-		nana::threads::scope_guard sg(impl_->token);
+		threads::lock_guard<threads::recursive_mutex> lock(impl_->mutex);
 		if(impl_->cache.tcontext.tid == tid)
 			return impl_->cache.tcontext.object;
 
@@ -207,7 +207,7 @@ namespace detail
 	{
 		if(0 == tid) tid = nana::system::this_thread_id();
 
-		nana::threads::scope_guard sg(impl_->token);
+		threads::lock_guard<threads::recursive_mutex> lock(impl_->mutex);
 
 		if(impl_->cache.tcontext.tid == tid)
 			return impl_->cache.tcontext.object;
@@ -227,7 +227,7 @@ namespace detail
 	{
 		if(0 == tid) tid = nana::system::this_thread_id();
 
-		nana::threads::scope_guard sg(impl_->token);
+		threads::lock_guard<threads::recursive_mutex> lock(impl_->mutex);
 
 		if(impl_->cache.tcontext.tid == tid)
 		{
@@ -1146,3 +1146,4 @@ namespace detail
 }//end namespace detail
 }//end namespace gui
 }//end namespace nana
+

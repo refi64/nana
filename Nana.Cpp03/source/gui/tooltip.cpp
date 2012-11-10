@@ -79,22 +79,22 @@ namespace nana{ namespace gui{
 					graph.string(x, y, 0x0, text_.c_str() + beg, text_.size() - beg);
 				}
 			private:
-				nana::gui::widget	*widget_;
+				widget	*widget_;
 				nana::paint::graphics * graph_;
 				nana::string text_;
 			};
 
-			class window
+			class uiform
 				: public widget_object<category::root_tag, drawer>
 			{
 				typedef widget_object<category::root_tag, drawer> base_type;
 			public:
-				window()
+				uiform()
 					:base_type(rectangle(), appear::bald<appear::floating>())
 				{
 					API::take_active(this->handle(), false, 0);
 					timer_.interval(500);
-					timer_.make_tick(nana::functor<void()>(*this, &window::_m_tick));
+					timer_.make_tick(nana::functor<void()>(*this, &uiform::_m_tick));
 				}
 
 				void set_tooltip_text(const nana::string& text)
@@ -109,14 +109,13 @@ namespace nana{ namespace gui{
 				}
 
 			private:
-				nana::gui::timer timer_;
-
-			};//class window
+				timer timer_;
+			};//class uiform
 
 
 			class controller
 			{
-				typedef std::pair<nana::gui::window, nana::string> pair_t;
+				typedef std::pair<window, nana::string> pair_t;
 				typedef controller self_type;
 
 				controller()
@@ -124,10 +123,10 @@ namespace nana{ namespace gui{
 				{}
 			public:
 
-				static nana::threads::token& locker()
+				static threads::recursive_mutex& mutex()
 				{
-					static nana::threads::token lock;
-					return lock;
+					static threads::recursive_mutex rcs_mutex;
+					return rcs_mutex;
 				}
 
 				static controller* object(bool destroy = false)
@@ -155,16 +154,16 @@ namespace nana{ namespace gui{
 					return --count_ref_;
 				}
 
-				void set(nana::gui::window wnd, const nana::string& str)
+				void set(window wd, const nana::string& str)
 				{
-					pair_t * p = _m_get(wnd);
+					pair_t * p = _m_get(wd);
 					p ->second = str;
 				}
 
 				void show(int x, int y, const nana::string& text)
 				{
 					if(0 == window_)
-						window_ = new window;
+						window_ = new uiform;
 
 					window_->set_tooltip_text(text);
 					nana::size sz = window_->size();
@@ -186,23 +185,23 @@ namespace nana{ namespace gui{
 					window_ = 0;
 				}
 			private:
-				void _m_enter(const nana::gui::eventinfo& ei)
+				void _m_enter(const eventinfo& ei)
 				{
 					pair_t * p = _m_get(ei.window);
 					if(p && p->second.size())
 					{
-						nana::point pos = nana::gui::API::cursor_position();
+						nana::point pos = API::cursor_position();
 						this->show(pos.x, pos.y + 20, p->second);
 					}
 				}
 
-				void _m_leave(const nana::gui::eventinfo& ei)
+				void _m_leave(const eventinfo& ei)
 				{
 					delete window_;
 					window_ = 0;
 				}
 
-				void _m_destroy(const nana::gui::eventinfo& ei)
+				void _m_destroy(const eventinfo& ei)
 				{
 					for(std::vector<pair_t*>::iterator i = cont_.begin(); i != cont_.end(); ++i)
 					{
@@ -214,26 +213,26 @@ namespace nana{ namespace gui{
 					}
 				}
 			private:
-				pair_t* _m_get(nana::gui::window wnd)
+				pair_t* _m_get(nana::gui::window wd)
 				{
 					for(std::vector<pair_t*>::iterator i = cont_.begin(); i != cont_.end(); ++i)
 					{
-						if((*i)->first == wnd)
+						if((*i)->first == wd)
 							return *i;
 					}
 
-					nana::gui::API::make_event<nana::gui::events::mouse_enter>(wnd, nana::functor<void(const nana::gui::eventinfo&)>(*this, &self_type::_m_enter));
-					nana::gui::API::make_event<nana::gui::events::mouse_leave>(wnd, nana::functor<void(const nana::gui::eventinfo&)>(*this, &self_type::_m_leave));
-					nana::gui::API::make_event<nana::gui::events::mouse_down>(wnd, nana::functor<void(const nana::gui::eventinfo&)>(*this, &self_type::_m_leave));
-					nana::gui::API::make_event<nana::gui::events::destroy>(wnd, nana::functor<void(const nana::gui::eventinfo&)>(*this, &self_type::_m_destroy));
+					API::make_event<events::mouse_enter>(wd, nana::functor<void(const eventinfo&)>(*this, &self_type::_m_enter));
+					API::make_event<events::mouse_leave>(wd, nana::functor<void(const eventinfo&)>(*this, &self_type::_m_leave));
+					API::make_event<events::mouse_down>(wd, nana::functor<void(const eventinfo&)>(*this, &self_type::_m_leave));
+					API::make_event<events::destroy>(wd, nana::functor<void(const eventinfo&)>(*this, &self_type::_m_destroy));
 
-					pair_t * newp = new pair_t(wnd, nana::string());
+					pair_t * newp = new pair_t(wd, nana::string());
 					cont_.push_back(newp);
 
 					return newp;
 				}
 			private:
-				window * window_;
+				uiform * window_;
 				std::vector<pair_t*> cont_;
 				unsigned long count_ref_;
 			};
@@ -243,40 +242,45 @@ namespace nana{ namespace gui{
 	//class tooltip
 		tooltip::tooltip()
 		{
-			nana::threads::scope_guard sg(drawerbase::tooltip::controller::locker());
-			drawerbase::tooltip::controller::object()->inc();
+			typedef drawerbase::tooltip::controller ctrl;
+			threads::lock_guard<threads::recursive_mutex> lock(ctrl::mutex());
+			ctrl::object()->inc();
 		}
 
 		tooltip::~tooltip()
 		{
-			nana::threads::scope_guard sg(drawerbase::tooltip::controller::locker());
+			typedef drawerbase::tooltip::controller ctrl;
+			threads::lock_guard<threads::recursive_mutex> lock(ctrl::mutex());
 
-			if(0 == drawerbase::tooltip::controller::object()->dec())
-				drawerbase::tooltip::controller::object(true);
+			if(0 == ctrl::object()->dec())
+				ctrl::object(true);
 		}
 
 		void tooltip::set(nana::gui::window wnd, const nana::string& text)
 		{
-			if(false == nana::gui::API::empty_window(wnd))
+			if(false == API::empty_window(wnd))
 			{
-				nana::threads::scope_guard sg(drawerbase::tooltip::controller::locker());
-				drawerbase::tooltip::controller::object()->set(wnd, text);
+				typedef drawerbase::tooltip::controller ctrl;
+				threads::lock_guard<threads::recursive_mutex> lock(ctrl::mutex());
+				ctrl::object()->set(wnd, text);
 			}
 		}
 
-		void tooltip::show(nana::gui::window wnd, int x, int y, const nana::string& text)
+		void tooltip::show(window wd, int x, int y, const nana::string& text)
 		{
-			nana::threads::scope_guard sg(drawerbase::tooltip::controller::locker());
+			typedef drawerbase::tooltip::controller ctrl;
+			threads::lock_guard<threads::recursive_mutex> lock(ctrl::mutex());
 
 			nana::point pos(x, y);
-			nana::gui::API::calc_screen_point(wnd, pos);
-			drawerbase::tooltip::controller::object()->show(pos.x, pos.y, text);
+			API::calc_screen_point(wd, pos);
+			ctrl::object()->show(pos.x, pos.y, text);
 		}
 
 		void tooltip::close()
 		{
-			nana::threads::scope_guard sg(drawerbase::tooltip::controller::locker());
-			drawerbase::tooltip::controller::object()->close();
+			typedef drawerbase::tooltip::controller ctrl;
+			threads::lock_guard<threads::recursive_mutex> lock(ctrl::mutex());
+			ctrl::object()->close();
 		}
 	//};//class tooltip
 

@@ -13,7 +13,7 @@
 #define NANA_THREADS_THREAD_HPP
 
 #include <map>
-#include "locks.hpp"
+#include "mutex.hpp"
 #include "../exceptions.hpp"
 #include "../traits.hpp"
 #include <nana/functor.hpp>
@@ -35,7 +35,7 @@ namespace nana
 				thread* get(unsigned tid);
 				void remove(unsigned tid);
 			private:
-				threads::token		lock_;
+				threads::recursive_mutex	mutex_;
 				std::map<unsigned, thread*>	map_;
 			};
 		}//end namespace detail

@@ -11,8 +11,7 @@ namespace nana{	namespace gui{	namespace widgets
 		text_editor::text_editor(window wd, graph_reference graph)
 			:window_(wd), graph_(graph), mask_char_(0)
 		{
-			text_area_.area.width = graph.width();
-			text_area_.area.height = graph.height();
+			text_area_.area = graph.size();
 			text_area_.captured = false;
 			text_area_.tab_space = 4;
 			text_area_.hscroll = text_area_.vscroll = 0;
@@ -1202,7 +1201,13 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::_m_update_line(std::size_t textline) const
 		{
-			int top = _m_text_top_base() + static_cast<int>(line_height() * textline);
+			if(textline < static_cast<std::size_t>(points_.offset.y))
+			{
+				//the line is not on the screen
+				return;
+			}
+			
+			int top = _m_text_top_base() + static_cast<int>(line_height() * (textline - points_.offset.y));
 			graph_.rectangle(text_area_.area.x, top, text_area_.area.width, line_height(), API::background(window_), true);
 			_m_draw_string(top, API::foreground(window_), textline, true);
 		}

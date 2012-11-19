@@ -167,14 +167,14 @@ namespace detail
 	#if defined(NANA_UNICODE)
 		std::string utf8str = nana::charset(nana::string(text, len));
 		XGlyphInfo ext;
-		XftFont * fs = reinterpret_cast<XftFont*>(dw->font.handle()->handle);
+		XftFont * fs = reinterpret_cast<XftFont*>(dw->font->handle);
 		::XftTextExtentsUtf8(nana::detail::platform_spec::instance().open_display(), fs,
 								reinterpret_cast<XftChar8*>(const_cast<char*>(utf8str.c_str())), utf8str.size(), &ext);
 		return nana::size(ext.xOff, fs->ascent + fs->descent);
 	#else
 		XRectangle ink;
 		XRectangle logic;
-		::XmbTextExtents(reinterpret_cast<XFontSet>(dw->font.handle()->handle), text, len, &ink, &logic);
+		::XmbTextExtents(reinterpret_cast<XFontSet>(dw->font->handle), text, len, &ink, &logic);
 		return nana::size(logic.width, logic.height);
 	#endif
 #endif
@@ -195,7 +195,7 @@ namespace detail
 	#if defined(NANA_UNICODE)
 		std::string utf8str = nana::charset(nana::string(text, len));
 		XGlyphInfo ext;
-		XftFont * fs = reinterpret_cast<XftFont*>(dw->font.handle()->handle);
+		XftFont * fs = reinterpret_cast<XftFont*>(dw->font->handle);
 		::XftTextExtentsUtf8(nana::detail::platform_spec::instance().open_display(), fs,
 								reinterpret_cast<XftChar8*>(const_cast<char*>(utf8str.c_str())), utf8str.size(), &ext);
 		extents.width = ext.xOff;
@@ -203,7 +203,7 @@ namespace detail
 	#else
 		XRectangle ink;
 		XRectangle logic;
-		::XmbTextExtents(reinterpret_cast<XFontSet>(dw->font.handle()->handle), text, len, &ink, &logic);
+		::XmbTextExtents(reinterpret_cast<XFontSet>(dw->font->handle), text, len, &ink, &logic);
 		extents.width = logic.width;
 		extents.height = logic.height;
 	#endif
@@ -227,11 +227,11 @@ namespace detail
 #elif defined(NANA_X11)
 	#if defined(NANA_UNICODE)
 		std::string utf8str = nana::charset(nana::string(str, len));
-		XftFont * fs = reinterpret_cast<XftFont*>(dw->font.handle()->handle);
+		XftFont * fs = reinterpret_cast<XftFont*>(dw->font->handle);
 		::XftDrawStringUtf8(dw->xftdraw, &(dw->xft_fgcolor), fs, x, y + fs->ascent,
 							reinterpret_cast<XftChar8*>(const_cast<char*>(utf8str.c_str())), utf8str.size());
 	#else
-		XFontSet fs = reinterpret_cast<XFontSet>(dw->font.handle()->handle);
+		XFontSet fs = reinterpret_cast<XFontSet>(dw->font->handle);
 		XFontSetExtents * ext = ::XExtentsOfFontSet(fs);
 		XFontStruct ** fontstructs;
 		char ** font_names;
@@ -246,7 +246,7 @@ namespace detail
 			if(descent < (*i)->descent)
 				descent = (*i)->descent;
 		}
-		XmbDrawString(display, dw->pixmap, reinterpret_cast<XFontSet>(dw->font.handle()->handle), dw->context, x, y + ascent + descent, buf, len);
+		XmbDrawString(display, dw->pixmap, reinterpret_cast<XFontSet>(dw->font->handle), dw->context, x, y + ascent + descent, buf, len);
 	#endif
 #endif
 	}

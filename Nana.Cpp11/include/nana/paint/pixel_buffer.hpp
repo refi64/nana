@@ -13,7 +13,7 @@
 #define NANA_PAINT_PIXEL_BUFFER_HPP
 
 #include <nana/gui/basis.hpp>
-#include <nana/refer.hpp>
+#include <memory>
 
 namespace nana{	namespace paint
 {
@@ -63,7 +63,7 @@ namespace nana{	namespace paint
 		void blend(const nana::point& s_pos, drawable_type dw_dst, const nana::rectangle& d_r, double fade_rate) const;
 
 	private:
-		nana::refer<pixel_buffer_storage*> storage_ref_;
+		std::shared_ptr<pixel_buffer_storage> storage_;
 	};
 }//end namespace paint
 }//end namespace nana

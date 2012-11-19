@@ -98,10 +98,17 @@ namespace nana
 						}
 						else
 						{
-							nana::paint::graphics dum_graph(endpos - xpos, ts.height);
-							dum_graph.bitblt(0, 0, endpos - xpos, ts.height, graph, xpos, top);
+							nana::rectangle r;
+							r.width = endpos - xpos;
+							r.height = ts.height;
+
+							nana::paint::graphics dum_graph(r.width, r.height);
+							dum_graph.bitblt(r, graph, nana::point(xpos, top));
 							dum_graph.string(0, 0, color, i->begin, len);
-							graph.bitblt(xpos, top, endpos - xpos, ts.height, dum_graph);
+
+							r.x = xpos;
+							r.y = top;
+							graph.bitblt(r, dum_graph);
 							if(omitted_pixels)
 								detail::draw_string(dw, endpos, top, STR("..."), 3);
 							break;

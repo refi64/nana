@@ -55,7 +55,7 @@ namespace gui
 			void picture_drawer::bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& source, int src_x, int src_y)
 			{
 				if(graph_)
-					graph_->bitblt(x, y, width, height, source, src_x, src_y);
+					graph_->bitblt(nana::rectangle(x, y, width, height), source, nana::point(src_x, src_y));
 			}
 
 			void picture_drawer::set_shadow_background(unsigned begin_color, unsigned end_color, bool horizontal)
@@ -123,10 +123,10 @@ namespace gui
 								unsigned block_tail = imgsize.width - backimg_.end;
 
 								if(backimg_.beg)
-									backimg_.image.paste(graph, 0, 0, static_cast<unsigned>(backimg_.beg), imgsize.height);
+									backimg_.image.paste(nana::rectangle(0, 0, backimg_.beg, imgsize.height), graph, nana::point());
 
 								if(block_tail)
-									backimg_.image.paste(graph, gsize.width - block_tail, 0, block_tail, imgsize.height, static_cast<int>(imgsize.width - block_tail), 0);
+									backimg_.image.paste(nana::rectangle(static_cast<int>(imgsize.width - block_tail), 0, block_tail, imgsize.height), graph, nana::point(gsize.width - block_tail, 0));
 								
 								if(backimg_.beg < backimg_.end)
 								{
@@ -137,15 +137,21 @@ namespace gui
 										{
 											unsigned imgarea = backimg_.end - backimg_.beg;
 											fixed_size = gsize.width - fixed_size;
-											int x = backimg_.beg;
+
+											nana::rectangle r(backimg_.beg, 0, imgarea, imgsize.height);
+											nana::point p_dst(backimg_.beg, 0);
+											
 											while(imgarea < fixed_size)
 											{
-												backimg_.image.paste(graph, x, 0, imgarea, imgsize.height, backimg_.beg, 0);
-												x += static_cast<int>(imgarea);
+												backimg_.image.paste(r, graph, p_dst);
+												p_dst.x += static_cast<int>(imgarea);
 												fixed_size -= imgarea;
 											}
 											if(fixed_size)
-												backimg_.image.paste(graph, x, 0, fixed_size, imgsize.height, backimg_.beg, 0);
+											{
+												r.width = fixed_size;
+												backimg_.image.paste(r, graph, p_dst);
+											}
 										}
 										else
 											backimg_.image.stretch(nana::rectangle(backimg_.beg, 0, imgsize.width - fixed_size, imgsize.height), graph, nana::rectangle(backimg_.beg, 0, gsize.width - fixed_size, imgsize.height));
@@ -173,11 +179,11 @@ namespace gui
 								unsigned block_tail = imgsize.height - backimg_.end;
 
 								if(backimg_.beg)
-									backimg_.image.paste(graph, 0, 0, imgsize.width, static_cast<unsigned>(backimg_.beg));
+									backimg_.image.paste(nana::rectangle(0, 0, imgsize.width, static_cast<unsigned>(backimg_.beg)), graph, nana::point());
 
 								if(block_tail)
-									backimg_.image.paste(graph, 0, gsize.height - block_tail, imgsize.width, block_tail, 0, static_cast<int>(imgsize.height - block_tail));
-								
+									backimg_.image.paste(nana::rectangle(0, static_cast<int>(imgsize.height - block_tail), imgsize.width, block_tail), graph, nana::point(0, gsize.height - block_tail));
+
 								if(backimg_.beg < backimg_.end)
 								{
 									unsigned fixed_size = backimg_.beg + block_tail;
@@ -186,16 +192,20 @@ namespace gui
 										if(false == backimg_.is_stretch)
 										{
 											unsigned imgarea = backimg_.end - backimg_.beg;
-											fixed_size = gsize.height - fixed_size;
-											int y = backimg_.beg;
+											nana::rectangle r(0, backimg_.beg, imgsize.width, imgarea);
+											nana::point pos(0, backimg_.beg);
+
 											while(imgarea < fixed_size)
 											{
-												backimg_.image.paste(graph, 0, y, imgsize.width, imgarea, 0, backimg_.beg);
-												y += static_cast<int>(imgarea);
+												backimg_.image.paste(r, graph, pos);
+												pos.y += static_cast<int>(imgarea);
 												fixed_size -= imgarea;
 											}
 											if(fixed_size)
-												backimg_.image.paste(graph, 0, y, imgsize.width, fixed_size, 0, backimg_.beg);
+											{
+												r.height = fixed_size;
+												backimg_.image.paste(r, graph, pos);
+											}
 										}
 										else
 											backimg_.image.stretch(nana::rectangle(0, backimg_.beg, imgsize.width, imgsize.height - fixed_size), graph, nana::rectangle(0, backimg_.beg, imgsize.width, gsize.height - fixed_size));

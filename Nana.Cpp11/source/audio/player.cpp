@@ -17,7 +17,7 @@ namespace nana{	namespace audio
 			: impl_(new implementation)
 		{}
 
-		player::player(const char* file)
+		player::player(const nana::string& file)
 			: impl_(new implementation)
 		{
 			open(file);
@@ -28,9 +28,9 @@ namespace nana{	namespace audio
 			delete impl_;
 		}
 
-		bool player::open(const char* file)
+		bool player::open(const nana::string& file)
 		{
-			if(file && impl_->stream.open(file))
+			if(impl_->stream.open(file))
 			{
 				const detail::wave_spec::format_chunck & ck = impl_->stream.format();
 				return impl_->dev.open(ck.nChannels, ck.nSamplePerSec, ck.wBitsPerSample);
@@ -55,7 +55,6 @@ namespace nana{	namespace audio
 			}
 			impl_->dev.wait_for_drain();
 		}
-
 
 		void player::close()
 		{

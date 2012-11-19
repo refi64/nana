@@ -459,17 +459,14 @@ namespace nana{	namespace gui{	namespace widgets
 				ext_renderer_.background(graph_, text_area_.area, bgcolor);
 
 			if(attributes_.counterpart && text_area_.area.width && text_area_.area.height)
-				attributes_.counterpart.bitblt(0, 0, text_area_.area.width, text_area_.area.height, graph_, text_area_.area.x, text_area_.area.y);
-
-			int y = _m_text_top_base();
+				attributes_.counterpart.bitblt(nana::rectangle(0, 0, text_area_.area.width, text_area_.area.height), graph_, nana::point(text_area_.area.x, text_area_.area.y));
 
 			if((false == textbase_.empty()) || has_focus)
 			{
+				int y = _m_text_top_base();
 				const unsigned line_hg = this->line_height();
 				for(unsigned ln = points_.offset.y; ln < textbase_.lines(); ++ln, y += line_hg)
-				{
 					_m_draw_string(y, fgcolor, ln, true);
-				}
 			}
 			else
 				_m_draw_tip_string();
@@ -837,79 +834,78 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::_m_scrollbar()
 		{
-			this->_m_get_scrollbar_size();
+			_m_get_scrollbar_size();
 
-			if(this->text_area_.vscroll)
+			if(text_area_.vscroll)
 			{
-				nana::gui::scroll<true>* scroll = this->attributes_.vscroll;
+				auto wdptr = this->attributes_.vscroll;
 				int x = text_area_.area.x + static_cast<int>(text_area_.area.width - text_area_.vscroll);
-				if(scroll == 0)
+				if(nullptr == wdptr)
 				{
 					using namespace nana::gui;
-					scroll = new nana::gui::scroll<true>;
-					scroll->create(window_, nana::rectangle(x, text_area_.area.y, text_area_.vscroll, _m_get_text_area_height()));
-					scroll->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
-					scroll->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
-					scroll->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);
-					this->attributes_.vscroll = scroll;
-					API::take_active(scroll->handle(), false, window_);
+					wdptr = new nana::gui::scroll<true>;
+					wdptr->create(window_, nana::rectangle(x, text_area_.area.y, text_area_.vscroll, _m_get_text_area_height()));
+					wdptr->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
+					wdptr->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
+					wdptr->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);
+					this->attributes_.vscroll = wdptr;
+					API::take_active(wdptr->handle(), false, window_);
 				}
 
-				if(textbase_.lines() != scroll->amount())
-					scroll->amount(static_cast<int>(textbase_.lines()));
+				if(textbase_.lines() != wdptr->amount())
+					wdptr->amount(static_cast<int>(textbase_.lines()));
 
-				if(this->screen_lines() != scroll->range())
-					scroll->range(this->screen_lines());
+				if(this->screen_lines() != wdptr->range())
+					wdptr->range(this->screen_lines());
 
-				if(this->points_.offset.y != static_cast<int>(scroll->value()))
-					scroll->value(this->points_.offset.y);
+				if(this->points_.offset.y != static_cast<int>(wdptr->value()))
+					wdptr->value(this->points_.offset.y);
 
-				scroll->move(x, text_area_.area.y, text_area_.vscroll, _m_get_text_area_height());
+				wdptr->move(x, text_area_.area.y, text_area_.vscroll, _m_get_text_area_height());
 			}
-			else if(this->attributes_.vscroll)
+			else if(attributes_.vscroll)
 			{
-				nana::gui::scroll<true>* scroll = this->attributes_.vscroll;
+				auto wdptr = this->attributes_.vscroll;
 				this->attributes_.vscroll = 0;
-				delete scroll;
+				delete wdptr;
 			}
 
 			//HScroll
-			if(this->text_area_.hscroll)
+			if(text_area_.hscroll)
 			{
-				nana::gui::scroll<false>* scroll = this->attributes_.hscroll;
+				nana::gui::scroll<false>* wdptr = this->attributes_.hscroll;
 				unsigned text_area_width = _m_get_text_area_width();
 				int y = text_area_.area.y + static_cast<int>(text_area_.area.height - text_area_.hscroll);
-				if(scroll == 0)
+				if(nullptr == wdptr)
 				{
 					using namespace nana::gui;
-					scroll = new nana::gui::scroll<false>;
-					scroll->create(window_, nana::rectangle(text_area_.area.x, y, text_area_width, this->text_area_.hscroll));
-					scroll->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
-					scroll->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
-					scroll->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);
-					scroll->step(20);
-					this->attributes_.hscroll = scroll;
-					API::take_active(scroll->handle(), false, window_);
+					wdptr = new nana::gui::scroll<false>;
+					wdptr->create(window_, nana::rectangle(text_area_.area.x, y, text_area_width, this->text_area_.hscroll));
+					wdptr->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
+					wdptr->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
+					wdptr->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);
+					wdptr->step(20);
+					this->attributes_.hscroll = wdptr;
+					API::take_active(wdptr->handle(), false, window_);
 				}
 
 				nana::size text_size = this->_m_text_extent_size(textbase_.getline(textbase_.max_line().first).c_str(), textbase_.max_line().second);
 
 				text_size.width += 1;
-				if(text_size.width > scroll->amount())
-					scroll->amount(text_size.width);
+				if(text_size.width > wdptr->amount())
+					wdptr->amount(text_size.width);
 
-				if(text_area_width != scroll->range())	scroll->range(text_area_width);
-				if(this->points_.offset.x != static_cast<int>(scroll->value()))
-					scroll->value(this->points_.offset.x);
+				if(text_area_width != wdptr->range())	wdptr->range(text_area_width);
+				if(this->points_.offset.x != static_cast<int>(wdptr->value()))
+					wdptr->value(this->points_.offset.x);
 
-				scroll->move(text_area_.area.x, y, text_area_width, text_area_.hscroll);
-
+				wdptr->move(text_area_.area.x, y, text_area_width, text_area_.hscroll);
 			}
 			else if(this->attributes_.hscroll)
 			{
-				nana::gui::scroll<false>* scroll = this->attributes_.hscroll;
+				nana::gui::scroll<false>* wdptr = this->attributes_.hscroll;
 				this->attributes_.hscroll = 0;
-				delete scroll;
+				delete wdptr;
 			}
 		}
 
@@ -1311,7 +1307,7 @@ namespace nana{	namespace gui{	namespace widgets
 										graph.string(0, 0, 0xFFFFFF, ent.begin, len);
 
 										int sel_xpos = static_cast<int>(str_w - head_w - sel_w);
-										graph_.bitblt(x + sel_xpos, top, sel_w, line_h_pixels, graph, sel_xpos, 0);
+										graph_.bitblt(nana::rectangle(x + sel_xpos, top, sel_w, line_h_pixels), graph, nana::point(sel_xpos, 0));
 									}
 									else
 									{	//LTR
@@ -1337,7 +1333,7 @@ namespace nana{	namespace gui{	namespace widgets
 									graph.typeface(graph_.typeface());
 									graph.rectangle(0x3399FF, true);
 									graph.string(0, 0, 0xFFFFFF, ent.begin, len);
-									graph_.bitblt(x + (str_w - sel_w), top, sel_w, line_h_pixels, graph, str_w - sel_w, 0);
+									graph_.bitblt(nana::rectangle(x + (str_w - sel_w), top, sel_w, line_h_pixels), graph, nana::point(str_w - sel_w, 0));
 								}
 								else
 								{	//LTR
@@ -1380,7 +1376,7 @@ namespace nana{	namespace gui{	namespace widgets
 									graph.typeface(graph_.typeface());
 									graph.rectangle(0x3399FF, true);
 									graph.string(0, 0, 0xFFFFFF, ent.begin, len);
-									graph_.bitblt(x, top, str_w - head_w, line_h_pixels, graph, 0, 0);
+									graph_.bitblt(nana::rectangle(x, top, str_w - head_w, line_h_pixels), graph);
 								}
 								else
 								{	//LTR
@@ -1422,7 +1418,7 @@ namespace nana{	namespace gui{	namespace widgets
 									graph.string(0, 0, 0xFFFFFF, ent.begin, len);
 									graph_.string(x, top, color, ent.begin, len);
 
-									graph_.bitblt(x + (str_w - sel_w), top, sel_w, line_h_pixels, graph, str_w - sel_w, 0);
+									graph_.bitblt(nana::rectangle(x + (str_w - sel_w), top, sel_w, line_h_pixels), graph, nana::point(str_w - sel_w, 0));
 								}
 								else
 								{

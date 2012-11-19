@@ -243,18 +243,6 @@ namespace paint
 			}
 		}
 
-		void image::paste(graphics& dst, int x, int y, unsigned width, unsigned height) const
-		{
-			if(ref_image_)
-				ref_image_.handle()->paste(nana::rectangle(0, 0, width, height), dst, x, y);
-		}
-
-		void image::paste(graphics& dst, int x, int y, unsigned width, unsigned height, int srcx, int srcy) const
-		{
-			if(ref_image_)
-				ref_image_.handle()->paste(nana::rectangle(srcx, srcy, width, height), dst, x, y);
-		}
-
 		void image::paste(const nana::rectangle& r_src, graphics & dst, const nana::point& p_dst) const
 		{
 			if(ref_image_)

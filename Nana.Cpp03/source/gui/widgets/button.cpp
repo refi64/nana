@@ -416,13 +416,21 @@ namespace drawerbase
 						unsigned img_end_width = bgimage_->block_size.width - static_cast<unsigned>(bgimage_->stretch.end);
 						unsigned height = bgimage_->block_size.height;
 
+						nana::rectangle r(block.pos, nana::size(img_beg_width, height));
+						nana::point p_dst;
+
 						if(bgimage_->stretch.beg)
-							bgimage_->image.paste(graph, 0, 0, img_beg_width, height, block.pos.x, block.pos.y);
+							bgimage_->image.paste(r, graph, p_dst);
 
 						unsigned width = graph.width() - (img_beg_width + img_end_width);
 						bgimage_->image.stretch(nana::rectangle(block.pos.x + bgimage_->stretch.beg, block.pos.y, img_mid_width, height), graph, nana::rectangle(bgimage_->stretch.beg, 0, width, height));
 						if(bgimage_->stretch.end)
-							bgimage_->image.paste(graph, graph.width() - img_end_width, 0, img_end_width, height, bgimage_->stretch.end, block.pos.y);
+						{
+							r.x = bgimage_->stretch.end;
+							r.width = img_end_width;
+							p_dst.x = static_cast<int>(graph.width() - img_end_width);
+							bgimage_->image.paste(r, graph, p_dst);
+						}
 					}
 					else if((bgimage_->stretch.arrange == nana::arrange::horizontal_vertical) && (bgimage_->stretch.beg >= bgimage_->stretch.end))
 					{

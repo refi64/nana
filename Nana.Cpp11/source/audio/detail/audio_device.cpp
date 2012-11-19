@@ -45,9 +45,9 @@ namespace nana{namespace audio
 		//class audio_device
 			audio_device::audio_device()
 #if defined(NANA_WINDOWS)
-				: handle_(0), buf_prep_(0)
+				: handle_(nullptr), buf_prep_(nullptr)
 #elif defined(NANA_LINUX)
-				: handle_(0), buf_prep_(0)
+				: handle_(nullptr), buf_prep_(nullptr)
 #endif
 			{}
 
@@ -58,7 +58,7 @@ namespace nana{namespace audio
 
 			bool audio_device::empty() const
 			{
-				return (0 == handle_);
+				return (nullptr == handle_);
 			}
 
 			bool audio_device::open(std::size_t channels, std::size_t rate, std::size_t bits_per_sample)
@@ -79,7 +79,7 @@ namespace nana{namespace audio
 				MMRESULT mmr = wave_native_if.out_open(&handle_, WAVE_MAPPER, &wfx, reinterpret_cast<DWORD_PTR>(&audio_device::_m_dev_callback), reinterpret_cast<DWORD_PTR>(this), CALLBACK_FUNCTION);
 				return (mmr == MMSYSERR_NOERROR);
 #elif defined(NANA_LINUX)
-				if(0 == handle_)
+				if(nullptr == handle_)
 				{
 					if(::snd_pcm_open(&handle_, "plughw:0,0", SND_PCM_STREAM_PLAYBACK, 0) < 0)
 						return false;
@@ -170,7 +170,7 @@ namespace nana{namespace audio
 #elif defined(NANA_LINUX)
 					::snd_pcm_close(handle_);
 #endif
-					handle_ = 0;
+					handle_ = nullptr;
 				}
 			}	
 

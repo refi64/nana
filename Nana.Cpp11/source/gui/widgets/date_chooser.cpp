@@ -386,90 +386,104 @@ namespace nana{ namespace gui{
 
 					if(tfid == transform_action::to_right)
 					{
+						nana::rectangle dr(0, refpos.y, 0, dirtybuf.height());
+						nana::rectangle nr(refpos.x, refpos.y, 0, newbuf.height());
 						for(int i = 1; i < count; ++i)
 						{
 							int off_x = static_cast<int>(delta * i);
-							graph.bitblt(refpos.x + off_x, refpos.y, dirtybuf.width() - off_x, dirtybuf.height(), dirtybuf, 0, 0);
-							graph.bitblt(refpos.x, refpos.y, off_x, newbuf.height(), newbuf, dirtybuf.width() - off_x, 0);
+							dr.x = refpos.x + off_x;
+							dr.width = dirtybuf.width() - off_x;
 
-							nana::gui::API::update_window(widget_->handle());
+							graph.bitblt(dr, dirtybuf);
+
+							nr.width = off_x;
+							graph.bitblt(nr, newbuf, nana::point(static_cast<int>(dr.width), 0));
+
+							API::update_window(*widget_);
 							nana::system::sleep(sleep_time);
 						}
 					}
 					else if(tfid == transform_action::to_left)
 					{
 						double delta = dirtybuf.width() / double(count);
+						nana::rectangle dr(refpos.x, refpos.y, 0, dirtybuf.height());
+						nana::rectangle nr(0, refpos.y, 0, newbuf.height());
 
 						for(int i = 1; i < count; ++i)
 						{
 							int off_x = static_cast<int>(delta * i);
 							int less_w = dirtybuf.width() - off_x;
-							graph.bitblt(refpos.x, refpos.y, less_w, dirtybuf.height(), dirtybuf, off_x, 0);
-							graph.bitblt(refpos.x + less_w, refpos.y, off_x, newbuf.height(), newbuf, 0, 0);
+							dr.width = dirtybuf.width() - off_x;
 
-							nana::gui::API::update_window(widget_->handle());
+							graph.bitblt(dr, dirtybuf, nana::point(off_x, 0));
+
+							nr.x = refpos.x + static_cast<int>(dr.width);
+							nr.width = off_x;
+							graph.bitblt(nr, newbuf);
+
+							API::update_window(*widget_);
 							nana::system::sleep(sleep_time);
 						}
 					}
 					else if(tfid == transform_action::to_leave)
 					{
-						nana::paint::graphics dzbuf(newbuf.width(), newbuf.height());
-						nana::paint::graphics nzbuf(newbuf.width(), newbuf.height());
+						nana::paint::graphics dzbuf(newbuf.size());
+						nana::paint::graphics nzbuf(newbuf.size());
 
+						nana::rectangle r;
 						for(int i = 1; i < count; ++i)
 						{
-							int zo_width = static_cast<int>(newbuf.width() - delta * i);
-							int zo_height = static_cast<int>(newbuf.height() - delta_h * i);
-							int dx = (static_cast<int>(newbuf.width()) - zo_width) / 2;
-							int dy = (static_cast<int>(newbuf.height()) - zo_height) / 2;
+							r.width = static_cast<int>(newbuf.width() - delta * i);
+							r.height = static_cast<int>(newbuf.height() - delta_h * i);
+							r.x = static_cast<int>(newbuf.width() - r.width) / 2;
+							r.y = static_cast<int>(newbuf.height() - r.height) / 2;
 
 							dzbuf.rectangle(0xFFFFFF, true);
-							dirtybuf.stretch(dzbuf, nana::rectangle(dx, dy, zo_width, zo_height));
+							dirtybuf.stretch(dzbuf, r);
 
-							zo_width = static_cast<int>(newbuf.width() + delta * (count - i));
-							zo_height = static_cast<int>(newbuf.height() + delta_h * (count - i));
-							dx = (static_cast<int>(newbuf.width()) - zo_width) / 2;
-							dy = (static_cast<int>(newbuf.height()) - zo_height) / 2;
-							newbuf.stretch(nzbuf, nana::rectangle(dx, dy, zo_width, zo_height));
+							r.width = static_cast<int>(newbuf.width() + delta * (count - i));
+							r.height = static_cast<int>(newbuf.height() + delta_h * (count - i));
+							r.x = static_cast<int>(newbuf.width() - r.width) / 2;
+							r.y = static_cast<int>(newbuf.height() - r.height) / 2;
+							newbuf.stretch(nzbuf, r);
 
 							nzbuf.blend(dzbuf, 0, 0, fade * (count - i));
 							graph.bitblt(refpos.x, refpos.y, dzbuf);
 
-							nana::gui::API::update_window(widget_->handle());
-
+							API::update_window(*widget_);
 							nana::system::sleep(sleep_time);
 						}
 					}
 					else if(tfid == transform_action::to_enter)
 					{
-						nana::paint::graphics dzbuf(newbuf.width(), newbuf.height());
-						nana::paint::graphics nzbuf(newbuf.width(), newbuf.height());
+						nana::paint::graphics dzbuf(newbuf.size());
+						nana::paint::graphics nzbuf(newbuf.size());
 
+						nana::rectangle r;
 						for(int i = 1; i < count; ++i)
 						{
-							int zo_width = static_cast<int>(newbuf.width() + delta * i);
-							int zo_height = static_cast<int>(newbuf.height() + delta_h * i);
-							int dx = (static_cast<int>(newbuf.width()) - zo_width) / 2;
-							int dy = (static_cast<int>(newbuf.height()) - zo_height) / 2;
-							dirtybuf.stretch(dzbuf, nana::rectangle(dx, dy, zo_width, zo_height));
+							r.width = static_cast<int>(newbuf.width() + delta * i);
+							r.height = static_cast<int>(newbuf.height() + delta_h * i);
+							r.x = static_cast<int>(newbuf.width() - r.width) / 2;
+							r.y = static_cast<int>(newbuf.height() - r.height) / 2;
+							dirtybuf.stretch(dzbuf, r);
 
-							zo_width = static_cast<int>(newbuf.width() - delta * (count - i));
-							zo_height = static_cast<int>(newbuf.height() - delta_h * (count - i));
-							dx = (static_cast<int>(newbuf.width()) - zo_width) / 2;
-							dy = (static_cast<int>(newbuf.height()) - zo_height) / 2;
+							r.width = static_cast<int>(newbuf.width() - delta * (count - i));
+							r.height = static_cast<int>(newbuf.height() - delta_h * (count - i));
+							r.x = static_cast<int>(newbuf.width() - r.width) / 2;
+							r.y = static_cast<int>(newbuf.height() - r.height) / 2;
 							nzbuf.rectangle(0xFFFFFF, true);
-							newbuf.stretch(nzbuf, nana::rectangle(dx, dy, zo_width, zo_height));
+							newbuf.stretch(nzbuf, r);
 
 							nzbuf.blend(dzbuf, 0, 0, fade * (count - i));
 							graph.bitblt(refpos.x, refpos.y, dzbuf);
 
-							nana::gui::API::update_window(widget_->handle());
-
+							API::update_window(*widget_);
 							nana::system::sleep(sleep_time);
 						}
 					}
 
-					graph.bitblt(refpos.x, refpos.y, newbuf.width(), newbuf.height(), newbuf, 0, 0);
+					graph.bitblt(nana::rectangle(refpos, newbuf.size()), newbuf);
 				}
 
 				void trigger::refresh(graph_reference graph)
@@ -623,17 +637,16 @@ namespace nana{ namespace gui{
 					{
 						if(tfid != transform_action::none)
 						{
-							const unsigned width = graph.width() - 2;
 							nana::point refpos(1, static_cast<int>(topbar_height) + 1);
+							nana::rectangle r(0, 0, graph.width() - 2, graph.height() - 2 - topbar_height);
 
-							unsigned height = graph.height() - 2 - topbar_height;
-							nana::paint::graphics dirtybuf(width, height);
-							dirtybuf.bitblt(0, 0, width, height, graph, refpos.x, refpos.y);
+							nana::paint::graphics dirtybuf(r.width, r.height);
+							dirtybuf.bitblt(r, graph, refpos);
 
 							_m_draw(graph);
 
-							nana::paint::graphics gbuf(width, height);
-							gbuf.bitblt(0, 0, width, height, graph, refpos.x, refpos.y);
+							nana::paint::graphics gbuf(r.width, r.height);
+							gbuf.bitblt(r, graph, refpos);
 
 							this->_m_perf_transform(tfid, graph, dirtybuf, gbuf, refpos);
 						}

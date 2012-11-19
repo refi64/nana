@@ -33,7 +33,7 @@ namespace detail
 	//			and some basic functions.
 	class bedrock
 	{
-		typedef bedrock self_type;
+		//typedef bedrock self_type;
 
 		bedrock();
 	public:
@@ -45,7 +45,7 @@ namespace detail
 		struct thread_context;
 
 		~bedrock();
-		void pump_event(nana::gui::window);
+		void pump_event(window);
 		void map_thread_root_buffer(core_window_t* );
 		static int inc_window(unsigned tid = 0);
 		thread_context* open_thread_context(unsigned tid = 0);
@@ -77,7 +77,7 @@ namespace detail
 	public:
 		window_manager_t wd_manager;
 		event_manager	evt_manager;
-		runtime_manager<core_window_t*, self_type>	rt_manager;
+		runtime_manager<core_window_t*, bedrock>	rt_manager;
 		static bool fire_event_for_drawer(unsigned event_id, core_window_t*, const eventinfo&, thread_context*);
 		static bool fire_event(unsigned event_id, core_window_t*, const eventinfo&);
 

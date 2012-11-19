@@ -196,6 +196,12 @@ namespace paint
 			this->make(width, height);
 		}
 
+		graphics::graphics(const nana::size& sz)
+			:handle_(0), changed_(true)
+		{
+			make(sz.width, sz.height);
+		}
+
 		graphics::graphics(const graphics& rhs)
 			:ref_(rhs.ref_), handle_(rhs.handle_), size_(rhs.size_), changed_(true)
 		{}
@@ -775,70 +781,73 @@ namespace paint
 			line(beg.x, beg.y, end.x, end.y, color);
 		}
 
-		void graphics::bitblt(int x, int y, unsigned width, unsigned height, nana::gui::native_window_type wd)
+		void graphics::bitblt(const nana::rectangle& r_dst, native_window_type wd)
 		{
 			if(handle_)
 			{
 #if defined(NANA_WINDOWS)
 				HDC dc = ::GetDC(reinterpret_cast<HWND>(wd));
-				::BitBlt(handle_->context, x, y, width, height, dc, 0, 0, SRCCOPY);
+				::BitBlt(handle_->context, r_dst.x, r_dst.y, r_dst.width, r_dst.height, dc, 0, 0, SRCCOPY);
 				::ReleaseDC(reinterpret_cast<HWND>(wd), dc);
 #elif defined(NANA_X11)
 				::XCopyArea(nana::detail::platform_spec::instance().open_display(),
 						reinterpret_cast<Window>(wd), handle_->pixmap, handle_->context,
-						0, 0, width, height, x, y);
+						0, 0, r_dst.width, r_dst.height, r_dst.x, r_dst.y);
 #endif
 				if(changed_ == false) changed_ = true;
 			}
 		}
 
-		void graphics::bitblt(int x, int y, unsigned width, unsigned height, nana::gui::native_window_type wd, int src_x, int src_y)
+		void graphics::bitblt(const nana::rectangle& r_dst, native_window_type wd, const nana::point& p_src)
 		{
 			if(handle_)
 			{
 #if defined(NANA_WINDOWS)
 				HDC dc = ::GetDC(reinterpret_cast<HWND>(wd));
-				::BitBlt(handle_->context, x, y, width, height, dc, src_x, src_y, SRCCOPY);
+				::BitBlt(handle_->context, r_dst.x, r_dst.y, r_dst.width, r_dst.height, dc, p_src.x, p_src.y, SRCCOPY);
 				::ReleaseDC(reinterpret_cast<HWND>(wd), dc);
 #elif defined(NANA_X11)
 				::XCopyArea(nana::detail::platform_spec::instance().open_display(),
 						reinterpret_cast<Window>(wd), handle_->pixmap, handle_->context,
-						src_x, src_y, width, height, x, y);
+						p_src.x, p_src.y, r_dst.width, r_dst.height, r_dst.x, r_dst.y);
 #endif
 				if(changed_ == false) changed_ = true;
 			}
 		}
 
-		void graphics::bitblt(int x, int y, unsigned width, unsigned height, const graphics& source)
+		void graphics::bitblt(const nana::rectangle& r_dst, const graphics& src)
 		{
-			if(handle_ && x < int(size_.width) && y < int(size_.height) && source.handle_)
+			if(handle_ && src.handle_)
 			{
 #if defined(NANA_WINDOWS)
-				::BitBlt(handle_->context, x, y, width, height, source.handle_->context, 0, 0, SRCCOPY);
+				::BitBlt(handle_->context, r_dst.x, r_dst.y, r_dst.width, r_dst.height, src.handle_->context, 0, 0, SRCCOPY);
 #elif defined(NANA_X11)
 				::XCopyArea(nana::detail::platform_spec::instance().open_display(),
-						source.handle_->pixmap, handle_->pixmap, handle_->context,
-						0, 0, width, height, x, y);
+						src.handle_->pixmap, handle_->pixmap, handle_->context,
+						0, 0, r_dst.width, r_dst.height, r_dst.x, r_dst.y);
 #endif
 				if(changed_ == false) changed_ = true;
 			}
 		}
 
-		void graphics::bitblt(int x, int y, const graphics& source)
+		void graphics::bitblt(int x, int y, const graphics& src)
 		{
-			bitblt(x, y, source.width(), source.height(), source);
+			nana::rectangle r(src.size());
+			r.x = x;
+			r.y = y;
+			bitblt(r, src);
 		}
 
-		void graphics::bitblt(int x, int y, unsigned width, unsigned height, const graphics& source, int src_x, int src_y)
+		void graphics::bitblt(const nana::rectangle& r_dst, const graphics& src, const nana::point& p_src)
 		{
-			if(handle_ && source.handle_)
+			if(handle_ && src.handle_)
 			{
 #if defined(NANA_WINDOWS)
-				::BitBlt(handle_->context, x, y, width, height, source.handle_->context, src_x, src_y, SRCCOPY);
+				::BitBlt(handle_->context, r_dst.x, r_dst.y, r_dst.width, r_dst.height, src.handle_->context, p_src.x, p_src.y, SRCCOPY);
 #elif defined(NANA_X11)
 				::XCopyArea(nana::detail::platform_spec::instance().open_display(),
-						source.handle_->pixmap, handle_->pixmap, handle_->context,
-						src_x, src_y, width, height, x, y);
+						src.handle_->pixmap, handle_->pixmap, handle_->context,
+						p_src.x, p_src.y, r_dst.width, r_dst.height, r_dst.x, r_dst.y);
 #endif
 				if(changed_ == false) changed_ = true;
 			}

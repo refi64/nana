@@ -30,14 +30,14 @@ namespace nana{
 #if defined(NANA_WINDOWS)
 			static HICON icon(const nana::paint::image& img)
 			{
-				image::image_impl_interface * impl = (img.ref_image_.empty() ? 0 : img.ref_image_.handle());
+				image::image_impl_interface * impl = (img.image_ptr_ ? img.image_ptr_.get() : nullptr);
 				if(impl)
 				{
 					paint::detail::image_ico * ico = dynamic_cast<paint::detail::image_ico*>(impl);
 					if(ico)
 					{
-						if(false == ico->ref().empty())
-							return ico->ref().handle();
+						if(ico->ptr())
+							return *(ico->ptr());
 					}
 				}
 				return 0;

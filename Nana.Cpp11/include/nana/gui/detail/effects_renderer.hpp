@@ -17,13 +17,6 @@ namespace nana{	namespace gui{
 			typedef window_layout<core_window_t> window_layer;
 			typedef nana::paint::graphics & graph_reference;
 
-			//there 
-			struct wd_rectangle
-			{
-				core_window_t * window;
-				nana::rectangle	r;
-			};
-
 			static edge_nimbus_renderer& instance()
 			{
 				static edge_nimbus_renderer object;
@@ -70,7 +63,6 @@ namespace nana{	namespace gui{
 					}
 
 					//Erase
-					for(typename std::vector<core_window_t*>::iterator i = erase.begin(); i != erase.end(); ++i)
 					for(auto el : erase)
 					{
 						if(el == wd)
@@ -83,7 +75,7 @@ namespace nana{	namespace gui{
 						graph->paste(native, r, r.x, r.y);
 					}
 
-					std::vector<nana::rectangle>::iterator visual_iterator = r_set.begin();
+					auto visual_iterator = r_set.begin();
 					//Render
 					for(auto & action : nimbus)
 					{
@@ -105,9 +97,8 @@ namespace nana{	namespace gui{
 
 			void _m_render_edge_nimbus(core_window_t* wd, const nana::rectangle & visual)
 			{
-				const int pixels = static_cast<int>(weight());
-
-				nana::rectangle r(visual.x - pixels, visual.y - pixels, visual.width + (pixels << 1), visual.height + (pixels << 1));
+				nana::rectangle r(visual);
+				r.pare_off(-static_cast<int>(weight()));
 				nana::rectangle good_r;
 				if(nana::gui::overlap(r, nana::rectangle(wd->root_graph->size()), good_r))
 				{

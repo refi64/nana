@@ -18,9 +18,9 @@
 #include <nana/deploy.hpp>
 #include <nana/gui/basis.hpp>
 #include <nana/paint/image.hpp>
-#include <nana/refer.hpp>
 #include <windows.h>
 #include <map>
+#include <memory>
 
 namespace nana
 {
@@ -85,11 +85,11 @@ namespace detail
 
 	struct drawable_impl_type
 	{
-		typedef nana::refer<font_tag*, font_tag::deleter> font_refer_t;
+		typedef std::shared_ptr<font_tag> font_ptr_t;
 
 		HDC		context;
 		HBITMAP	pixmap;
-		font_refer_t	font;
+		font_ptr_t font;
 
 		struct pen_spec
 		{
@@ -140,7 +140,7 @@ namespace detail
 	class platform_spec
 	{
 	public:
-		typedef drawable_impl_type::font_refer_t font_refer_t;
+		typedef drawable_impl_type::font_ptr_t	font_ptr_t;
 
 		class co_initializer
 		{
@@ -153,10 +153,10 @@ namespace detail
 
 		platform_spec();
 
-		const font_refer_t& default_native_font() const;
+		const font_ptr_t& default_native_font() const;
 		unsigned font_size_to_height(unsigned) const;
 		unsigned font_height_to_size(unsigned) const;
-		font_refer_t make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out);
+		font_ptr_t make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out);
 
 		void event_register_filter(nana::gui::native_window_type, unsigned eventid);
 		static platform_spec& instance();
@@ -164,7 +164,7 @@ namespace detail
 		void keep_window_icon(nana::gui::native_window_type, const nana::paint::image&);
 		void release_window_icon(nana::gui::native_window_type);
 	private:
-		font_refer_t def_font_ref_;
+		font_ptr_t	def_font_ptr_;
 		std::map<nana::gui::native_window_type, nana::paint::image> iconbase_;
 	};
 

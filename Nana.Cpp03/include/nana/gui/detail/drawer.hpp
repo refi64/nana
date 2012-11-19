@@ -74,7 +74,6 @@ namespace gui
 		class drawer
 			: nana::noncopyable
 		{
-			typedef drawer this_type;
 		public:
 
 			drawer();

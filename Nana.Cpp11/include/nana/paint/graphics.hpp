@@ -14,8 +14,9 @@
 
 #include "../basic_types.hpp"
 #include "../gui/basis.hpp"
-#include "../refer.hpp"
 #include "pixel_buffer.hpp"
+#include <memory>
+
 namespace nana
 {
 	namespace paint
@@ -23,10 +24,6 @@ namespace nana
 		namespace detail
 		{
 			struct native_font_signature;
-			struct graphics_handle_deleter
-			{
-				void operator()(const nana::detail::drawable_impl_type*) const;
-			};
 		}// end namespace detail
 
 		typedef detail::native_font_signature*		native_font_type;
@@ -68,6 +65,7 @@ namespace nana
 
 			graphics();
 			graphics(unsigned width, unsigned height);
+			graphics(const nana::size&);
 			graphics(const graphics&);
 			graphics& operator=(const graphics&);
 			bool changed() const;
@@ -92,7 +90,6 @@ namespace nana
 
 			bool text_metrics(unsigned & ascent, unsigned& descent, unsigned& internal_leading) const;
 
-
 			unsigned bidi_string(int x, int y, color_t, const nana::char_t *, std::size_t len);
 			void string(int x, int y, color_t, const nana::string&, std::size_t len);
 			void string(int x, int y, color_t, const nana::string&);
@@ -110,11 +107,12 @@ namespace nana
 
 			void line(int x1, int y1, int x2, int y2, color_t color);
 			void line(const point& beg, const point& end, color_t color);
-			void bitblt(int x, int y, unsigned width, unsigned height, native_window_type source);
-			void bitblt(int x, int y, unsigned width, unsigned height, native_window_type source, int src_x, int src_y);
+			
 			void bitblt(int x, int y, const graphics& source);
-			void bitblt(int x, int y, unsigned width, unsigned height, const graphics& source);
-			void bitblt(int x, int y, unsigned width, unsigned height, const graphics& source, int src_x, int src_y);
+			void bitblt(const nana::rectangle& r_dst, native_window_type src);
+			void bitblt(const nana::rectangle& r_dst, native_window_type src, const nana::point& p_src);
+			void bitblt(const nana::rectangle& r_dst, const graphics& src);
+			void bitblt(const nana::rectangle& r_dst, const graphics& src, const nana::point& p_src);
 
 			void blend(graphics& dst, int x, int y, double fade_rate) const;
 			void blend(const nana::point& s_pos, graphics& dst, const nana::rectangle& r, double fade_rate) const;
@@ -140,7 +138,7 @@ namespace nana
 
 			static color_t mix(color_t colorX, color_t colorY, double persent);
 		private:
-            nana::refer<drawable_type, detail::graphics_handle_deleter> ref_;
+			std::shared_ptr<nana::detail::drawable_impl_type> dwptr_;
             drawable_type	handle_;
 			nana::size	size_;
 			nana::paint::pixel_buffer pxbuf_;

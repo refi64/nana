@@ -187,7 +187,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 
 			const int scale = 32;
 			if(img.empty() == false)
-				img.paste(graph, xpos + 10, top + 10 + (static_cast<int>(ts.height) - scale) / 2, 32, 32);
+				img.paste(nana::rectangle(0, 0, 32, 32), graph, nana::point(xpos + 10, top + 10 + (static_cast<int>(ts.height) - scale) / 2));
 
 			if(flag_.have_user)
 				graph.string(xpos + 60, top + 10, 0x0, user);

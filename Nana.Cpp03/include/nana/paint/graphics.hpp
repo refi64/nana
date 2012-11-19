@@ -68,6 +68,7 @@ namespace nana
 
 			graphics();
 			graphics(unsigned width, unsigned height);
+			graphics(const nana::size&);
 			graphics(const graphics&);
 			graphics& operator=(const graphics&);
 			bool changed() const;
@@ -110,11 +111,11 @@ namespace nana
 
 			void line(int x1, int y1, int x2, int y2, color_t color);
 			void line(const point& beg, const point& end, color_t color);
-			void bitblt(int x, int y, unsigned width, unsigned height, native_window_type source);
-			void bitblt(int x, int y, unsigned width, unsigned height, native_window_type source, int src_x, int src_y);
+			void bitblt(const nana::rectangle& r_dst, native_window_type src);
+			void bitblt(const nana::rectangle& r_dst, native_window_type source, const nana::point&);
 			void bitblt(int x, int y, const graphics& source);
-			void bitblt(int x, int y, unsigned width, unsigned height, const graphics& source);
-			void bitblt(int x, int y, unsigned width, unsigned height, const graphics& source, int src_x, int src_y);
+			void bitblt(const nana::rectangle& r_dst, const graphics& src);
+			void bitblt(const nana::rectangle& r_dst, const graphics& src, const nana::point& p_src);
 
 			void blend(graphics& dst, int x, int y, double fade_rate) const;
 			void blend(const nana::point& s_pos, graphics& dst, const nana::rectangle& r, double fade_rate) const;

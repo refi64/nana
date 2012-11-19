@@ -59,7 +59,7 @@ namespace nana{	namespace audio{
 				unsigned long cksize;
 			};
 		public:
-			bool open(const char* file);
+			bool open(const nana::string& file);
 			void close();
 			bool empty() const;
 			const wave_spec::format_chunck & format() const;

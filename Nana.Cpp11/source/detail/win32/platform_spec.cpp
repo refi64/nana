@@ -158,12 +158,12 @@ namespace detail
 			metrics.cbSize -= sizeof(metrics.iPaddedBorderWidth);
 #endif 
 		::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof metrics, &metrics, 0);
-		def_font_ref_ = make_native_font(metrics.lfMessageFont.lfFaceName, font_size_to_height(9), 400, false, false, false);
+		def_font_ptr_ = make_native_font(metrics.lfMessageFont.lfFaceName, font_size_to_height(9), 400, false, false, false);
 	}
 
-	const platform_spec::font_refer_t& platform_spec::default_native_font() const
+	const platform_spec::font_ptr_t& platform_spec::default_native_font() const
 	{
-		return this->def_font_ref_;
+		return def_font_ptr_;
 	}
 
 	unsigned platform_spec::font_size_to_height(unsigned size) const
@@ -184,13 +184,13 @@ namespace detail
 		return height;
 	}
 
-	platform_spec::font_refer_t platform_spec::make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out)
+	platform_spec::font_ptr_t platform_spec::make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out)
 	{
 		::LOGFONT logfont;
 		memset(&logfont, 0, sizeof logfont);
 
 		if(0 == name || 0 == *name)
-			strcpy(logfont.lfFaceName, default_native_font().handle()->name.c_str());
+			strcpy(logfont.lfFaceName, def_font_ptr_->name.c_str());
 		else
 			strcpy(logfont.lfFaceName, name);
 
@@ -208,7 +208,6 @@ namespace detail
 		logfont.lfStrikeOut = strike_out;
 		HFONT result = ::CreateFontIndirect(&logfont);
 
-		font_refer_t ref;
 		if(result)
 		{
 			font_tag * impl = new font_tag;
@@ -219,9 +218,9 @@ namespace detail
 			impl->underline = underline;
 			impl->strikeout = strike_out;
 			impl->handle = result;
-			ref = impl;
+			return std::shared_ptr<font_tag>(impl, font_tag::deleter());
 		}
-		return ref;
+		return nullptr;
 	}
 
 	//event_register

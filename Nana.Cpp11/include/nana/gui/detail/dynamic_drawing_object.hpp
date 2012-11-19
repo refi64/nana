@@ -146,18 +146,16 @@ namespace dynamic_drawing
 	{
 	public:
 		bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& source, int srcx, int srcy)
-			:x_(x), y_(y), width_(width), height_(height), srcx_(srcx), srcy_(srcy), graph_(source)
-		{
-		}
+			:r_dst_(x, y, width, height), p_src_(srcx, srcy), graph_(source)
+		{}
 
 		void draw(nana::paint::graphics& graph) const
 		{
-			graph.bitblt(x_, y_, width_, height_, graph_, srcx_, srcy_);
+			graph.bitblt(r_dst_, graph_, p_src_);
 		}
 	private:
-		int x_, y_;
-		unsigned width_, height_;
-		int srcx_, srcy_;
+		nana::rectangle r_dst_;
+		nana::point p_src_;
 		nana::paint::graphics graph_;
 	};
 
@@ -166,17 +164,16 @@ namespace dynamic_drawing
 	{
 	public:
 		bitblt_image(int x, int y, unsigned width, unsigned height, const nana::paint::image& img, int srcx, int srcy)
-			:x_(x), y_(y), width_(width), height_(height), srcx_(srcx), srcy_(srcy), img_(img)
+			: r_(srcx, srcy, width, height), p_dst_(x, y), img_(img)
 		{}
 
 		void draw(nana::paint::graphics& graph) const
 		{
-			img_.paste(graph, x_, y_, width_, height_, srcx_, srcy_);
+			img_.paste(r_, graph, p_dst_);
 		}
 	private:
-		int x_, y_;
-		unsigned width_, height_;
-		int srcx_, srcy_;
+		nana::rectangle r_;
+		nana::point p_dst_;
 		nana::paint::image img_;
 	};
 

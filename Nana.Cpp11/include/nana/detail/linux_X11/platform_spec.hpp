@@ -24,7 +24,6 @@
 #include <X11/Xatom.h>
 #include <X11/Xos.h>
 #include <nana/gui/basis.hpp>
-#include <nana/refer.hpp>
 #include <nana/paint/image.hpp>
 #include <nana/paint/graphics.hpp>
 #include <vector>
@@ -86,7 +85,7 @@ namespace detail
 
 	struct drawable_impl_type
 	{
-		typedef nana::refer<font_tag*, font_tag::deleter> font_refer_t;
+		typedef std::shared_ptr<font_tag> font_ptr_t;
 
 		drawable_impl_type();
 		~drawable_impl_type();
@@ -95,7 +94,7 @@ namespace detail
 
 		Pixmap	pixmap;
 		GC	context;
-		font_refer_t font;
+		font_ptr_t font;
 
 		struct string_spec
 		{
@@ -177,7 +176,7 @@ namespace detail
     public:
         int error_code;
 	public:
-		typedef drawable_impl_type::font_refer_t font_refer_t;
+		typedef drawable_impl_type::font_ptr_t font_ptr_t;
 		typedef void (*timer_proc_type)(unsigned tid);
 		typedef void (*event_proc_type)(Display*, msg_packet_tag&);
 
@@ -185,10 +184,10 @@ namespace detail
 		platform_spec();
 		~platform_spec();
 
-		const font_refer_t& default_native_font() const;
+		const font_ptr_t& default_native_font() const;
 		unsigned font_size_to_height(unsigned) const;
 		unsigned font_height_to_size(unsigned) const;
-		font_refer_t make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strick_out);
+		font_ptr_t make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strick_out);
 
 		Display* open_display();
 		void close_display();
@@ -251,7 +250,7 @@ namespace detail
 		Display*	display_;
 		Colormap	colormap_;
 		atombase_tag atombase_;
-		font_refer_t def_font_ref_;
+		font_ptr_t def_font_ptr_;
 		XKeyEvent	key_state_;
 		int (*def_X11_error_handler_)(Display*, XErrorEvent*);
 		Window grab_;

@@ -116,7 +116,7 @@ namespace nana
 		rectangle & operator=(const point&);
 		rectangle & operator=(const size&);
 
-		rectangle& pare_off(unsigned pixels);
+		rectangle& pare_off(int pixels);
 
 		int x;
 		int y;

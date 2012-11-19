@@ -812,7 +812,7 @@ namespace detail
 				}
 				else
 				{
-					addr->rev_graph.bitblt(0, 0, addr->size.width, addr->size.height, wd, addr->pos.x, addr->pos.y);
+					addr->rev_graph.bitblt(addr->size, wd, addr->pos);
 					addr->rev.width = addr->size.width;
 					addr->rev.height = addr->size.height;
 					addr->rev.x = addr->pos.x;

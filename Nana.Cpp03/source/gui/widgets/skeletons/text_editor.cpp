@@ -459,22 +459,14 @@ namespace nana{	namespace gui{	namespace widgets
 				ext_renderer_.background(graph_, text_area_.area, bgcolor);
 
 			if(attributes_.counterpart && text_area_.area.width && text_area_.area.height)
-				attributes_.counterpart.bitblt(0, 0, text_area_.area.width, text_area_.area.height, graph_, text_area_.area.x, text_area_.area.y);
-
-			int y = _m_text_top_base();
+				attributes_.counterpart.bitblt(nana::rectangle(0, 0, text_area_.area.width, text_area_.area.height), graph_, nana::point(text_area_.area.x, text_area_.area.y));
 
 			if((false == textbase_.empty()) || has_focus)
 			{
+				int y = _m_text_top_base();
 				const unsigned line_hg = this->line_height();
-
-				nana::upoint a, b;
-				_m_get_sort_select_points(a, b);
-				//unsigned whitespace_w = graph_.text_extent_size(STR(" ")).width;
-
 				for(unsigned ln = points_.offset.y; ln < textbase_.lines(); ++ln, y += line_hg)
-				{
 					_m_draw_string(y, fgcolor, ln, true);
-				}
 			}
 			else
 				_m_draw_tip_string();
@@ -1316,7 +1308,7 @@ namespace nana{	namespace gui{	namespace widgets
 										graph.string(0, 0, 0xFFFFFF, i->begin, len);
 
 										int sel_xpos = static_cast<int>(str_w - head_w - sel_w);
-										graph_.bitblt(x + sel_xpos, top, sel_w, line_h_pixels, graph, sel_xpos, 0);
+										graph_.bitblt(nana::rectangle(x + sel_xpos, top, sel_w, line_h_pixels), graph, nana::point(sel_xpos, 0));
 									}
 									else
 									{	//LTR
@@ -1342,7 +1334,7 @@ namespace nana{	namespace gui{	namespace widgets
 									graph.typeface(graph_.typeface());
 									graph.rectangle(0x3399FF, true);
 									graph.string(0, 0, 0xFFFFFF, i->begin, len);
-									graph_.bitblt(x + (str_w - sel_w), top, sel_w, line_h_pixels, graph, str_w - sel_w, 0);
+									graph_.bitblt(nana::rectangle(x + (str_w - sel_w), top, sel_w, line_h_pixels), graph, nana::point(str_w - sel_w, 0));
 								}
 								else
 								{	//LTR
@@ -1384,7 +1376,7 @@ namespace nana{	namespace gui{	namespace widgets
 									graph.typeface(graph_.typeface());
 									graph.rectangle(0x3399FF, true);
 									graph.string(0, 0, 0xFFFFFF, i->begin, len);
-									graph_.bitblt(x, top, str_w - head_w, line_h_pixels, graph, 0, 0);
+									graph_.bitblt(nana::rectangle(x, top, str_w - head_w, line_h_pixels), graph);
 								}
 								else
 								{	//LTR
@@ -1426,7 +1418,7 @@ namespace nana{	namespace gui{	namespace widgets
 									graph.string(0, 0, 0xFFFFFF, i->begin, len);
 									graph_.string(x, top, color, i->begin, len);
 
-									graph_.bitblt(x + (str_w - sel_w), top, sel_w, line_h_pixels, graph, str_w - sel_w, 0);
+									graph_.bitblt(nana::rectangle(x + (str_w - sel_w), top, sel_w, line_h_pixels), graph, nana::point(str_w - sel_w, 0));
 								}
 								else
 								{

@@ -43,8 +43,7 @@ namespace gui
 
 		void drawing::update() const
 		{
-			if(API::empty_window(handle_))	return;
-			nana::gui::API::refresh_window(handle_);
+			API::refresh_window(handle_);
 		}
 
 		void drawing::string(int x, int y, unsigned color, const nana::char_t* text)

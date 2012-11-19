@@ -15,10 +15,9 @@
 #ifndef NANA_FILESYSTEM_FILE_ITERATOR_HPP
 #define NANA_FILESYSTEM_FILE_ITERATOR_HPP
 #include <iterator>
+#include <memory>
 
 #include <nana/deploy.hpp>
-#include <nana/refer.hpp>
-
 
 #ifdef NANA_WINDOWS
 	#include <windows.h>
@@ -42,7 +41,6 @@ namespace filesystem
 #elif NANA_LINUX
 		fileinfo(const nana::string& filename, const struct stat &);
 #endif
-
 		nana::string name;
 
 		unsigned long size;
@@ -53,7 +51,6 @@ namespace filesystem
 	class basic_file_iterator
 		:public std::iterator<std::input_iterator_tag, FileInfo>
 	{
-		typedef basic_file_iterator self_type;
 	public:
 		typedef FileInfo value_type;
 
@@ -71,17 +68,17 @@ namespace filesystem
 		const value_type*
 		operator->() const { return &(operator*()); }
 
-		self_type& operator++()
+		basic_file_iterator& operator++()
 		{ _m_read(); return *this; }
 
-		self_type operator++(int)
+		basic_file_iterator operator++(int)
 		{
-			self_type tmp = *this;
+			basic_file_iterator tmp = *this;
 			_m_read();
 			return tmp;
 		}
 
-		bool equal(const self_type& x) const
+		bool equal(const basic_file_iterator& x) const
 		{
 			if(end_ && (end_ == x.end_)) return true;
 			return (value_.name == x.value_.name);
@@ -155,7 +152,7 @@ namespace filesystem
 		#endif
 			if(false == end_)
 			{
-				refer_ = handle;
+				find_ptr_ = std::shared_ptr<find_handle_t>(new find_handle_t(handle), inner_handle_deleter());
 				handle_ = handle;
 			}
 		}
@@ -206,16 +203,17 @@ namespace filesystem
 	private:
 		struct inner_handle_deleter
 		{
-			void operator()(find_handle_t handle)
+			void operator()(find_handle_t * handle)
 			{
-				if(handle)
+				if(handle && *handle)
 				{
   				#if defined(NANA_WINDOWS)
-					::FindClose(handle);
-            			#elif defined(NANA_LINUX)
-					::closedir(handle);
+					::FindClose(*handle);
+            	#elif defined(NANA_LINUX)
+					::closedir(*handle);
 				#endif
 				}
+				delete handle;
 			}
 		};
 	private:
@@ -227,7 +225,8 @@ namespace filesystem
 #elif defined(NANA_LINUX)
 		std::string	path_;
 #endif
-		nana::refer<find_handle_t, inner_handle_deleter>	refer_;
+		std::shared_ptr<find_handle_t> find_ptr_;
+
 		find_handle_t	handle_;
 		value_type	value_;
 	};

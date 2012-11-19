@@ -97,7 +97,7 @@ namespace detail
 
 			if(start_driver && proc_.event_proc && proc_.timer_proc)
 			{
-				//It should start the msg driver, before starting it, the msg driver must be inactively.
+				//It should start the msg driver, before starting it, the msg driver must be inactive.
 				if(thrd_)
 				{
 					is_work_ = false;
@@ -112,12 +112,12 @@ namespace detail
 		{
 			std::lock_guard<decltype(table_.mutex)> lock(table_.mutex);
 			
-			std::map<Window, thread_binder*>::iterator i = table_.wnd_table.find(wd);
+			auto i = table_.wnd_table.find(wd);
 			if(i != table_.wnd_table.end())
 			{
 				thread_binder * const thr = i->second;
 				std::lock_guard<decltype(thr->mutex)> lock(thr->mutex);
-				for(msg_queue_type::iterator li = thr->msg_queue.begin(); li != thr->msg_queue.end();)
+				for(auto li = thr->msg_queue.begin(); li != thr->msg_queue.end();)
 				{
 					if(wd == _m_window(*li))
 						li = thr->msg_queue.erase(li);
@@ -235,7 +235,7 @@ namespace detail
 		void _m_msg_dispatch(const msg_packet_tag &msg)
 		{
 			std::lock_guard<decltype(table_.mutex)> lock(table_.mutex);
-			std::map<Window, thread_binder*>::iterator i = table_.wnd_table.find(_m_window(msg));
+			auto i = table_.wnd_table.find(_m_window(msg));
 			if(i != table_.wnd_table.end())
 			{
 				thread_binder * const thr = i->second;
@@ -256,7 +256,7 @@ namespace detail
 			{
 				std::lock_guard<decltype(table_.mutex)> lock(table_.mutex);
 				//Find the thread whether it is registered for the window.
-				std::map<unsigned, thread_binder*>::iterator i = table_.thr_table.find(tid);
+				auto i = table_.thr_table.find(tid);
 				if(i != table_.thr_table.end())
 				{
 					if(i->second->window.size())
@@ -301,7 +301,7 @@ namespace detail
 			thread_binder * thr;
 			{
 				std::lock_guard<decltype(table_.mutex)> lock(table_.mutex);
-				std::map<unsigned, thread_binder*>::iterator i = table_.thr_table.find(tid);
+				auto i = table_.thr_table.find(tid);
 				if(i != table_.thr_table.end())
 				{
 					if(i->second->msg_queue.size())

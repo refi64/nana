@@ -1,13 +1,14 @@
 #include <nana/audio/detail/audio_stream.hpp>
+#include <nana/charset.hpp>
 
 namespace nana{	namespace audio
 {
 	namespace detail
 	{
 		//class audio_stream
-			bool audio_stream::open(const char* file)
+			bool audio_stream::open(const nana::string& file)
 			{
-				fs_.open(file, std::ios::binary);
+				fs_.open(static_cast<std::string>(nana::charset(file)).c_str(), std::ios::binary);
 				if(fs_)
 				{
 					wave_spec::master_riff_chunk riff;

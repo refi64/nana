@@ -165,19 +165,21 @@ namespace nana{ namespace gui{
 						if(size.width > scale) size.width = scale;
 						if(size.height > scale) size.height = scale;
 
-						int tx = x + static_cast<int>(scale + extra_size - size.width) / 2;
-						int ty = y + static_cast<int>(height - size.height) / 2;
-						item.image.paste(graph, tx, ty, size.width, size.height);
+						nana::point pos(x, y);
+						pos.x += static_cast<int>(scale + extra_size - size.width) / 2;
+						pos.y += static_cast<int>(height - size.height) / 2;
+
+						item.image.paste(size, graph, pos);
 						if(item.enable == false)
 						{
 							nana::paint::graphics gh(size.width, size.height);
-							gh.bitblt(0, 0, size.width, size.height, graph, tx, ty);
+							gh.bitblt(size, graph, pos);
 							gh.rgb_to_wb();
-							gh.paste(graph, tx, ty);
+							gh.paste(graph, pos.x, pos.y);
 						}
 						else if(state == StateNormal)
 						{
-							graph.blend(tx, ty, size.width, size.height, graph.mix(color, 0xC0DDFC, 0.5), 0.25);
+							graph.blend(pos.x, pos.y, size.width, size.height, graph.mix(color, 0xC0DDFC, 0.5), 0.25);
 						}
 
 						x += scale;

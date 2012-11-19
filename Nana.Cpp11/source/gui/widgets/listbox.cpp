@@ -2231,10 +2231,11 @@ namespace nana{ namespace gui{
 
 		void listbox::checkable(bool chkable)
 		{
-			if(get_drawer_trigger().essence().checkable != chkable)
+			auto & t = get_drawer_trigger();
+			if(t.essence().checkable != chkable)
 			{
-				get_drawer_trigger().essence().checkable = chkable;
-				get_drawer_trigger().update();
+				t.essence().checkable = chkable;
+				t.update();
 			}
 		}
 

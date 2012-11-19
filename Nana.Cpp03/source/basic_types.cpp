@@ -128,10 +128,10 @@ namespace nana
 			return *this;
 		}
 
-		rectangle& rectangle::pare_off(unsigned pixels)
+		rectangle& rectangle::pare_off(int pixels)
 		{
-			x += static_cast<int>(pixels);
-			y += static_cast<int>(pixels);
+			x += pixels;
+			y += pixels;
 			width -= (pixels << 1);
 			height -= (pixels << 1);
 			return *this;

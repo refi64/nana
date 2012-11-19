@@ -388,20 +388,24 @@ namespace detail
 		atombase_.xdnd_finished = ::XInternAtom(display_, "XdndFinished", False);
 
 		//Create default font object.
-		def_font_ref_ = make_native_font(0, font_size_to_height(10), 400, false, false, false);
+		def_font_ptr_ = make_native_font(0, font_size_to_height(10), 400, false, false, false);
 		msg_dispatcher_ = new msg_dispatcher(display_);
 	}
 
 	platform_spec::~platform_spec()
 	{
 		delete msg_dispatcher_;
-		def_font_ref_.release();
+
+		//The font should be destroyed before closing display,
+		//otherwise it crashs
+		def_font_ptr_.reset();
+
 		close_display();
 	}
 
-	const platform_spec::font_refer_t& platform_spec::default_native_font() const
+	const platform_spec::font_ptr_t& platform_spec::default_native_font() const
 	{
-		return this->def_font_ref_;
+		return this->def_font_ptr_;
 	}
 
 	unsigned platform_spec::font_size_to_height(unsigned size) const
@@ -414,9 +418,9 @@ namespace detail
 		return height;
 	}
 
-	platform_spec::font_refer_t platform_spec::make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out)
+	platform_spec::font_ptr_t platform_spec::make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out)
 	{
-		font_refer_t ref;
+		font_ptr_t ref;
 #if defined(NANA_UNICODE)
 		if(0 == name || *name == 0)
 			name = STR("*");
@@ -454,7 +458,7 @@ namespace detail
 			impl->underline = underline;
 			impl->strikeout = strike_out;
 			impl->handle = handle;
-			ref = impl;
+			ref = std::shared_ptr<font_tag>(impl, font_tag::deleter());
 		}
 		return ref;
 	}
@@ -818,7 +822,7 @@ namespace detail
 				}
 				else
 				{
-					addr->rev_graph.bitblt(0, 0, addr->size.width, addr->size.height, wd, addr->pos.x, addr->pos.y);
+					addr->rev_graph.bitblt(addr->size, wd, addr->pos);
 					addr->rev.width = addr->size.width;
 					addr->rev.height = addr->size.height;
 					addr->rev.x = addr->pos.x;

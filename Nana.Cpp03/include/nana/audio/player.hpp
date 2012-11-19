@@ -1,6 +1,8 @@
 #ifndef NANA_AUDIO_PLAYER_HPP
 #define NANA_AUDIO_PLAYER_HPP
 #include <nana/traits.hpp>
+#include <nana/deploy.hpp>
+
 namespace nana{	namespace audio
 {
 	class player
@@ -9,10 +11,10 @@ namespace nana{	namespace audio
 		struct implementation;
 	public:
 		player();
-		player(const char* audio_file);
+		player(const nana::string& audio_file);
 		~player();
 
-		bool open(const char* audio_file);
+		bool open(const nana::string& audio_file);
 		void play();
 		void close();
 	private:

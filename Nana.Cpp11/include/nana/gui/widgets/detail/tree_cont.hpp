@@ -4,7 +4,7 @@
  *
  *	Distributed under the Nana Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
- *	http://stdex.sourceforge.net/LICENSE_1_0.txt)
+ *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/widgets/detail/tree_cont.hpp
  */

@@ -70,6 +70,53 @@ namespace detail
 		imm_set_composition_window_type imm_set_composition_window;
 	}
 #pragma pack(1)
+	//Decoder of WPARAM and LPARAM
+	struct wparam_button
+	{
+		bool left:1;
+		bool right:1;
+		bool shift:1;
+		bool ctrl:1;
+		bool middle:1;
+		bool place_holder:3;
+		char place_holder_c[1];
+		short wheel_delta;
+	};
+
+	template<int Bytes>
+	struct param_mouse
+	{
+		wparam_button button;
+		short x;
+		short y;
+	};
+
+	template<>
+	struct param_mouse<8>
+	{
+		wparam_button button;
+		char _x64_placeholder[4];
+		short x;
+		short y;
+	};
+
+	template<int Bytes>
+	struct param_size
+	{
+		unsigned long state;
+		short width;
+		short height;
+	};
+
+	template<>
+	struct param_size<8>
+	{
+		unsigned long state;
+		char _x64_placeholder[4];
+		short width;
+		short height;
+	};
+
 	union parameter_decoder
 	{
 		struct
@@ -78,32 +125,9 @@ namespace detail
 			LPARAM lparam;
 		}raw_param;
 
-		struct
-		{
-			struct
-			{
-				bool left:1;
-				bool right:1;
-				bool shift:1;
-				bool ctrl:1;
-				bool middle:1;
-				bool place_holder:3;
-				char place_holder_c[1];
-				short wheel_delta;
-			}button;
-
-			short x;
-			short y;
-		}mouse;
-
-		struct
-		{
-			unsigned long state;
-			short width;
-			short height;
-		}size;
+		param_mouse<sizeof(LPARAM)> mouse;
+		param_size<sizeof(LPARAM)> size;
 	};
-
 #pragma pack()
 
 	struct bedrock::thread_context

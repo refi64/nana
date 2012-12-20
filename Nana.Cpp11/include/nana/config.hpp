@@ -12,6 +12,15 @@
 #ifndef NANA_CONFIG_HPP
 #define NANA_CONFIG_HPP
 
+//There are marcos used for configuring Nana for the target system
+//
+//USE_NANA_WINDOWS
+//		Target for Windows XP and later
+//
+//USE_NANA_LINUX_X11
+//		Target to Linux(X11)
+//
+//Only one of them can be defined!!!
 #define USE_NANA_WINDOWS
 
 #if defined(USE_NANA_WINDOWS)

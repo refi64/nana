@@ -12,7 +12,17 @@
 #ifndef NANA_CONFIG_HPP
 #define NANA_CONFIG_HPP
 
+//There are marcos used for configuring Nana for the target system
+//
+//USE_NANA_WINDOWS
+//		Target for Windows XP and later
+//
+//USE_NANA_LINUX_X11
+//		Target to Linux(X11)
+//
+//Only one of them can be defined!!!
 #define USE_NANA_WINDOWS
+
 
 #if defined(USE_NANA_WINDOWS)
 	#define NANA_WINDOWS 1
@@ -35,9 +45,10 @@
 	#define NANA_LIBPNG 1
 #endif
 
+
 //If Boost C++ Library is installed in current system. Nana recommends
 //enabling Boost mutex and condition_variable instead of the mutex
-//and condition_variable that provided by Nana.
+//and condition_variable that provided by Nana. Only for C++03
 //#define NANA_USE_BOOST_MUTEX_CONDITION_VARIABLE 1
 
 #endif

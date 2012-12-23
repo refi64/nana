@@ -79,13 +79,13 @@ namespace gui
 				tooltip_window(window wd, const nana::point& pos, const nana::size& size)
 					: widget_object<category::root_tag, tlwnd_drawer>(wd, false, rectangle(pos, size), nana::gui::appear::bald<nana::gui::appear::floating>())
 				{
-					API::take_active(this->handle(), false, 0);
+					API::take_active(handle(), false, nullptr);
 				}
 
 				void show_text(const nana::string& text, int text_off, bool selected, nana::paint::image* img)
 				{
-					this->get_drawer_trigger().text(text, text_off, selected, img);
-					this->show();
+					get_drawer_trigger().text(text, text_off, selected, img);
+					show();
 				}
 			};//end class tooltip_window
 

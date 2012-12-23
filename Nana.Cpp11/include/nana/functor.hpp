@@ -2,8 +2,8 @@
  *	A Functor implementation
  *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
- *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	Distributed under the Nana Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
  *
  *	@file: nana/functor.hpp
@@ -66,8 +66,7 @@ namespace nana
 
 			static std::function<function> act(concept_type & obj, MFPtr mf)
 			{
-				using namespace std::placeholders;
-				return std::bind(mf, &obj, _1, _2);
+				return std::bind(mf, &obj, std::placeholders::_1, std::placeholders::_2);
 			}
 		};
 
@@ -79,8 +78,7 @@ namespace nana
 
 			static std::function<function> act(concept_type & obj, MFPtr mf)
 			{
-				using namespace std::placeholders;
-				return std::bind(mf, &obj, _1, _2, _3);
+				return std::bind(mf, &obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 			}
 		};
 
@@ -92,8 +90,7 @@ namespace nana
 
 			static std::function<function> act(concept_type & obj, MFPtr mf)
 			{
-				using namespace std::placeholders;
-				return std::bind(mf, &obj, _1, _2, _3, _4);
+				return std::bind(mf, &obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 			}
 		};
 
@@ -105,8 +102,7 @@ namespace nana
 
 			static std::function<function> act(concept_type & obj, MFPtr mf)
 			{
-				using namespace std::placeholders;
-				return std::bind(mf, &obj, _1, _2, _3, _4, _5);
+				return std::bind(mf, &obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
 			}
 		};
 	}//end namespace detail
@@ -116,8 +112,8 @@ namespace nana
 	{
 		typedef typename traits::mfptr_traits<MFPtr>::function function;
 		typedef typename traits::mfptr_traits<MFPtr>::concept_type concept_type;
-		
-		return detail::only_bind_this<std::is_base_of<concept_type, typename std::remove_pointer<T>::type>::value, MFPtr, traits::mfptr_traits<MFPtr>::parameter>::act(obj, mf); 
+
+		return detail::only_bind_this<std::is_base_of<concept_type, typename std::remove_pointer<T>::type>::value, MFPtr, traits::mfptr_traits<MFPtr>::parameter>::act(obj, mf);
 	}
 
 	namespace detail

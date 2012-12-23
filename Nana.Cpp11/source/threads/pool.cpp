@@ -15,7 +15,12 @@
 #include <time.h>
 #include <deque>
 #include <vector>
-#include <condition_variable>
+
+#if defined(NANA_MINGW)
+    #include <nana/std_condition_variable.hpp>
+#else
+    #include <condition_variable>
+#endif
 
 #if defined(NANA_WINDOWS)
 	#include <windows.h>
@@ -110,7 +115,7 @@ namespace threads
 
 					if(all_finished)
 						break;
-					
+
 					while(true)
 					{
 						auto idle_thr = _m_pick_up_an_idle();
@@ -151,7 +156,7 @@ namespace threads
 				}
 
 				pool_throbj * pto = _m_pick_up_an_idle();
-				
+
 				if(pto)
 				{
 					pto->task_ptr = taskptr;

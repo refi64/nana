@@ -23,6 +23,9 @@
 //Only one of them can be defined!!!
 #define USE_NANA_WINDOWS
 
+//NANA_MINGW
+//	Enable this flags when you compile Nana with MinGW
+//#define NANA_MINGW
 
 #if defined(USE_NANA_WINDOWS)
 	#define NANA_WINDOWS 1

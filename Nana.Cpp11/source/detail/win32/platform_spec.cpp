@@ -14,6 +14,7 @@
 #include PLATFORM_SPEC_HPP
 #include <nana/gui/detail/eventinfo.hpp>
 #include <shellapi.h>
+#include <stdexcept>
 
 namespace nana
 {
@@ -142,7 +143,7 @@ namespace detail
 			if(fn_unin)
 				fn_unin();
 			::FreeLibrary(ole32_);
-		}	
+		}
 	}
 
 	platform_spec::platform_spec()
@@ -156,7 +157,7 @@ namespace detail
 		::GetVersionEx(&osvi);
 		if (osvi.dwMajorVersion < 6)
 			metrics.cbSize -= sizeof(metrics.iPaddedBorderWidth);
-#endif 
+#endif
 		::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof metrics, &metrics, 0);
 		def_font_ptr_ = make_native_font(metrics.lfMessageFont.lfFaceName, font_size_to_height(9), 400, false, false, false);
 	}

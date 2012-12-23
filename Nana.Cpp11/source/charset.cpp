@@ -17,15 +17,18 @@
 #include <clocale>
 
 //GCC 4.7.0 does not implement the <codecvt> and codecvt_utfx classes
-#if defined(NANA_WINDOWS)
+#ifndef STD_CODECVT_NOT_SUPPORTED
 	#include <codecvt>
+#endif
+
+#if defined(NANA_MINGW)
+	#include <windows.h>
 #endif
 
 namespace nana
 {
 	namespace detail
 	{
-
 		class locale_initializer
 		{
 		public:
@@ -40,6 +43,72 @@ namespace nana
 				}
 			}
 		};
+
+		bool wc2mb(std::string& mbstr, const wchar_t * s)
+		{
+#if defined(NANA_MINGW)
+			int bytes = ::WideCharToMultiByte(CP_ACP, 0, s, -1, 0, 0, 0, 0);
+			if(bytes > 1)
+			{
+				mbstr.resize(bytes - 1);
+				::WideCharToMultiByte(CP_ACP, 0, s, -1, &(mbstr[0]), bytes - 1, 0, 0);
+			}
+			return true;
+#else
+			locale_initializer::init();
+			std::mbstate_t mbstate = std::mbstate_t();
+			std::size_t len = std::wcsrtombs(nullptr, &s, 0, &mbstate);
+			if(len == static_cast<std::size_t>(-1))
+				return false;
+			mbstr.resize(len);
+			std::wcsrtombs(&(mbstr[0]), &s, len, &mbstate);
+#endif
+			return true;
+		}
+		
+		bool mb2wc(std::wstring& wcstr, const char* s)
+		{
+#if defined(NANA_MINGW) 
+			int chars = ::MultiByteToWideChar(CP_ACP, 0, s, -1, 0, 0);
+			if(chars > 1)
+			{
+				wcstr.resize(chars - 1);
+				::MultiByteToWideChar(CP_ACP, 0, s, -1, &wcstr[0], chars - 1);
+			}
+#else
+			locale_initializer::init();
+			std::mbstate_t mbstate = std::mbstate_t();
+			std::size_t len = std::mbsrtowcs(nullptr, &s, 0, &mbstate);
+			if(len == static_cast<std::size_t>(-1))
+				return false;
+			
+			wcstr.resize(len);
+			std::mbsrtowcs(&wcstr[0], &s, len, &mbstate);
+#endif
+			return true;
+		}
+
+		bool mb2wc(std::string& wcstr, const char* s)
+		{
+#if defined(NANA_MINGW) 
+			int chars = ::MultiByteToWideChar(CP_ACP, 0, s, -1, 0, 0);
+			if(chars > 1)
+			{
+				wcstr.resize((chars - 1) * sizeof(wchar_t));
+				::MultiByteToWideChar(CP_ACP, 0, s, -1, reinterpret_cast<wchar_t*>(&wcstr[0]), chars - 1);
+			}
+#else
+			locale_initializer::init();
+			std::mbstate_t mbstate = std::mbstate_t();
+			std::size_t len = std::mbsrtowcs(nullptr, &s, 0, &mbstate);
+			if(len == static_cast<std::size_t>(-1))
+				return false;
+			
+			wcstr.resize(sizeof(wchar_t) * len);
+			std::mbsrtowcs(reinterpret_cast<wchar_t*>(&wcstr[0]), &s, len, &mbstate);
+#endif
+			return true;
+		}
 
 		class charset_encoding_interface
 		{
@@ -56,7 +125,7 @@ namespace nana
 			virtual std::wstring&& wstr_move() = 0;
 		};
 
-#if defined(NANA_WINDOWS)
+#ifndef STD_CODECVT_NOT_SUPPORTED
 		class charset_string
 			: public charset_encoding_interface
 		{
@@ -101,15 +170,7 @@ namespace nana
 					}
 
 					std::string mbstr;
-					std::mbstate_t mbstate = std::mbstate_t();
-					const wchar_t * sp = wcstr.c_str();
-					locale_initializer::init();
-					std::size_t len = std::wcsrtombs(nullptr, &sp, 0, &mbstate);
-					if(len != static_cast<std::size_t>(-1))
-					{
-						mbstr.resize(len);
-						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
-					}
+					wc2mb(mbstr, wcstr.c_str());
 					return mbstr;
 				}
 				return data_;
@@ -174,16 +235,8 @@ namespace nana
 				}
 
 				std::wstring wcstr;
-				const char* sp = data_.c_str();
-				std::mbstate_t mbstate = std::mbstate_t();
-
-				locale_initializer::init();
-				std::size_t len = std::mbsrtowcs(nullptr, &sp, 0, &mbstate);
-				if(len != static_cast<std::size_t>(-1))
+				if(mb2wc(wcstr, data_.c_str()))
 				{
-					wcstr.resize(len);
-					std::mbsrtowcs(&wcstr[0], &sp, len, &mbstate);
-
 					switch(encoding)
 					{
 					case unicode::utf8:
@@ -191,15 +244,17 @@ namespace nana
 					case unicode::utf16:
 						return std::wstring_convert<std::codecvt_utf16<wchar_t>>().to_bytes(wcstr);
 					case unicode::utf32:
-#if defined(NANA_WINDOWS)
+	#if defined(NANA_WINDOWS)
 						{
 							const char * bytes = reinterpret_cast<const char*>(wcstr.c_str());
 							std::u32string utf32str = std::wstring_convert<std::codecvt_utf16<char32_t>, char32_t>().from_bytes(bytes, bytes + sizeof(wchar_t) * wcstr.size());
 							return std::string(reinterpret_cast<const char*>(utf32str.c_str()), sizeof(char32_t) * utf32str.size());
 						}
-#else
+	#elif defined(NANA_LINUX)
 						return std::string(reinterpret_cast<const char*>(wcstr.c_str()), sizeof(wchar_t) * wcstr.size());
-#endif
+	#else
+						throw std::runtime_error("Bad charset");
+	#endif
 					}
 				}
 				return std::string();
@@ -222,16 +277,7 @@ namespace nana
 				}
 
 				std::wstring wcstr;
-				const char* sp = data_.c_str();
-				std::mbstate_t mbstate = std::mbstate_t();
-
-				locale_initializer::init();
-				std::size_t len = std::mbsrtowcs(nullptr, &sp, 0, &mbstate);
-				if(len != static_cast<std::size_t>(-1))
-				{
-					wcstr.resize(len);
-					std::mbsrtowcs(&wcstr[0], &sp, len, &mbstate);
-				}
+				mb2wc(wcstr, data_.c_str());
 				return wcstr;
 			}
 
@@ -268,18 +314,9 @@ namespace nana
 			{
 				if(data_.size())
 				{
-					std::mbstate_t mbstate = std::mbstate_t();
-					const wchar_t* sp = data_.c_str();
-
-					locale_initializer::init();
-					std::size_t len = std::wcsrtombs(nullptr, &sp, 0, &mbstate);
-					if(len != static_cast<std::size_t>(-1))
-					{
-						std::string mbstr;
-						mbstr.resize(len);
-						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
-						return mbstr;
-					}
+					std::string mbstr;
+					wc2mb(mbstr, data_.c_str());
+					return mbstr;
 				}
 				return std::string();
 			}
@@ -299,15 +336,17 @@ namespace nana
 				case unicode::utf16:
 					return std::wstring_convert<std::codecvt_utf16<wchar_t>>().to_bytes(data_);
 				case unicode::utf32:
-#if defined(NANA_WINDOWS)
+	#if defined (NANA_WINDOWS)
 					{
 						const char* bytes = reinterpret_cast<const char*>(data_.c_str());
 						std::u32string utf32str = std::wstring_convert<std::codecvt_utf16<char32_t>, char32_t>().from_bytes(bytes, bytes + sizeof(wchar_t) * data_.size());
 						return std::string(reinterpret_cast<const char*>(utf32str.c_str()), sizeof(char32_t) * utf32str.size());
 					}
-#else
+	#elif defined(NANA_LINUX)
 					return std::string(reinterpret_cast<const char*>(data_.c_str()), data_.size() * sizeof(wchar_t));
-#endif
+	#else
+					throw std::runtime_error("Bad charset");
+	#endif
 				}
 				return std::string();
 			}
@@ -325,7 +364,7 @@ namespace nana
 			std::wstring data_;
 			std::string data_for_move_;
 		};
-#elif defined(NANA_LINUX)
+#else
 		unsigned long utf8char(const unsigned char*& p, const unsigned char* end)
 		{
 			if(p != end)
@@ -740,15 +779,7 @@ namespace nana
 					}
 
 					std::string mbstr;
-					std::mbstate_t mbstate = std::mbstate_t();
-					const wchar_t * sp = reinterpret_cast<const wchar_t*>(strbuf.c_str());
-					locale_initializer::init();
-					std::size_t len = std::wcsrtombs(0, &sp, 0, &mbstate);
-					if(len != static_cast<std::size_t>(-1))
-					{
-						mbstr.resize(len);
-						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
-					}
+					wc2mb(mbstr, reinterpret_cast<const wchar_t*>(strbuf.c_str()));
 					return mbstr;
 				}
 				return data_;
@@ -804,16 +835,8 @@ namespace nana
 					return std::string();
 				}
 				std::string wcstr;
-				const char* sp = data_.c_str();
-				std::mbstate_t mbstate = std::mbstate_t();
-
-				locale_initializer::init();
-				std::size_t len = std::mbsrtowcs(nullptr, &sp, 0, &mbstate);
-				if(len != static_cast<std::size_t>(-1))
+				if(mb2wc(wcstr, data_.c_str()))
 				{
-					wcstr.resize(len * sizeof(wchar_t));
-					std::mbsrtowcs(reinterpret_cast<wchar_t*>(&wcstr[0]), &sp, len, &mbstate);
-
 					switch(encoding)
 					{
 					case unicode::utf8:
@@ -848,15 +871,7 @@ namespace nana
 				}
 
 				std::wstring wcstr;
-				const char* sp = data_.c_str();
-				std::mbstate_t mbstate = std::mbstate_t();
-				locale_initializer::init();
-				std::size_t len = std::mbsrtowcs(0, &sp, 0, &mbstate);
-				if(len != static_cast<std::size_t>(-1))
-				{
-					wcstr.resize(len);
-					std::mbsrtowcs(&wcstr[0], &sp, len, &mbstate);
-				}
+				mb2wc(wcstr, data_.c_str());
 				return wcstr;
 			}
 
@@ -890,18 +905,9 @@ namespace nana
 			{
 				if(data_.size())
 				{
-					std::mbstate_t mbstate = std::mbstate_t();
-					const wchar_t* sp = data_.c_str();
-
-					locale_initializer::init();
-					std::size_t len = std::wcsrtombs(0, &sp, 0, &mbstate);
-					if(len != static_cast<std::size_t>(-1))
-					{
-						std::string mbstr;
-						mbstr.resize(len);
-						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
-						return mbstr;
-					}
+					std::string mbstr;
+					wc2mb(mbstr, data_.c_str());
+					return mbstr;
 				}
 				return std::string();
 			}

@@ -23,16 +23,9 @@
 //Only one of them can be defined!!!
 #define USE_NANA_WINDOWS
 
-#if defined(USE_NANA_WINDOWS)
-	#define NANA_WINDOWS 1
-	#define PLATFORM_SPEC_HPP <nana/detail/win32/platform_spec.hpp>
-	#define GUI_BEDROCK_HPP <nana/gui/detail/bedrock.hpp>
-#elif defined(USE_NANA_LINUX_X11)
-	#define NANA_LINUX 1
-	#define NANA_X11 1
-	#define PLATFORM_SPEC_HPP <nana/detail/linux_X11/platform_spec.hpp>
-	#define GUI_BEDROCK_HPP <nana/gui/detail/bedrock.hpp>
-#endif
+//NANA_MINGW
+//	Enable this flags when you compile Nana with MinGW
+//#define NANA_MINGW
 
 #define NANA_UNICODE 1
 
@@ -45,5 +38,34 @@
 #endif
 
 
+//Here defines some flags that tell Nana what features of compiler envoriment are not conformed with ISO C++.
+
+//STD_CODECVT_NOT_SUPPORTED
+//	Enable this flag when compiling Nana with MinGW.
+//#define STD_CODECVT_NOT_SUPPORTED
+
+//Don't modify the following lines
+#if defined(USE_NANA_WINDOWS)
+	#define NANA_WINDOWS 1
+	#define PLATFORM_SPEC_HPP <nana/detail/win32/platform_spec.hpp>
+	#define GUI_BEDROCK_HPP <nana/gui/detail/bedrock.hpp>
+#elif defined(USE_NANA_LINUX_X11)
+	#define NANA_LINUX 1
+	#define NANA_X11 1
+	#define PLATFORM_SPEC_HPP <nana/detail/linux_X11/platform_spec.hpp>
+	#define GUI_BEDROCK_HPP <nana/gui/detail/bedrock.hpp>
 #endif
 
+#if defined(NANA_LINUX)
+	#ifndef STD_CODECVT_NOT_SUPPORTED
+		#define STD_CODECVT_NOT_SUPPORTED
+	#endif
+#endif
+
+#if defined(NANA_MINGW)
+	#ifndef STD_CODECVT_NOT_SUPPORTED
+		#define STD_CODECVT_NOT_SUPPORTED
+	#endif
+#endif
+
+#endif	//NANA_CONFIG_HPP

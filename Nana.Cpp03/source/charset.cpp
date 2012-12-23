@@ -16,6 +16,10 @@
 #include <cwchar>
 #include <clocale>
 
+#if defined(NANA_MINGW)
+	#include <windows.h>
+#endif
+
 namespace nana
 {
 	namespace detail
@@ -34,6 +38,72 @@ namespace nana
 				}
 			}
 		};
+		
+		bool wc2mb(std::string& mbstr, const wchar_t * s)
+		{
+#if defined(NANA_MINGW)
+			int bytes = ::WideCharToMultiByte(CP_ACP, 0, s, -1, 0, 0, 0, 0);
+			if(bytes > 1)
+			{
+				mbstr.resize(bytes - 1);
+				::WideCharToMultiByte(CP_ACP, 0, s, -1, &(mbstr[0]), bytes - 1, 0, 0);
+			}
+			return true;
+#else
+			locale_initializer::init();
+			std::mbstate_t mbstate = std::mbstate_t();
+			std::size_t len = std::wcsrtombs(0, &s, 0, &mbstate);
+			if(len == static_cast<std::size_t>(-1))
+				return false;
+			mbstr.resize(len);
+			std::wcsrtombs(&(mbstr[0]), &s, len, &mbstate);
+#endif
+			return true;
+		}
+		
+		bool mb2wc(std::wstring& wcstr, const char* s)
+		{
+#if defined(NANA_MINGW) 
+			int chars = ::MultiByteToWideChar(CP_ACP, 0, s, -1, 0, 0);
+			if(chars > 1)
+			{
+				wcstr.resize(chars - 1);
+				::MultiByteToWideChar(CP_ACP, 0, s, -1, &wcstr[0], chars - 1);
+			}
+#else
+			locale_initializer::init();
+			std::mbstate_t mbstate = std::mbstate_t();
+			std::size_t len = std::mbsrtowcs(0, &s, 0, &mbstate);
+			if(len == static_cast<std::size_t>(-1))
+				return false;
+			
+			wcstr.resize(len);
+			std::mbsrtowcs(&wcstr[0], &s, len, &mbstate);
+#endif
+			return true;
+		}
+
+		bool mb2wc(std::string& wcstr, const char* s)
+		{
+#if defined(NANA_MINGW) 
+			int chars = ::MultiByteToWideChar(CP_ACP, 0, s, -1, 0, 0);
+			if(chars > 1)
+			{
+				wcstr.resize((chars - 1) * sizeof(wchar_t));
+				::MultiByteToWideChar(CP_ACP, 0, s, -1, reinterpret_cast<wchar_t*>(&wcstr[0]), chars - 1);
+			}
+#else
+			locale_initializer::init();
+			std::mbstate_t mbstate = std::mbstate_t();
+			std::size_t len = std::mbsrtowcs(0, &s, 0, &mbstate);
+			if(len == static_cast<std::size_t>(-1))
+				return false;
+			
+			wcstr.resize(sizeof(wchar_t) * len);
+			std::mbsrtowcs(reinterpret_cast<wchar_t*>(&wcstr[0]), &s, len, &mbstate);
+#endif
+			return true;
+		}
 
 		unsigned long utf8char(const unsigned char*& p, const unsigned char* end)
 		{
@@ -469,15 +539,7 @@ namespace nana
 					}
 
 					std::string mbstr;
-					std::mbstate_t mbstate = std::mbstate_t();
-					const wchar_t * sp = reinterpret_cast<const wchar_t*>(strbuf.c_str());
-					locale_initializer::init();
-					std::size_t len = std::wcsrtombs(0, &sp, 0, &mbstate);
-					if(len != static_cast<std::size_t>(-1))
-					{
-						mbstr.resize(len);
-						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
-					}
+					wc2mb(mbstr, reinterpret_cast<const wchar_t*>(strbuf.c_str()));
 					return mbstr;
 				}
 				return data_;
@@ -527,16 +589,8 @@ namespace nana
 				}
 
 				std::string wcstr;
-				const char* sp = data_.c_str();
-				std::mbstate_t mbstate = std::mbstate_t();
-
-				locale_initializer::init();
-				std::size_t len = std::mbsrtowcs(0, &sp, 0, &mbstate);
-				if(len != static_cast<std::size_t>(-1))
+				if(mb2wc(wcstr, data_.c_str()))
 				{
-					wcstr.resize(len * sizeof(wchar_t));
-					std::mbsrtowcs(reinterpret_cast<wchar_t*>(&wcstr[0]), &sp, len, &mbstate);
-
 #if defined(NANA_WINDOWS)
 					switch(encoding)
 					{
@@ -598,15 +652,7 @@ namespace nana
 				}
 
 				std::wstring wcstr;
-				const char* sp = data_.c_str();
-				std::mbstate_t mbstate = std::mbstate_t();
-				locale_initializer::init();
-				std::size_t len = std::mbsrtowcs(0, &sp, 0, &mbstate);
-				if(len != static_cast<std::size_t>(-1))
-				{
-					wcstr.resize(len);
-					std::mbsrtowcs(&wcstr[0], &sp, len, &mbstate);
-				}
+				mb2wc(wcstr, data_.c_str());
 				return wcstr;
 			}
 		private:
@@ -633,18 +679,9 @@ namespace nana
 			{
 				if(data_.size())
 				{
-					std::mbstate_t mbstate = std::mbstate_t();
-					const wchar_t* sp = data_.c_str();
-
-					locale_initializer::init();
-					std::size_t len = std::wcsrtombs(0, &sp, 0, &mbstate);
-					if(len != static_cast<std::size_t>(-1))
-					{
-						std::string mbstr;
-						mbstr.resize(len);
-						std::wcsrtombs(&(mbstr[0]), &sp, len, &mbstate);
+					std::string mbstr;
+					if(wc2mb(mbstr, data_.c_str()))
 						return mbstr;
-					}
 				}
 				return std::string();
 			}

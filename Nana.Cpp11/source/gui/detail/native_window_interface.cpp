@@ -13,9 +13,13 @@
 #include PLATFORM_SPEC_HPP
 #include <nana/gui/detail/native_window_interface.hpp>
 #if defined(NANA_WINDOWS)
-	#include <nana/paint/detail/image_ico.hpp>
-	#include <mutex>
+	#if defined(NANA_MINGW)
+        #include <nana/std_mutex.hpp>
+    #else
+        #include <mutex>
+	#endif
 	#include <map>
+	#include <nana/paint/detail/image_ico.hpp>
 #elif defined(NANA_X11)
 	#include <nana/system/platform.hpp>
 	#include GUI_BEDROCK_HPP
@@ -45,7 +49,7 @@ namespace nana{
 #endif
 		};
 	}
-	
+
 	namespace gui{	namespace detail{
 
 #if defined(NANA_WINDOWS)
@@ -349,7 +353,7 @@ namespace nana{
 #elif defined(NANA_X11)
 			if(wd && (false == img.empty()))
 			{
-				
+
 				const nana::paint::graphics & graph = restrict::spec.keep_window_icon(wd, img);
 				XWMHints hints;
 				hints.flags = IconPixmapHint;
@@ -645,7 +649,7 @@ namespace nana{
 				hints.y = y;
 				::XSetWMNormalHints(disp, reinterpret_cast<Window>(wd), &hints);
 			}
-			
+
 			::XMoveWindow(disp, reinterpret_cast<Window>(wd), x, y);
 #endif
 		}
@@ -711,7 +715,7 @@ namespace nana{
 				hints.width = width;
 				hints.height = height;
 			}
-			
+
 			if(hints.flags)
 				::XSetWMNormalHints(disp, reinterpret_cast<Window>(wd), &hints);
 
@@ -1202,7 +1206,7 @@ namespace nana{
 				if(static_cast<unsigned>(x) > sz.width + ext_width)
 					sz.width = static_cast<unsigned>(x);
 				if(static_cast<unsigned>(y) > sz.height + ext_height)
-					sz.height = static_cast<unsigned>(y);			
+					sz.height = static_cast<unsigned>(y);
 			}
 #endif
 			return sz;

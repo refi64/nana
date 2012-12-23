@@ -2,9 +2,16 @@
 #define NANA_AUDIO_DETAIL_BUFFER_PREPARATION_HPP
 #include <nana/deploy.hpp>
 #include <nana/audio/detail/audio_stream.hpp>
-#include <mutex>
-#include <condition_variable>
-#include <thread>
+
+#if defined(NANA_MINGW)
+    #include <nana/std_thread.hpp>
+    #include <nana/std_mutex.hpp>
+    #include <nana/std_condition_variable.hpp>
+#else
+    #include <mutex>
+    #include <condition_variable>
+    #include <thread>
+#endif
 
 #include <sstream>
 #include <vector>

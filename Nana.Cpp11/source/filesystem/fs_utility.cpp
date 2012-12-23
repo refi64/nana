@@ -15,7 +15,14 @@
 #include <nana/filesystem/file_iterator.hpp>
 #include <vector>
 #if defined(NANA_WINDOWS)
-	#include <windows.h>
+    #include <windows.h>
+
+    #if defined(NANA_MINGW)
+        #ifndef _WIN32_IE
+            #define _WIN32_IE 0x0500
+        #endif
+    #endif
+
 	#include <shlobj.h>
 	#include <nana/datetime.hpp>
 #elif defined(NANA_LINUX)

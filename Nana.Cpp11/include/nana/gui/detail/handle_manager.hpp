@@ -2,8 +2,8 @@
  *	Handle Manager Implementation
  *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
- *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	Distributed under the Nana Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/detail/handle_manager.hpp
@@ -15,9 +15,15 @@
 #ifndef NANA_GUI_DETAIL_HANDLE_MANAGER_HPP
 #define NANA_GUI_DETAIL_HANDLE_MANAGER_HPP
 #include <map>
-#include <nana/traits.hpp>
 #include <iterator>
-#include <mutex>
+
+#include <nana/traits.hpp>
+#include <nana/config.hpp>
+#if defined(NANA_MINGW)
+    #include <nana/std_mutex.hpp>
+#else
+    #include <mutex>
+#endif
 
 namespace nana
 {
@@ -33,9 +39,9 @@ namespace gui
 			typedef Value value_type;
 			typedef std::pair<key_type, value_type> pair_type;
 			typedef std::size_t size_type;
-			
+
 			static const size_type npos = -1;
-			
+
 			cache()
 				:addr_(reinterpret_cast<pair_type*>(place_))
 			{
@@ -45,16 +51,16 @@ namespace gui
 					seq_[i] = npos;
 				}
 			}
-			
+
 			~cache()
 			{
 				for(int i = 0; i < CacheSize; ++i)
 				{
 					if(bitmap_[i])
 						addr_[i].~pair_type();
-				}	
+				}
 			}
-			
+
 			bool insert(key_type k, value_type v)
 			{
 				size_type pos = _m_find_key(k);
@@ -66,19 +72,19 @@ namespace gui
 				{
 					//No key exists
 					pos = _m_find_pos();
-					
+
 					if(pos == npos)
 					{	//No room, and remove the last pair
 						pos = seq_[CacheSize - 1];
 						(addr_ + pos)->~pair_type();
 					}
-					
+
 					if(seq_[0] != npos)
 					{//Need to move
 						for(int i = CacheSize - 1; i > 0; --i)
 							seq_[i] = seq_[i - 1];
 					}
-					
+
 					seq_[0] = pos;
 
 					new (addr_ + pos) pair_type(k, v);
@@ -86,17 +92,17 @@ namespace gui
 				}
 				return v;
 			}
-			
+
 			void erase(key_type k)
 			{
 				size_type pos = _m_find_key(k);
 				if(pos != npos)
 				{
 					(addr_+pos)->~pair_type;
-					bitmap_[pos] = 0;	
+					bitmap_[pos] = 0;
 				}
 			}
-			
+
 			value_type * get(key_type k)
 			{
 				size_type pos = _m_find_key(k);
@@ -114,13 +120,13 @@ namespace gui
 				}
 				return npos;
 			}
-			
+
 			size_type _m_find_pos() const
 			{
 				for(int i = 0; i < CacheSize; ++i)
 				{
 					if(bitmap_[i] == 0)
-						return i;	
+						return i;
 				}
 				return npos;
 			}
@@ -270,7 +276,7 @@ namespace gui
 				std::copy(queue_.begin(), queue_.end(), std::back_inserter(v));
 			}
 		private:
-			
+
 			template<bool IsQueueOperation, typename Container>
 			struct is_queue
 			{
@@ -299,7 +305,7 @@ namespace gui
 				static void insert(handle_type handle, Container& queue){}
 				static void erase(handle_type handle, Container& queue){}
 			};
-			
+
 		private:
 			mutable std::recursive_mutex mutex_;
 			mutable cache<const handle_type, bool, 5> cacher_;

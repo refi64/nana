@@ -234,18 +234,23 @@ namespace gui
 			}
 		}
 
-		void drawer::map(window wd, const nana::rectangle& vr)	//Copy the root buffer to screen
+		void drawer::map(window wd)	//Copy the root buffer to screen
 		{
 			if(wd)
 			{
 				bedrock_type::core_window_t* iwd = reinterpret_cast<bedrock_type::core_window_t*>(wd);
-				const bool caret = (iwd->together.caret && iwd->together.caret->visible());
-				if(caret) iwd->together.caret->visible(false);
+				bedrock_type::core_window_t * caret_wd = iwd->root_widget->other.attribute.root->focus;
+
+				const bool owns_caret = (caret_wd && (caret_wd->together.caret) && (caret_wd->together.caret->visible()));
+				if(owns_caret) caret_wd->together.caret->visible(false);
 
 				if(false == edge_nimbus_renderer_t::instance().render(iwd))
-					iwd->root_graph->paste(iwd->root, vr, vr.x, vr.y);
-
-				if(caret) iwd->together.caret->visible(true);
+				{
+					nana::rectangle vr;
+					if(bedrock_type::window_manager_t::wndlayout_type::read_visual_rectangle(iwd, vr))
+						iwd->root_graph->paste(iwd->root, vr, vr.x, vr.y);
+				}
+				if(owns_caret) caret_wd->together.caret->visible(true);
 			}
 		}
 

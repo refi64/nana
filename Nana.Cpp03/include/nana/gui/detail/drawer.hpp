@@ -96,7 +96,7 @@ namespace gui
 			void key_char(const eventinfo&);
 			void key_up(const eventinfo&);
 			void shortkey(const eventinfo&);
-			void map(window, const nana::rectangle& vr);	//Copy the root buffer to screen
+			void map(window);	//Copy the root buffer to screen
 			void refresh();
 			drawer_trigger* realizer() const;
 			void attached(drawer_trigger&);

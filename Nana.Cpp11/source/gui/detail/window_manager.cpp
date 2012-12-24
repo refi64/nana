@@ -730,17 +730,12 @@ namespace detail
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
 				if(handle_manager_.available(wd))
 				{
+					//Copy the root buffer that wd specified into DeviceContext
 #if defined(NANA_LINUX)
-					nana::rectangle vr;
-					if(wndlayout_type::read_visual_rectangle(wd, vr))
-						wd->drawer.map(reinterpret_cast<window>(wd), vr);	//Copy the root buffer that wd specified into DeviceContext
+					wd->drawer.map(reinterpret_cast<window>(wd));
 #elif defined(NANA_WINDOWS)
 					if(nana::system::this_thread_id() == wd->thread_id)
-					{
-						nana::rectangle vr;
-						if(wndlayout_type::read_visual_rectangle(wd, vr))
-							wd->drawer.map(reinterpret_cast<window>(wd), vr);	//Copy the root buffer that wd specified into DeviceContext
-					}
+						wd->drawer.map(reinterpret_cast<window>(wd));
 					else
 						bedrock::instance().map_thread_root_buffer(wd);
 #endif

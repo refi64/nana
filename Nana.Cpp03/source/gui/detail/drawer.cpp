@@ -235,18 +235,23 @@ namespace gui
 			}
 		}
 
-		void drawer::map(nana::gui::window window, const nana::rectangle& vr)	//Copy the root buffer to screen
+		void drawer::map(window wd)	//Copy the root buffer to screen
 		{
-			if(window)
+			if(wd)
 			{
-				bedrock_type::core_window_t* wd = reinterpret_cast<bedrock_type::core_window_t*>(window);
-				const bool caret = (wd->together.caret && wd->together.caret->visible());
-				if(caret) wd->together.caret->visible(false);
+				bedrock_type::core_window_t* iwd = reinterpret_cast<bedrock_type::core_window_t*>(wd);
+				bedrock_type::core_window_t* caret_wd = iwd->root_widget->other.attribute.root->focus;
 
-				if(false == edge_nimbus_renderer_t::instance().render(wd))
-					wd->root_graph->paste(wd->root, vr, vr.x, vr.y);
+				const bool owns_caret = (caret_wd && caret_wd->together.caret && caret_wd->together.caret->visible());
+				if(owns_caret) caret_wd->together.caret->visible(false);
 
-				if(caret) wd->together.caret->visible(true);
+				if(false == edge_nimbus_renderer_t::instance().render(iwd))
+				{
+					nana::rectangle vr;
+					if(bedrock_type::window_manager_t::wndlayout_type::read_visual_rectangle(iwd, vr))
+						iwd->root_graph->paste(iwd->root, vr, vr.x, vr.y);
+				}
+				if(owns_caret) caret_wd->together.caret->visible(true);
 			}
 		}
 

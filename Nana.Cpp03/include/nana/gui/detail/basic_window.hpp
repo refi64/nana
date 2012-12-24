@@ -481,7 +481,6 @@ namespace detail
 			};
 
 			unsigned category;
-
 			basic_window *active_window;	//if flags.take_active is false, the active_window still keeps the focus,
 											//if the active_window is null, the parent of this window keeps focus.
 			paint::graphics glass_buffer;	//if flags.glass is true. Refer to window_layout::make_glass_background.

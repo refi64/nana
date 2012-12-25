@@ -83,7 +83,7 @@ namespace detail
 					}
 				}
 			}
-			return "";
+			return std::string();
 		}
 	//end class conf
 
@@ -101,7 +101,7 @@ namespace detail
 		std::string charset_conv::charset(const std::string& str) const
 		{
 			if(reinterpret_cast<iconv_t>(-1) == handle_)
-				return "";
+				return std::string();
 
 			char * inbuf = const_cast<char*>(str.c_str());
 			std::size_t inleft = str.size();
@@ -118,7 +118,7 @@ namespace detail
 		std::string charset_conv::charset(const char* buf, std::size_t len) const
 		{
 			if(reinterpret_cast<iconv_t>(-1) == handle_)
-				return "";
+				return std::string();
 
 			char * inbuf = const_cast<char*>(buf);
 			std::size_t outlen = (len * 4 + 4);
@@ -329,8 +329,6 @@ namespace detail
 		if(0 == langstr)
 		{
 			langstr = getenv("LC_ALL");
-		//	if(0 == langstr)
-		//		langstr = getenv("LANG");
 		}
 
 		std::string langstr_dup;
@@ -636,19 +634,17 @@ namespace detail
 
 						if(has_status)
 						{
-							addr->input_context = ::XCreateIC(addr->input_method,
-														XNInputStyle, (XIMPreeditPosition | XIMStatusArea),
-														XNPreeditAttributes, preedit_attr,
-														XNStatusAttributes, status_attr,
-														XNClientWindow, reinterpret_cast<Window>(wd),
-														0);
+							addr->input_context = ::XCreateIC(addr->input_method, XNInputStyle, (XIMPreeditPosition | XIMStatusArea),
+														XNPreeditAttributes, preedit_attr, XNStatusAttributes, status_attr,
+														XNClientWindow, reinterpret_cast<Window>(wd), 0);
 						}
 						else
 							addr->input_context = 0;
 
 						if((addr->input_context == 0) && has_preedit)
 						{
-							addr->input_context = ::XCreateIC(addr->input_method, XNInputStyle, (XIMPreeditPosition | XIMStatusNothing), XNPreeditAttributes, preedit_attr, XNClientWindow, reinterpret_cast<Window>(wd), 0);
+							addr->input_context = ::XCreateIC(addr->input_method, XNInputStyle, (XIMPreeditPosition | XIMStatusNothing),
+															XNPreeditAttributes, preedit_attr, XNClientWindow, reinterpret_cast<Window>(wd), 0);
 						}
 
 						if(addr->input_context)
@@ -658,9 +654,8 @@ namespace detail
 							::XFree(attr);
 						}
 						else
-						{
-							addr->input_context = ::XCreateIC(addr->input_method, XNInputStyle, (XIMPreeditNothing | XIMStatusNothing), XNClientWindow, reinterpret_cast<Window>(wd), 0);
-						}
+							addr->input_context = ::XCreateIC(addr->input_method, XNInputStyle, (XIMPreeditNothing | XIMStatusNothing),
+															XNClientWindow, reinterpret_cast<Window>(wd), 0);
 
 						if(addr->input_context)
 						{
@@ -672,12 +667,9 @@ namespace detail
 							new_attr.event_mask = (attr.your_event_mask | addr->input_context_event_mask);
 							::XChangeWindowAttributes(display_, reinterpret_cast<Window>(wd), CWEventMask, &new_attr);
 						}
-
 						::XFree(preedit_attr);
 						::XFree(status_attr);
 					}
-
-
 					::XFree(imstyle);
 				}
 			}
@@ -769,10 +761,10 @@ namespace detail
 		std::map<nana::gui::native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
 		if(i != caret_holder_.carets.end())
 		{
-			caret_reinstate(wd);
-			caret_tag * addr = i->second;
-			addr->pos.x = x;
-			addr->pos.y = y;
+			caret_tag & crt = *i->second;
+			caret_reinstate(crt);
+			crt.pos.x = x;
+			crt.pos.y = y;
 		}
 	}
 
@@ -782,70 +774,87 @@ namespace detail
 		std::map<nana::gui::native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
 		if(i != caret_holder_.carets.end())
 		{
-			if(i->second->visible != vis)
+			caret_tag& crt = *i->second;
+			if(crt.visible != vis)
 			{
 				if(vis == false)
 				{
-					caret_reinstate(wd);
-					if(i->second->input_context && i->second->has_input_method_focus)
+					caret_reinstate(crt);
+					if(crt.input_context && crt.has_input_method_focus)
 					{
-						::XUnsetICFocus(i->second->input_context);
-						i->second->has_input_method_focus = false;
+						::XUnsetICFocus(crt.input_context);
+						crt.has_input_method_focus = false;
 					}
 				}
 				else
 				{
-					if(i->second->input_context && (false == i->second->has_input_method_focus))
+					if(crt.input_context && (false == crt.has_input_method_focus))
 					{
-						::XSetICFocus(i->second->input_context);
-						i->second->has_input_method_focus = true;
+						::XSetICFocus(crt.input_context);
+						crt.has_input_method_focus = true;
 					}
 				}
-				i->second->visible = vis;
+				crt.visible = vis;
 			}
 		}
 	}
 
-	void platform_spec::caret_flash(nana::gui::native_window_type wd)
+	void platform_spec::caret_flash(caret_tag & crt)
+	{
+		if(crt.visible && (false == caret_reinstate(crt)))
+		{
+			crt.rev_graph.bitblt(crt.size, crt.window, crt.pos);
+			crt.rev.width = crt.size.width;
+			crt.rev.height = crt.size.height;
+			crt.rev.x = crt.pos.x;
+			crt.rev.y = crt.pos.y;
+			crt.graph.paste(crt.window, crt.rev, 0, 0);
+		}
+	}
+	
+	bool platform_spec::caret_update(nana::gui::native_window_type wd, nana::paint::graphics& root_graph, bool is_erase_caret_from_root_graph)
 	{
 		platform_scope_guard psg;
 		std::map<nana::gui::native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
 		if(i != caret_holder_.carets.end())
 		{
-			caret_tag * addr = i->second;
-			if(addr->visible)
+			caret_tag & crt = *i->second;
+			if(is_erase_caret_from_root_graph)
 			{
-				if(addr->rev.width && addr->rev.height)
+				root_graph.bitblt(crt.rev, crt.rev_graph);	
+			}
+			else
+			{
+				bool owns_caret = false;
+				nana::paint::graphics * crt_graph;
+				if(crt.rev.width && crt.rev.height)
 				{
-					addr->rev_graph.paste(wd, addr->rev, 0, 0);
-					addr->rev.width = addr->rev.height = 0;
+					crt.rev_graph.bitblt(crt.size, root_graph, crt.pos);
+					crt_graph = &crt.graph;
+					owns_caret = true;	
 				}
 				else
-				{
-					addr->rev_graph.bitblt(addr->size, wd, addr->pos);
-					addr->rev.width = addr->size.width;
-					addr->rev.height = addr->size.height;
-					addr->rev.x = addr->pos.x;
-					addr->rev.y = addr->pos.y;
-					addr->graph.paste(wd, addr->rev, 0, 0);
-				}
+					crt_graph = &crt.rev_graph;
+					
+				root_graph.bitblt(crt.rev, *crt_graph);
+				return owns_caret;
 			}
 		}
+		return false;
 	}
 
-	void platform_spec::caret_reinstate(nana::gui::native_window_type wd)
+	//Copy the reversed graphics to the window
+	bool platform_spec::caret_reinstate(caret_tag& crt)
 	{
-		platform_scope_guard psg;
-		std::map<nana::gui::native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
-		if(i != caret_holder_.carets.end())
+		if(crt.rev.width && crt.rev.height)
 		{
-			caret_tag * addr = i->second;
-			if(addr->rev.width && addr->rev.height)
-			{
-				addr->rev_graph.paste(wd, addr->rev, 0, 0);
-				addr->rev.width = addr->rev.height = 0;
-			}
+			crt.rev_graph.paste(crt.window, crt.rev, 0, 0);
+			//Drop the reversed graphics in order to draw the
+			//caret in the next flash.
+			crt.rev.width = crt.rev.height = 0;
+			return true;
 		}
+		return false;
 	}
 
 	void platform_spec::set_error_handler()
@@ -873,9 +882,8 @@ namespace detail
 			if(xlib_locker_.try_lock())
 			{
 				for(std::map<nana::gui::native_window_type, caret_tag*>::iterator i = caret_holder_.carets.begin(); i != caret_holder_.carets.end(); ++i)
-				{
-					caret_flash(i->first);
-				}
+					caret_flash(*i->second);
+
 				xlib_locker_.unlock();
 			}
 			for(int i = 0; i < 5 && (false == caret_holder_.exit_thread); ++i)

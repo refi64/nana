@@ -15,6 +15,10 @@
 #include <nana/gui/detail/dynamic_drawing_object.hpp>
 #include <nana/gui/detail/effects_renderer.hpp>
 
+#if defined(NANA_X11)
+	#include <nana/detail/linux_X11/platform_spec.hpp>
+#endif
+
 namespace nana
 {
 namespace gui
@@ -241,9 +245,20 @@ namespace gui
 			{
 				bedrock_type::core_window_t* iwd = reinterpret_cast<bedrock_type::core_window_t*>(wd);
 				bedrock_type::core_window_t* caret_wd = iwd->root_widget->other.attribute.root->focus;
+				bool owns_caret = (caret_wd && caret_wd->together.caret && caret_wd->together.caret->visible());
 
-				const bool owns_caret = (caret_wd && caret_wd->together.caret && caret_wd->together.caret->visible());
-				if(owns_caret) caret_wd->together.caret->visible(false);
+				//The caret in X11 is implemented by Nana, it is different from Windows'
+				//the caret in X11 is asynchronous, it is hard to hide and show the caret
+				//immediately, and therefore the caret always be flickering when the graphics
+				//buffer is mapping to the window.
+				if(owns_caret)
+				{
+#ifndef NANA_X11
+					caret_wd->together.caret->visible(false);
+#else
+					owns_caret = nana::detail::platform_spec::instance().caret_update(iwd->root, *iwd->root_graph, false);
+#endif
+				}
 
 				if(false == edge_nimbus_renderer_t::instance().render(iwd))
 				{
@@ -251,7 +266,15 @@ namespace gui
 					if(bedrock_type::window_manager_t::wndlayout_type::read_visual_rectangle(iwd, vr))
 						iwd->root_graph->paste(iwd->root, vr, vr.x, vr.y);
 				}
-				if(owns_caret) caret_wd->together.caret->visible(true);
+
+				if(owns_caret)
+				{
+#ifndef NANA_X11
+					caret_wd->together.caret->visible(true);
+#else
+					nana::detail::platform_spec::instance().caret_update(iwd->root, *iwd->root_graph, true);
+#endif
+				}
 			}
 		}
 

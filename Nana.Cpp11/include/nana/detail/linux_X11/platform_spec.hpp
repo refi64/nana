@@ -216,8 +216,9 @@ namespace detail
 		void caret_close(nana::gui::native_window_type);
 		void caret_pos(nana::gui::native_window_type, int x, int y);
 		void caret_visible(nana::gui::native_window_type, bool);
-		void caret_flash(nana::gui::native_window_type);
-		void caret_reinstate(nana::gui::native_window_type);
+		void caret_flash(caret_tag&);
+		bool caret_update(nana::gui::native_window_type, nana::paint::graphics& root_graph, bool is_erase_caret_from_root_graph);
+		static bool caret_reinstate(caret_tag&);
 		void set_error_handler();
 		int rev_error_handler();
 		void event_register_filter(nana::gui::native_window_type, unsigned eventid);

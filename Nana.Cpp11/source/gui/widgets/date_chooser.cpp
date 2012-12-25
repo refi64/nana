@@ -412,7 +412,6 @@ namespace nana{ namespace gui{
 						for(int i = 1; i < count; ++i)
 						{
 							int off_x = static_cast<int>(delta * i);
-							int less_w = dirtybuf.width() - off_x;
 							dr.width = dirtybuf.width() - off_x;
 
 							graph.bitblt(dr, dirtybuf, nana::point(off_x, 0));

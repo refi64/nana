@@ -183,8 +183,8 @@ namespace nana{
 			wd_area.bottom -= wd_area.top;
 
 			window_result result = {reinterpret_cast<native_window_type>(wnd),
-										client.right, client.bottom,
-										wd_area.right - client.right, wd_area.bottom - client.bottom};
+										static_cast<unsigned>(client.right), static_cast<unsigned>(client.bottom),
+										static_cast<unsigned>(wd_area.right - client.right), static_cast<unsigned>(wd_area.bottom - client.bottom)};
 #elif defined(NANA_X11)
 			nana::detail::platform_scope_guard psg;
 

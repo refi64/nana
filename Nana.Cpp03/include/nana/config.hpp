@@ -23,9 +23,6 @@
 //Only one of them can be defined!!!
 #define USE_NANA_WINDOWS
 
-//NANA_MINGW
-//	Enable this flags when you compile Nana with MinGW
-//#define NANA_MINGW
 
 #if defined(USE_NANA_WINDOWS)
 	#define NANA_WINDOWS 1
@@ -42,10 +39,15 @@
 #define NANA_UNICODE 1
 //Support for PNG
 //Comment it to disable the feature of support for PNG.
-//#define NANA_ENABLE_PNG 1
+#define NANA_ENABLE_PNG 1
 #if defined(NANA_ENABLE_PNG)
 	//Comment it to use libpng from operating system.
 	#define NANA_LIBPNG 1
+#endif
+
+//Test whether the compiler is G++/MinGW.
+#if defined(__GNUG__) && defined(NANA_WINDOWS)
+	#define	NANA_MINGW
 #endif
 
 

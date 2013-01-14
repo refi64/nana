@@ -117,8 +117,8 @@ namespace nana
 		rectangle(const size &);
 		rectangle(const point&, const size&);
 
-		bool operator==(const rectangle& rhs) const;
-		bool operator!=(const rectangle& rhs) const;
+		bool operator==(const rectangle&) const;
+		bool operator!=(const rectangle&) const;
 		rectangle & operator=(const point&);
 		rectangle & operator=(const size&);
 

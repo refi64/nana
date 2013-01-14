@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="..\..\source\charset.cpp" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="412" topLine="15" />
+		</Cursor>
+	</File>
+	<File name="..\..\source\audio\detail\audio_device.cpp" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6476" topLine="23" />
+		</Cursor>
+	</File>
+	<File name="..\..\source\detail\win32\platform_spec.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="545" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="..\..\source\threads\pool.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="520" topLine="11" />
+		</Cursor>
+	</File>
+	<File name="..\..\source\filesystem\fs_utility.cpp" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="675" topLine="12" />
+		</Cursor>
+	</File>
+	<File name="..\..\source\gui\detail\native_window_interface.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4901" topLine="171" />
+		</Cursor>
+	</File>
+	<File name="..\..\source\paint\graphics.cpp" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="16105" topLine="579" />
+		</Cursor>
+	</File>
+	<File name="..\..\source\audio\detail\buffer_preparation.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1510" topLine="45" />
+		</Cursor>
+	</File>
+</CodeBlocks_layout_file>

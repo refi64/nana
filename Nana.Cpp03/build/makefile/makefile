@@ -13,12 +13,12 @@ LIBS	= -lX11 -lpthread -lXpm -lrt -ldl
 BIN	= nana.a
 
 SRC_NANA = $(wildcard $(SRCROOT)/*.cpp)
-SRC_DETAIL = $(wildcard $(SRCROOT)/detail/*.cpp) $(wildcard $(SRCROOT)/detail/linux_X11/*.cpp)
+SRC_DETAIL = $(wildcard $(SRCROOT)/detail/*.cpp)
 SRC_FILESYSTEM = $(wildcard $(SRCROOT)/filesystem/*.cpp)
 SRC_AUDIO = $(wildcard $(SRCROOT)/audio/*.cpp)
 SRC_AUDIO_DETAIL = $(wildcard $(SRCROOT)/audio/detail/*.cpp)
 SRC_GUI = $(wildcard $(SRCROOT)/gui/*.cpp)
-SRC_GUI_DETAIL = $(wildcard $(SRCROOT)/gui/detail/*.cpp) $(wildcard $(SRCROOT)/gui/detail/linux_X11/*.cpp)
+SRC_GUI_DETAIL = $(wildcard $(SRCROOT)/gui/detail/*.cpp)
 SRC_GUI_WIDGETS = $(wildcard $(SRCROOT)/gui/widgets/*.cpp)
 SRC_GUI_WIDGETS_SKELETONS = $(wildcard $(SRCROOT)/gui/widgets/skeletons/*.cpp)
 SRC_PAINT = $(wildcard $(SRCROOT)/paint/*.cpp)

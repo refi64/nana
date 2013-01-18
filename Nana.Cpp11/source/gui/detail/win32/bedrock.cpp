@@ -6,10 +6,11 @@
  *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
  *
- *	@file: nana/gui/detail/bedrock.cpp
+ *	@file: nana/gui/detail/win32/bedrock.cpp
  */
 
 #include <nana/config.hpp>
+
 #include PLATFORM_SPEC_HPP
 #include GUI_BEDROCK_HPP
 #include <nana/gui/detail/eventinfo.hpp>

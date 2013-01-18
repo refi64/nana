@@ -809,7 +809,7 @@ namespace nana{	namespace gui
 			OPENFILENAME ofn;
 			memset(&ofn, 0, sizeof ofn);
 			ofn.lStructSize = sizeof(ofn);
-			ofn.hwndOwner = reinterpret_cast<HWND>(impl_->owner);
+			ofn.hwndOwner = reinterpret_cast<HWND>(API::root(impl_->owner));
 			ofn.lpstrFile = buffer;
 			ofn.lpstrFile[0] = '\0';
 			ofn.nMaxFile = sizeof(buffer) / sizeof(nana::char_t) - 1;

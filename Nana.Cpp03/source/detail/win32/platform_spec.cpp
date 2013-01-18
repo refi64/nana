@@ -11,13 +11,11 @@
  *	This file provides basis class and data structrue that required by nana
  */
 #include <nana/config.hpp>
+
 #include PLATFORM_SPEC_HPP
 #include <nana/gui/detail/eventinfo.hpp>
 #include <shellapi.h>
-
-#if defined(NANA_WINDOWS)
-	#include <stdexcept>
-#endif
+#include <stdexcept>
 
 namespace nana
 {
@@ -269,3 +267,4 @@ namespace detail
 	}
 }//end namespace detail
 }//end namespace nana
+

@@ -1,11 +1,8 @@
 #include <nana/audio/detail/audio_device.hpp>
 #include <nana/system/platform.hpp>
 
-#if defined(NANA_WINDOWS)
-	#include <windows.h>
-#elif defined(NANA_LINUX)
+#if defined(NANA_LINUX)
 	#include <pthread.h>
-	#include <alsa/asoundlib.h>
 	#include <unistd.h>
 	#include <sys/time.h>
 	#include <errno.h>

@@ -4,9 +4,9 @@
  *
  *	Distributed under the Nana Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
- *	http://stdex.sourceforge.net/LICENSE_1_0.txt)
+ *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
  *
- *	@file: nana/detail/platform_spec.cpp
+ *	@file: nana/detail/linux_X11/platform_spec.cpp
  *
  *	This file provides basis class and data structrue that required by nana
  *
@@ -16,19 +16,17 @@
 #include <nana/config.hpp>
 #include PLATFORM_SPEC_HPP
 #include <nana/detail/linux_X11/msg_dispatcher.hpp>
+#include <X11/Xlocale.h>
+#include <locale>
+#include <map>
+#include <set>
+#include <nana/paint/graphics.hpp>
+#include <nana/system/platform.hpp>
+#include <nana/threads/thread.hpp>
+#include <errno.h>
+#include GUI_BEDROCK_HPP
+#include <sstream>
 
-#if defined(NANA_LINUX)
-	#include <X11/Xlocale.h>
-	#include <locale>
-	#include <map>
-	#include <set>
-	#include <nana/paint/graphics.hpp>
-	#include <nana/system/platform.hpp>
-	#include <nana/threads/thread.hpp>
-	#include <errno.h>
-	#include GUI_BEDROCK_HPP
-	#include <sstream>
-#endif
 
 namespace nana
 {
@@ -1277,3 +1275,4 @@ namespace detail
 	}
 }//end namespace detail
 }//end namespace nana
+

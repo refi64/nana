@@ -36,7 +36,6 @@ namespace gui
 		virtual void attached(graph_reference);	//none-const
 		virtual void detached();	//none-const
 
-		//notify_background_change:
 		//@brief: If the widget is a glass window, and the widgets under the glass widget are changed, nana.gui will invoke a notify_background_change
 		virtual void notify_background_change(graph_reference);
 		virtual void typeface_changed(graph_reference);
@@ -68,7 +67,6 @@ namespace gui
 			class object;
 		}
 
-		//class drawer
 		//@brief:	Every window has a drawer, the drawer holds a drawer_trigger for
 		//			a widget.
 		class drawer
@@ -118,7 +116,7 @@ namespace gui
 		public:
 			nana::paint::graphics graphics;
 		private:
-			std::vector<nana::gui::detail::dynamic_drawing::object*>	dynamic_drawing_objects_;
+			std::vector<dynamic_drawing::object*>	dynamic_drawing_objects_;
 			drawer_trigger* realizer_;
 			bool refreshing_;
 		};

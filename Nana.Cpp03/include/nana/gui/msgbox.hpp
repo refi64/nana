@@ -35,6 +35,7 @@ namespace nana{	namespace gui{
 		}
 
 		pick_t operator()() const;
+		pick_t show() const;
 	private:
 		std::stringstream sstream_;
 		window wd_;

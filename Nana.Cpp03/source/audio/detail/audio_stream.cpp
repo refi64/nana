@@ -21,7 +21,7 @@ namespace nana{	namespace audio
 							std::size_t cksize = _m_locate_chunck(*reinterpret_cast<const unsigned long*>("data"));
 							if(cksize)
 							{
-								pcm_data_pos_ = fs_.tellg();
+								pcm_data_pos_ = static_cast<std::size_t>(fs_.tellg());
 								pcm_data_size_ = cksize;
 								return true;
 							}
@@ -61,7 +61,7 @@ namespace nana{	namespace audio
 			std::size_t audio_stream::read(void * buf, std::size_t len)
 			{
 				fs_.read(reinterpret_cast<char*>(buf), static_cast<std::streamsize>(len <= data_size_ ? len : data_size_));
-				std::size_t read_bytes = fs_.gcount();
+				std::size_t read_bytes = static_cast<std::size_t>(fs_.gcount());
 				data_size_ -= read_bytes;
 				return read_bytes;
 			}

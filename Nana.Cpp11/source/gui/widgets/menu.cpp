@@ -1178,7 +1178,7 @@ namespace nana{ namespace gui{
 
 		menu& menu::max_pixels(unsigned px)
 		{
-			impl_->mbuilder.data().max_pixels = (px < 100 ? px : 100);
+			impl_->mbuilder.data().max_pixels = (px > 100 ? px : 100);
 			return *this;
 		}
 

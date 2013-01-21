@@ -384,6 +384,11 @@ namespace nana
 
 		msgbox::pick_t msgbox::operator ()() const
 		{
+			return show();
+		}
+
+		msgbox::pick_t msgbox::show() const
+		{
 #if defined(NANA_WINDOWS)
 			int type = 0;
 			switch(button_)

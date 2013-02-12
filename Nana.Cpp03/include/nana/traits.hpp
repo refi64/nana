@@ -269,7 +269,7 @@ namespace nana
 		template<typename R, typename Concept>
 		struct mfptr_traits<R(Concept::*)() const>
 		{
-			typedef Concept concept_type;
+			typedef const Concept concept_type;
 			typedef R return_type;
 			typedef return_type function();
 			enum{Parameter = 0};	
@@ -278,7 +278,7 @@ namespace nana
 		template<typename R, typename Concept>
 		struct mfptr_traits<R(Concept::*)() volatile>
 		{
-			typedef Concept concept_type;
+			typedef volatile Concept concept_type;
 			typedef R return_type;
 			typedef return_type function();
 			enum{Parameter = 0};	
@@ -287,7 +287,7 @@ namespace nana
 		template<typename R, typename Concept>
 		struct mfptr_traits<R(Concept::*)() const volatile>
 		{
-			typedef Concept concept_type;
+			typedef const volatile Concept concept_type;
 			typedef R return_type;
 			typedef return_type function();
 			enum{Parameter = 0};	
@@ -306,7 +306,17 @@ namespace nana
 		template<typename R, typename Concept, typename P>
 		struct mfptr_traits<R(Concept::*)(P) const>
 		{
-			typedef Concept concept_type;
+			typedef const Concept concept_type;
+			typedef R return_type;
+			typedef P param0_type;
+			typedef return_type function(param0_type);	
+			enum{Parameter = 1};	
+		};
+
+		template<typename R, typename Concept, typename P>
+		struct mfptr_traits<R(Concept::*)(P) volatile>
+		{
+			typedef volatile Concept concept_type;
 			typedef R return_type;
 			typedef P param0_type;
 			typedef return_type function(param0_type);	
@@ -316,7 +326,7 @@ namespace nana
 		template<typename R, typename Concept, typename P>
 		struct mfptr_traits<R(Concept::*)(P) const volatile>
 		{
-			typedef Concept concept_type;
+			typedef const volatile Concept concept_type;
 			typedef R return_type;
 			typedef P param0_type;
 			typedef return_type function(param0_type);	
@@ -337,7 +347,18 @@ namespace nana
 		template<typename R, typename Concept, typename P0, typename P1>
 		struct mfptr_traits<R(Concept::*)(P0, P1) const>
 		{
-			typedef Concept concept_type;
+			typedef const Concept concept_type;
+			typedef R return_type;
+			typedef P0 param0_type;
+			typedef P1 param1_type;
+			typedef return_type function(param0_type, param1_type);
+			enum{Parameter = 2};
+		};
+
+		template<typename R, typename Concept, typename P0, typename P1>
+		struct mfptr_traits<R(Concept::*)(P0, P1) volatile>
+		{
+			typedef volatile Concept concept_type;
 			typedef R return_type;
 			typedef P0 param0_type;
 			typedef P1 param1_type;
@@ -348,7 +369,7 @@ namespace nana
 		template<typename R, typename Concept, typename P0, typename P1>
 		struct mfptr_traits<R(Concept::*)(P0, P1) const volatile>
 		{
-			typedef Concept concept_type;
+			typedef const volatile Concept concept_type;
 			typedef R return_type;
 			typedef P0 param0_type;
 			typedef P1 param1_type;
@@ -371,7 +392,7 @@ namespace nana
 		template<typename R, typename Concept, typename P0, typename P1, typename P2>
 		struct mfptr_traits<R(Concept::*)(P0, P1, P2) const>
 		{
-			typedef Concept concept_type;
+			typedef const Concept concept_type;
 			typedef R return_type;
 			typedef P0 param0_type;
 			typedef P1 param1_type;
@@ -383,7 +404,7 @@ namespace nana
 		template<typename R, typename Concept, typename P0, typename P1, typename P2>
 		struct mfptr_traits<R(Concept::*)(P0, P1, P2) volatile>
 		{
-			typedef Concept concept_type;
+			typedef volatile Concept concept_type;
 			typedef R return_type;
 			typedef P0 param0_type;
 			typedef P1 param1_type;
@@ -395,7 +416,7 @@ namespace nana
 		template<typename R, typename Concept, typename P0, typename P1, typename P2>
 		struct mfptr_traits<R(Concept::*)(P0, P1, P2) const volatile>
 		{
-			typedef Concept concept_type;
+			typedef const volatile Concept concept_type;
 			typedef R return_type;
 			typedef P0 param0_type;
 			typedef P1 param1_type;
@@ -420,7 +441,7 @@ namespace nana
 		template<typename R, typename Concept, typename P0, typename P1, typename P2, typename P3>
 		struct mfptr_traits<R(Concept::*)(P0, P1, P2, P3) const>
 		{
-			typedef Concept concept_type;
+			typedef const Concept concept_type;
 			typedef R return_type;
 			typedef P0 param0_type;
 			typedef P1 param1_type;
@@ -433,7 +454,7 @@ namespace nana
 		template<typename R, typename Concept, typename P0, typename P1, typename P2, typename P3>
 		struct mfptr_traits<R(Concept::*)(P0, P1, P2, P3) volatile>
 		{
-			typedef Concept concept_type;
+			typedef volatile Concept concept_type;
 			typedef R return_type;
 			typedef P0 param0_type;
 			typedef P1 param1_type;
@@ -446,7 +467,7 @@ namespace nana
 		template<typename R, typename Concept, typename P0, typename P1, typename P2, typename P3>
 		struct mfptr_traits<R(Concept::*)(P0, P1, P2, P3) const volatile>
 		{
-			typedef Concept concept_type;
+			typedef const volatile Concept concept_type;
 			typedef R return_type;
 			typedef P0 param0_type;
 			typedef P1 param1_type;
@@ -473,7 +494,7 @@ namespace nana
 		template<typename R, typename Concept, typename P0, typename P1, typename P2, typename P3, typename P4>
 		struct mfptr_traits<R(Concept::*)(P0, P1, P2, P3, P4) const>
 		{
-			typedef Concept concept_type;
+			typedef const Concept concept_type;
 			typedef R return_type;
 			typedef P0 param0_type;
 			typedef P1 param1_type;
@@ -487,7 +508,7 @@ namespace nana
 		template<typename R, typename Concept, typename P0, typename P1, typename P2, typename P3, typename P4>
 		struct mfptr_traits<R(Concept::*)(P0, P1, P2, P3, P4) volatile>
 		{
-			typedef Concept concept_type;
+			typedef volatile Concept concept_type;
 			typedef R return_type;
 			typedef P0 param0_type;
 			typedef P1 param1_type;
@@ -501,7 +522,7 @@ namespace nana
 		template<typename R, typename Concept, typename P0, typename P1, typename P2, typename P3, typename P4>
 		struct mfptr_traits<R(Concept::*)(P0, P1, P2, P3, P4) const volatile>
 		{
-			typedef Concept concept_type;
+			typedef const volatile Concept concept_type;
 			typedef R return_type;
 			typedef P0 param0_type;
 			typedef P1 param1_type;

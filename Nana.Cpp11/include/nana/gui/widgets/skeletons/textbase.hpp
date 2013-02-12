@@ -15,6 +15,7 @@
 #include <string>
 #include <deque>
 #include <iostream>
+#include <memory>
 
 namespace nana
 {
@@ -47,52 +48,33 @@ namespace skeletons
 		{
 			return text_cont_.size();
 		}
-
-		size_type line_size(size_type line) const
-		{
-			if(line < text_cont_.size())
-				return text_cont_[line].size();
-			return 0;
-		}
 		
-		string_type getline(size_type line) const
+		const string_type& getline(size_type pos) const
 		{
-			if(line < text_cont_.size())
-				return text_cont_[line];
-				
-			return string_type();
+			if(pos < text_cont_.size())
+				return text_cont_[pos];
+
+			if(nullptr == nullstr_)
+				nullstr_ = std::shared_ptr<string_type>(new string_type);
+			return *nullstr_;
 		}
 
 		std::pair<size_t, size_t> max_line() const
 		{
 			return std::make_pair(attr_max_.line, attr_max_.size);
 		}
-		
-		friend std::ostream& operator<<(std::ostream& os, const textbase& tb)
-		{
-			const size_type lines = tb.lines();
-			if(lines)
-			{
-				os<<tb.getline(0);
-				for(size_type i = 1; i < lines; ++i)
-				{
-					os<<'\n'<<tb.getline(i);
-				}
-			}	
-			return os;
-		}
 	public:
-		void cover(size_type line, const char_type* text)
+		void cover(size_type pos, const char_type* text)
 		{
-			if(line < text_cont_.size())
-				text_cont_[line] = text;
-			else
+			if(text_cont_.size() <= pos)
 			{
 				text_cont_.push_back(text);
-				line = text_cont_.size() - 1;
+				pos = text_cont_.size() - 1;
 			}
+			else
+				text_cont_[pos] = text;
 
-			this->_m_make_max(line);
+			_m_make_max(pos);
 		}
 
 		void insert(size_type line, size_type pos, const char_type* str)
@@ -156,18 +138,18 @@ namespace skeletons
 					lnstr.erase(pos, count);
 
 				if(attr_max_.line == line)
-					this->_m_scan_for_max();
+					_m_scan_for_max();
 			}	
 		}
 		
-		void erase(size_type line)
+		void erase(size_type pos)
 		{
-			if(line < text_cont_.size())
-				text_cont_.erase(text_cont_.begin() + line);
+			if(pos < text_cont_.size())
+				text_cont_.erase(text_cont_.begin() + pos);
 
-			if(line == attr_max_.line)
+			if(pos == attr_max_.line)
 				_m_scan_for_max();
-			else if(line < attr_max_.line)
+			else if(pos < attr_max_.line)
 				attr_max_.line--;
 		}
 		
@@ -177,45 +159,47 @@ namespace skeletons
 			attr_max_.reset();
 		}
 		
-		void merge(size_type line)
+		void merge(size_type pos)
 		{
-			if(text_cont_.size() && (0 <= line) && line < text_cont_.size() - 1)
+			if(text_cont_.size() && (pos < text_cont_.size() - 1))
 			{
-				text_cont_[line] += text_cont_[line + 1];
-				text_cont_.erase(text_cont_.begin() + line + 1);
-				_m_make_max(line);
-				if(line < attr_max_.line)
-					attr_max_.line--;
+				text_cont_[pos] += text_cont_[pos + 1];
+				text_cont_.erase(text_cont_.begin() + pos + 1);
+				_m_make_max(pos);
+				if(pos < attr_max_.line)
+					--attr_max_.line;
 			}
 		}
 	private:
-		void _m_make_max(std::size_t line)
+		void _m_make_max(std::size_t pos)
 		{
-			const string_type& str = text_cont_[line];
+			const string_type& str = text_cont_[pos];
 			if(str.size() > attr_max_.size)
 			{
 				attr_max_.size = str.size();
-				attr_max_.line = line;
+				attr_max_.line = pos;
 			}
 		}
 
 		void _m_scan_for_max()
 		{
 			attr_max_.size = 0;
-			typename std::deque<string_type>::iterator it = text_cont_.begin(), end = text_cont_.end();
 			std::size_t n = 0;
-			for(; it != end; ++it, ++n)
+			for(auto & s : text_cont_)
 			{
-				if(it->size() > attr_max_.size)
+				if(s.size() > attr_max_.size)
 				{
-					attr_max_.size = it->size();
+					attr_max_.size = s.size();
 					attr_max_.line = n;
 				}
+
+				++n;
 			}
 		}
 		
 	private:
 		std::deque<string_type>	text_cont_;
+		mutable std::shared_ptr<string_type> nullstr_;
 		struct attr_max
 		{
 			attr_max()
@@ -237,6 +221,4 @@ namespace skeletons
 }//end namespace widgets
 }//end namespace gui
 }//end namespace nana
-
-
 #endif

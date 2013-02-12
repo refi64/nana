@@ -157,6 +157,7 @@ namespace nana{ namespace gui{
 						break;
 					case StateSelected:
 						graph.shadow_rectangle(x + 1, y + 1, width - 2, height - 2, color, /*graph.mix(color, 0x99CCFF, 0.5)*/0x99CCFF, true);
+					default: break;
 					}
 
 					if(item.image.empty() == false)

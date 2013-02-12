@@ -187,8 +187,8 @@ namespace detail
 			{}
 
 			core_window_t*	taken_window;
-			nana::gui::native_window_type window;
-			nana::gui::native_window_type owner;
+			native_window_type window;
+			native_window_type owner;
 			bool has_keyboard;
 		}menu;
 
@@ -355,12 +355,12 @@ namespace detail
 	void bedrock::pump_event(window modal_window)
 	{
 		const unsigned tid = ::GetCurrentThreadId();
-		thread_context * context = this->open_thread_context(tid);
+		thread_context * context = open_thread_context(tid);
 		if(0 == context->window_count)
 		{
 			//test if there is not a window
 			//GetMessage may block if there is not a window
-			this->remove_thread_context();
+			remove_thread_context();
 			return;
 		}
 
@@ -374,7 +374,7 @@ namespace detail
 			if(modal_window)
 			{
 				HWND ntv_modal = reinterpret_cast<HWND>(
-									this->root(reinterpret_cast<core_window_t*>(modal_window)));
+									root(reinterpret_cast<core_window_t*>(modal_window)));
 
 				HWND owner = ::GetWindow(ntv_modal, GW_OWNER);
 				if(owner && owner != ::GetDesktopWindow())
@@ -389,14 +389,14 @@ namespace detail
 
 						if((msg.message == WM_CHAR || msg.message == WM_KEYDOWN || msg.message == WM_KEYUP) || !::IsDialogMessage(ntv_modal, &msg))
 						{
-							nana::gui::native_window_type menu = get_menu(reinterpret_cast<nana::gui::native_window_type>(msg.hwnd), true);
+							native_window_type menu = get_menu(reinterpret_cast<native_window_type>(msg.hwnd), true);
 							if(menu) interior_helper_for_menu(msg, menu);
 
 							::TranslateMessage(&msg);
 							::DispatchMessage(&msg);
 
-							this->wd_manager.remove_trash_handle(tid);
-							this->evt_manager.remove_trash_handle(0);
+							wd_manager.remove_trash_handle(tid);
+							evt_manager.remove_trash_handle(0);
 						}
 					}
 				}
@@ -407,15 +407,15 @@ namespace detail
 				{
 					if(-1 != ::GetMessage(&msg, 0, 0, 0))
 					{
-						nana::gui::native_window_type menu = get_menu(reinterpret_cast<nana::gui::native_window_type>(msg.hwnd), true);
+						native_window_type menu = get_menu(reinterpret_cast<native_window_type>(msg.hwnd), true);
 						if(menu) interior_helper_for_menu(msg, menu);
 
 						::TranslateMessage(&msg);
 						::DispatchMessage(&msg);
 					}
 
-					this->wd_manager.remove_trash_handle(tid);
-					this->evt_manager.remove_trash_handle(0);
+					wd_manager.remove_trash_handle(tid);
+					evt_manager.remove_trash_handle(0);
 				}//end while
 
 				//Empty these rest messages, there is not a window to process these messages.
@@ -429,13 +429,13 @@ namespace detail
 		if(0 == --(context->event_pump_ref_count))
 		{
 			if(0 == modal_window || 0 == context->window_count)
-				this->remove_thread_context();
+				remove_thread_context();
 		}
 	}//end bedrock::event_loop
 
 	void make_eventinfo(eventinfo& ei, bedrock::core_window_t* wnd, unsigned msg, const parameter_decoder& pmdec)
 	{
-		ei.window = reinterpret_cast<nana::gui::window>(wnd);
+		ei.window = reinterpret_cast<window>(wnd);
 
 		switch(msg)
 		{
@@ -553,7 +553,7 @@ namespace detail
 		case nana::detail::messages::tray:
 			if(wd)
 			{
-				nana::gui::eventinfo ei;
+				eventinfo ei;
 				switch(lParam)
 				{
 				case WM_LBUTTONDBLCLK:
@@ -994,7 +994,7 @@ namespace detail
 							ei.dropinfo->pos.y = pos.y;
 
 							bedrock.wd_manager.calc_window_point(msgwnd, ei.dropinfo->pos);
-							ei.window = reinterpret_cast<nana::gui::window>(msgwnd);
+							ei.window = reinterpret_cast<window>(msgwnd);
 
 							bedrock.fire_event(event_tag::mouse_drop, msgwnd, ei);
 							bedrock.wd_manager.refresh(msgwnd);
@@ -1149,9 +1149,9 @@ namespace detail
 						ei.keyboard.ignore = false;
 
 						ei.identifier = event_tag::key_char;
-						ei.window = reinterpret_cast<nana::gui::window>(msgwnd);
+						ei.window = reinterpret_cast<window>(msgwnd);
 
-						bedrock.evt_manager.answer(event_tag::key_char, reinterpret_cast<nana::gui::window>(msgwnd), ei, event_manager::event_kind::user);
+						bedrock.evt_manager.answer(event_tag::key_char, reinterpret_cast<window>(msgwnd), ei, event_manager::event_kind::user);
 
 						if((ei.keyboard.ignore == false) && bedrock.wd_manager.available(msgwnd))
 							bedrock.fire_event_for_drawer(event_tag::key_char, msgwnd, ei, &context);
@@ -1265,7 +1265,7 @@ namespace detail
 		return wd;
 	}
 
-	bool bedrock::close_menu_if_focus_other_window(nana::gui::native_window_type wd)
+	bool bedrock::close_menu_if_focus_other_window(native_window_type wd)
 	{
 		if(impl_->menu.window && (impl_->menu.window != wd))
 		{
@@ -1283,7 +1283,7 @@ namespace detail
 		return false;
 	}
 
-	void bedrock::set_menu(nana::gui::native_window_type menu_window, bool has_keyboard)
+	void bedrock::set_menu(native_window_type menu_window, bool has_keyboard)
 	{
 		if(menu_window && impl_->menu.window != menu_window)
 		{
@@ -1295,7 +1295,7 @@ namespace detail
 		}
 	}
 
-	nana::gui::native_window_type bedrock::get_menu(nana::gui::native_window_type owner, bool is_keyboard_condition)
+	native_window_type bedrock::get_menu(native_window_type owner, bool is_keyboard_condition)
 	{
 		if(	(impl_->menu.owner == 0) ||
 			(owner && (impl_->menu.owner == owner))
@@ -1307,7 +1307,7 @@ namespace detail
 		return 0;
 	}
 
-	nana::gui::native_window_type bedrock::get_menu()
+	native_window_type bedrock::get_menu()
 	{
 		return impl_->menu.window;
 	}
@@ -1316,7 +1316,7 @@ namespace detail
 	{
 		if(impl_->menu.window)
 		{
-			nana::gui::native_window_type delwin = impl_->menu.window;
+			native_window_type delwin = impl_->menu.window;
 			impl_->menu.window = impl_->menu.owner = 0;
 			impl_->menu.has_keyboard = false;
 			native_interface::close_window(delwin);
@@ -1349,7 +1349,7 @@ namespace detail
 		return impl_->keyboard_tracking_state.has_shortkey_occured;
 	}
 
-	bool bedrock::fire_event_for_drawer(unsigned event_id, core_window_t* wd, const nana::gui::eventinfo& ei, bedrock::thread_context* thrd)
+	bool bedrock::fire_event_for_drawer(unsigned event_id, core_window_t* wd, const eventinfo& ei, thread_context* thrd)
 	{
 		if(bedrock_object.wd_manager.available(wd) == false) return false;
 		core_window_t* prev_event_wd;
@@ -1361,7 +1361,7 @@ namespace detail
 
 		if(wd->other.upd_state == core_window_t::update_state::none)
 			wd->other.upd_state = core_window_t::update_state::lazy;
-		bool ret = bedrock_object.evt_manager.answer(event_id, reinterpret_cast<nana::gui::window>(wd), ei, event_manager::event_kind::trigger);
+		bool ret = bedrock_object.evt_manager.answer(event_id, reinterpret_cast<window>(wd), ei, event_manager::event_kind::trigger);
 
 		if(thrd) thrd->event_window = prev_event_wd;
 		return ret;

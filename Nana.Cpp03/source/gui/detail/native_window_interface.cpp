@@ -184,10 +184,8 @@ namespace nana{
 			nana::detail::platform_scope_guard psg;
 
 			XSetWindowAttributes win_attr;
-			unsigned long attr_mask =	CWBackPixmap | CWBackPixel |
-										CWBorderPixel |
-										CWWinGravity | CWBitGravity |
-										CWColormap | CWEventMask;
+			unsigned long attr_mask =	CWBackPixmap | CWBackPixel | CWBorderPixel |
+										CWWinGravity | CWBitGravity | CWColormap | CWEventMask;
 
 			Display * disp = restrict::spec.open_display();
 			win_attr.colormap = restrict::spec.colormap();
@@ -219,7 +217,7 @@ namespace nana{
 				calc_screen_point(owner, pos);
 			}
 
-			win_attr.event_mask = ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | ExposureMask | StructureNotifyMask | LeaveWindowMask | FocusChangeMask;
+			win_attr.event_mask = ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | ExposureMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask | FocusChangeMask;
 
 			Window handle = ::XCreateWindow(disp, parent,
 							pos.x, pos.y, (r.width ? r.width : 1), (r.height ? r.height : 1), 0,
@@ -333,6 +331,25 @@ namespace nana{
 #endif
 			return reinterpret_cast<native_window_type>(wd);
 		}
+		
+#if defined(NANA_X11)
+		void native_interface::set_modal(native_window_type wd)
+		{
+			Window owner = reinterpret_cast<Window>(restrict::spec.get_owner(wd));
+			if(wd && owner)
+			{
+				if(is_window_visible(wd))
+					show_window(wd, false, true);
+				Display* disp = restrict::spec.open_display();
+				const nana::detail::atombase_tag  & atombase = restrict::spec.atombase();
+				::XSetTransientForHint(disp, reinterpret_cast<Window>(wd), owner);
+				::XChangeProperty(disp, reinterpret_cast<Window>(wd),
+								atombase.net_wm_state, XA_ATOM, sizeof(int) * 8, 
+								PropModeReplace,
+								reinterpret_cast<const unsigned char*>(&atombase.net_wm_state_modal), 1);
+			}
+		}
+#endif
 
 		bool native_interface::window_icon(native_window_type wd, const nana::paint::image& img)
 		{

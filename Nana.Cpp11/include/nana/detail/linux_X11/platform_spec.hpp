@@ -130,6 +130,7 @@ namespace detail
 		Atom net_wm_state_fullscreen;
 		Atom net_wm_state_maximized_horz;
 		Atom net_wm_state_maximized_vert;
+		Atom net_wm_state_modal;
 		Atom net_wm_window_type;
 		Atom net_wm_window_type_normal;
 		Atom net_wm_window_type_utility;

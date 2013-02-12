@@ -450,16 +450,13 @@ namespace nana{	namespace gui{
 									r.y += r.height;
 								}
 
-								if(nana::gui::is_hit_the_rectangle(r, x, y))
+								if(is_hit_the_rectangle(r, x, y))
 								{
 									style_.active_item_rectangle = r;
 									std::size_t index = seq_index + head_;
 
-									ui_element::t what;
-									if(i->child && (r.x + static_cast<int>(r.width) - 16 < x))
-										what = ui_el_.item_arrow;
-									else
-										what = ui_el_.item_name;
+									ui_element::t what = ((i->child && (r.x + static_cast<int>(r.width) - 16 < x))
+															? ui_el_.item_arrow : ui_el_.item_name);
 									if(what == ui_el_.what && index == ui_el_.index)
 										return false;
 
@@ -576,7 +573,7 @@ namespace nana{	namespace gui{
 					}
 					r.y += r.height;
 					r.width = r.height = 100;
-					style_.listbox = &(form_loader<nana::gui::float_listbox>()(window_, r));
+					style_.listbox = &(form_loader<gui::float_listbox>()(window_, r));
 					style_.listbox->set_module(style_.module, 16);
 					style_.listbox->show();
 					style_.listbox->make_event<events::destroy>(*this, &scheme::_m_list_closed);
@@ -596,7 +593,6 @@ namespace nana{	namespace gui{
 							{
 								treebase_.tail(style_.active);
 								nana::string name = style_.module.items[style_.module.index].text;
-								nana::any value;
 								node_handle node = treebase_.find_child(name);
 								if(node)
 								{

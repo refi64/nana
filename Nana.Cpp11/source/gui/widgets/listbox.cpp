@@ -36,6 +36,7 @@ namespace nana{ namespace gui{
 					unsigned pixels;
 					bool visible;
 					size_type index;
+					std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*)> weak_ordering;
 				};
 
 				typedef std::vector<item_t> container;
@@ -57,6 +58,19 @@ namespace nana{ namespace gui{
 						return true;
 					}
 					return false;
+				}
+
+				std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*)> fetch_comp(std::size_t index) const
+				{
+					if(index < cont_.size())
+					{
+						for(auto & m : cont_)
+						{
+							if(m.index == index)
+								return m.weak_ordering;
+						}
+					}
+					return nullptr;
 				}
 
 				void create(const nana::string& text, unsigned pixels)
@@ -100,6 +114,16 @@ namespace nana{ namespace gui{
 				const container& cont() const
 				{
 					return cont_;
+				}
+
+				item_t& get_item(size_type index)
+				{
+					for(auto & m : cont_)
+					{
+						if(m.index == index)
+							return m;
+					}
+					throw std::out_of_range("Nana.GUI.Listbox: invalid header index.");
 				}
 
 				const item_t& get_item(size_type index) const
@@ -156,7 +180,7 @@ namespace nana{ namespace gui{
 				size_type neighbor(size_type index, bool front) const
 				{
 					size_type n = npos;
-					for(container::const_iterator i = cont_.begin(); i != cont_.end(); ++i)
+					for(auto i = cont_.begin(); i != cont_.end(); ++i)
 					{
 						if(i->index == index)
 						{
@@ -280,6 +304,7 @@ namespace nana{ namespace gui{
 					typedef std::deque<item_t> container;
 
 					nana::string text;
+					std::vector<std::size_t> sorted;
 					container items;
 					bool expand;
 
@@ -297,14 +322,15 @@ namespace nana{ namespace gui{
 				typedef std::list<category> container;
 				mutable extra_events ext_event;
 
+				std::function<std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*)>(std::size_t) > fetch_ordering_comparer;
+
 				es_lister()
-					: widget_(nullptr)
+					: widget_(nullptr), sorted_index_(npos), neg_sorted_(false)
 				{
 					category cg;
 					cg.expand = true;
 					list_.push_back(cg);
 				}
-
 
 				void bind(widget& wd)
 				{
@@ -320,7 +346,7 @@ namespace nana{ namespace gui{
 
 				nana::any * anyobj(size_type cat, size_type index, bool allocate_if_empty) const
 				{
-					container::const_iterator i = _m_at(cat);
+					auto i = _m_at(cat);
 					if(index < i->items.size())
 					{
 						const item_t & item = i->items[index];
@@ -330,6 +356,73 @@ namespace nana{ namespace gui{
 							return (item.anyobj = new nana::any);
 					}
 					return nullptr;
+				}
+
+				void sort()
+				{
+					if(sorted_index_ != npos)
+					{
+						auto weak_ordering_comp = fetch_ordering_comparer(sorted_index_);
+						if(weak_ordering_comp)
+						{
+							for(auto & cat: list_)
+							{
+								auto bi = std::begin(cat.sorted);
+								auto ei = std::end(cat.sorted);
+								std::sort(bi, ei, [&cat, &weak_ordering_comp, this](std::size_t x, std::size_t y){
+										//The predicate must be a strict weak ordering.
+										//!comp(x, y) != comp(x, y)
+										auto & mx = cat.items[x];
+										auto & my = cat.items[y];
+										auto & a = mx.texts[sorted_index_];
+										auto & b = my.texts[sorted_index_];
+										return (a == b ? false : (weak_ordering_comp(a, mx.anyobj, b, my.anyobj) != neg_sorted_));
+									});
+							}
+						}
+						else
+						{	//No user-defined comparer is provided, and default comparer is applying.
+							for(auto & cat: list_)
+							{
+								auto bi = std::begin(cat.sorted);
+								auto ei = std::end(cat.sorted);
+								std::sort(bi, ei, [&cat, &weak_ordering_comp, this](std::size_t x, std::size_t y){
+										auto & a = cat.items[x].texts[sorted_index_];
+										auto & b = cat.items[y].texts[sorted_index_];
+										return (neg_sorted_ ? a > b : a < b);
+									});
+							}
+						}
+					}
+				}
+
+				bool sort_index(std::size_t index)
+				{
+					if(npos != index)
+					{
+						if(index != sorted_index_)
+						{
+							sorted_index_ = index;
+							neg_sorted_ = false;
+						}
+						else
+							neg_sorted_ = !neg_sorted_;
+
+						sort();
+						return true;
+					}
+					sorted_index_ = npos;
+					return false;
+				}
+
+				std::size_t sort_index() const
+				{
+					return sorted_index_;
+				}
+
+				bool neg_sorted() const
+				{
+					return neg_sorted_;
 				}
 
 				void create(const nana::string& text)
@@ -344,12 +437,14 @@ namespace nana{ namespace gui{
 				{
 					item_t item;
 					item.texts.push_back(text);
-					_m_at(cat)->items.push_back(item);
+					auto i = _m_at(cat);
+					i->items.push_back(item);
+					i->sorted.push_back(i->items.size() - 1);
 				}
 
 				bool insert(size_type cat, size_type index, const nana::string& text)
 				{
-					container::iterator i = _m_at(cat);
+					auto i = _m_at(cat);
 					item_t item;
 					item.texts.push_back(text);
 					if(index < i->items.size())
@@ -358,28 +453,43 @@ namespace nana{ namespace gui{
 						i->items.push_back(item);
 					else
 						return false;
+					i->sorted.push_back(i->items.size() - 1);
 					return true;
 				}
 
 				category::container::value_type& at(size_type cat, size_type index)
 				{
+					if(sorted_index_ != npos)
+						index = absolute(cat, index);
 					return _m_at(cat)->items.at(index);
 				}
 
 				const category::container::value_type& at(size_type cat, size_type index) const
+				{
+					if(sorted_index_ != npos)
+						index = absolute(cat, index);
+					return _m_at(cat)->items.at(index);
+				}
+
+				category::container::value_type& at_abs(size_type cat, size_type index)
 				{
 					return _m_at(cat)->items.at(index);
 				}
 
 				void clear(size_type cat)
 				{
-					_m_at(cat)->items.clear();
+					auto i = _m_at(cat);
+					i->items.clear();
+					i->sorted.clear();
 				}
 
 				void clear()
 				{
 					for(auto & m : list_)
+					{
 						m.items.clear();
+						m.sorted.clear();
+					}
 				}
 
 				std::pair<size_type, size_type> advance(size_type categ, size_type index, size_type n)
@@ -454,7 +564,7 @@ namespace nana{ namespace gui{
 					}
 
 					size_type n = 0;
-					container::const_iterator i = _m_at(cat);
+					auto i = _m_at(cat);
 					if(index == npos)
 					{
 						if(i->expand)
@@ -485,10 +595,10 @@ namespace nana{ namespace gui{
 				{
 					if(subitem < header_size)
 					{
-						container::iterator i = _m_at(cat);
+						auto i = _m_at(cat);
 						if(index < i->items.size())
 						{
-							std::vector<nana::string> & cont = i->items[index].texts;
+							auto & cont = i->items[index].texts;
 							if(subitem >= cont.size())
 							{	//If the index of specified sub item is over the number of sub items that item contained,
 								//it fills the non-exist items.
@@ -496,31 +606,48 @@ namespace nana{ namespace gui{
 								cont.push_back(str);
 							}
 							else
+							{
 								cont[subitem] = str;
+								if(sorted_index_ == subitem)
+									sort();
+							}
 						}
 					}
 				}
 
 				void erase(size_type cat, size_type index)
 				{
-					container::iterator i = _m_at(cat);
+					auto i = _m_at(cat);
 					if(index < i->items.size())
+					{
 						i->items.erase(i->items.begin() + index);
+						i->sorted.erase(std::find(i->sorted.begin(), i->sorted.end(), i->items.size()));
+						sort();
+					}
 				}
 
 				void erase(size_type cat)
 				{
 					auto i = _m_at(cat);
+
+					//If the category is the first one, it just clears the items instead of removing whole category.
 					if(cat)
+					{
 						list_.erase(i);
+					}
 					else
+					{
 						i->items.clear();
+						i->sorted.clear();
+					}
 				}
 
 				void erase()
 				{
-					container::iterator i = list_.begin();
+					//Do not remove the first category.
+					auto i = list_.begin();
 					i->items.clear();
+					i->sorted.clear();
 					if(list_.size() > 1)
 						list_.erase(++i, list_.end());
 				}
@@ -529,10 +656,10 @@ namespace nana{ namespace gui{
 				{
 					if(cat)
 					{
-						auto i = _m_at(cat);
-						if(i->expand != exp)
+						auto & expanded = _m_at(cat)->expand;
+						if(expanded != exp)
 						{
-							i->expand = exp;
+							expanded = exp;
 							return true;
 						}
 					}
@@ -663,9 +790,9 @@ namespace nana{ namespace gui{
 						if(good == false) return;
 					}
 
-					container::value_type::container::value_type * item_ptr;
 					//start moving
-					do{
+					while(true)
+					{
 						if(upwards == false)
 						{
 							if(good(spos.first))
@@ -705,7 +832,7 @@ namespace nana{ namespace gui{
 							else
 								--spos.second;
 						}
-						item_ptr = nullptr;
+
 						if(good(spos.first))
 						{
 							if(expand(spos.first) == false)
@@ -713,12 +840,13 @@ namespace nana{ namespace gui{
 
 							if(good(spos.first, spos.second))
 							{
-								item_ptr = & at(spos.first, spos.second);
-								item_ptr->flags.selected = true;
-								ext_event.selected(*widget_, spos.first, spos.second, true);
+								at(spos.first, spos.second).flags.selected = true;
+								ext_event.selected(*widget_, spos.first, absolute(spos.first, spos.second), true);
 							}
+							else break;
 						}
-					}while(nullptr == item_ptr);
+						else break;
+					}
 				}
 
 				size_type size_categ() const
@@ -735,7 +863,7 @@ namespace nana{ namespace gui{
 				{
 					if(categ < list_.size())
 					{
-						container::const_iterator i = list_.begin();
+						auto i = list_.begin();
 						std::advance(i, categ);
 						if(index < i->items.size() && (sub < i->items[index].texts.size()))
 							return i->items[index].texts[sub];
@@ -813,27 +941,21 @@ namespace nana{ namespace gui{
 
 				std::pair<size_type, size_type> last() const
 				{
-					container::const_reverse_iterator i = list_.rbegin();
-					size_type n = i->items.size();
-					size_type categ = list_.size() - 1;
-					if(categ == 0)
+					auto & catobj = *list_.rbegin();
+					size_type n = catobj.items.size();
+					size_type cat = list_.size() - 1;
+					if(cat == 0)
 					{
 						if(n)	--n;
 					}
 					else
 					{
-						if(i->expand)
-						{
-							n = i->items.size();
-							if(n)
-								--n;
-							else
-								n = npos;
-						}
+						if(n && catobj.expand)
+							--n;
 						else
 							n = npos;
 					}
-					return std::pair<size_type, size_type>(categ, n);
+					return std::pair<size_type, size_type>(cat, n);
 				}
 
 				bool good(size_type cat) const
@@ -856,7 +978,7 @@ namespace nana{ namespace gui{
 					{
 						if(index != npos)
 						{
-							container::const_iterator i = _m_at(cat);
+							auto i = _m_at(cat);
 							if(index >= i->items.size())
 							{
 								if(++i != list_.end())
@@ -876,23 +998,29 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				bool forward(size_type categ, size_type index, size_type offs, std::pair<size_type, size_type>& item) const
+				//Translate relative position into absolute position
+				size_type absolute(size_type cat, size_type index) const
+				{
+					return (sorted_index_ == npos ? index : _m_at(cat)->sorted[index]);
+				}
+
+				bool forward(size_type cat, size_type index, size_type offs, std::pair<size_type, size_type>& item) const
 				{
 					std::pair<size_type, size_type> good;
-					if(good_item(categ, index, good) == false)
+					if(good_item(cat, index, good) == false)
 						return false;
 
-					categ = good.first;
+					cat = good.first;
 					index = good.second;
 
 					if(offs == 0)
 					{
-						item.first = categ;
+						item.first = cat;
 						item.second = index;
 						return true;
 					}
 
-					if(list_.size() <= categ) return false;
+					if(list_.size() <= cat) return false;
 
 					//this is a category, so...
 					if(npos == index)
@@ -903,16 +1031,16 @@ namespace nana{ namespace gui{
 						index = 0;
 					}
 
-					container::const_iterator i_categ = _m_at(categ);
+					auto icat = _m_at(cat);
 
-					if(i_categ->items.size() <= index) return false;
+					if(icat->items.size() <= index) return false;
 
-					if(i_categ->expand)
+					if(icat->expand)
 					{
-						std::size_t item_size = i_categ->items.size() - index;
+						std::size_t item_size = icat->items.size() - index;
 						if(offs < item_size)
 						{
-							item.first = categ;
+							item.first = cat;
 							item.second = offs + index;
 							return true;
 						}
@@ -920,27 +1048,27 @@ namespace nana{ namespace gui{
 							offs -= item_size;
 					}
 
-					++categ;
-					++i_categ;
-					for(; i_categ != list_.end(); ++i_categ, ++categ)
+					++cat;
+					++icat;
+					for(; icat != list_.end(); ++icat, ++cat)
 					{
 						if(offs-- == 0)
 						{
-							item.first = categ;
+							item.first = cat;
 							item.second = npos;
 							return true;
 						}
 
-						if(i_categ->expand)
+						if(icat->expand)
 						{
-							if(offs < i_categ->items.size())
+							if(offs < icat->items.size())
 							{
-								item.first = categ;
+								item.first = cat;
 								item.second = offs;
 								return true;
 							}
 							else
-								offs -= i_categ->items.size();
+								offs -= icat->items.size();
 						}
 					}
 					return false;
@@ -956,8 +1084,7 @@ namespace nana{ namespace gui{
 
 					if(categ < list_.size())
 					{
-						container::const_iterator i = _m_at(categ);
-
+						auto i = _m_at(categ);
 						size_type n = (index == npos ? 1 : index + 2);
 						if(n <= offs)
 						{
@@ -997,7 +1124,7 @@ namespace nana{ namespace gui{
 					if(index >= list_.size())
 						throw std::out_of_range("Nana.GUI.Listbox: invalid category index");
 
-					container::iterator i = list_.begin();
+					auto i = list_.begin();
 					std::advance(i, index);
 					return i;
 				}
@@ -1007,12 +1134,14 @@ namespace nana{ namespace gui{
 					if(index >= list_.size())
 						throw std::out_of_range("Nana.GUI.Listbox: invalid category index");
 
-					container::const_iterator i = list_.begin();
+					auto i = list_.begin();
 					std::advance(i, index);
 					return i;
 				}
 			private:
 				nana::gui::listbox * widget_;
+				std::size_t sorted_index_;		//It stands for the index of header which is used to sort.
+				bool		neg_sorted_;
 				container list_;
 			};//end class es_lister
 
@@ -1023,8 +1152,8 @@ namespace nana{ namespace gui{
 			{
 				typedef std::size_t size_type;
 
-				enum state_t{StateNormal, StateHighlight, StateGrab, StateFloat};
-				enum where_t{WhereUnknown = -1, WhereHeader, WhereLister, WhereChecker};
+				enum class state_t{normal, highlighted, pressed, grabed, floated};
+				enum class where_t{unknown = -1, header, lister, checker};
 
 				nana::paint::graphics *graph;
 				bool auto_draw;
@@ -1040,16 +1169,17 @@ namespace nana{ namespace gui{
 				nana::any resolver;
 
 				state_t ptr_state;
-				nana::upoint pointer_where;	//x stands for which object, such as header and lister, y stands for item
-											//if where == header, y indicates the item
-											//if where == lister || where == checker, y indicates the offset to the scroll offset_y which stands for the first item displayed in lister.
-											//if where == unknown, y ignored.
+
+				std::pair<where_t, std::size_t> pointer_where;	//The 'first' stands for which object, such as header and lister, 'second' stands for item
+																//if where == header, 'second' indicates the item
+																//if where == lister || where == checker, 'second' indicates the offset to the scroll offset_y which stands for the first item displayed in lister.
+																//if where == unknown, 'second' ignored.
 
 				struct
 				{
 					static const unsigned scale = 16;
 					int offset_x;
-					nana::upoint offset_y;	//x stands for category, y stands for item. "y == WhereUnknown" means that is a category.
+					nana::upoint offset_y;	//x stands for category, y stands for item. "y == npos" means that is a category.
 
 					nana::gui::scroll<true> v;
 					nana::gui::scroll<false> h;
@@ -1058,10 +1188,11 @@ namespace nana{ namespace gui{
 				essence_t()
 					:	graph(nullptr), auto_draw(true), checkable(false), if_image(false),
 						header_size(25), item_size(24), text_height(0), suspension_width(0),
-						ptr_state(StateNormal)
+						ptr_state(state_t::normal)
 				{
 					scroll.offset_x = 0;
-					pointer_where.x = WhereUnknown;
+					pointer_where.first = where_t::unknown;
+					lister.fetch_ordering_comparer = std::bind(&es_header::fetch_comp, &header, std::placeholders::_1);
 				}
 
 				nana::upoint scroll_y() const
@@ -1080,7 +1211,7 @@ namespace nana{ namespace gui{
 						else if(number)
 							scroll.offset_y.y = static_cast<nana::upoint::value_type>(number - 1);
 						else
-							scroll.offset_y.y = (pos.x > 0 ? WhereUnknown : 0);
+							scroll.offset_y.y = (pos.x > 0 ? npos : 0);
 					}
 				}
 
@@ -1102,17 +1233,17 @@ namespace nana{ namespace gui{
 
 					std::pair<size_type, size_type> & item = svec[0];
 					//Same with current scroll offset item.
-					if(item.second == npos && item.first == scroll.offset_y.x && static_cast<int>(scroll.offset_y.y) == WhereUnknown)
+					if(item.second == npos && item.first == scroll.offset_y.x && scroll.offset_y.y == npos)
 						return;
 
-					if(item.first < scroll.offset_y.x || ((item.first == scroll.offset_y.x) && (static_cast<int>(scroll.offset_y.y) != WhereUnknown) && (item.second == npos || item.second < scroll.offset_y.y)))
+					if(item.first < scroll.offset_y.x || ((item.first == scroll.offset_y.x) && (scroll.offset_y.y != npos) && (item.second == npos || item.second < scroll.offset_y.y)))
 					{
 						scroll.offset_y.x = static_cast<nana::upoint::value_type>(item.first);
 						scroll.offset_y.y = static_cast<nana::upoint::value_type>(item.second);
 						if(lister.expand(item.first) == false)
 						{
 							if(lister.categ_selected(item.first))
-								scroll.offset_y.y = essence_t::WhereUnknown;
+								scroll.offset_y.y = npos;
 							else
 								lister.expand(item.first, true);
 						}
@@ -1126,7 +1257,7 @@ namespace nana{ namespace gui{
 						if(n_off.first != npos)
 						{
 							scroll.offset_y.x = static_cast<nana::upoint::value_type>(n_off.first);
-							scroll.offset_y.y = static_cast<nana::upoint::value_type>(n_off.second != npos ? n_off.second : WhereUnknown);
+							scroll.offset_y.y = static_cast<nana::upoint::value_type>(n_off.second);
 						}
 					}
 
@@ -1260,34 +1391,37 @@ namespace nana{ namespace gui{
 
 				bool calc_where(int x, int y)
 				{
-					nana::upoint new_where;
+					decltype(pointer_where) new_where;
 
 					if(2 < x && x < static_cast<int>(graph->width()) - 2 && 1 < y && y < static_cast<int>(graph->height()) - 1)
 					{
 						if(header.visible() && y < static_cast<int>(header_size + 1))
 						{
 							x -= (2 - scroll.offset_x);
-							new_where.x = WhereHeader;
-							new_where.y = static_cast<int>(header.item_by_x(x));
+							new_where.first = where_t::header;
+							new_where.second = static_cast<int>(header.item_by_x(x));
 						}
 						else
 						{
-							new_where.y = (y - (header.visible() ? header_size : 0) + 1) / item_size;
-							new_where.x = WhereLister;
+							new_where.second = (y - (header.visible() ? header_size : 0) + 1) / item_size;
+							new_where.first = where_t::lister;
 							if(checkable)
 							{
 								nana::rectangle r;
 								if(rect_lister(r))
 								{
-									int top = new_where.y * item_size + (header.visible() ? header_size : 0);
-									if(is_checkarea(nana::point(item_xpos(r), top), nana::point(x, y)))
-										new_where.x = WhereChecker;
+									std::size_t top = new_where.second * item_size + (header.visible() ? header_size : 0);
+									if(is_checkarea(nana::point(item_xpos(r), static_cast<int>(top)), nana::point(x, y)))
+										new_where.first = where_t::checker;
 								}
 							}
 						}
 					}
 					else
-						new_where.x = new_where.y = WhereUnknown;
+					{
+						new_where.first = where_t::unknown;
+						new_where.second = npos;
+					}
 
 					if(new_where != pointer_where)
 					{
@@ -1419,7 +1553,7 @@ namespace nana{ namespace gui{
 
 				bool mouse_spliter(const nana::rectangle& r, int x)
 				{
-					if(essence_->ptr_state == essence_->StateHighlight)
+					if(essence_->ptr_state == essence_t::state_t::highlighted)
 					{
 						x -= (r.x - essence_->scroll.offset_x);
 						for(auto & hd : essence_->header.cont())
@@ -1435,7 +1569,7 @@ namespace nana{ namespace gui{
 							}
 						}
 					}
-					else if(essence_->ptr_state == essence_->StateNormal)
+					else if(essence_->ptr_state == essence_t::state_t::normal)
 						item_spliter_ = npos;
 					return false;
 				}
@@ -1448,8 +1582,8 @@ namespace nana{ namespace gui{
 						if(item_spliter_ != npos)
 							orig_item_width_ = essence_->header.get_item(item_spliter_).pixels;
 					}
-					else if(grab_terminal_.index != npos && grab_terminal_.index != essence_->pointer_where.y)
-						essence_->header.move(essence_->pointer_where.y, grab_terminal_.index, grab_terminal_.place_front);
+					else if(grab_terminal_.index != npos && grab_terminal_.index != essence_->pointer_where.second)
+						essence_->header.move(essence_->pointer_where.second, grab_terminal_.index, grab_terminal_.place_front);
 				}
 
 				//grab_move
@@ -1463,7 +1597,7 @@ namespace nana{ namespace gui{
 						_m_make_float(rect, pos);
 
 						//Draw the target strip
-						grab_terminal_.index = _m_target_strip(pos.x, rect, essence_->pointer_where.y, grab_terminal_.place_front);
+						grab_terminal_.index = _m_target_strip(pos.x, rect, essence_->pointer_where.second, grab_terminal_.place_front);
 						return 1;
 					}
 					else
@@ -1505,10 +1639,7 @@ namespace nana{ namespace gui{
 					size_type i = essence_->header.item_by_x(x);
 					if(i == npos)
 					{
-						if(essence_->header.xpos(grab) < x)
-							i = essence_->header.last();
-						else
-							i = essence_->header.begin();
+						i = (essence_->header.xpos(grab) < x ? essence_->header.last() : essence_->header.begin());
 					}
 					if(grab != i)
 					{
@@ -1520,7 +1651,6 @@ namespace nana{ namespace gui{
 
 							//Get the item pos
 							//if mouse pos is at left of an item middle, the pos of itself otherwise the pos of the next.
-
 							place_front = (x <= midpos);
 							x = (place_front ? item_xpos : essence_->header.xpos(essence_->header.neighbor(i, false)));
 
@@ -1542,10 +1672,9 @@ namespace nana{ namespace gui{
 					int txtop = (rect.height - essence_->text_height) / 2 + rect.y;
 					nana::color_t txtcolor = essence_->lister.wd_ptr()->foreground();
 
-					int state = essence_->StateNormal;
-
+					auto state = essence_t::state_t::normal;
 					//check whether grabing an item, if item_spliter_ != npos, that indicates the grab item is a spliter.
-					if(essence_->pointer_where.x == essence_->WhereHeader && (item_spliter_ == npos))
+					if(essence_->pointer_where.first == essence_t::where_t::header && (item_spliter_ == npos))
 						state = essence_->ptr_state;
 
 					int bottom_y = static_cast<int>(rect.y + rect.height - 2);
@@ -1556,7 +1685,7 @@ namespace nana{ namespace gui{
 							int next_x = x + static_cast<int>(i.pixels);
 							if(next_x > rect.x)
 							{
-								_m_draw_item(graph, x, rect.y, height, txtop, txtcolor, i, (i.index == essence_->pointer_where.y ? state : essence_->StateNormal));
+								_m_draw_item(graph, x, rect.y, height, txtop, txtcolor, i, (i.index == essence_->pointer_where.second ? state : essence_t::state_t::normal));
 								graph.line(next_x - 1, rect.y, next_x - 1, bottom_y, 0xDEDFE1);
 							}
 							x = next_x;
@@ -1569,36 +1698,40 @@ namespace nana{ namespace gui{
 				}
 
 				template<typename Item>
-				void _m_draw_item(graph_reference graph, int x, int y, unsigned height, int txtop, nana::color_t txtcolor, const Item& item, int state)
+				void _m_draw_item(graph_reference graph, int x, int y, unsigned height, int txtop, nana::color_t txtcolor, const Item& item, essence_t::state_t state)
 				{
 					nana::color_t bkcolor;
+					typedef essence_t::state_t state_t;
 					switch(state)
 					{
-					case essence_t::StateNormal:	bkcolor = 0xF1F2F4; break;
-					case essence_t::StateHighlight:	bkcolor = 0xFFFFFF; break;
-					case essence_t::StateGrab:		bkcolor = 0x8BD6F6; break;
-					case essence_t::StateFloat:
-						bkcolor = 0xBABBBC;
-						break;
+					case state_t::normal:		bkcolor = 0xF1F2F4; break;
+					case state_t::highlighted:	bkcolor = 0xFFFFFF; break;
+					case state_t::pressed:
+					case state_t::grabed:		bkcolor = 0x8BD6F6; break;
+					case state_t::floated:		bkcolor = 0xBABBBC;	break;
 					}
 
 					graph.rectangle(x, y, item.pixels, height, bkcolor, true);
 					graph.string(x + 5, txtop, txtcolor, item.text);
+
+					if(item.index == essence_->lister.sort_index())
+					{
+						nana::paint::gadget::directions::t dir = essence_->lister.neg_sorted() ? nana::paint::gadget::directions::to_south : nana::paint::gadget::directions::to_north;
+						nana::paint::gadget::arrow_16_pixels(graph, x + (item.pixels - 16) / 2, -4, 0x0, 0, dir);
+					}
 				}
 
 				void _m_make_float(const nana::rectangle& rect, const nana::point& pos)
 				{
-					const es_header::item_t & item = essence_->header.get_item(essence_->pointer_where.y);
+					const es_header::item_t & item = essence_->header.get_item(essence_->pointer_where.second);
 
 					nana::paint::graphics ext_graph(item.pixels, essence_->header_size);
 					ext_graph.typeface(essence_->graph->typeface());
 
 					int txtop = (essence_->header_size - essence_->text_height) / 2;
-
-					_m_draw_item(ext_graph, 0, 0, essence_->header_size, txtop, 0xFFFFFF, item, essence_->StateFloat);
+					_m_draw_item(ext_graph, 0, 0, essence_->header_size, txtop, 0xFFFFFF, item, essence_t::state_t::floated);
 
 					int xpos = essence_->header.xpos(item.index) + pos.x - ref_xpos_;
-
 					ext_graph.blend(*(essence_->graph), xpos - essence_->scroll.offset_x + rect.x, rect.y, 0.5);
 				}
 
@@ -1638,8 +1771,9 @@ namespace nana{ namespace gui{
 					es_lister & lister = essence_->lister;
 					//The Tracker indicates the item where mouse placed.
 					std::pair<es_lister::size_type, es_lister::size_type> tracker(npos, npos);
-					if((essence_->pointer_where.x == essence_->WhereLister || essence_->pointer_where.x == essence_->WhereChecker) && essence_->pointer_where.y != npos)
-						lister.forward(essence_->scroll.offset_y.x, essence_->scroll.offset_y.y, essence_->pointer_where.y, tracker);
+					auto & ptr_where = essence_->pointer_where;
+					if((ptr_where.first == essence_t::where_t::lister || ptr_where.first == essence_t::where_t::checker) && ptr_where.second != npos)
+						lister.forward(essence_->scroll.offset_y.x, essence_->scroll.offset_y.y, ptr_where.second, tracker);
 
 					std::vector<es_header::size_type> subitems;
 					essence_->header_seq(subitems, rect.width);
@@ -1650,13 +1784,13 @@ namespace nana{ namespace gui{
 					int y = rect.y;
 					int txtoff = (essence_->item_size - essence_->text_height) / 2;
 
-					es_lister::container::const_iterator i_categ = lister.cat_container().begin();
+					auto i_categ = lister.cat_container().begin();
 					std::advance(i_categ, essence_->scroll.offset_y.x);
 
 					size_type catg_idx = essence_->scroll.offset_y.x;
 					size_type item_idx = essence_->scroll.offset_y.y;
 
-					essence_t::state_t state = essence_t::StateNormal;
+					auto state = essence_t::state_t::normal;
 					//Here draws a root categ or a first drawing is not a categ.
 					if(catg_idx == 0 || item_idx != npos)
 					{
@@ -1666,16 +1800,31 @@ namespace nana{ namespace gui{
 							item_idx = 0;
 						}
 
-						for(auto i = i_categ->items.begin() + essence_->scroll.offset_y.y; i != i_categ->items.end(); ++i, ++item_idx)
+						//Test whether the sort is enabled.
+						if(essence_->lister.sort_index() != npos)
 						{
-							if(n-- == 0) break;
-							if(tracker.first == catg_idx && tracker.second == item_idx)
-								state = essence_->StateHighlight;
-							else
-								state = essence_->StateNormal;
+							std::size_t size = i_categ->items.size();
+							for(std::size_t offs = essence_->scroll.offset_y.y; offs < size; ++offs, ++item_idx)
+							{
+								if(n-- == 0)	break;
+								state = (tracker.first == catg_idx && tracker.second == item_idx	?
+									essence_t::state_t::highlighted : essence_t::state_t::normal);
 
-							_m_draw_item(*i, x, y, txtoff, header_w, rect, subitems, bkcolor, txtcolor, state);
-							y += essence_->item_size;
+								_m_draw_item(i_categ->items[lister.absolute(catg_idx, offs)], x, y, txtoff, header_w, rect, subitems, bkcolor, txtcolor, state);
+								y += essence_->item_size;
+							}
+						}
+						else
+						{
+							for(auto i = i_categ->items.begin() + essence_->scroll.offset_y.y; i != i_categ->items.end(); ++i, ++item_idx)
+							{
+								if(n-- == 0)	break;
+								state = (tracker.first == catg_idx && tracker.second == item_idx	?
+									essence_t::state_t::highlighted : essence_t::state_t::normal);
+
+								_m_draw_item(*i, x, y, txtoff, header_w, rect, subitems, bkcolor, txtcolor, state);
+								y += essence_->item_size;
+							}
 						}
 						++i_categ;
 						++catg_idx;
@@ -1686,29 +1835,43 @@ namespace nana{ namespace gui{
 						if(n-- == 0) break;
 						item_idx = 0;
 
-						if(tracker.second == npos && tracker.first == catg_idx)
-							state = essence_->StateHighlight;
-						else
-							state = essence_->StateNormal;
+						state = (tracker.second == npos && tracker.first == catg_idx ?
+								essence_t::state_t::highlighted : essence_t::state_t::normal);
 
 						_m_draw_categ(*i_categ, rect.x - essence_->scroll.offset_x, y, txtoff, header_w, rect, bkcolor, state);
 						y += essence_->item_size;
 
 						if(false == i_categ->expand) continue;
 
-						for(auto & m : i_categ->items)
+						//Test whether the sort is enabled.
+						if(essence_->lister.sort_index() != npos)
 						{
-							if(n-- == 0) break;
+							std::size_t size = i_categ->items.size();
+							for(std::size_t pos = 0; pos < size; ++pos)
+							{
+								if(n-- == 0)	break;
+								state = (tracker.first == catg_idx && tracker.second == item_idx	?
+									essence_t::state_t::highlighted : essence_t::state_t::normal);
 
-							if(tracker.first == catg_idx && tracker.second == item_idx)
-								state = essence_->StateHighlight;
-							else
-								state = essence_->StateNormal;
+								_m_draw_item(i_categ->items[lister.absolute(catg_idx, pos)], x, y, txtoff, header_w, rect, subitems, bkcolor, txtcolor, state);
+								y += essence_->item_size;
+								++item_idx;
+							}						
+						}
+						else
+						{
+							for(auto & m : i_categ->items)
+							{
+								if(n-- == 0) break;
 
-							_m_draw_item(m, x, y, txtoff, header_w, rect, subitems, bkcolor, txtcolor, state);
-							y += essence_->item_size;
+								state = (tracker.first == catg_idx && tracker.second == item_idx ?
+										essence_t::state_t::highlighted : essence_t::state_t::normal);
 
-							++item_idx;
+								_m_draw_item(m, x, y, txtoff, header_w, rect, subitems, bkcolor, txtcolor, state);
+								y += essence_->item_size;
+
+								++item_idx;
+							}
 						}
 					}
 
@@ -1716,13 +1879,13 @@ namespace nana{ namespace gui{
 						essence_->graph->rectangle(rect.x, y, rect.width, rect.y + rect.height - y, bkcolor, true);
 				}
 			private:
-				void _m_draw_categ(const es_lister::category& categ, int x, int y, int txtoff, unsigned width, const nana::rectangle& r, nana::color_t bkcolor, int state) const
+				void _m_draw_categ(const es_lister::category& categ, int x, int y, int txtoff, unsigned width, const nana::rectangle& r, nana::color_t bkcolor, essence_t::state_t state) const
 				{
 					bool sel = categ.select();
 					if(sel && (categ.expand == false))
 						bkcolor = 0xD5EFFC;
 
-					if(state == essence_->StateHighlight)
+					if(state == essence_t::state_t::highlighted)
 						bkcolor = essence_->graph->mix(bkcolor, 0x99DEFD, 0.8);
 
 					auto graph = essence_->graph;
@@ -1761,7 +1924,7 @@ namespace nana{ namespace gui{
 					if((item.fgcolor & 0xFF000000) == 0)
 						txtcolor = item.fgcolor;
 
-					if(state == essence_->StateHighlight)
+					if(state == essence_t::state_t::highlighted)
 						bkcolor = essence_->graph->mix(bkcolor, 0x99DEFD, 0.8);
 
 					unsigned show_w = width - essence_->scroll.offset_x;
@@ -1790,14 +1953,14 @@ namespace nana{ namespace gui{
 
 								mouse_action act = mouse_action::normal;
 
-								if(essence_->pointer_where.x == essence_->WhereChecker)
+								if(essence_->pointer_where.first == essence_t::where_t::checker)
 								{
 									switch(state)
 									{
-									case essence_t::StateHighlight:
+									case essence_t::state_t::highlighted:
 										act = mouse_action::over;
 										break;
-									case essence_t::StateGrab:
+									case essence_t::state_t::grabed:
 										act = mouse_action::pressed;
 										break;
 									default:	break;
@@ -1955,8 +2118,21 @@ namespace nana{ namespace gui{
 				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
 				{
 					int update = 0; //0 = nothing, 1 = update, 2 = refresh
-					if(essence_->ptr_state == essence_->StateGrab)
+					if(essence_->ptr_state == essence_t::state_t::pressed)
 					{
+						if(essence_->pointer_where.first == essence_t::where_t::header)
+						{
+							essence_->ptr_state = essence_t::state_t::grabed;
+							nana::point pos(ei.mouse.x, ei.mouse.y);
+							essence_->widget_to_header(pos);
+							drawer_header_->grab(pos, true);
+							API::capture_window(essence_->lister.wd_ptr()->handle(), true);
+							update = 2;
+						}
+					}
+
+					if(essence_->ptr_state == essence_t::state_t::grabed)
+					{	
 						nana::point pos(ei.mouse.x, ei.mouse.y);
 						essence_->widget_to_header(pos);
 
@@ -1966,12 +2142,12 @@ namespace nana{ namespace gui{
 					}
 					else if(essence_->calc_where(ei.mouse.x, ei.mouse.y))
 					{
-						essence_->ptr_state = essence_->StateHighlight;
+						essence_->ptr_state = essence_t::state_t::highlighted;
 						update = 2;
 					}
 
 					bool set_spliter = false;
-					if(essence_->pointer_where.x == essence_->WhereHeader)
+					if(essence_->pointer_where.first == essence_t::where_t::header)
 					{
 						nana::rectangle r;
 						if(essence_->rect_header(r))
@@ -1983,7 +2159,7 @@ namespace nana{ namespace gui{
 							}
 						}
 					}
-					if(set_spliter == false && essence_->ptr_state != essence_->StateGrab)
+					if(set_spliter == false && essence_->ptr_state != essence_t::state_t::grabed)
 					{
 						if((drawer_header_->item_spliter() != npos) || (essence_->lister.wd_ptr()->cursor() == cursor::size_we))
 						{
@@ -2007,13 +2183,15 @@ namespace nana{ namespace gui{
 
 				void trigger::mouse_leave(graph_reference graph, const eventinfo&)
 				{
-					if((static_cast<int>(essence_->pointer_where.x) != essence_->WhereUnknown) || (essence_->ptr_state != essence_->StateNormal))
+					typedef essence_t::state_t state_t;
+					if((essence_->pointer_where.first != essence_t::where_t::unknown) || (essence_->ptr_state != state_t::normal))
 					{
-						if(essence_->ptr_state != essence_->StateGrab)
+						if(essence_->ptr_state != state_t::grabed)
 						{
-							essence_->pointer_where.x = essence_->WhereUnknown;
-							essence_->ptr_state = essence_->StateNormal;
+							essence_->pointer_where.first = essence_t::where_t::unknown;
+							essence_->ptr_state = state_t::normal;
 						}
+						
 						draw();
 						API::lazy_refresh();
 					}
@@ -2022,29 +2200,31 @@ namespace nana{ namespace gui{
 				void trigger::mouse_down(graph_reference, const eventinfo& ei)
 				{
 					bool update = false;
-					if(essence_->pointer_where.x == essence_->WhereHeader && (static_cast<int>(essence_->pointer_where.y) != essence_->WhereUnknown || (drawer_header_->item_spliter() != npos)))
+					auto & ptr_where = essence_->pointer_where;
+					if((ptr_where.first == essence_t::where_t::header) && (ptr_where.second != npos || (drawer_header_->item_spliter() != npos)))
 					{
-						essence_->ptr_state = essence_->StateGrab;
-						nana::point pos(ei.mouse.x, ei.mouse.y);
-						essence_->widget_to_header(pos);
-						drawer_header_->grab(pos, true);
-						API::capture_window(essence_->lister.wd_ptr()->handle(), true);
-						update = true;
+						essence_->ptr_state = essence_t::state_t::pressed;
+						nana::rectangle r;
+						if(essence_->rect_header(r))
+						{
+							drawer_header_->draw(r);
+							update = true;
+						}
 					}
-					else if(essence_->pointer_where.x == essence_->WhereLister || essence_->pointer_where.x == essence_->WhereChecker)
+					else if(ptr_where.first == essence_t::where_t::lister || ptr_where.first == essence_t::where_t::checker)
 					{
 						auto & lister = essence_->lister;
 						std::pair<size_type, size_type> item;
-						if(lister.forward(essence_->scroll.offset_y.x, essence_->scroll.offset_y.y, essence_->pointer_where.y, item))
+						if(lister.forward(essence_->scroll.offset_y.x, essence_->scroll.offset_y.y, ptr_where.second, item))
 						{
 							auto * item_ptr = (item.second != npos ? &lister.at(item.first, item.second) : nullptr);
-							if(essence_->pointer_where.x == essence_->WhereLister)
+							if(ptr_where.first == essence_t::where_t::lister)
 							{
 								lister.select_for_all(false);
 								if(item_ptr)
 								{
 									item_ptr->flags.selected = true;
-									lister.ext_event.selected(*lister.wd_ptr(), item.first, item.second, true);
+									lister.ext_event.selected(*lister.wd_ptr(), item.first, lister.absolute(item.first, item.second), true);
 								}
 								else
 									lister.categ_selected(item.first, true);
@@ -2054,12 +2234,11 @@ namespace nana{ namespace gui{
 								if(item_ptr)
 								{
 									item_ptr->flags.checked = ! item_ptr->flags.checked;
-									lister.ext_event.checked(*lister.wd_ptr(), item.first, item.second, item_ptr->flags.checked);
+									lister.ext_event.checked(*lister.wd_ptr(), item.first, lister.absolute(item.first, item.second), item_ptr->flags.checked);
 								}
 								else
 									lister.categ_checked_reverse(item.first);
 							}
-
 							update = true;
 						}
 						else
@@ -2083,9 +2262,24 @@ namespace nana{ namespace gui{
 
 				void trigger::mouse_up(graph_reference graph, const eventinfo& ei)
 				{
-					if(essence_->ptr_state == essence_->StateGrab)
+					typedef essence_t::where_t where_t;
+					typedef essence_t::state_t state_t;
+					state_t prev_state = essence_->ptr_state;
+					essence_->ptr_state = state_t::highlighted;
+					//Do sort
+					if(essence_->pointer_where.first == where_t::header && prev_state == state_t::pressed)
 					{
-						essence_->ptr_state = essence_->StateHighlight;
+						if(essence_->pointer_where.second < essence_->header.cont().size())
+						{
+							if(essence_->lister.sort_index(essence_->pointer_where.second))
+							{
+								draw();
+								API::lazy_refresh();
+							}
+						}
+					}
+					else if(prev_state == state_t::grabed)
+					{
 						nana::point pos(ei.mouse.x, ei.mouse.y);
 						essence_->widget_to_header(pos);
 						drawer_header_->grab(pos, false);
@@ -2107,25 +2301,27 @@ namespace nana{ namespace gui{
 
 				void trigger::dbl_click(graph_reference graph, const eventinfo& ei)
 				{
-					if(essence_->pointer_where.x == essence_->WhereLister)
+					if(essence_->pointer_where.first == essence_t::where_t::lister)
 					{
 						std::pair<es_lister::size_type, es_lister::size_type> item;
+						auto & offset_y = essence_->scroll.offset_y;
+						auto & lister = essence_->lister;
 						//Get the item which the mouse is placed.
-						if(essence_->lister.forward(essence_->scroll.offset_y.x, essence_->scroll.offset_y.y, essence_->pointer_where.y, item))
+						if(lister.forward(offset_y.x, offset_y.y, essence_->pointer_where.second, item))
 						{
 							if(item.second == npos)	//being the npos of item.second is a category
 							{
-								bool do_expand = (essence_->lister.expand(item.first) == false);
-								essence_->lister.expand(item.first, do_expand);
+								bool do_expand = (lister.expand(item.first) == false);
+								lister.expand(item.first, do_expand);
 
 								if(do_expand == false)
 								{
-									std::pair<size_type, size_type> last = essence_->lister.last();
+									auto last = lister.last();
 									size_type n = essence_->number_of_lister_items(false);
-									if(essence_->lister.backward(last.first, last.second, n, last))
+									if(lister.backward(last.first, last.second, n, last))
 									{
-										essence_->scroll.offset_y.x = static_cast<nana::upoint::value_type>(last.first);
-										essence_->scroll.offset_y.y = static_cast<nana::upoint::value_type>(last.second);
+										offset_y.x = static_cast<decltype(offset_y.x)>(last.first);
+										offset_y.y = static_cast<decltype(offset_y.y)>(last.second);
 									}
 								}
 								essence_->adjust_scroll_life();
@@ -2201,7 +2397,7 @@ namespace nana{ namespace gui{
 
 		void listbox::append_item(listbox::size_type cat, const nana::string& text)
 		{
-			drawerbase::listbox::es_lister & lister = get_drawer_trigger().essence().lister;
+			auto & lister = get_drawer_trigger().essence().lister;
 			lister.push_back(cat, text);
 			window wd = handle();
 			if(false == API::empty_window(wd))
@@ -2213,9 +2409,10 @@ namespace nana{ namespace gui{
 			}
 		}
 
+
 		void listbox::insert(size_type cat, size_type index, const nana::string& text)
 		{
-			drawerbase::listbox::es_lister & lister = get_drawer_trigger().essence().lister;
+			auto & lister = get_drawer_trigger().essence().lister;
 			if(lister.insert(cat, index, text))
 			{
 				window wd = handle();
@@ -2257,7 +2454,7 @@ namespace nana{ namespace gui{
 		void listbox::checked(size_type cat, size_type i, bool value)
 		{
 			auto & lister = get_drawer_trigger().essence().lister;
-			auto & item = lister.at(cat, i);
+			auto & item = lister.at_abs(cat, i);
 			if(item.flags.checked != value)
 			{
 				item.flags.checked = value;
@@ -2268,12 +2465,12 @@ namespace nana{ namespace gui{
 
 		void listbox::clear(size_type cat)
 		{
-			drawerbase::listbox::essence_t & es = get_drawer_trigger().essence();
+			auto & es = get_drawer_trigger().essence();
 			es.lister.clear(cat);
 			nana::upoint pos = es.scroll_y();
 			if(pos.x == cat)
 			{
-				pos.y = (pos.x > 0 ? es.WhereUnknown : 0);
+				pos.y = (pos.x > 0 ? drawerbase::listbox::npos : 0);
 				es.scroll_y(pos);
 			}
 			get_drawer_trigger().update();
@@ -2281,17 +2478,17 @@ namespace nana{ namespace gui{
 
 		void listbox::clear()
 		{
-			drawerbase::listbox::essence_t & es = get_drawer_trigger().essence();
+			auto & es = get_drawer_trigger().essence();
 			es.lister.clear();
 			nana::upoint pos = es.scroll_y();
-			pos.y = (pos.x > 0 ? es.WhereUnknown : 0);
+			pos.y = (pos.x > 0 ? drawerbase::listbox::npos : 0);
 			es.scroll_y(pos);
 			get_drawer_trigger().update();
 		}
 
 		void listbox::erase(size_type categ, size_type item)
 		{
-			drawerbase::listbox::essence_t & es = get_drawer_trigger().essence();
+			auto & es = get_drawer_trigger().essence();
 			es.lister.erase(categ, item);
 			nana::upoint pos = es.scroll_y();
 			if((pos.x == categ) && (item <= pos.y))
@@ -2299,7 +2496,7 @@ namespace nana{ namespace gui{
 				if(pos.y == 0)
 				{
 					if(es.lister.size_item(categ) == 0)
-						pos.y = (pos.x > 0 ? es.WhereUnknown : 0);
+						pos.y = (pos.x > 0 ? drawerbase::listbox::npos : 0);
 				}
 				else
 					--pos.y;
@@ -2308,18 +2505,18 @@ namespace nana{ namespace gui{
 			get_drawer_trigger().update();
 		}
 
-		void listbox::erase(size_type categ)
+		void listbox::erase(size_type cat)
 		{
-			drawerbase::listbox::essence_t & es = get_drawer_trigger().essence();
-			es.lister.erase(categ);
-			if(categ)
+			auto & es = get_drawer_trigger().essence();
+			es.lister.erase(cat);
+			if(cat)
 			{
 				nana::upoint pos = es.scroll_y();
-				if(categ <= pos.x)
+				if(cat <= pos.x)
 				{
 					if(pos.x == es.lister.size_categ())
 						--pos.x;
-					pos.y = es.WhereUnknown;
+					pos.y = drawerbase::listbox::npos;
 					es.scroll_y(pos);
 				}
 			}
@@ -2330,7 +2527,7 @@ namespace nana{ namespace gui{
 
 		void listbox::erase()
 		{
-			drawerbase::listbox::essence_t & es = get_drawer_trigger().essence();
+			auto & es = get_drawer_trigger().essence();
 			es.lister.erase();
 			es.scroll_y(nana::upoint(0, 0));
 			get_drawer_trigger().update();
@@ -2348,9 +2545,14 @@ namespace nana{ namespace gui{
 
 		void listbox::set_item_text(size_type categ, size_type index, size_type sub, const nana::string& text)
 		{
-			drawerbase::listbox::essence_t & es = get_drawer_trigger().essence();
+			auto & es = get_drawer_trigger().essence();
 			es.lister.text(categ, index, sub, text, es.header.cont().size());
 			get_drawer_trigger().update();
+		}
+
+		void listbox::set_sort_compare(size_type sub, std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*)> strick_ordering)
+		{
+			get_drawer_trigger().essence().header.get_item(sub).weak_ordering = std::move(strick_ordering);
 		}
 
 		void listbox::show_header(bool sh)
@@ -2382,7 +2584,7 @@ namespace nana{ namespace gui{
 		void listbox::selected(size_type cat, size_type i, bool value)
 		{
 			auto & lister = get_drawer_trigger().essence().lister;
-			auto & item = lister.at(cat, i);
+			auto & item = lister.at_abs(cat, i);
 			if(item.flags.selected != value)
 			{
 				item.flags.selected = value;
@@ -2401,8 +2603,9 @@ namespace nana{ namespace gui{
 		{
 			if(img)
 			{
-				get_drawer_trigger().essence().lister.at(cat, index).img = img;
-				get_drawer_trigger().essence().if_image = true;
+				auto & es = get_drawer_trigger().essence();
+				es.lister.at(cat, index).img = img;
+				es.if_image = true;
 				get_drawer_trigger().update();
 			}
 		}

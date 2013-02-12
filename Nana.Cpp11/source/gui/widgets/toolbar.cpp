@@ -138,25 +138,26 @@ namespace nana{ namespace gui{
 			class item_renderer
 			{
 			public:
-				enum{StateNormal, StateHighlight, StateSelected};
+				enum class state_t{normal, highlighted, selected};
 				const static unsigned extra_size = 6;
 
 				item_renderer(nana::paint::graphics& graph, bool textout, unsigned scale, nana::color_t color)
 					:graph(graph), textout(textout), scale(scale), color(color)
 				{}
 
-				void operator()(int x, int y, unsigned width, unsigned height, item_type& item, int state)
+				void operator()(int x, int y, unsigned width, unsigned height, item_type& item, state_t state)
 				{
 					//draw background
-					if(state != StateNormal)
+					if(state != state_t::normal)
 						graph.rectangle(x, y, width, height, 0x3399FF, false);
 					switch(state)
 					{
-					case StateHighlight:
+					case state_t::highlighted:
 						graph.shadow_rectangle(x + 1, y + 1, width - 2, height - 2, color, /*graph.mix(color, 0xC0DDFC, 0.5)*/ 0xC0DDFC, true);
 						break;
-					case StateSelected:
+					case state_t::selected:
 						graph.shadow_rectangle(x + 1, y + 1, width - 2, height - 2, color, /*graph.mix(color, 0x99CCFF, 0.5)*/0x99CCFF, true);
+					default:	break;
 					}
 
 					if(item.image.empty() == false)
@@ -177,7 +178,7 @@ namespace nana{ namespace gui{
 							gh.rgb_to_wb();
 							gh.paste(graph, pos.x, pos.y);
 						}
-						else if(state == StateNormal)
+						else if(state == state_t::normal)
 						{
 							graph.blend(pos.x, pos.y, size.width, size.height, graph.mix(color, 0xC0DDFC, 0.5), 0.25);
 						}
@@ -204,14 +205,14 @@ namespace nana{ namespace gui{
 				unsigned scale;
 				bool textout;
 				size_type which;
-				int state;
+				item_renderer::state_t state;
 
 				container cont;
 				nana::gui::tooltip tooltip;
 
 
 				drawer_impl_type()
-					:scale(16), textout(false), which(npos), state(item_renderer::StateNormal)
+					:scale(16), textout(false), which(npos), state(item_renderer::state_t::normal)
 				{}
 			};
 
@@ -312,12 +313,12 @@ namespace nana{ namespace gui{
 
 							if(which == npos || (*(impl_->cont.begin() + which))->enable)
 							{
-								impl_->state = (ei.mouse.left_button ? item_renderer::StateSelected : item_renderer::StateHighlight);
+								impl_->state = (ei.mouse.left_button ? item_renderer::state_t::selected : item_renderer::state_t::highlighted);
 
 								_m_draw();
 								nana::gui::API::lazy_refresh();
 
-								if(impl_->state == item_renderer::StateHighlight)
+								if(impl_->state == item_renderer::state_t::highlighted)
 									ext_event.enter(*static_cast<nana::gui::toolbar*>(widget_), which);
 							}
 
@@ -350,7 +351,7 @@ namespace nana{ namespace gui{
 					impl_->tooltip.close();
 					if(impl_->which != npos && (impl_->cont.at(impl_->which)->enable))
 					{
-						impl_->state = item_renderer::StateSelected;
+						impl_->state = item_renderer::state_t::selected;
 						_m_draw();
 						nana::gui::API::lazy_refresh();
 					}
@@ -365,12 +366,12 @@ namespace nana{ namespace gui{
 						{
 							ext_event.selected(*static_cast<nana::gui::toolbar*>(widget_), which);
 
-							impl_->state = item_renderer::StateHighlight;
+							impl_->state = item_renderer::state_t::highlighted;
 						}
 						else
 						{
 							impl_->which = which;
-							impl_->state = (which == npos ? item_renderer::StateNormal : item_renderer::StateHighlight);
+							impl_->state = (which == npos ? item_renderer::state_t::normal : item_renderer::state_t::highlighted);
 						}
 
 						_m_draw();
@@ -418,7 +419,7 @@ namespace nana{ namespace gui{
 						{
 							_m_fill_pixels(item, false);
 
-							ir(x, y, item->pixels, impl_->scale + ir.extra_size, *item, (index == impl_->which ? impl_->state : item_renderer::StateNormal));
+							ir(x, y, item->pixels, impl_->scale + ir.extra_size, *item, (index == impl_->which ? impl_->state : item_renderer::state_t::normal));
 
 							x += item->pixels;
 						}

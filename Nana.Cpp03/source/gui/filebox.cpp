@@ -49,7 +49,7 @@ namespace nana{	namespace gui
 					{
 						std::stringstream ss;
 						ss<<(item.modified_time.tm_year + 1900)<<'-';
-						_m_stream2(ss, item.modified_time.tm_mon)<<'-';
+						_m_stream2(ss, item.modified_time.tm_mon + 1)<<'-';
 						_m_stream2(ss, item.modified_time.tm_mday)<<' ';
 
 						_m_stream2(ss, item.modified_time.tm_hour)<<':';
@@ -69,23 +69,7 @@ namespace nana{	namespace gui
 				case 3:
 					if(false == item.directory)
 					{
-						std::stringstream ss;
-						if(item.bytes < 1024)
-						{
-							ss<<item.bytes<<" Bytes";
-							return nana::charset(ss.str());
-						}
-						double size = item.bytes / 1024.0;
-						if(size < 1024)
-							return _m_trans(size) + STR(" KB");
-						size /= 1024.0;
-						if(size < 1024)
-							return _m_trans(size) + STR(" MB");
-						size /= 1024.0;
-						if(size < 1024)
-							return _m_trans(size) + STR(" GB");
-						size /= 1024.0;
-						return _m_trans(size) + STR(" TB");
+						return _m_trans(item.bytes);
 					}
 					return nana::string();
 				}
@@ -105,18 +89,32 @@ namespace nana{	namespace gui
 				}
 			}
 
-			nana::string _m_trans(double value) const
+			static nana::string _m_trans(std::size_t bytes)
 			{
+				const nana::char_t * ustr[] = {STR(" KB"), STR(" MB"), STR(" GB"), STR(" TB")};
 				std::stringstream ss;
-				ss<<value;
-				std::string s = ss.str();
-				std::size_t pos = s.find('.');
-				if(pos != s.npos)
+				if(bytes >= 1024)
 				{
-					if(pos + 2 < s.size())
-						s.erase(pos + 2);
+					double cap = bytes / 1024.0;
+					std::size_t uid = 0;
+					while((cap >= 1024.0) && (uid < (sizeof(ustr) / sizeof(nana::char_t*))))
+					{
+						cap /= 1024.0;
+						++uid;
+					}
+					ss<<cap;
+					std::string s = ss.str();
+					std::size_t pos = s.find('.');
+					if(pos != s.npos)
+					{
+						if(pos + 2 < s.size())
+							s.erase(pos + 2);
+					}
+					return static_cast<nana::string>(nana::charset(s)) + ustr[uid];
 				}
-				return nana::charset(s);
+				
+				ss<<bytes<<" Bytes";
+				return nana::charset(ss.str());
 			}
 		};
 		
@@ -125,6 +123,26 @@ namespace nana{	namespace gui
 			bool operator()(const item_fs& a, const item_fs& b) const
 			{
 				return ((a.directory != b.directory) && a.directory);
+			}
+		};
+
+		struct comp_sort_by_type
+		{
+			bool operator()(const nana::string& a, nana::any* anyptr_a, const nana::string& b, nana::any* anyptr_b) const
+			{
+				if(anyptr_a->get<item_fs>()->directory) return true;
+				if(anyptr_b->get<item_fs>()->directory) return false;
+				return (a != b && a < b);
+			}
+		};
+
+		struct comp_sort_by_size
+		{
+			bool operator()(const nana::string& a, nana::any* anyptr_a, const nana::string& b, nana::any* anyptr_b) const
+			{
+				item_fs * fsa = anyptr_a->get<item_fs>();
+				item_fs * fsb = anyptr_b->get<item_fs>();
+				return (fsa->bytes < fsb->bytes);
 			}
 		};
 	public:
@@ -161,6 +179,8 @@ namespace nana{	namespace gui
 			ls_file_.append_header(STR("Size"), 70);
 			ls_file_.make_event<events::dbl_click>(*this, &filebox_implement::_m_sel_file);
 			ls_file_.make_event<events::mouse_down>(*this, &filebox_implement::_m_sel_file);
+			ls_file_.set_sort_compare(2, comp_sort_by_type());
+			ls_file_.set_sort_compare(3, comp_sort_by_size());
 
 			lb_file_.create(*this);
 			lb_file_.caption(STR("File:"));
@@ -183,7 +203,6 @@ namespace nana{	namespace gui
 			selection_.type = kind::none;
 			_m_layout();
 			_m_init_tree();
-			_m_load_cat_path(nana::filesystem::path_user());
 
 			if(0 == title.size())
 				caption(io_read ? STR("Open") : STR("Save As"));
@@ -194,6 +213,11 @@ namespace nana{	namespace gui
 		void def_extension(const nana::string& ext)
 		{
 			def_ext_ = ext;
+		}
+
+		void load_fs(const nana::string& init_path)
+		{
+			_m_load_cat_path(init_path.size() ? init_path : nana::filesystem::path_user());
 		}
 
 		void add_filter(const nana::string& desc, const nana::string& type)
@@ -274,24 +298,22 @@ namespace nana{	namespace gui
 
 		void _m_init_tree()
 		{
-			nana::string home = nana::filesystem::path_user();
+			using namespace nana::filesystem;
 
 			//The path in linux is starting with the character '/', the name of root key should be
-			//"FS.HOME", "FS.ROOT". Because a key of the tree widget must not be '/'
-
+			//"FS.HOME", "FS.ROOT". Because a key of the tree widget should not be '/'
 			nodes_.home = tree_.insert(STR("FS.HOME"), STR("Home"), kind::filesystem);
 			nodes_.filesystem = tree_.insert(STR("FS.ROOT"), STR("Filesystem"), kind::filesystem);
 
-			nana::filesystem::file_iterator end;
-			nana::string str = nana::filesystem::path_user();
-			for(nana::filesystem::file_iterator i(str); i != end; ++i)
+			file_iterator end;
+			for(nana::filesystem::file_iterator i(path_user()); i != end; ++i)
 			{
 				if((false == i->directory) || (i->name.size() && i->name[0] == '.')) continue;
 				if(tree_.insert(nodes_.home, i->name, i->name, kind::filesystem))
 					break;
 			}
 
-			for(nana::filesystem::file_iterator i(STR("/")); i != end; ++i)
+			for(file_iterator i(STR("/")); i != end; ++i)
 			{
 				if((false == i->directory) || (i->name.size() && i->name[0] == '.')) continue;
 				if(tree_.insert(nodes_.filesystem, i->name, i->name, kind::filesystem))
@@ -324,15 +346,17 @@ namespace nana{	namespace gui
 				addr_.filesystem += STR('/');
 
 			file_container_.clear();
-			nana::filesystem::attribute fattr;
-			nana::filesystem::file_iterator end;
-			for(nana::filesystem::file_iterator i(path); i != end; ++i)
+
+			using namespace nana::filesystem;
+			attribute fattr;
+			file_iterator end;
+			for(file_iterator i(path); i != end; ++i)
 			{
 				if((i->name.size() == 0) || (i->name[0] == STR('.')))
 					continue;
 				item_fs m;
 				m.name = i->name;
-				if(nana::filesystem::file_attrib(path + m.name, fattr))
+				if(file_attrib(path + m.name, fattr))
 				{
 					m.bytes = fattr.bytes;
 					m.directory = fattr.is_directory;
@@ -342,7 +366,7 @@ namespace nana{	namespace gui
 				{
 					m.bytes = 0;
 					m.directory = i->directory;
-					nana::filesystem::modified_file_time(path + i->name, m.modified_time);
+					modified_file_time(path + i->name, m.modified_time);
 				}
 
 				file_container_.push_back(m);
@@ -416,9 +440,8 @@ namespace nana{	namespace gui
 
 		bool _m_filter_allowed(const nana::string& name, bool is_dir, const nana::string& filter, const std::vector<nana::string>* extension) const
 		{
-			if(filter.size())
-				if(name.find(filter) == filter.npos)
-					return false;
+			if(filter.size() && (name.find(filter) == filter.npos))
+				return false;
 
 			if((is_dir || 0 == extension) || (0 == extension->size())) return true;
 
@@ -443,8 +466,13 @@ namespace nana{	namespace gui
 
 			for(std::vector<item_fs>::iterator i = file_container_.begin(); i != file_container_.end(); ++i)
 			{
-				if(_m_filter_allowed(i->name, i->directory, filter, ext_types))
-					ls_file_.append(0, *i);
+				item_fs & fs = *i;
+				if(_m_filter_allowed(fs.name, fs.directory, filter, ext_types))
+				{
+					std::size_t index = ls_file_.size_item();
+					ls_file_.append(0, fs);
+					ls_file_.anyobj(0, index, fs);
+				}
 			}
 			ls_file_.auto_draw(true);
 		}
@@ -620,7 +648,14 @@ namespace nana{	namespace gui
 					
 					if(io_read_)
 					{
-						if(good)
+						if(false == good)
+						{
+							msgbox mb(*this, caption());
+							mb.icon(msgbox::icon_information);
+							mb<<STR("The file \"")<<tar<<STR("\"\n is not existing. Please check and retry.");
+							mb();	
+						}
+						else
 							_m_finish(kind::filesystem, tar);
 					}
 					else
@@ -871,6 +906,8 @@ namespace nana{	namespace gui
 			}
 			else
 				fb.add_filter(STR("All Files"), STR("*.*"));
+
+			fb.load_fs(impl_->path);
 
 			API::modal_window(fb);
 			if(fb.selected())

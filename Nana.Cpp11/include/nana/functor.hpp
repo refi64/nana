@@ -128,27 +128,27 @@ namespace nana
 
 			fn_group_type & operator=(const std::function<function_type> & f)
 			{
-				this->clear();
-				this->append(f);
+				clear();
+				append(f);
 				return *static_cast<fn_group_type*>(this);
 			}
 
 			fn_group_type & operator=(std::function<function_type>&& f)
 			{
-				this->clear();
-				this->append(std::move(f));
+				clear();
+				append(std::move(f));
 				return *static_cast<fn_group_type*>(this);
 			}
 
 			fn_group_type & operator+=(const std::function<function_type> & f)
 			{
-				this->append(f);
+				append(f);
 				return *static_cast<fn_group_type*>(this);
 			}
 
 			fn_group_type & operator+=(std::function<function_type> && f)
 			{
-				this->append(std::move(f));
+				append(std::move(f));
 				return *static_cast<fn_group_type*>(this);
 			}
 
@@ -214,16 +214,16 @@ namespace nana
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)())
 		{
-			this->append(make_fun(obj, mf));
+			append(make_fun(obj, mf));
 		}
 
 		R operator()() const
 		{
-			const container & fobjs = this->_m_cont();
+			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				typename container::const_iterator last = fobjs.end() - 1;
-				for(typename container::const_iterator i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.end() - 1;
+				for(auto i = fobjs.begin(); i != last; ++i)
 					(*i)();
 				return (*last)();
 			}
@@ -244,16 +244,16 @@ namespace nana
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)(P0))
 		{
-			this->append(make_fun(obj, mf));
+			append(make_fun(obj, mf));
 		}
 
 		R operator()(P0 p0) const
 		{
-			const container & fobjs = this->_m_cont();
+			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				typename container::const_iterator last = fobjs.end() - 1;
-				for(typename container::const_iterator i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.end() - 1;
+				for(auto i = fobjs.begin(); i != last; ++i)
 					(*i)(p0);
 				return (*last)(p0);
 			}
@@ -274,16 +274,16 @@ namespace nana
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)(P0, P1))
 		{
-			this->append(make_fun(obj, mf));
+			append(make_fun(obj, mf));
 		}
 
 		R operator()(P0 p0, P1 p1) const
 		{
-			const container & fobjs = this->_m_cont();
+			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				typename container::const_iterator last = fobjs.end() - 1;
-				for(typename container::const_iterator i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.end() - 1;
+				for(auto i = fobjs.begin(); i != last; ++i)
 					(*i)(p0, p1);
 				return (*last)(p0, p1);
 			}
@@ -304,16 +304,16 @@ namespace nana
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)(P0, P1, P2))
 		{
-			this->append(make_fun(obj, mf));
+			append(make_fun(obj, mf));
 		}
 
 		R operator()(P0 p0, P1 p1, P2 p2) const
 		{
-			const container & fobjs = this->_m_cont();
+			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				typename container::const_iterator last = fobjs.end() - 1;
-				for(typename container::const_iterator i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.end() - 1;
+				for(auto i = fobjs.begin(); i != last; ++i)
 					(*i)(p0, p1, p2);
 				return (*last)(p0, p1, p2);
 			}
@@ -334,16 +334,16 @@ namespace nana
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)(P0, P1, P2, P3))
 		{
-			this->append(make_fun(obj, mf));
+			append(make_fun(obj, mf));
 		}
 
 		R operator()(P0 p0, P1 p1, P2 p2, P3 p3) const
 		{
-			const container & fobjs = this->_m_cont();
+			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				typename container::const_iterator last = fobjs.end() - 1;
-				for(typename container::const_iterator i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.end() - 1;
+				for(auto i = fobjs.begin(); i != last; ++i)
 					(*i)(p0, p1, p2, p3);
 				return (*last)(p0, p1, p2, p3);
 			}
@@ -364,16 +364,16 @@ namespace nana
 		template<typename T, typename Concept>
 		void assign(T& obj, R(Concept::*mf)(P0, P1, P2, P3, P4))
 		{
-			this->append(make_fun(obj, mf));
+			append(make_fun(obj, mf));
 		}
 
 		R operator()(P0 p0, P1 p1, P2 p2, P3 p3, P4 p4) const
 		{
-			const container & fobjs = this->_m_cont();
+			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				typename container::const_iterator last = fobjs.end() - 1;
-				for(typename container::const_iterator i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.end() - 1;
+				for(auto i = fobjs.begin(); i != last; ++i)
 					(*i)(p0, p1, p2, p3, p4);
 				return (*last)(p0, p1, p2, p3, p4);
 			}

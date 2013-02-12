@@ -122,51 +122,49 @@ namespace nana{ namespace gui{
 		void append_categ(const nana::string& text);
 		void append_header(const nana::string&, unsigned width = 120);
 		void append_item(const nana::string&);
-		void append_item(size_type categ, const nana::string&);
+		void append_item(size_type cat, const nana::string&);
 		
 		template<typename T>
-		void append(size_type categ, const T& t)
+		void append(size_type cat, const T& t)
 		{
-			inner_resolver_proxy<T> * proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
+			auto proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
 			if(proxy)
 			{
 				auto & res = proxy->res->refer();
-				size_type index = size_item(categ);
-				append_item(categ, res.decode(0, t));
-
+				size_type index = size_item(cat);
+				append_item(cat, res.decode(0, t));
 				std::size_t headers = _m_headers();
 				for(std::size_t i = 1; i < headers; ++i)
-					set_item_text(categ, index, i, res.decode(i, t));
+					set_item_text(cat, index, i, res.decode(i, t));
 			}
 		}
 
-		void insert(size_type categ, size_type index, const nana::string&);
+		void insert(size_type cat, size_type index, const nana::string&);
 
 		template<typename T>
-		void insert(size_type categ, size_type index, const T& t)
+		void insert(size_type cat, size_type index, const T& t)
 		{
-			inner_resolver_proxy<T> * proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
+			auto proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
 			if(proxy)
 			{
 				auto & res = proxy->res->refer();
-				insert(categ, index, res.decode(0, t));
-
+				insert(cat, index, res.decode(0, t));
 				std::size_t headers = _m_headers();
 				for(std::size_t i = 1; i < headers; ++i)
-					set_item_text(categ, index, i, res.decode(i, t));
-			}		
+					set_item_text(cat, index, i, res.decode(i, t));
+			}
 		}
 
 		void checkable(bool);
 		bool checked(size_type item) const;
-		bool checked(size_type categ, size_type item) const;
+		bool checked(size_type cat, size_type item) const;
 		void checked(std::vector<std::pair<size_type, size_type> >&);
-		void checked(size_type categ, size_type item, bool);
+		void checked(size_type cat, size_type item, bool);
 
-		void clear(size_type categ);
+		void clear(size_type cat);
 		void clear();
-		void erase(size_type categ, size_type item);
-		void erase(size_type categ);
+		void erase(size_type cat, size_type item);
+		void erase(size_type cat);
 		void erase();
 
 		template<typename Resolver>
@@ -178,39 +176,40 @@ namespace nana{ namespace gui{
 		}
 
 		template<typename T>
-		bool item(size_type categ, size_type index, T & t) const
+		bool item(size_type cat, size_type index, T & t) const
 		{
-			inner_resolver_proxy<T> * proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
+			auto proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
 			if(proxy)
 			{
 				auto & res = proxy->res->refer();
 				std::size_t headers = _m_headers();
 				for(std::size_t i = 0; i < headers; ++i)
-					res.encode(t, i, item_text(categ, index, i));
+					res.encode(t, i, item_text(cat, index, i));
 				return true;
 			}
 			return false;
 		}
 
-		nana::string item_text(size_type categ, size_type index, size_type sub) const;
+		nana::string item_text(size_type cat, size_type index, size_type sub) const;
 		void set_item_text(size_type index, size_type sub, const nana::string&);
-		void set_item_text(size_type categ, size_type index, size_type sub, const nana::string&);
+		void set_item_text(size_type cat, size_type index, size_type sub, const nana::string&);
+		void set_sort_compare(size_type sub, std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*)> strick_ordering);
 		void show_header(bool);
 		bool visible_header() const;
 		bool selected(size_type item) const;
-		bool selected(size_type categ, size_type item) const;
+		bool selected(size_type cat, size_type item) const;
 		void selected(std::vector<index_pair_t>&);
-		void selected(size_type categ, size_type item, bool);
+		void selected(size_type cat, size_type item, bool);
 		void move_select(bool upwards);
-		void icon(size_type categ, size_type index, const nana::paint::image&);
-		nana::paint::image icon(size_type categ, size_type index) const;
-		void item_background(size_type categ, size_type index, nana::color_t color);
-		nana::color_t item_background(size_type categ, size_type index) const;
-		void item_foreground(size_type categ, size_type index, nana::color_t color);
-		nana::color_t item_foreground(size_type categ, size_type index) const;
+		void icon(size_type cat, size_type index, const nana::paint::image&);
+		nana::paint::image icon(size_type cat, size_type index) const;
+		void item_background(size_type cat, size_type index, nana::color_t color);
+		nana::color_t item_background(size_type cat, size_type index) const;
+		void item_foreground(size_type cat, size_type index, nana::color_t color);
+		nana::color_t item_foreground(size_type cat, size_type index) const;
 		size_type size_categ() const;
 		size_type size_item() const;
-		size_type size_item(size_type categ) const;
+		size_type size_item(size_type cat) const;
 	private:
 		nana::any* _m_anyobj(size_type cat, size_type index, bool allocate_if_empty) const;
 		void _m_resolver(const nana::any&);

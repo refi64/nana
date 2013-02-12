@@ -752,6 +752,9 @@ namespace API
 				if((iwd->other.category == category::root_tag::value) && (iwd->flags.modal == false))
 				{
 					iwd->flags.modal = true;
+#if defined(NANA_X11)
+					restrict::interface_type::set_modal(iwd->root);
+#endif
 					restrict::window_manager.show(iwd, true);
 					wd = reinterpret_cast<window>(iwd);
 				}

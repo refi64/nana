@@ -81,7 +81,7 @@ namespace nana{
 		{
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-			map_t::iterator i = map_.find(wd);
+			auto i = map_.find(wd);
 			if(i != map_.end())
 			{
 				ext = i->second;
@@ -95,7 +95,7 @@ namespace nana{
 		{
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-			map_t::iterator i = map_.find(wd);
+			auto i = map_.find(wd);
 			if(i != map_.end())
 			{
 				HICON ret = i->second.ico;
@@ -189,10 +189,8 @@ namespace nana{
 			nana::detail::platform_scope_guard psg;
 
 			XSetWindowAttributes win_attr;
-			unsigned long attr_mask =	CWBackPixmap | CWBackPixel |
-										CWBorderPixel |
-										CWWinGravity | CWBitGravity |
-										CWColormap | CWEventMask;
+			unsigned long attr_mask = CWBackPixmap | CWBackPixel | CWBorderPixel |
+							CWWinGravity | CWBitGravity | CWColormap | CWEventMask;
 
 			Display * disp = restrict::spec.open_display();
 			win_attr.colormap = restrict::spec.colormap();
@@ -224,7 +222,7 @@ namespace nana{
 				calc_screen_point(owner, pos);
 			}
 
-			win_attr.event_mask = ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | ExposureMask | StructureNotifyMask | LeaveWindowMask | FocusChangeMask;
+			win_attr.event_mask = ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | ExposureMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask | FocusChangeMask;
 
 			Window handle = ::XCreateWindow(disp, parent,
 							pos.x, pos.y, (r.width ? r.width : 1), (r.height ? r.height : 1), 0,
@@ -338,6 +336,25 @@ namespace nana{
 #endif
 			return reinterpret_cast<native_window_type>(wd);
 		}
+
+#if defined(NANA_X11)
+		void native_interface::set_modal(native_window_type wd)
+		{
+			Window owner = reinterpret_cast<Window>(restrict::spec.get_owner(wd));
+			if(wd && owner)
+			{
+				if(is_window_visible(wd))
+					show_window(wd, false, true);
+				auto disp = restrict::spec.open_display();
+				auto & atombase = restrict::spec.atombase();
+				::XSetTransientForHint(disp, reinterpret_cast<Window>(wd), owner);
+				::XChangeProperty(disp, reinterpret_cast<Window>(wd),
+								atombase.net_wm_state, XA_ATOM, sizeof(int) * 8, 
+								PropModeReplace,
+								reinterpret_cast<const unsigned char*>(&atombase.net_wm_state_modal), 1);
+			}
+		}
+#endif
 
 		bool native_interface::window_icon(native_window_type wd, const nana::paint::image& img)
 		{
@@ -659,7 +676,7 @@ namespace nana{
 #if defined(NANA_WINDOWS)
 			if(::GetWindowThreadProcessId(reinterpret_cast<HWND>(wd), 0) != ::GetCurrentThreadId())
 			{
-				nana::detail::messages::move_window * mw = new nana::detail::messages::move_window;
+				auto * mw = new nana::detail::messages::move_window;
 				mw->x = x;
 				mw->y = y;
 				mw->width = width;
@@ -782,7 +799,7 @@ namespace nana{
 #if defined(NANA_WINDOWS)
 			if(::GetWindowThreadProcessId(reinterpret_cast<HWND>(wd), 0) != ::GetCurrentThreadId())
 			{
-				nana::detail::messages::move_window * mw = new nana::detail::messages::move_window;
+				auto * mw = new nana::detail::messages::move_window;
 				mw->width = width;
 				mw->height = height;
 				mw->ignore = mw->Pos;
@@ -804,7 +821,7 @@ namespace nana{
 				::MoveWindow(reinterpret_cast<HWND>(wd), r.left, r.top, static_cast<int>(width), static_cast<int>(height), true);
 			}
 #elif defined(NANA_X11)
-			Display * disp = restrict::spec.open_display();
+			auto disp = restrict::spec.open_display();
 			nana::detail::platform_scope_guard psg;
 
 			//Check the XSizeHints for testing whether the window is sizable.
@@ -985,10 +1002,10 @@ namespace nana{
 #if defined(NANA_WINDOWS)
 			if(::GetCurrentThreadId() != ::GetWindowThreadProcessId(reinterpret_cast<HWND>(wd), 0))
 			{
-				nana::detail::messages::caret* c = new nana::detail::messages::caret;
-				c->x = x;
-				c->y = y;
-				::PostMessage(reinterpret_cast<HWND>(wd), nana::detail::messages::operate_caret, 2, reinterpret_cast<LPARAM>(c));
+				auto cp = new nana::detail::messages::caret;
+				cp->x = x;
+				cp->y = y;
+				::PostMessage(reinterpret_cast<HWND>(wd), nana::detail::messages::operate_caret, 2, reinterpret_cast<LPARAM>(cp));
 			}
 			else
 				::SetCaretPos(x, y);

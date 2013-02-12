@@ -27,11 +27,11 @@
 #include GUI_BEDROCK_HPP
 #include <sstream>
 
-
 namespace nana
 {
 namespace detail
 {
+	typedef gui::native_window_type native_window_type;
 #if defined(NANA_UNICODE)
 	//class conf
 		conf::conf(const char * file)
@@ -136,7 +136,7 @@ namespace detail
 
 	struct caret_tag
 	{
-		nana::gui::native_window_type window;
+		native_window_type window;
 		bool has_input_method_focus;
 		bool visible;
 		nana::point pos;
@@ -151,7 +151,7 @@ namespace detail
 		XRectangle input_status_area;
 		long input_context_event_mask;
 
-		caret_tag(nana::gui::native_window_type wd)
+		caret_tag(native_window_type wd)
 			: window(wd), has_input_method_focus(false), visible(false),
               input_method(0), input_context(0), input_font(0), input_context_event_mask(0)
 		{}
@@ -367,6 +367,7 @@ namespace detail
 		atombase_.net_wm_state_fullscreen = ::XInternAtom(display_, "_NET_WM_STATE_FULLSCREEN", False);
 		atombase_.net_wm_state_maximized_horz = ::XInternAtom(display_, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
 		atombase_.net_wm_state_maximized_vert = ::XInternAtom(display_, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+		atombase_.net_wm_state_modal = ::XInternAtom(display_, "_NET_WM_STATE_MODAL", False);
 		atombase_.net_wm_window_type = ::XInternAtom(display_, "_NET_WM_WINDOW_TYPE", False);
 		atombase_.net_wm_window_type_normal = ::XInternAtom(display_, "_NET_WM_WINDOW_TYPE_NORMAL", False);
 		atombase_.net_wm_window_type_utility = ::XInternAtom(display_, "_NET_WM_WINDOW_TYPE_UTILITY", False);
@@ -521,27 +522,26 @@ namespace detail
 	//There are three members make_owner(), get_owner() and remove(),
 	//they are maintain a table to discribe the owner of windows because the feature in X11, the
 	//owner of top level window must be RootWindow.
-	void platform_spec::make_owner(nana::gui::native_window_type owner, nana::gui::native_window_type wd)
+	void platform_spec::make_owner(native_window_type owner, native_window_type wd)
 	{
 		platform_scope_guard psg;
 		wincontext_[wd].owner = owner;
 		window_context_t & context = wincontext_[owner];
 		if(context.owned == 0)
-			context.owned = new std::vector<nana::gui::native_window_type>;
+			context.owned = new std::vector<native_window_type>;
 		context.owned->push_back(wd);
 	}
 
-	nana::gui::native_window_type platform_spec::get_owner(nana::gui::native_window_type wd) const
+	native_window_type platform_spec::get_owner(native_window_type wd) const
 	{
 		platform_scope_guard psg;
-		std::map<nana::gui::native_window_type, window_context_t>::const_iterator i = wincontext_.find(wd);
+		std::map<native_window_type, window_context_t>::const_iterator i = wincontext_.find(wd);
 		return (i != wincontext_.end() ? i->second.owner : 0);
 	}
 
-	void platform_spec::remove(nana::gui::native_window_type wd)
+	void platform_spec::remove(native_window_type wd)
 	{
 		msg_dispatcher_->erase(reinterpret_cast<Window>(wd));
-		using namespace nana::gui;
 		platform_scope_guard psg;
 		std::map<native_window_type, window_context_t>::iterator i = wincontext_.find(wd);
 		if(i == wincontext_.end()) return;
@@ -565,11 +565,10 @@ namespace detail
 		if(vec)
 		{
 			set_error_handler();
+			gui::detail::bedrock & bedrock = gui::detail::bedrock::instance();
 			for(std::vector<native_window_type>::reverse_iterator u = vec->rbegin(); u != vec->rend(); ++u)
 			{
-				typedef nana::gui::detail::bedrock bedrock;
-				bedrock::core_window_t * wd = bedrock::instance().wd_manager.root(*u);
-				bedrock::instance().wd_manager.close(wd);
+				bedrock.wd_manager.close(bedrock.wd_manager.root(*u));
 			}
 			rev_error_handler();
 		}
@@ -589,16 +588,16 @@ namespace detail
 		xkey = this->key_state_;
 	}
 
-	XIC platform_spec::caret_input_context(nana::gui::native_window_type wd) const
+	XIC platform_spec::caret_input_context(native_window_type wd) const
 	{
 		platform_scope_guard psg;
-		std::map<nana::gui::native_window_type, caret_tag*>::const_iterator i = caret_holder_.carets.find(wd);
+		std::map<native_window_type, caret_tag*>::const_iterator i = caret_holder_.carets.find(wd);
 		if(i != caret_holder_.carets.end())
 			return i->second->input_context;
 		return 0;
 	}
 
-	void platform_spec::caret_open(nana::gui::native_window_type wd, unsigned width, unsigned height)
+	void platform_spec::caret_open(native_window_type wd, unsigned width, unsigned height)
 	{
 		bool is_start_routine = false;
 		platform_scope_guard psg;
@@ -611,14 +610,14 @@ namespace detail
 			if(addr->input_method)
 			{
 				XIMStyles* imstyle;
-				::XGetIMValues(addr->input_method, XNQueryInputStyle, &imstyle, 0, 0);
+				::XGetIMValues(addr->input_method, XNQueryInputStyle, &imstyle, 0, (void*)0);	//explicit sentinel
 				if(imstyle)
 				{
 					if(imstyle->count_styles)
 					{
 						addr->input_font = 0;
-						XVaNestedList preedit_attr = ::XVaCreateNestedList(0, XNSpotLocation, &(addr->input_spot), 0);
-						XVaNestedList status_attr = ::XVaCreateNestedList(0, XNAreaNeeded, &(addr->input_status_area), 0);
+						XVaNestedList preedit_attr = ::XVaCreateNestedList(0, XNSpotLocation, &(addr->input_spot), (void*)0);	//explicit sentinel
+						XVaNestedList status_attr = ::XVaCreateNestedList(0, XNAreaNeeded, &(addr->input_status_area), (void*)0);	//explicit sentinel
 						XIMStyle * style_end = imstyle->supported_styles + imstyle->count_styles;
 						bool has_status = false;
 						bool has_preedit = false;
@@ -637,7 +636,7 @@ namespace detail
 						{
 							addr->input_context = ::XCreateIC(addr->input_method, XNInputStyle, (XIMPreeditPosition | XIMStatusArea),
 														XNPreeditAttributes, preedit_attr, XNStatusAttributes, status_attr,
-														XNClientWindow, reinterpret_cast<Window>(wd), 0);
+														XNClientWindow, reinterpret_cast<Window>(wd), (void*)0);	//explicit sentinel
 						}
 						else
 							addr->input_context = 0;
@@ -645,26 +644,26 @@ namespace detail
 						if((addr->input_context == 0) && has_preedit)
 						{
 							addr->input_context = ::XCreateIC(addr->input_method, XNInputStyle, (XIMPreeditPosition | XIMStatusNothing),
-                                                              XNPreeditAttributes, preedit_attr, XNClientWindow, reinterpret_cast<Window>(wd), 0);
+                                                              XNPreeditAttributes, preedit_attr, XNClientWindow, reinterpret_cast<Window>(wd), (void*)0);	//explicit sentinel
 						}
 
 						if(addr->input_context)
 						{
 							XVaNestedList attr = ::XVaCreateNestedList(0, XNAreaNeeded, &(addr->input_status_area),
-                                                                       XNClientWindow, reinterpret_cast<Window>(wd), 0);
-							::XGetICValues(addr->input_context, XNStatusAttributes, attr, 0);
+                                                                       XNClientWindow, reinterpret_cast<Window>(wd), (void*)0);	//explicit sentinel
+							::XGetICValues(addr->input_context, XNStatusAttributes, attr, (void*)0);	//explicit sentinel
 							::XFree(attr);
 						}
 						else
 						{
 							addr->input_context = ::XCreateIC(addr->input_method, XNInputStyle, (XIMPreeditNothing | XIMStatusNothing),
-                                                              XNClientWindow, reinterpret_cast<Window>(wd), 0);
+                                                              XNClientWindow, reinterpret_cast<Window>(wd), (void*)0);	//explicit sentinel
 						}
 
 						if(addr->input_context)
 						{
 							//Make the IM event filter.
-							::XGetICValues(addr->input_context, XNFilterEvents, &(addr->input_context_event_mask), NULL);
+							::XGetICValues(addr->input_context, XNFilterEvents, &(addr->input_context_event_mask), (void*)0);	//explicit sentinel
 							XWindowAttributes attr;
 							::XGetWindowAttributes(display_, reinterpret_cast<Window>(wd), &attr);
 							XSetWindowAttributes new_attr;
@@ -697,13 +696,13 @@ namespace detail
 			caret_holder_.thr.start(*this, &platform_spec::_m_caret_routine);
 	}
 
-	void platform_spec::caret_close(nana::gui::native_window_type wd)
+	void platform_spec::caret_close(native_window_type wd)
 	{
 		bool is_end_routine = false;
 		{
 			platform_scope_guard psg;
 
-			std::map<nana::gui::native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
+			std::map<native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
 			if(i != caret_holder_.carets.end())
 			{
 				caret_tag * addr = i->second;
@@ -750,10 +749,10 @@ namespace detail
 			caret_holder_.thr.close();
 	}
 
-	void platform_spec::caret_pos(nana::gui::native_window_type wd, int x, int y)
+	void platform_spec::caret_pos(native_window_type wd, int x, int y)
 	{
 		platform_scope_guard psg;
-		std::map<nana::gui::native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
+		std::map<native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
 		if(i != caret_holder_.carets.end())
 		{
 			caret_tag& crt = *i->second;
@@ -763,10 +762,10 @@ namespace detail
 		}
 	}
 
-	void platform_spec::caret_visible(nana::gui::native_window_type wd, bool vis)
+	void platform_spec::caret_visible(native_window_type wd, bool vis)
 	{
 		platform_scope_guard psg;
-		std::map<nana::gui::native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
+		std::map<native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
 		if(i != caret_holder_.carets.end())
 		{
 			caret_tag & crt = *i->second;
@@ -807,10 +806,10 @@ namespace detail
 		}
 	}
 
-	bool platform_spec::caret_update(nana::gui::native_window_type wd, nana::paint::graphics& root_graph, bool is_erase_caret_from_root_graph)
+	bool platform_spec::caret_update(native_window_type wd, nana::paint::graphics& root_graph, bool is_erase_caret_from_root_graph)
 	{
 		platform_scope_guard psg;
-		std::map<nana::gui::native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
+		std::map<native_window_type, caret_tag*>::iterator i = caret_holder_.carets.find(wd);
 		if(i != caret_holder_.carets.end())
 		{
 			caret_tag & crt = *i->second;
@@ -877,7 +876,7 @@ namespace detail
 		{
 			if(mutex_xlib_.try_lock())
 			{
-				for(std::map<nana::gui::native_window_type, caret_tag*>::iterator i = caret_holder_.carets.begin(); i != caret_holder_.carets.end(); ++i)
+				for(std::map<native_window_type, caret_tag*>::iterator i = caret_holder_.carets.begin(); i != caret_holder_.carets.end(); ++i)
 					caret_flash(*i->second);
 				
 				mutex_xlib_.unlock();
@@ -890,7 +889,7 @@ namespace detail
 		}
 	}
 
-	void platform_spec::event_register_filter(nana::gui::native_window_type wd, unsigned eventid)
+	void platform_spec::event_register_filter(native_window_type wd, unsigned eventid)
 	{
 		switch(eventid)
 		{
@@ -953,7 +952,7 @@ namespace detail
 		}
 	}
 
-	void platform_spec::msg_insert(nana::gui::native_window_type wd)
+	void platform_spec::msg_insert(native_window_type wd)
 	{
 		msg_dispatcher_->insert(reinterpret_cast<Window>(wd));
 	}
@@ -963,12 +962,12 @@ namespace detail
 		msg_dispatcher_->set(tp, ep, &platform_spec::_m_msg_filter);
 	}
 
-	void platform_spec::msg_dispatch(nana::gui::native_window_type modal)
+	void platform_spec::msg_dispatch(native_window_type modal)
 	{
 		msg_dispatcher_->dispatch(reinterpret_cast<Window>(modal));
 	}
 
-	void* platform_spec::request_selection(nana::gui::native_window_type requestor, Atom type, size_t& size)
+	void* platform_spec::request_selection(native_window_type requestor, Atom type, size_t& size)
 	{
 		if(requestor)
 		{
@@ -1002,7 +1001,7 @@ namespace detail
 		return 0;
 	}
 
-	void platform_spec::write_selection(nana::gui::native_window_type owner, Atom type, const void * buf, size_t bufsize)
+	void platform_spec::write_selection(native_window_type owner, Atom type, const void * buf, size_t bufsize)
 	{
 		platform_scope_guard psg;
 		::XSetSelectionOwner(display_, atombase_.clipboard, reinterpret_cast<Window>(owner), CurrentTime);
@@ -1020,7 +1019,7 @@ namespace detail
 	}
 
 	//Icon Storage
-	const nana::paint::graphics& platform_spec::keep_window_icon(nana::gui::native_window_type wd, const nana::paint::image& img)
+	const nana::paint::graphics& platform_spec::keep_window_icon(native_window_type wd, const nana::paint::image& img)
 	{
 		nana::paint::graphics & graph = iconbase_[wd];
 		graph.make(img.size().width, img.size().height);
@@ -1231,7 +1230,7 @@ namespace detail
 					::XTranslateCoordinates(self.display_, self.root_window(), evt.xclient.window, x, y, &self.xdnd_.pos.x, &self.xdnd_.pos.y, &child);
 					typedef nana::gui::detail::bedrock bedrock;
 
-					bedrock::core_window_t * wd = bedrock::instance().wd_manager.find_window(reinterpret_cast<nana::gui::native_window_type>(evt.xclient.window),
+					bedrock::core_window_t * wd = bedrock::instance().wd_manager.find_window(reinterpret_cast<native_window_type>(evt.xclient.window),
 																								self.xdnd_.pos.x, self.xdnd_.pos.y);
 					if(wd && wd->flags.dropable)
 					{

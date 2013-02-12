@@ -57,8 +57,8 @@ namespace nana{	namespace gui{	namespace widgets
 			unsigned screen_lines() const;
 			std::size_t text_lines() const;
 
-			bool getline(std::size_t n, nana::string&) const;
-			void setline(std::size_t n, const nana::string&);
+			bool getline(std::size_t pos, nana::string&) const;
+			void setline(std::size_t pos, const nana::string&);
 			void text(const nana::string&);
 			nana::string text() const;
 

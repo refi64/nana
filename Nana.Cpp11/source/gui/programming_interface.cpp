@@ -740,12 +740,15 @@ namespace API
 			restrict::core_window_t * const iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 			internal_scope_guard isg;
 
-			wd = 0;
+			wd = nullptr;
 			if(restrict::window_manager.available(iwd))
 			{
 				if((iwd->other.category == category::root_tag::value) && (iwd->flags.modal == false))
 				{
 					iwd->flags.modal = true;
+#if defined(NANA_X11)
+					restrict::interface_type::set_modal(iwd->root);
+#endif
 					restrict::window_manager.show(iwd, true);
 					wd = reinterpret_cast<window>(iwd);
 				}

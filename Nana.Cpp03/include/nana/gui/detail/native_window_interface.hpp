@@ -2,8 +2,8 @@
  *	Platform Implementation
  *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
- *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	Distributed under the Nana Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/detail/native_window_interface.hpp
@@ -26,7 +26,7 @@ namespace detail
 	{
 		struct window_result
 		{
-			nana::gui::native_window_type handle;
+			native_window_type handle;
 
 			unsigned width;		//client size
 			unsigned height;	//client size
@@ -37,8 +37,11 @@ namespace detail
 
 		static nana::size	screen_size();
 		static window_result create_window(native_window_type, bool nested, const rectangle&, const appearance&);
-		static nana::gui::native_window_type create_child_window(native_window_type, const rectangle&);
+		static native_window_type create_child_window(native_window_type, const rectangle&);
 
+#if defined(NANA_X11)
+        static void set_modal(native_window_type);
+#endif
 		static bool window_icon(native_window_type, const paint::image&);
 		static void	active_owner(native_window_type);
 		static void	close_window(native_window_type);

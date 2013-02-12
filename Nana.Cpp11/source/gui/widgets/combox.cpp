@@ -27,8 +27,8 @@ namespace nana{ namespace gui{
 				typedef nana::paint::graphics & graph_reference;
 				typedef nana::gui::widget	& widget_reference;
 
-				enum{WhereUnknown, WhereText, WherePushButton};
-				enum{StateNone, StateMouseOver, StatePress};
+				enum class where_t{unknown, text, push_button};
+				enum class state_t{none, mouse_over, pressed};
 
 				mutable extra_events ext_event;
 
@@ -39,8 +39,8 @@ namespace nana{ namespace gui{
 						item_renderer_(nullptr), image_enabled_(false), image_pixels_(16), editor_(nullptr)
 				{
 					state_.focused = false;
-					state_.state = StateNone;
-					state_.pointer_where = WhereUnknown;
+					state_.state = state_t::none;
+					state_.pointer_where = where_t::unknown;
 					state_.lister = nullptr;
 				}
 
@@ -64,7 +64,7 @@ namespace nana{ namespace gui{
 					editor_ = new widgets::skeletons::text_editor(widget_->handle(), graph);
 					editor_->border_renderer(nana::make_fun(*this, &drawer_impl::draw_border));
 					editor_->multi_lines(false);
-					this->editable(false);
+					editable(false);
 
 					graph_ = &graph;
 				}
@@ -82,7 +82,7 @@ namespace nana{ namespace gui{
 					anyobj_.push_back(nullptr);
 				}
 
-				int get_where() const
+				where_t get_where() const
 				{
 					return state_.pointer_where;
 				}
@@ -153,14 +153,14 @@ namespace nana{ namespace gui{
 
 				bool calc_where(graph_reference graph, int x, int y)
 				{
-					int new_where = WhereUnknown;
+					auto new_where = where_t::unknown;
 
 					if(1 < x && x < static_cast<int>(graph.width()) - 2 && 1 < y && y < static_cast<int>(graph.height()) - 2)
 					{
 						if((editor_->attr().editable == false) || (static_cast<int>(graph.width()) - 22 <= x))
-							new_where = WherePushButton;
+							new_where = where_t::push_button;
 						else
-							new_where = WhereText;
+							new_where = where_t::text;
 					}
 
 					if(new_where != state_.pointer_where)
@@ -173,13 +173,13 @@ namespace nana{ namespace gui{
 
 				void set_mouse_over(bool mo)
 				{
-					state_.state = mo ? StateMouseOver : StateNone;
-					state_.pointer_where = WhereUnknown;
+					state_.state = mo ? state_t::mouse_over : state_t::none;
+					state_.pointer_where = where_t::unknown;
 				}
 
 				void set_mouse_press(bool mp)
 				{
-					state_.state = (mp ? StatePress : StateMouseOver);
+					state_.state = (mp ? state_t::pressed : state_t::mouse_over);
 				}
 
 				void set_focused(bool f)
@@ -285,14 +285,13 @@ namespace nana{ namespace gui{
 							//Test if the current item or text is different from selected.
 							if(ignore_condition || (old_index != index) || (module_.items[index].text != widget_->caption()))
 							{
-								nana::point pos = API::cursor_position();
+								auto pos = API::cursor_position();
 								API::calc_window_point(widget_->handle(), pos);
-								if(this->calc_where(*graph_, pos.x, pos.y))
-									state_.state = StateNone;
+								if(calc_where(*graph_, pos.x, pos.y))
+									state_.state = state_t::none;
 
 								editor_->text(module_.items[index].text);
-								bool enb = widget_->enabled();
-								_m_draw_push_button(enb);
+								_m_draw_push_button(widget_->enabled());
 								_m_draw_image();
 
 								//Yes, it's safe to static_cast here!
@@ -350,7 +349,7 @@ namespace nana{ namespace gui{
 				{
 					nana::rectangle r(graph.size());
 					unsigned color_start = color::button_face_shadow_start, color_end = gui::color::button_face_shadow_end;
-					if(state_.state == StatePress)
+					if(state_.state == state_t::pressed)
 					{
 						r.pare_off(2);
 						color_start = gui::color::button_face_shadow_end;
@@ -373,14 +372,14 @@ namespace nana{ namespace gui{
 					int mid = top + (bottom - top) * 5 / 18;
 
 					nana::color_t topcol, topcol_ln, botcol, botcol_ln;
-					if(this->has_lister() || (state_.state == StatePress && state_.pointer_where == WherePushButton))
+					if(this->has_lister() || (state_.state == state_t::pressed && state_.pointer_where == where_t::push_button))
 					{
 						topcol_ln = nana::paint::graphics::mix(0x3F476C, 0x0, 0.8);
 						botcol_ln = nana::paint::graphics::mix(0x031141, 0x0, 0.8);
 						topcol = nana::paint::graphics::mix(0x3F83B4, 0x0, 0.8);
 						botcol = nana::paint::graphics::mix(0x0C4A95, 0x0, 0.8);					
 					}
-					else if(state_.state == this->StateMouseOver)
+					else if(state_.state == state_t::mouse_over)
 					{
 						topcol_ln = nana::paint::graphics::mix(0x3F476C, 0xFFFFFF, 0.9);
 						botcol_ln = nana::paint::graphics::mix(0x031141, 0xFFFFFF, 0.9);
@@ -468,8 +467,8 @@ namespace nana{ namespace gui{
 				struct state_type
 				{
 					bool	focused;
-					int		state;
-					int		pointer_where;
+					state_t	state;
+					where_t	pointer_where;
 
 					nana::gui::float_listbox * lister;
 					std::size_t	item_index_before_selection;
@@ -572,10 +571,9 @@ namespace nana{ namespace gui{
 					drawer_->set_mouse_press(true);
 					if(drawer_->widget_ptr()->enabled())
 					{
-						widgets::skeletons::text_editor * editor = drawer_->editor();
-
+						auto * editor = drawer_->editor();
 						if(false == editor->mouse_down(ei.mouse.left_button, ei.mouse.x, ei.mouse.y))
-							if(drawer_->WherePushButton == drawer_->get_where())
+							if(drawer_impl::where_t::push_button == drawer_->get_where())
 								drawer_->open_lister();
 
 						drawer_->draw();
@@ -695,19 +693,19 @@ namespace nana{ namespace gui{
 
 		combox::combox(window wd, bool visible)
 		{
-			this->create(wd, rectangle(), visible);
+			create(wd, rectangle(), visible);
 		}
 
 		combox::combox(window wd, const nana::rectangle& r, bool visible)
 		{
-			this->create(wd, r, visible);
+			create(wd, r, visible);
 		}
 
 		void combox::clear()
 		{
-			nana::gui::internal_scope_guard sg;
+			internal_scope_guard sg;
 			get_drawer_trigger().get_drawer_impl().clear();
-			API::refresh_window(this->handle());
+			API::refresh_window(handle());
 		}
 
 		void combox::editable(bool eb)
@@ -751,7 +749,7 @@ namespace nana{ namespace gui{
 			return get_drawer_trigger().get_drawer_impl().ext_event;
 		}
 
-		void combox::renderer(combox::item_renderer* ir)
+		void combox::renderer(item_renderer* ir)
 		{
 			get_drawer_trigger().get_drawer_impl().renderer(ir);
 		}

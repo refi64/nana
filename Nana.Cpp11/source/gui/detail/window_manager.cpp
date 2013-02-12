@@ -426,7 +426,7 @@ namespace detail
 				{
 					//Before close the window, its owner window should be actived, otherwise other window will be
 					//activated due to the owner window is not enabled.
-					if(wd->flags.modal || (wd->owner == 0) || wd->owner->flags.take_active)
+					if(wd->flags.modal || (wd->owner == nullptr) || wd->owner->flags.take_active)
 						native_interface::active_owner(wd->root);
 
 					//Close should detach the drawer and send destroy signal to widget object.
@@ -490,7 +490,7 @@ namespace detail
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 			if(handle_manager_.available(wd) == false)	return;
 
-			if(wd->other.category == category::root_tag::value || wd->other.category != category::frame_tag::value)
+			if((wd->other.category == category::root_tag::value) || (wd->other.category != category::frame_tag::value))
 			{
 				root_table_.erase(wd->root);
 				handle_manager_.remove(wd);
@@ -1081,7 +1081,7 @@ namespace detail
 		//tabstop
 		//@brief: when users press a TAB, the focus should move to the next widget.
 		//	this method insert a window which catchs an user TAB into a TAB window container
-		//	the TAB window container is held by a wnd's root widget. Not every widget has a TAB window container,
+		//	the TAB window container is held by a wd's root widget. Not every widget has a TAB window container,
 		//	the container is created while a first Tab Window is setting
 		void window_manager::tabstop(core_window_t* wd)
 		{
@@ -1379,7 +1379,7 @@ namespace detail
 		bool window_manager::_m_effective(core_window_t* wd, int root_x, int root_y)
 		{
 			if(wd == nullptr || false == wd->visible)	return false;
-			return nana::gui::is_hit_the_rectangle(nana::rectangle(wd->root_x, wd->root_y, wd->rect.width, wd->rect.height), root_x, root_y);
+			return is_hit_the_rectangle(nana::rectangle(wd->root_x, wd->root_y, wd->rect.width, wd->rect.height), root_x, root_y);
 		}
 	//end class window_manager
 }//end namespace detail

@@ -195,6 +195,7 @@ namespace nana{ namespace gui{
 		nana::string item_text(size_type categ, size_type index, size_type sub) const;
 		void set_item_text(size_type index, size_type sub, const nana::string&);
 		void set_item_text(size_type categ, size_type index, size_type sub, const nana::string&);
+		void set_sort_compare(size_type sub, const nana::functor<bool(const nana::string&, nana::any*, const nana::string&, nana::any*)>& strick_weak_ordering);
 		void show_header(bool);
 		bool visible_header() const;
 		bool selected(size_type item) const;

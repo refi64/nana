@@ -71,7 +71,7 @@ namespace nana{	namespace gui{	namespace widgets
 				{
 					for(std::size_t i = textbase_.lines() - 1; i > 0; --i)
 						textbase_.erase(i);
-					this->_m_reset();
+					_m_reset();
 				}
 			}
 
@@ -127,7 +127,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 			if(API::focus_window() != window_)
 			{
-				this->redraw(false);
+				redraw(false);
 				return true;
 			}
 			return false;
@@ -235,21 +235,21 @@ namespace nana{	namespace gui{	namespace widgets
 			if((points_.caret.y == n) && (text.size() < points_.caret.x))
 			{
 				points_.caret.x = static_cast<unsigned>(text.size());
-				mkdraw = this->_m_adjust_caret_into_screen();
+				mkdraw = _m_adjust_caret_into_screen();
 			}
 
 			if(!mkdraw && (static_cast<size_t>(points_.offset.y) <= n) && (n < static_cast<size_t>(points_.offset.y + screen_lines())))
 				mkdraw = true;
 
 			if(mkdraw)
-				this->redraw(API::focus_window() == window_);
+				redraw(API::focus_window() == window_);
 		}
 
 		void text_editor::text(const nana::string& str)
 		{
 			textbase_.erase_all();
 			_m_reset();
-			this->put(str);
+			put(str);
 		}
 
 		nana::string text_editor::text() const
@@ -313,12 +313,12 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::reset_caret_height() const
 		{
-			API::caret_size(this->window_, nana::size(1, this->line_height()));
+			API::caret_size(window_, nana::size(1, line_height()));
 		}
 
 		void text_editor::reset_caret()
 		{
-			this->move_caret(points_.caret.x, points_.caret.y);
+			move_caret(points_.caret.x, points_.caret.y);
 		}
 
 		void text_editor::show_caret(bool isshow)
@@ -371,7 +371,7 @@ namespace nana{	namespace gui{	namespace widgets
 		bool text_editor::hit_select_area(nana::upoint pos) const
 		{
 			nana::upoint a, b;
-			this->_m_get_sort_select_points(a, b);
+			_m_get_sort_select_points(a, b);
 			if(a != b)
 			{
 				if((pos.y > a.y || (pos.y == a.y && pos.x >= a.x)) && ((pos.y < b.y) || (pos.y == b.y && pos.x < b.x)))
@@ -385,32 +385,32 @@ namespace nana{	namespace gui{	namespace widgets
 			nana::upoint a, b;
 			_m_get_sort_select_points(a, b);
 
-			if(this->hit_select_area(points_.caret) || (select_.b == points_.caret))
+			if(hit_select_area(points_.caret) || (select_.b == points_.caret))
 			{
 				points_.caret = select_.b;
 				if(_m_adjust_caret_into_screen())
 					redraw(true);
-				this->reset_caret();
+				reset_caret();
 				return true;
 			}
 
 			nana::upoint caret = points_.caret;
 
 			nana::string text;
-			if(this->_m_make_select_string(text))
+			if(_m_make_select_string(text))
 			{
 				if(caret.y < a.y || (caret.y == a.y && caret.x < a.x))
 				{//forward
-					this->_m_erase_select();
-					this->_m_put(text);
+					_m_erase_select();
+					_m_put(text);
 
 					select_.a = caret;
 					select_.b.y = b.y + (caret.y - a.y);
 				}
 				else if(b.y < caret.y || (caret.y == b.y && b.x < caret.x))
 				{
-					this->_m_put(text);
-					this->_m_erase_select();
+					_m_put(text);
+					_m_erase_select();
 
 					select_.b.y = caret.y;
 					select_.a.y = caret.y - (b.y - a.y);
@@ -464,7 +464,7 @@ namespace nana{	namespace gui{	namespace widgets
 			if((false == textbase_.empty()) || has_focus)
 			{
 				int y = _m_text_top_base();
-				const unsigned line_hg = this->line_height();
+				const unsigned line_hg = line_height();
 				for(unsigned ln = points_.offset.y; ln < textbase_.lines(); ++ln, y += line_hg)
 					_m_draw_string(y, fgcolor, ln, true);
 			}
@@ -478,7 +478,7 @@ namespace nana{	namespace gui{	namespace widgets
 		void text_editor::put(const nana::string& text)
 		{
 			points_.caret = _m_erase_select();
-			points_.caret = this->_m_put(text);
+			points_.caret = _m_put(text);
 			if(graph_)
 			{
 				_m_adjust_caret_into_screen();
@@ -511,7 +511,7 @@ namespace nana{	namespace gui{	namespace widgets
 		void text_editor::copy() const
 		{
 			nana::string str;
-			if(this->_m_make_select_string(str))
+			if(_m_make_select_string(str))
 			{
 				nana::system::dataexch de;
 				de.set(str);
@@ -525,7 +525,7 @@ namespace nana{	namespace gui{	namespace widgets
 			nana::system::dataexch de;
 			nana::string text;
 			de.get(text);
-			this->put(text);
+			put(text);
 		}
 
 		void text_editor::enter()
@@ -562,7 +562,7 @@ namespace nana{	namespace gui{	namespace widgets
 					need_refresh = true;
 				}
 
-				if(this->_m_adjust_caret_into_screen() || need_refresh)
+				if(_m_adjust_caret_into_screen() || need_refresh)
 					redraw(true);
 
 				_m_scrollbar();
@@ -588,7 +588,7 @@ namespace nana{	namespace gui{	namespace widgets
 					has_erase = false;	//No characters behind the caret
 			}
 
-			if(has_erase)	this->backspace();
+			if(has_erase)	backspace();
 
 			_m_scrollbar();
 			points_.xpos = points_.caret.x;
@@ -613,10 +613,10 @@ namespace nana{	namespace gui{	namespace widgets
 					}
 #endif
 					textbase_.erase(points_.caret.y, points_.caret.x, erase_number);
-					if(this->_m_move_offset_x_while_over_border(-2) == false)
+					if(_m_move_offset_x_while_over_border(-2) == false)
 					{
 						_m_update_line(points_.caret.y);
-						this->draw_scroll_rectangle();
+						draw_scroll_rectangle();
 						has_to_redraw = false;
 					}
 				}
@@ -666,9 +666,9 @@ namespace nana{	namespace gui{	namespace widgets
 					need_redraw = true;
 
 				if(static_cast<unsigned>(points_.offset.y) > points_.caret.y)
-					this->_m_offset_y(static_cast<int>(points_.caret.y));
+					_m_offset_y(static_cast<int>(points_.caret.y));
 
-				if(this->_m_adjust_caret_into_screen() && (need_redraw == false))
+				if(_m_adjust_caret_into_screen() && (need_redraw == false))
 					need_redraw = true;
 			}
 
@@ -686,7 +686,7 @@ namespace nana{	namespace gui{	namespace widgets
 				if(points_.xpos < points_.caret.x)
 					points_.caret.x = points_.xpos;
 
-				if(this->_m_adjust_caret_into_screen() && (need_redraw == false))
+				if(_m_adjust_caret_into_screen() && (need_redraw == false))
 					need_redraw = true;
 			}
 			if(need_redraw)	redraw(true);
@@ -704,13 +704,13 @@ namespace nana{	namespace gui{	namespace widgets
 					if(is_incomplete(textbase_.getline(points_.caret.y), points_.caret.x))
 						--points_.caret.x;
 #endif
-					if(this->_m_move_offset_x_while_over_border(-2))
+					if(_m_move_offset_x_while_over_border(-2))
 						redraw(true);
 				}
 				else if(points_.caret.y)
 				{	//Move to previous line
 					points_.caret.x = static_cast<unsigned>(textbase_.getline(-- points_.caret.y).size());
-					if(this->_m_adjust_caret_into_screen())
+					if(_m_adjust_caret_into_screen())
 						redraw(true);
 				}
 			}
@@ -736,7 +736,7 @@ namespace nana{	namespace gui{	namespace widgets
 					if(is_incomplete(lnstr, points_.caret.x))
 						++points_.caret.x;
 #endif
-					if(this->_m_move_offset_x_while_over_border(2))
+					if(_m_move_offset_x_while_over_border(2))
 						redraw(true);
 				}
 				else if(textbase_.lines() && (points_.caret.y < textbase_.lines() - 1))
@@ -744,7 +744,7 @@ namespace nana{	namespace gui{	namespace widgets
 					points_.caret.x = 0;
 					++ points_.caret.y;
 
-					if(this->_m_adjust_caret_into_screen())
+					if(_m_adjust_caret_into_screen())
 						redraw(true);
 				}
 			}
@@ -760,11 +760,11 @@ namespace nana{	namespace gui{	namespace widgets
 
 		nana::upoint text_editor::mouse_caret(int screen_x, int screen_y)
 		{
-			points_.caret = this->_m_screen_to_caret(screen_x, screen_y);
-			if(this->_m_adjust_caret_into_screen())
+			points_.caret = _m_screen_to_caret(screen_x, screen_y);
+			if(_m_adjust_caret_into_screen())
 				redraw(true);
 
-			this->move_caret(points_.caret.x, points_.caret.y);
+			move_caret(points_.caret.x, points_.caret.y);
 			return points_.caret;
 		}
 
@@ -827,84 +827,82 @@ namespace nana{	namespace gui{	namespace widgets
 			{
 				redraw(true);
 				reset_caret();
-				nana::gui::API::update_window(this->window_);
+				nana::gui::API::update_window(window_);
 			}
 		}
 
 		void text_editor::_m_scrollbar()
 		{
-			this->_m_get_scrollbar_size();
+			_m_get_scrollbar_size();
 
-			if(this->text_area_.vscroll)
+			if(text_area_.vscroll)
 			{
-				nana::gui::scroll<true>* scroll = this->attributes_.vscroll;
+				nana::gui::scroll<true>* scroll = attributes_.vscroll;
 				int x = text_area_.area.x + static_cast<int>(text_area_.area.width - text_area_.vscroll);
 				if(scroll == 0)
 				{
-					using namespace nana::gui;
 					scroll = new nana::gui::scroll<true>;
 					scroll->create(window_, rectangle(x, text_area_.area.y, text_area_.vscroll, _m_get_text_area_height()));
 					scroll->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
 					scroll->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
 					scroll->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);
-					this->attributes_.vscroll = scroll;
+					attributes_.vscroll = scroll;
 					API::take_active(scroll->handle(), false, window_);
 				}
 
 				if(textbase_.lines() != scroll->amount())
 					scroll->amount(static_cast<int>(textbase_.lines()));
 
-				if(this->screen_lines() != scroll->range())
-					scroll->range(this->screen_lines());
+				if(screen_lines() != scroll->range())
+					scroll->range(screen_lines());
 
-				if(this->points_.offset.y != static_cast<int>(scroll->value()))
-					scroll->value(this->points_.offset.y);
+				if(points_.offset.y != static_cast<int>(scroll->value()))
+					scroll->value(points_.offset.y);
 
 				scroll->move(x, text_area_.area.y, text_area_.vscroll, _m_get_text_area_height());
 			}
-			else if(this->attributes_.vscroll)
+			else if(attributes_.vscroll)
 			{
-				nana::gui::scroll<true>* scroll = this->attributes_.vscroll;
-				this->attributes_.vscroll = 0;
+				nana::gui::scroll<true>* scroll = attributes_.vscroll;
+				attributes_.vscroll = 0;
 				delete scroll;
 			}
 
 			//HScroll
-			if(this->text_area_.hscroll)
+			if(text_area_.hscroll)
 			{
-				nana::gui::scroll<false>* scroll = this->attributes_.hscroll;
+				nana::gui::scroll<false>* scroll = attributes_.hscroll;
 				unsigned text_area_width = _m_get_text_area_width();
 				int y = text_area_.area.y + static_cast<int>(text_area_.area.height - text_area_.hscroll);
 				if(scroll == 0)
 				{
-					using namespace nana::gui;
 					scroll = new nana::gui::scroll<false>;
-					scroll->create(window_, rectangle(text_area_.area.x, y, text_area_width, this->text_area_.hscroll));
+					scroll->create(window_, rectangle(text_area_.area.x, y, text_area_width, text_area_.hscroll));
 					scroll->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
 					scroll->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
 					scroll->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);
 					scroll->step(20);
-					this->attributes_.hscroll = scroll;
+					attributes_.hscroll = scroll;
 					API::take_active(scroll->handle(), false, window_);
 				}
 
-				nana::size text_size = this->_m_text_extent_size(textbase_.getline(textbase_.max_line().first).c_str(), textbase_.max_line().second);
+				nana::size text_size = _m_text_extent_size(textbase_.getline(textbase_.max_line().first).c_str(), textbase_.max_line().second);
 
 				text_size.width += 1;
 				if(text_size.width > scroll->amount())
 					scroll->amount(text_size.width);
 
 				if(text_area_width != scroll->range())	scroll->range(text_area_width);
-				if(this->points_.offset.x != static_cast<int>(scroll->value()))
-					scroll->value(this->points_.offset.x);
+				if(points_.offset.x != static_cast<int>(scroll->value()))
+					scroll->value(points_.offset.x);
 
 				scroll->move(text_area_.area.x, y, text_area_width, text_area_.hscroll);
 
 			}
-			else if(this->attributes_.hscroll)
+			else if(attributes_.hscroll)
 			{
-				nana::gui::scroll<false>* scroll = this->attributes_.hscroll;
-				this->attributes_.hscroll = 0;
+				nana::gui::scroll<false>* scroll = attributes_.hscroll;
+				attributes_.hscroll = 0;
 				delete scroll;
 			}
 		}
@@ -924,17 +922,17 @@ namespace nana{	namespace gui{	namespace widgets
 			text_area_.hscroll = 0;
 
 			//Only the textbox is multi_lines, it enables the scrollbars
-			if(this->attributes_.multi_lines)
+			if(attributes_.multi_lines)
 			{
-				text_area_.vscroll = (textbase_.lines() > this->screen_lines() ? 16 : 0);
+				text_area_.vscroll = (textbase_.lines() > screen_lines() ? 16 : 0);
 
 				std::pair<size_t, size_t> max_line = textbase_.max_line();
 				if(max_line.second)
 				{
-					if(this->points_.offset.x || _m_text_extent_size(textbase_.getline(max_line.first).c_str(), max_line.second).width > _m_get_text_area_width())
+					if(points_.offset.x || _m_text_extent_size(textbase_.getline(max_line.first).c_str(), max_line.second).width > _m_get_text_area_width())
 					{
 						text_area_.hscroll = 16;
-						if((text_area_.vscroll == 0) && (textbase_.lines() > this->screen_lines()))
+						if((text_area_.vscroll == 0) && (textbase_.lines() > screen_lines()))
 							text_area_.vscroll = 16;
 					}
 				}
@@ -947,7 +945,7 @@ namespace nana{	namespace gui{	namespace widgets
 		{
 			points_.caret.x = points_.caret.y = 0;
 			points_.offset.x = 0;
-			this->_m_offset_y(0);
+			_m_offset_y(0);
 			select_.a = select_.b;
 		}
 
@@ -1034,7 +1032,7 @@ namespace nana{	namespace gui{	namespace widgets
 		bool text_editor::_m_make_select_string(nana::string& text) const
 		{
 			nana::upoint a, b;
-			this->_m_get_sort_select_points(a, b);
+			_m_get_sort_select_points(a, b);
 			if(a != b)
 			{
 				if(a.y != b.y)
@@ -1094,15 +1092,15 @@ namespace nana{	namespace gui{	namespace widgets
 				{
 				case 1:
 					points_.caret = a;
-					this->_m_move_offset_x_while_over_border(-2);
+					_m_move_offset_x_while_over_border(-2);
 					break;
 				case 2:
 					points_.caret = b;
-					this->_m_move_offset_x_while_over_border(2);
+					_m_move_offset_x_while_over_border(2);
 					break;
 				}
 				select_.a = select_.b = points_.caret;
-				this->reset_caret();
+				reset_caret();
 				return true;
 			}
 			return false;
@@ -1237,7 +1235,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 			unsigned whitespace_w = graph_.text_extent_size(STR(" ")).width;
 
-			const unsigned line_h_pixels = this->line_height();
+			const unsigned line_h_pixels = line_height();
 
 			//The line of text is in the range of selection
 			nana::upoint a, b;
@@ -1483,8 +1481,7 @@ namespace nana{	namespace gui{	namespace widgets
 		//@note:	the function assumes the points_.caret is correct
 		bool text_editor::_m_adjust_caret_into_screen()
 		{
-			this->_m_get_scrollbar_size();
-			const unsigned screen_lines = this->screen_lines();
+			_m_get_scrollbar_size();
 
 			const unsigned delta_pixels = _m_text_extent_size(STR("    ")).width;
 			unsigned x = points_.caret.x;
@@ -1494,7 +1491,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 			unsigned text_w = _m_pixels_by_char(points_.caret.y, x);
 
-			unsigned area_w = this->_m_get_text_area_width();
+			unsigned area_w = _m_get_text_area_width();
 
 			bool adjusted = true;
 			if(static_cast<int>(text_w) < points_.offset.x)
@@ -1509,31 +1506,30 @@ namespace nana{	namespace gui{	namespace widgets
 			else
 				adjusted = false;
 
+			const unsigned scrlines = screen_lines();
 			int value = points_.offset.y;
-
-			if(screen_lines && (points_.caret.y >= points_.offset.y + screen_lines))
+			if(scrlines && (points_.caret.y >= points_.offset.y + scrlines))
 			{
-				value = static_cast<int>(points_.caret.y - screen_lines) + 1;
+				value = static_cast<int>(points_.caret.y - scrlines) + 1;
 				adjusted = true;
 			}
 			else if(static_cast<int>(points_.caret.y) < points_.offset.y)
 			{
-				if(screen_lines >= static_cast<unsigned>(points_.offset.y))
+				if(scrlines >= static_cast<unsigned>(points_.offset.y))
 					value = 0;
 				else
-					value = static_cast<int>(points_.offset.y - screen_lines);
+					value = static_cast<int>(points_.offset.y - scrlines);
 				adjusted = true;
 			}
 			else if(points_.offset.y)
 			{
-				if(textbase_.lines() <= screen_lines)
+				if(textbase_.lines() <= scrlines)
 				{
 					value = 0;
 					adjusted = true;
 				}
 			}
 			_m_offset_y(value);
-
 			_m_scrollbar();
 			return adjusted;
 		}
@@ -1550,7 +1546,7 @@ namespace nana{	namespace gui{	namespace widgets
 				if(y < static_cast<int>(text_area_.area.y))
 					y = points_.offset.y ? points_.offset.y - 1 : 0;
 				else
-					y = (y - static_cast<int>(text_area_.area.y)) / static_cast<int>(this->line_height()) + points_.offset.y;
+					y = (y - static_cast<int>(text_area_.area.y)) / static_cast<int>(line_height()) + points_.offset.y;
 
 				if(textbase_.lines() <= static_cast<unsigned>(y))
 					res.y = static_cast<int>(textbase_.lines()) - 1;

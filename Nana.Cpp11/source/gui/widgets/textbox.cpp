@@ -49,7 +49,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			widget_ = &wd;
 		}
 
-		void drawer::attached(nana::paint::graphics& graph)
+		void drawer::attached(graph_reference graph)
 		{
 			window wd = widget_->handle();
 			editor_ = new text_editor(wd, graph);
@@ -77,16 +77,16 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		void drawer::detached()
 		{
 			delete editor_;
-			editor_ = 0;
-			API::dev::umake_drawer_event(widget_->handle());
+			editor_ = nullptr;
+			API::dev::umake_drawer_event(*widget_);
 		}
 
-		void drawer::refresh(nana::paint::graphics& graph)
+		void drawer::refresh(graph_reference graph)
 		{
 			editor_->redraw(status_.has_focus);
 		}
 
-		void drawer::focus(nana::paint::graphics& graph, const eventinfo& ei)
+		void drawer::focus(graph_reference graph, const eventinfo& ei)
 		{
 			status_.has_focus = ei.focus.getting;
 			refresh(graph);
@@ -146,8 +146,6 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		void drawer::key_char(graph_reference, const eventinfo& ei)
 		{
-			using namespace nana::gui;
-
 			if(editor_->attr().editable)
 			{
 				switch(ei.keyboard.key)
@@ -227,6 +225,31 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		{
 			create(wd, r, visible);
 		}
+
+		void textbox::load(const nana::char_t* file)
+		{
+			internal_scope_guard isg;
+			auto editor = get_drawer_trigger().editor();
+			if(editor)
+				editor->load(static_cast<std::string>(nana::charset(file)).c_str());
+		}
+
+		void textbox::store(const nana::char_t* file) const
+		{
+			internal_scope_guard isg;
+			auto editor = get_drawer_trigger().editor();
+			if(editor)
+				editor->store(static_cast<std::string>(nana::charset(file)).c_str());
+		}
+
+		void textbox::store(const nana::char_t* file, nana::unicode encoding) const
+		{
+			internal_scope_guard isg;
+			auto editor = get_drawer_trigger().editor();
+			if(editor)
+				editor->store(static_cast<std::string>(nana::charset(file)).c_str(), encoding);
+		}
+
 
 		bool textbox::getline(std::size_t n, nana::string& text) const
 		{

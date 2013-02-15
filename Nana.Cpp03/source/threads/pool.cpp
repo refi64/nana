@@ -177,6 +177,30 @@ namespace threads
 				unique_lock<mutex> lock(signal_.mutex);
 				signal_.cond.wait(lock);
 			}
+
+			void wait_for_finished()
+			{
+				while(true)
+				{
+					bool finished = true;
+					{
+						lock_guard<recursive_mutex> lock(mutex_);
+						for(std::vector<pool_throbj*>::iterator i = container_.threads.begin(); i != container_.threads.end(); ++i)
+						{
+							if(state::run == (*i)->thr_state)
+							{
+								finished = false;
+								break;
+							}
+						}
+					}
+					
+					if(finished)
+						return;
+
+					nana::system::sleep(100);
+				}			
+			}
 		private:
 			pool_throbj* _m_pick_up_an_idle()
 			{
@@ -362,6 +386,11 @@ namespace threads
 		void pool::wait_for_signal()
 		{
 			impl_->wait_for_signal();
+		}
+
+		void pool::wait_for_finished()
+		{
+			impl_->wait_for_finished();
 		}
 
 		void pool::_m_push(task* task_ptr)

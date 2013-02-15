@@ -65,6 +65,10 @@ namespace nana{ namespace gui{
 		textbox(window, bool visible);
 		textbox(window, const rectangle& = rectangle(), bool visible = true);
 
+		void load(const nana::char_t* file);
+		void store(const nana::char_t* file) const;
+		void store(const nana::char_t* file, nana::unicode::t encoding) const;
+
 		bool getline(std::size_t n, nana::string&) const;
 		textbox& append(const nana::string&, bool at_caret);
 		textbox& border(bool);

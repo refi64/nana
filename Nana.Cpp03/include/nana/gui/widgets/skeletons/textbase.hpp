@@ -14,8 +14,9 @@
 #define NANA_GUI_WIDGET_DETAIL_TEXTBASE_HPP
 #include <string>
 #include <deque>
-#include <iostream>
 #include <nana/refer.hpp>
+#include <fstream>
+#include <nana/charset.hpp>
 
 namespace nana
 {
@@ -42,6 +43,65 @@ namespace skeletons
 		{
 			return (text_cont_.size() == 0 ||
 					((text_cont_.size() == 1) && (text_cont_.begin()->size() == 0)));
+		}
+
+		void load(const char* tfs)
+		{
+			text_cont_.clear();
+			attr_max_.reset();
+
+			std::ifstream ifs(tfs);
+			std::string str;
+			std::size_t lines = 0;
+			while(ifs.good())
+			{
+				std::getline(ifs, str);
+				text_cont_.push_back(nana::charset(str));
+				if(text_cont_.back().size() > attr_max_.size)
+				{
+					attr_max_.size = text_cont_.back().size();
+					attr_max_.line = lines;
+				}
+				++lines;
+			}
+		}
+
+		void store(const char* tfs) const
+		{
+			std::ofstream ofs(tfs, std::ios::binary);
+			if(ofs && text_cont_.size())
+			{
+				if(text_cont_.size() > 1)
+				{
+					for(std::deque<string_type>::const_iterator i = text_cont_.begin(), end = text_cont_.end() - 1; i != end; ++i)
+					{
+						std::string mbs = nana::charset(*i);
+						ofs.write(mbs.c_str(), static_cast<std::streamsize>(mbs.size()));
+						ofs.write("\r\n", 2);
+					}
+				}
+				std::string mbs = nana::charset(text_cont_.back());
+				ofs.write(mbs.c_str(), static_cast<std::streamsize>(mbs.size()));
+			}
+		}
+
+		void store(const char* tfs, nana::unicode::t encoding) const
+		{
+			std::ofstream ofs(tfs, std::ios::binary);
+			if(ofs && text_cont_.size())
+			{
+				if(text_cont_.size() > 1)
+				{
+					for(std::deque<string_type>::const_iterator i = text_cont_.begin(), end = text_cont_.end() - 1; i != end; ++i)
+					{
+						std::string mbs = nana::charset(*i).to_bytes(encoding);
+						ofs.write(mbs.c_str(), static_cast<std::streamsize>(mbs.size()));
+						ofs.write("\r\n", 2);
+					}
+				}
+				std::string mbs = nana::charset(text_cont_.back()).to_bytes(encoding);
+				ofs.write(mbs.c_str(), static_cast<std::streamsize>(mbs.size()));
+			}		
 		}
 
 		size_type lines() const

@@ -76,6 +76,7 @@ namespace threads
 
 		void signal();
 		void wait_for_signal();
+		void wait_for_finished();
 	private:
 		void _m_push(task* task_ptr);
 	private:

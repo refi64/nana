@@ -34,6 +34,23 @@ namespace nana{	namespace gui{	namespace widgets
 			text_area_.border_renderer = f;
 		}
 
+		void text_editor::load(const char* tfs)
+		{
+			textbase_.load(tfs);
+			redraw(API::is_focus_window(window_));
+			_m_scrollbar();
+		}
+
+		void text_editor::store(const char* tfs) const
+		{
+			textbase_.store(tfs);
+		}
+
+		void text_editor::store(const char* tfs, nana::unicode encoding) const
+		{
+			textbase_.store(tfs, encoding);
+		}
+
 		bool text_editor::text_area(const nana::rectangle& r)
 		{
 			if(text_area_.area == r)
@@ -461,9 +478,13 @@ namespace nana{	namespace gui{	namespace widgets
 
 			if((false == textbase_.empty()) || has_focus)
 			{
+				auto scrlines = screen_lines() + static_cast<unsigned>(points_.offset.y);
+				if(scrlines > textbase_.lines())
+					scrlines = textbase_.lines();
+
 				int y = _m_text_top_base();
-				const unsigned line_hg = line_height();
-				for(unsigned ln = points_.offset.y; ln < textbase_.lines(); ++ln, y += line_hg)
+				const unsigned pixles = line_height();	
+				for(unsigned ln = points_.offset.y; ln < scrlines; ++ln, y += pixles)
 					_m_draw_string(y, fgcolor, ln, true);
 			}
 			else
@@ -777,7 +798,6 @@ namespace nana{	namespace gui{	namespace widgets
 			if(vertical && attributes_.vscroll)
 			{
 				attributes_.vscroll->make_step(!upwards);
-
 				if(_m_scroll_text(true))
 				{
 					redraw(true);
@@ -834,14 +854,15 @@ namespace nana{	namespace gui{	namespace widgets
 		{
 			_m_get_scrollbar_size();
 
+			nana::size tx_area = _m_text_area();
 			if(text_area_.vscroll)
 			{
 				auto wdptr = attributes_.vscroll;
-				int x = text_area_.area.x + static_cast<int>(text_area_.area.width - text_area_.vscroll);
+				int x = text_area_.area.x + static_cast<int>(tx_area.width);
 				if(nullptr == wdptr)
 				{
 					wdptr = new gui::scroll<true>;
-					wdptr->create(window_, nana::rectangle(x, text_area_.area.y, text_area_.vscroll, _m_get_text_area_height()));
+					wdptr->create(window_, nana::rectangle(x, text_area_.area.y, text_area_.vscroll, tx_area.height));
 					wdptr->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
 					wdptr->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
 					wdptr->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);
@@ -858,7 +879,7 @@ namespace nana{	namespace gui{	namespace widgets
 				if(points_.offset.y != static_cast<int>(wdptr->value()))
 					wdptr->value(points_.offset.y);
 
-				wdptr->move(x, text_area_.area.y, text_area_.vscroll, _m_get_text_area_height());
+				wdptr->move(x, text_area_.area.y, text_area_.vscroll, tx_area.height);
 			}
 			else if(attributes_.vscroll)
 			{
@@ -871,12 +892,11 @@ namespace nana{	namespace gui{	namespace widgets
 			if(text_area_.hscroll)
 			{
 				gui::scroll<false>* wdptr = attributes_.hscroll;
-				unsigned text_area_width = _m_get_text_area_width();
-				int y = text_area_.area.y + static_cast<int>(text_area_.area.height - text_area_.hscroll);
+				int y = text_area_.area.y + static_cast<int>(tx_area.height);
 				if(nullptr == wdptr)
 				{
 					wdptr = new gui::scroll<false>;
-					wdptr->create(window_, nana::rectangle(text_area_.area.x, y, text_area_width, text_area_.hscroll));
+					wdptr->create(window_, nana::rectangle(text_area_.area.x, y, tx_area.width, text_area_.hscroll));
 					wdptr->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
 					wdptr->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
 					wdptr->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);
@@ -884,18 +904,18 @@ namespace nana{	namespace gui{	namespace widgets
 					attributes_.hscroll = wdptr;
 					API::take_active(wdptr->handle(), false, window_);
 				}
-
-				nana::size text_size = _m_text_extent_size(textbase_.getline(textbase_.max_line().first).c_str(), textbase_.max_line().second);
+				auto maxline = textbase_.max_line();
+				nana::size text_size = _m_text_extent_size(textbase_.getline(maxline.first).c_str(), maxline.second);
 
 				text_size.width += 1;
 				if(text_size.width > wdptr->amount())
 					wdptr->amount(text_size.width);
 
-				if(text_area_width != wdptr->range())	wdptr->range(text_area_width);
+				if(tx_area.width != wdptr->range())	wdptr->range(tx_area.width);
 				if(points_.offset.x != static_cast<int>(wdptr->value()))
 					wdptr->value(points_.offset.x);
 
-				wdptr->move(text_area_.area.x, y, text_area_width, text_area_.hscroll);
+				wdptr->move(text_area_.area.x, y, tx_area.width, text_area_.hscroll);
 			}
 			else if(attributes_.hscroll)
 			{
@@ -905,14 +925,10 @@ namespace nana{	namespace gui{	namespace widgets
 			}
 		}
 
-		unsigned text_editor::_m_get_text_area_width() const
+		nana::size text_editor::_m_text_area() const
 		{
-			return (text_area_.area.width > text_area_.vscroll ? text_area_.area.width - text_area_.vscroll : 0);
-		}
-
-		unsigned text_editor::_m_get_text_area_height() const
-		{
-			return (text_area_.area.height > text_area_.hscroll ? text_area_.area.height - text_area_.hscroll : 0);
+			return nana::size((text_area_.area.width > text_area_.vscroll ? text_area_.area.width - text_area_.vscroll : 0),
+				(text_area_.area.height > text_area_.hscroll ? text_area_.area.height - text_area_.hscroll : 0));
 		}
 
 		void text_editor::_m_get_scrollbar_size()
@@ -927,7 +943,7 @@ namespace nana{	namespace gui{	namespace widgets
 				std::pair<size_t, size_t> max_line = textbase_.max_line();
 				if(max_line.second)
 				{
-					if(points_.offset.x || _m_text_extent_size(textbase_.getline(max_line.first).c_str(), max_line.second).width > _m_get_text_area_width())
+					if(points_.offset.x || _m_text_extent_size(textbase_.getline(max_line.first).c_str(), max_line.second).width > _m_text_area().width)
 					{
 						text_area_.hscroll = 16;
 						if((text_area_.vscroll == 0) && (textbase_.lines() > screen_lines()))
@@ -1489,7 +1505,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 			unsigned text_w = _m_pixels_by_char(points_.caret.y, x);
 
-			unsigned area_w = _m_get_text_area_width();
+			unsigned area_w = _m_text_area().width;
 
 			bool adjusted = true;
 			if(static_cast<int>(text_w) < points_.offset.x)
@@ -1549,11 +1565,10 @@ namespace nana{	namespace gui{	namespace widgets
 
 			//Convert the screen point to text caret point
 			const string_type& lnstr = textbase_.getline(res.y);
-
 			res.x = static_cast<int>(lnstr.size());
 			if(res.x)
 			{
-				x -= (text_area_.area.x + points_.offset.x);
+				x += (points_.offset.x - text_area_.area.x);
 				if(x > 0)
 				{
 					unicode_bidi bidi;

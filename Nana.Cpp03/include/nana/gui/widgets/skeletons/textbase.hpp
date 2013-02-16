@@ -90,13 +90,29 @@ namespace skeletons
 			std::ofstream ofs(tfs, std::ios::binary);
 			if(ofs && text_cont_.size())
 			{
+				const char * le_boms[] = {"\xEF\xBB\xBF", "\xFF\xFE", "\xFF\xFE\x0\x0"};	//BOM for little-endian
+				int bytes = 0;
+				switch(encoding)
+				{
+				case nana::unicode::utf8:
+					bytes = 3;	break;
+				case nana::unicode::utf16:
+					bytes = 2;	break;
+				case nana::unicode::utf32:
+					bytes = 4;	break;
+				}
+
+				if(bytes)
+					ofs.write(le_boms[static_cast<int>(encoding)], bytes);
+
 				if(text_cont_.size() > 1)
 				{
+					std::string mbs;
 					for(std::deque<string_type>::const_iterator i = text_cont_.begin(), end = text_cont_.end() - 1; i != end; ++i)
 					{
-						std::string mbs = nana::charset(*i).to_bytes(encoding);
+						mbs = nana::charset(*i).to_bytes(encoding);
+						mbs += "\r\n";
 						ofs.write(mbs.c_str(), static_cast<std::streamsize>(mbs.size()));
-						ofs.write("\r\n", 2);
 					}
 				}
 				std::string mbs = nana::charset(text_cont_.back()).to_bytes(encoding);

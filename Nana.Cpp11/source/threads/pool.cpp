@@ -179,22 +179,23 @@ namespace threads
 			{
 				while(true)
 				{
-					bool finished = true;
 					{
 						std::lock_guard<decltype(mutex_)> lock(mutex_);
-						for(auto thr : container_.threads)
+						if(container_.tasks.empty())
 						{
-							if(state::run == thr->thr_state)
+							bool finished = true;
+							for(auto thr : container_.threads)
 							{
-								finished = false;
-								break;
+								if(state::run == thr->thr_state)
+								{
+									finished = false;
+									break;
+								}
 							}
+							if(finished)
+								return;
 						}
 					}
-					
-					if(finished)
-						return;
-
 					nana::system::sleep(100);
 				}			
 			}

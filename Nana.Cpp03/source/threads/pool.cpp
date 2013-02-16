@@ -182,22 +182,23 @@ namespace threads
 			{
 				while(true)
 				{
-					bool finished = true;
 					{
 						lock_guard<recursive_mutex> lock(mutex_);
-						for(std::vector<pool_throbj*>::iterator i = container_.threads.begin(); i != container_.threads.end(); ++i)
+						if(container_.tasks.empty())
 						{
-							if(state::run == (*i)->thr_state)
+							bool finished = true;
+							for(std::vector<pool_throbj*>::iterator i = container_.threads.begin(); i != container_.threads.end(); ++i)
 							{
-								finished = false;
-								break;
+								if(state::run == (*i)->thr_state)
+								{
+									finished = false;
+									break;
+								}
 							}
+							if(finished)
+								return;
 						}
 					}
-					
-					if(finished)
-						return;
-
 					nana::system::sleep(100);
 				}			
 			}

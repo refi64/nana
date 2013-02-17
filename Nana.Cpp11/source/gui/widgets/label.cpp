@@ -80,12 +80,12 @@ namespace gui
 					nana::string text = API::window_caption(wd_);
 
 					nana::size extsize;
-					nana::string::size_type length = text.length();
-					if(0 == length)	return extsize;
+					if(0 == text.length())
+						return extsize;
 
 					nana::size txt_size = graph.text_extent_size(STR("jH"));
 					nana::string::size_type start = 0;
-					nana::string::size_type pos = text.find(nana::char_t('\n'), start);
+					auto pos = text.find(nana::char_t('\n'), start);
 
 					//[Feature:1]GUI.Label supports that transforms '\n' into new line autometically
 					extsize.height = txt_size.height;
@@ -93,7 +93,7 @@ namespace gui
 					{
 						if(pos > start)
 						{
-							unsigned px = graph.text_extent_size(text.substr(start, pos - start)).width;
+							auto px = graph.text_extent_size(text.substr(start, pos - start)).width;
 							if(extsize.width < px)
 								extsize.width = px;
 						}
@@ -173,14 +173,14 @@ namespace gui
 				void _m_append(const section_t& sec)
 				{
 					if(container_.size() == 0)
-						container_.push_back(std::vector<section_t*>());
+						container_.emplace_back();
 
-					(container_.end() - 1)->push_back(new section_t(sec));
+					container_.back().push_back(new section_t(sec));
 				}
 
 				void _m_endl()
 				{
-					container_.push_back(std::vector<section_t*>());
+					container_.emplace_back();
 				}
 
 				void _m_clear()
@@ -190,7 +190,6 @@ namespace gui
 						for(auto section : line)
 							delete section;
 					}
-
 					container_.clear();
 				}
 			private:
@@ -538,19 +537,17 @@ namespace gui
 							}
 							break;
 						case states::pstr:
-							while(ch != '"' && ch != 0)
+							while(ch && (ch != '"'))
 							{
 								data_.tokenstr += ch;
 								ch = data_.str.c_str()[++data_.pos];
 							}
-							if(ch != 0)
+							if(ch)
 								++data_.pos;
 							return tokens::pure_string;
 						}
-
 						ch = data_.str.c_str()[++data_.pos];
 					}
-
 					return tokens::eof;
 				}
 
@@ -576,7 +573,6 @@ namespace gui
 						init_fmt = 0;
 					}
 				}data_;
-
 			};
 
 			class format_renderer
@@ -669,8 +665,7 @@ namespace gui
 						{
 							for(auto & r : section->areas)
 							{
-								//Test if the specified point is in the area specified by rectangle.
-								if((r.x <= x && x < r.x + static_cast<int>(r.width)) && (r.y <= y && y < r.y + static_cast<int>(r.height)))
+								if(nana::gui::is_hit_the_rectangle(r, x, y))
 								{
 									API::window_cursor(trace_.wd, cursor::hand);
 									trace_.url = section->url;
@@ -728,7 +723,7 @@ namespace gui
 					return (pixels ? pixels : 10);
 				}
 
-				void _m_change_font(nana::paint::graphics& graph, nana::paint::font& font, const content::line_container::value_type s) const
+				void _m_change_font(graph_reference graph, nana::paint::font& font, const content::line_container::value_type s) const
 				{
 					if((s->font.size() && (s->font != font.name())) || (s->size != nsize && s->size != font.size()) || (s->bold != font.bold()))
 					{
@@ -1041,7 +1036,7 @@ namespace gui
 
 		void label::transparent(bool value)
 		{
-			nana::gui::internal_scope_guard isg;
+			internal_scope_guard isg;
 			if(API::glass_window(this->handle(), value))
 				API::refresh_window(this->handle());
 		}

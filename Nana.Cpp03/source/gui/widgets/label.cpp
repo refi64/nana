@@ -80,8 +80,7 @@ namespace gui
 					nana::string text = API::window_caption(wd_);
 
 					nana::size extsize;
-					nana::string::size_type length = text.length();
-					if(0 == length)	return extsize;
+					if(0 == text.length())	return extsize;
 
 					nana::size txt_size = graph.text_extent_size(STR("jH"));
 					nana::string::size_type start = 0;
@@ -176,7 +175,7 @@ namespace gui
 					if(container_.size() == 0)
 						container_.push_back(std::vector<section_t*>());
 
-					(container_.end() - 1)->push_back(new section_t(sec));
+					container_.back().push_back(new section_t(sec));
 				}
 
 				void _m_endl()
@@ -188,13 +187,9 @@ namespace gui
 				{
 					for(std::vector<std::vector<section_t*> >::iterator i = container_.begin(); i != container_.end(); ++i)
 					{
-						line_container & lc = *i;
-						for(std::vector<section_t*>::iterator u = lc.begin(); u != lc.end(); ++u)
-						{
+						for(std::vector<section_t*>::iterator u = i->begin(), uend = i->end(); u != uend; ++u)
 							delete *u;
-						}
 					}
-
 					container_.clear();
 				}
 			private:
@@ -541,19 +536,17 @@ namespace gui
 							}
 							break;
 						case states::pstr:
-							while(ch != '"' && ch != 0)
+							while(ch && (ch != '"'))
 							{
 								data_.tokenstr += ch;
 								ch = data_.str.c_str()[++data_.pos];
 							}
-							if(ch != 0)
+							if(ch)
 								++data_.pos;
 							return tokens::pure_string;
 						}
-
 						ch = data_.str.c_str()[++data_.pos];
 					}
-
 					return tokens::eof;
 				}
 			private:
@@ -672,8 +665,7 @@ namespace gui
 							std::vector<nana::rectangle>::iterator i = (*u)->areas.begin(), end = (*u)->areas.end();
 							for(; i != end; ++i)
 							{
-								//Test if the specified point is in the area specified by rectangle.
-								if((i->x <= x && x < i->x + static_cast<int>(i->width)) && (i->y <= y && y < i->y + static_cast<int>(i->height)))
+								if(nana::gui::is_hit_the_rectangle(*i, x, y))
 								{
 									API::window_cursor(trace_.wd, cursor::hand);
 									
@@ -731,7 +723,7 @@ namespace gui
 					return (pixels ? pixels : 10);
 				}
 
-				void _m_change_font(nana::paint::graphics& graph, nana::paint::font& font, const content::line_container::value_type s) const
+				void _m_change_font(graph_reference graph, nana::paint::font& font, const content::line_container::value_type s) const
 				{
 					if((s->font.size() && (s->font != font.name())) || (s->size != nsize && s->size != font.size()) || (s->bold != font.bold()))
 					{

@@ -129,16 +129,12 @@ namespace drawerbase
 				{
 					if(blockptr->enable && (blockptr->who == i))
 					{
+						blockptr->pos = nana::point(valid_area.x, valid_area.y);
 						if(arrange.value == arrange::horizontal)
-						{
-							blockptr->pos.x = valid_area.x + pos;
-							blockptr->pos.y = valid_area.y;
-						}
+							blockptr->pos.x += pos;
 						else
-						{
-							blockptr->pos.x = valid_area.x;
-							blockptr->pos.y = valid_area.y + pos;
-						}
+							blockptr->pos.y += pos;
+
 						pos += static_cast<int>(each_pixels);
 					}
 				}

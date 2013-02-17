@@ -51,12 +51,172 @@ namespace skeletons
 			attr_max_.reset();
 
 			std::ifstream ifs(tfs);
+			ifs.seekg(0, std::ios::end);
+			std::size_t bytes = static_cast<std::size_t>(ifs.tellg());
+			ifs.seekg(0, std::ios::beg);
+
+			if(bytes >= 2)
+			{
+				int ch = ifs.get();
+				if(0xEF == ch && bytes >= 3)
+				{
+					//UTF8
+					ch = ifs.get();
+					if(0xBB == ch && 0xBF == ifs.get())
+					{
+						ifs.close();
+						load(tfs, nana::unicode::utf8);
+						return;
+					}
+				}
+				else if(0xFF == ch)
+				{
+					if(0xFE == ifs.get())
+					{
+						//UTF16,UTF32
+						if(bytes >= 4)
+						{
+							if(ifs.get() == 0 && ifs.get() == 0)
+							{
+								ifs.close();
+								load(tfs, nana::unicode::utf32);
+								return;
+							}
+						}
+						ifs.close();
+						load(tfs, nana::unicode::utf16);
+						return;
+					}
+				}
+				else if(0xFE == ch)
+				{
+					if(ifs.get() == 0xFF)
+					{
+						//UTF16(big-endian)
+						ifs.close();
+						load(tfs, nana::unicode::utf16);
+						return;
+					}
+				}
+				else if(0 == ch)
+				{
+					if(bytes >= 4 && ifs.get() == 0)
+					{
+						ch = ifs.get();
+						if(0xFE == ch && ifs.get() == 0xFF)
+						{
+							//UTF32(big_endian)
+							ifs.close();
+							load(tfs, nana::unicode::utf32);
+							return;
+						}
+					}
+				}
+			}
+
+			ifs.clear();
+			ifs.seekg(0, std::ios::beg);
+
 			std::string str;
 			std::size_t lines = 0;
 			while(ifs.good())
 			{
 				std::getline(ifs, str);
 				text_cont_.push_back(nana::charset(str));
+				if(text_cont_.back().size() > attr_max_.size)
+				{
+					attr_max_.size = text_cont_.back().size();
+					attr_max_.line = lines;
+				}
+				++lines;
+			}
+		}
+
+		static void byte_order_translate_2bytes(std::string& str)
+		{
+			char * s = const_cast<char*>(str.c_str());
+			char * end = s + str.size();
+			for(; s < end; s += 2)
+			{
+				char c = *s;
+				*s = *(s + 1);
+				*(s + 1) = c;
+			}
+		}
+
+		static void byte_order_translate_4bytes(std::string& str)
+		{
+			char * s = const_cast<char*>(str.c_str());
+			char * end = s + str.size();
+			for(; s < end; s += 4)
+			{
+				char c = *s;
+				*s = *(s + 3);
+				*(s + 3) = c;
+				
+				c = *(s + 1);
+				*(s + 1) = *(s + 2);
+				*(s + 2) = c;
+			}
+		}
+
+		void load(const char * tfs, nana::unicode encoding)
+		{
+			text_cont_.clear();
+			attr_max_.reset();
+
+			std::ifstream ifs(tfs);
+			std::string str;
+			bool big_endian = true;
+			
+			if(ifs.good())
+			{
+				std::getline(ifs, str);
+
+				std::size_t len_of_BOM = 0;
+				switch(encoding)
+				{
+				case nana::unicode::utf8:
+					len_of_BOM = 3;	break;
+				case nana::unicode::utf16:
+					len_of_BOM = 2;	break;
+				case nana::unicode::utf32:
+					len_of_BOM = 4;	break;
+				}
+
+				big_endian = (str[0] == 0x00 || str[0] == char(0xFE));
+				str.erase(0, len_of_BOM);
+				if(big_endian)
+				{
+					if(nana::unicode::utf16 == encoding)
+						byte_order_translate_2bytes(str);
+					else
+						byte_order_translate_4bytes(str);
+				}
+
+				text_cont_.push_back(nana::charset(str, encoding));
+				if(text_cont_.back().size() > attr_max_.size)
+				{
+					attr_max_.size = text_cont_.back().size();
+					attr_max_.line = 0;
+				}
+			}
+
+			std::size_t lines = 1;
+
+			while(ifs.good())
+			{
+				std::getline(ifs, str);
+
+				if(big_endian)
+				{
+					if(nana::unicode::utf16 == encoding)
+						byte_order_translate_2bytes(str);
+					else
+						byte_order_translate_4bytes(str);					
+				}
+
+				text_cont_.push_back(nana::charset(str, encoding));
 				if(text_cont_.back().size() > attr_max_.size)
 				{
 					attr_max_.size = text_cont_.back().size();

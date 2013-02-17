@@ -162,7 +162,7 @@ namespace nana
 						wcstr = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(data_);
 						break;
 					case unicode::utf16:
-						wcstr = std::wstring_convert<std::codecvt_utf16<wchar_t>>().from_bytes(data_);
+						wcstr = std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>>().from_bytes(data_);
 						break;
 					case unicode::utf32:
 						wcstr.append(reinterpret_cast<const wchar_t*>(data_.c_str()), data_.size() / sizeof(wchar_t));
@@ -242,7 +242,7 @@ namespace nana
 					case unicode::utf8:
 						return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wcstr);
 					case unicode::utf16:
-						return std::wstring_convert<std::codecvt_utf16<wchar_t>>().to_bytes(wcstr);
+						return std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>>().to_bytes(wcstr);
 					case unicode::utf32:
 	#if defined(NANA_WINDOWS)
 						{
@@ -267,9 +267,9 @@ namespace nana
 					switch(utf_x_)
 					{
 					case unicode::utf8:
-						return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(data_);
+						return std::wstring_convert<std::codecvt_utf8<wchar_t, 0x10FFFF, std::little_endian>>().from_bytes(data_);
 					case unicode::utf16:
-						return std::wstring_convert<std::codecvt_utf16<wchar_t>>().from_bytes(data_);
+						return std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>>().from_bytes(data_);
 					case unicode::utf32:
 						return std::wstring(reinterpret_cast<const wchar_t*>(data_.c_str()), data_.size() * sizeof(wchar_t));
 					}
@@ -334,7 +334,7 @@ namespace nana
 				case unicode::utf8:
 					return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(data_);
 				case unicode::utf16:
-					return std::wstring_convert<std::codecvt_utf16<wchar_t>>().to_bytes(data_);
+					return std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10FFFF, std::little_endian>>().to_bytes(data_);
 				case unicode::utf32:
 	#if defined (NANA_WINDOWS)
 					{

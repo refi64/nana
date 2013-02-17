@@ -37,6 +37,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::load(const char* tfs)
 		{
+			_m_reset();
 			textbase_.load(tfs);
 			redraw(API::is_focus_window(window_));
 			_m_scrollbar();

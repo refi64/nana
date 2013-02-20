@@ -233,7 +233,7 @@ namespace skeletons
 			{
 				if(text_cont_.size() > 1)
 				{
-					for(std::deque<string_type>::const_iterator i = text_cont_.begin(), end = text_cont_.end() - 1; i != end; ++i)
+					for(typename std::deque<string_type>::const_iterator i = text_cont_.begin(), end = text_cont_.end() - 1; i != end; ++i)
 					{
 						std::string mbs = nana::charset(*i);
 						ofs.write(mbs.c_str(), static_cast<std::streamsize>(mbs.size()));
@@ -268,7 +268,7 @@ namespace skeletons
 				if(text_cont_.size() > 1)
 				{
 					std::string mbs;
-					for(std::deque<string_type>::const_iterator i = text_cont_.begin(), end = text_cont_.end() - 1; i != end; ++i)
+					for(typename std::deque<string_type>::const_iterator i = text_cont_.begin(), end = text_cont_.end() - 1; i != end; ++i)
 					{
 						mbs = nana::charset(*i).to_bytes(encoding);
 						mbs += "\r\n";

@@ -323,8 +323,9 @@ namespace nana{
 
 		native_window_type native_interface::create_child_window(native_window_type parent, const rectangle& r)
 		{
+			if(nullptr == parent) return nullptr;
 #if defined(NANA_WINDOWS)
-			HWND wd = ::CreateWindowEx(WS_EX_CONTROLPARENT,		// Extended possibilites for variation
+			HWND handle = ::CreateWindowEx(WS_EX_CONTROLPARENT,		// Extended possibilites for variation
 										STR("NanaWindowInternal"),
 										STR("Nana Child Window"),	// Title Text
 										WS_CHILD | WS_VISIBLE | WS_TABSTOP  | WS_CLIPSIBLINGS,
@@ -332,9 +333,82 @@ namespace nana{
 										reinterpret_cast<HWND>(parent),	// The window is a child-window to desktop
 										0, ::GetModuleHandle(0), 0);
 #elif defined(NANA_X11)
-			Window wd = 0;
+			nana::detail::platform_scope_guard psg;
+
+			XSetWindowAttributes win_attr;
+			unsigned long attr_mask = CWBackPixmap | CWBackPixel | CWBorderPixel |
+							CWWinGravity | CWBitGravity | CWColormap | CWEventMask;
+
+			Display * disp = restrict::spec.open_display();
+			win_attr.colormap = restrict::spec.colormap();
+
+			win_attr.background_pixmap = None;
+			win_attr.background_pixel = 0xFFFFFF;
+			win_attr.border_pixmap = None;
+			win_attr.border_pixel = 0x0;
+			win_attr.bit_gravity = 0;
+			win_attr.win_gravity = NorthWestGravity;
+			win_attr.backing_store = 0;
+			win_attr.backing_planes = 0;
+			win_attr.backing_pixel = 0;
+			win_attr.colormap = restrict::spec.colormap();
+
+			win_attr.override_redirect = True;
+			attr_mask |= CWOverrideRedirect;
+
+			nana::point pos(r.x, r.y);
+			win_attr.event_mask = ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | ExposureMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask | FocusChangeMask;
+
+			Window handle = ::XCreateWindow(disp, reinterpret_cast<Window>(parent),
+							pos.x, pos.y, (r.width ? r.width : 1), (r.height ? r.height : 1), 0,
+							restrict::spec.screen_depth(), InputOutput, restrict::spec.screen_visual(),
+							attr_mask, &win_attr);
+
+			if(handle)
+			{
+				restrict::spec.make_owner(parent, reinterpret_cast<native_window_type>(handle));
+
+				XTextProperty name;
+				char text[] = "Nana Child Window";
+				char * str = text;
+				::XStringListToTextProperty(&str, 1, &name);
+				::XSetWMName(disp, handle, &name);
+
+				const nana::detail::atombase_tag & ab = restrict::spec.atombase();
+				::XSetWMProtocols(disp, handle, const_cast<Atom*>(&ab.wm_delete_window), 1);
+
+				struct
+				{
+					long flags;
+					long functions;
+					long decorations;
+					long input;
+					long status;
+				}motif;
+				//MWM_HINTS_FUNCTIONS | MWM_HINTS_DECORATIONS;// | MWM_HINTS_INPUT_MODE;
+				motif.flags = 1 | 2; //| 4;
+				motif.functions = 4;//MWM_FUNC_MOVE;
+				motif.decorations = 0;
+				motif.input = 0;//MWM_INPUT_MODELESS;
+				motif.status = 0;
+
+				XSizeHints hints;
+				hints.flags = USPosition;
+				hints.x = pos.x;
+				hints.y = pos.y;
+				hints.min_width = hints.max_width = r.width;
+				hints.min_height = hints.max_height = r.height;
+				hints.flags |= (PMinSize | PMaxSize);
+				::XSetWMNormalHints(disp, handle, &hints);
+
+				::XChangeProperty(disp, handle, ab.motif_wm_hints, ab.motif_wm_hints, 32, PropModeReplace,
+									reinterpret_cast<unsigned char*>(&motif), sizeof(motif)/sizeof(long));
+
+				::XChangeProperty(disp, handle, ab.net_wm_state, XA_ATOM, 32, PropModeAppend,
+						reinterpret_cast<unsigned char*>(const_cast<Atom*>(&ab.net_wm_state_skip_taskbar)), 1);
+			}
 #endif
-			return reinterpret_cast<native_window_type>(wd);
+			return reinterpret_cast<native_window_type>(handle);
 		}
 
 #if defined(NANA_X11)

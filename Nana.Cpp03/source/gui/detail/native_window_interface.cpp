@@ -45,7 +45,7 @@ namespace nana{
 #endif
 		};
 	}
-	
+
 	namespace gui{	namespace detail{
 
 #if defined(NANA_WINDOWS)
@@ -178,8 +178,8 @@ namespace nana{
 			wd_area.bottom -= wd_area.top;
 
 			window_result result = {reinterpret_cast<native_window_type>(wnd),
-										client.right, client.bottom,
-										wd_area.right - client.right, wd_area.bottom - client.bottom};
+										static_cast<unsigned>(client.right), static_cast<unsigned>(client.bottom),
+										static_cast<unsigned>(wd_area.right - client.right), static_cast<unsigned>(wd_area.bottom - client.bottom)};
 #elif defined(NANA_X11)
 			nana::detail::platform_scope_guard psg;
 
@@ -405,7 +405,7 @@ namespace nana{
 #endif
 			return reinterpret_cast<native_window_type>(handle);
 		}
-		
+
 #if defined(NANA_X11)
 		void native_interface::set_modal(native_window_type wd)
 		{
@@ -418,7 +418,7 @@ namespace nana{
 				const nana::detail::atombase_tag  & atombase = restrict::spec.atombase();
 				::XSetTransientForHint(disp, reinterpret_cast<Window>(wd), owner);
 				::XChangeProperty(disp, reinterpret_cast<Window>(wd),
-								atombase.net_wm_state, XA_ATOM, sizeof(int) * 8, 
+								atombase.net_wm_state, XA_ATOM, sizeof(int) * 8,
 								PropModeReplace,
 								reinterpret_cast<const unsigned char*>(&atombase.net_wm_state_modal), 1);
 			}
@@ -439,7 +439,7 @@ namespace nana{
 #elif defined(NANA_X11)
 			if(wd && (false == img.empty()))
 			{
-				
+
 				const nana::paint::graphics & graph = restrict::spec.keep_window_icon(wd, img);
 				XWMHints hints;
 				hints.flags = IconPixmapHint;
@@ -735,7 +735,7 @@ namespace nana{
 				hints.y = y;
 				::XSetWMNormalHints(disp, reinterpret_cast<Window>(wd), &hints);
 			}
-			
+
 			::XMoveWindow(disp, reinterpret_cast<Window>(wd), x, y);
 #endif
 		}
@@ -801,7 +801,7 @@ namespace nana{
 				hints.width = width;
 				hints.height = height;
 			}
-			
+
 			if(hints.flags)
 				::XSetWMNormalHints(disp, reinterpret_cast<Window>(wd), &hints);
 
@@ -1303,7 +1303,7 @@ namespace nana{
 				if(static_cast<unsigned>(x) > sz.width + ext_width)
 					sz.width = static_cast<unsigned>(x);
 				if(static_cast<unsigned>(y) > sz.height + ext_height)
-					sz.height = static_cast<unsigned>(y);			
+					sz.height = static_cast<unsigned>(y);
 			}
 #endif
 			return sz;

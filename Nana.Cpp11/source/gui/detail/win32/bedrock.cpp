@@ -152,7 +152,7 @@ namespace detail
 			: event_pump_ref_count(0), window_count(0), event_window(nullptr)
 		{
 			cursor.window = nullptr;
-			cursor.predef_cursor = cursor::arrow;
+			cursor.predef_cursor = nana::gui::cursor::arrow;
 		}
 	};
 
@@ -838,7 +838,7 @@ namespace detail
 					make_eventinfo(ei, mouse_window, message, pmdec);
 					msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);
 					decltype(msgwnd) click_window = nullptr;
-					
+
 					if(msgwnd == mouse_window)
 					{
 						mouse_window->flags.action = mouse_action::over;
@@ -1384,14 +1384,14 @@ namespace detail
 			wd->other.upd_state = core_window_t::update_state::lazy;
 
 		bedrock_object.evt_manager.answer(eid, reinterpret_cast<window>(wd), ei, event_manager::event_kind::both);
-		
+
 		if(ask_update)
 			bedrock_object.wd_manager.do_lazy_refresh(wd, false);
 		else if(bedrock_object.wd_manager.available(wd))
 			wd->other.upd_state = core_window_t::update_state::none;
 
 		if(thrd)	thrd->event_window = prev_event_wd;
-		return true;		
+		return true;
 	}
 
 	void bedrock::event_expose(core_window_t * wd, bool exposed)
@@ -1482,7 +1482,7 @@ namespace detail
 #else
 			::SetClassLong(reinterpret_cast<HWND>(wd->root), GCL_HCURSOR,
 					static_cast<unsigned long>(reinterpret_cast<size_t>(::LoadCursor(0, translate(cur)))));
-#endif	
+#endif
 	}
 
 	void bedrock::update_cursor(core_window_t * wd)
@@ -1508,11 +1508,11 @@ namespace detail
 				native_window_type native_handle = native_interface::find_window(pos.x, pos.y);
 				if(nullptr == native_handle)
 					return;
-				
+
 				native_interface::calc_window_point(native_handle, pos);
 				if(wd != wd_manager.find_window(native_handle, pos.x, pos.y))
 					return;
-				
+
 				if(wd->predef_cursor != thrd->cursor.predef_cursor)
 				{
 					if(thrd->cursor.predef_cursor != cursor::arrow)

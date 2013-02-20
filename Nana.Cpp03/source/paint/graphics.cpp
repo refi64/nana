@@ -255,7 +255,7 @@ namespace paint
 
 				//The object will be delete while ref_ is performing a release.
 				drawable_type dw = new nana::detail::drawable_impl_type;
-				//Reuse the old font 
+				//Reuse the old font
 				if(!ref_.empty())
 				{
 					drawable_type reuse = ref_.handle();
@@ -538,7 +538,7 @@ namespace paint
 							x += detail::raw_text_extent_size(handle_, str, len).width;
 						}
 
-						str = i; 
+						str = i;
 						while(str != end && (*str == '\t'))
 							++str;
 
@@ -583,7 +583,7 @@ namespace paint
 			if((static_cast<int>(width) > -x) && (static_cast<int>(height) > -y) && width && height && handle_)
 			{
 #if defined(NANA_WINDOWS)
-				::RECT r = {x, y, x + width, y + height};
+				::RECT r = {x, y, static_cast<int>(x + width), static_cast<int>(y + height)};
 				handle_->brush.set(handle_->context, handle_->brush.Solid, color);
 				(solid ? ::FillRect : ::FrameRect)(handle_->context, &r, handle_->brush.handle);
 #elif defined(NANA_X11)
@@ -877,7 +877,7 @@ namespace paint
 				pixbuf.blend(nana::point(s_good_r.x, 0), dst.handle_, d_good_r, fade_rate);
 
 				if(dst.changed_ == false) dst.changed_ = true;
-			}		
+			}
 		}
 
 		void graphics::blend(int x, int y, unsigned width, unsigned height, nana::color_t color, double fade_rate)
@@ -1063,7 +1063,7 @@ namespace paint
 #if defined(NANA_WINDOWS)
 				int iWidth = static_cast<int>(size_.width);
 				int iHeight = static_cast<int>(size_.height);
-				BITMAPINFO bmpInfo = {0};
+				BITMAPINFO bmpInfo = {};
 				bmpInfo.bmiHeader.biSize = sizeof(bmpInfo.bmiHeader);
 				bmpInfo.bmiHeader.biWidth = static_cast<int>(size_.width);
 				bmpInfo.bmiHeader.biHeight = static_cast<int>(size_.height);

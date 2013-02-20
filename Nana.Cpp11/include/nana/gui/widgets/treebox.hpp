@@ -49,7 +49,7 @@ namespace gui
 			};
 
 			class trigger
-				:public nana::gui::drawer_trigger
+				:public drawer_trigger
 			{
 			public:
 				struct treebox_node_type
@@ -182,7 +182,7 @@ namespace gui
 				};
 			private:
 				nana::paint::graphics	*graph_;
-				nana::gui::widget		*widget_;
+				widget		*widget_;
 
 				struct drawing_flags
 				{
@@ -262,7 +262,7 @@ namespace gui
 
 	template<typename UserData>
 	class treebox
-		:public widget_object<nana::gui::category::widget_tag, drawerbase::treebox::trigger>
+		:public widget_object<category::widget_tag, drawerbase::treebox::trigger>
 	{
 	public:
 		typedef UserData value_type;

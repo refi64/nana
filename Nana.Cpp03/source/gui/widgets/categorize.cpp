@@ -114,11 +114,8 @@ namespace nana{	namespace gui{
 							graph.line(left, top, left, r.y + height, 0x3C7FB1);
 						}
 						_m_item_bground(graph, r.x + 1, top, width, height, state_name);
-
 						graph.rectangle(r, 0x3C7FB1, false);
 					}
-
-
 					graph.string(strpos.x, strpos.y, style_.fgcolor, name);
 
 					if(has_child)

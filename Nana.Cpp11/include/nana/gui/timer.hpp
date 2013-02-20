@@ -35,7 +35,7 @@ namespace gui
 		template<typename Function>
 		void make_tick(Function f)
 		{
-			nana::gui::API::make_event<detail::event_template<detail::event_tag::elapse> >(reinterpret_cast<nana::gui::window>(this), f);
+			API::make_event<detail::event_template<detail::event_tag::elapse> >(reinterpret_cast<window>(this), f);
 			this->_m_set_timer();
 		}
 

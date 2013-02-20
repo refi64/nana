@@ -630,7 +630,7 @@ namespace drawerbase
 			void button::_m_shortkey()
 			{
 				eventinfo ei;
-				API::raise_event<nana::gui::events::click>(handle(), ei);
+				API::raise_event<events::click>(handle(), ei);
 			}
 
 			void button::_m_complete_creation()

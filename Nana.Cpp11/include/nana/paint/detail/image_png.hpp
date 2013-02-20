@@ -33,7 +33,7 @@ namespace nana
 #else
 				FILE* fp = ::fopen(png_file, "rb");
 #endif
-				if(0 == fp) return false;
+				if(nullptr == fp) return false;
 
 				bool is_opened = false;
 

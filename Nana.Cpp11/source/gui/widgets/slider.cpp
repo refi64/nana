@@ -65,10 +65,18 @@ namespace nana{ namespace gui{
 
 				virtual void slider(window, graph_reference graph, const slider_t& s)
 				{
+					nana::rectangle r = graph.size();
 					if(s.horizontal)
-						graph.round_rectangle(s.pos, 0, s.scale, graph.height(), 3, 3, 0x0, true, 0xF0F0F0);
+					{
+						r.x = s.pos;
+						r.width = s.scale;
+					}
 					else
-						graph.round_rectangle(0, s.pos, graph.width(), s.scale, 3, 3, 0x0, true, 0xF0F0F0);
+					{
+						r.y = s.pos;
+						r.height = s.scale;
+					}
+					graph.round_rectangle(r, 3, 3, 0x0, true, 0xF0F0F0);
 				}
 			};
 
@@ -78,17 +86,17 @@ namespace nana{ namespace gui{
 				enum dir_t{DirHorizontal, DirVertical};
 				enum where_t{WhereNone, WhereBar, WhereSlider};
 				
-				typedef nana::gui::drawer_trigger::graph_reference graph_reference;
+				typedef drawer_trigger::graph_reference graph_reference;
 				mutable extra_events ext_event;
 
 				controller()
 				{
-					other_.wd = 0;
-					other_.widget = 0;
-					other_.graph = 0;
+					other_.wd = nullptr;
+					other_.widget = nullptr;
+					other_.graph = nullptr;
 
 					proto_.renderer = nana::gui::slider::renderer_cloneable<interior_renderer>().clone();
-					proto_.provider = 0;
+					proto_.provider = nullptr;
 
 					attr_.skdir = seekdir::bilateral;
 					attr_.dir = this->DirHorizontal;
@@ -132,7 +140,7 @@ namespace nana{ namespace gui{
 
 				void detached()
 				{
-					other_.graph = 0;
+					other_.graph = nullptr;
 				}
 
 				pat::cloneable_interface<renderer>& ext_renderer()
@@ -144,8 +152,8 @@ namespace nana{ namespace gui{
 				{
 					if(proto_.renderer != &rd)
 					{
-						pat::cloneable_interface<slider::renderer>* odi = proto_.renderer;
-						pat::cloneable_interface<slider::renderer>* ndi = rd.clone();
+						auto odi = proto_.renderer;
+						auto ndi = rd.clone();
 						if(ndi && (odi != ndi))
 						{
 							proto_.renderer = ndi;
@@ -159,8 +167,8 @@ namespace nana{ namespace gui{
 				{
 					if(proto_.provider != &pd)
 					{
-						pat::cloneable_interface<slider::provider> * opi = proto_.provider;
-						pat::cloneable_interface<slider::provider> * npi = pd.clone();
+						auto opi = proto_.provider;
+						auto npi = pd.clone();
 						if(npi && (opi != npi))
 						{
 							proto_.provider = npi;
@@ -172,19 +180,14 @@ namespace nana{ namespace gui{
 
 				void draw()
 				{
-					if(0 == other_.graph)
-						return;
-
-					nana::size graphsize = other_.graph->size();
-					if(graphsize.width == 0 || graphsize.height == 0)
+					if(nullptr == other_.graph || other_.graph->size().is_zero())
 						return;
 
 					//Background, if the window is a glass window then initialize the background.
 					bool isglass = API::glass_window(other_.wd);
 					if(isglass)
-					{
-						nana::gui::API::make_glass_background(other_.wd);
-					}
+						API::make_glass_background(other_.wd);
+
 					proto_.renderer->refer().background(other_.wd, *other_.graph, isglass);
 
 					_m_draw_objects();
@@ -318,7 +321,7 @@ namespace nana{ namespace gui{
 					if(slider_state_.trace == slider_state_.TraceCapture)
 					{
 						API::capture_window(other_.wd, false);
-						if(other_.wd != nana::gui::API::find_window(nana::gui::API::cursor_position()))
+						if(other_.wd != API::find_window(API::cursor_position()))
 						{
 							slider_state_.trace = slider_state_.TraceNone;
 							attr_.is_draw_adorn = false;

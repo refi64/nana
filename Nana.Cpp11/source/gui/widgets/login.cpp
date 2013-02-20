@@ -270,13 +270,13 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			other_.graph = &graph;
 		}
 
-		void bind(nana::gui::widget& wd)
+		void bind(widget& wd)
 		{
 			other_.wd  = &wd;
 			_m_init_widgets(wd);
 		}
 
-		nana::gui::widget* widget() const
+		widget* widget_ptr() const
 		{
 			return other_.wd;
 		}
@@ -296,21 +296,19 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 		{
 			if(user.size())
 			{
-				for(std::vector<item_t*>::iterator i = container_.begin(); i < container_.end(); ++i)
+				for(auto m: container_)
 				{
-					if(user == (*i)->user.caption())
+					if(user == m->user.caption())
 					{
-						(*i)->password.caption(password);
-						(*i)->img = img;
+						m->password.caption(password);
+						m->img = img;
 						return;
 					}
 				}
 
 				item_t * m = new item_t(user, password, img);
 				if(other_.wd)
-				{
 					_m_init_widget(m);
-				}
 
 				container_.push_back(m);
 				mode_.valid = false;
@@ -331,8 +329,8 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			int top = 0;
 			if(mode_.valid)
 			{
-				for(std::vector<item_t*>::iterator i = container_.begin(); i != container_.end(); ++i)
-					_m_hide(*i);
+				for(auto m: container_)
+					_m_hide(m);
 
 				_m_draw_item(renderer, mode_.item, 0, login_rectangle, 0, gsize);
 				top += mode_.item->pixels;
@@ -342,18 +340,15 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 				_m_hide(mode_.item);
 				if(item_state_.index >= container_.size()) item_state_.index = 0;
 
-				std::vector<item_t*>::iterator end = container_.begin() + item_state_.index;
-				for(std::vector<item_t*>::iterator i = container_.begin(); i != end; ++i)
-				{
-					_m_hide(*i);
-				}
+				for(std::size_t i = 0; i < item_state_.index; ++i)
+					_m_hide(container_[i]);
 
-				for(std::vector<item_t*>::iterator i = container_.begin() + item_state_.index; i != container_.end(); ++i)
+				for(std::size_t i = item_state_.index, size = container_.size(); i != size; ++i)
 				{
-					item_t * m = *i;
+					item_t * m = container_[i];
 					if(top < static_cast<int>(gsize.width))
 					{
-						_m_draw_item(renderer, m, i - container_.begin(), login_rectangle, top, gsize);
+						_m_draw_item(renderer, m, i, login_rectangle, top, gsize);
 						top += m->pixels;
 					}
 					else
@@ -405,15 +400,16 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			if(x < static_cast<int>(sz.width))
 			{
 				int top = 0;
-				for(std::vector<item_t*>::const_iterator i = container_.begin() + item_state_.index; i != container_.end(); ++i)
+				for(std::size_t i = item_state_.index, size = container_.size(); i != size; ++i)
 				{
+					auto m = container_[i];
 					if(top < static_cast<int>(sz.height))
 					{
-						if(top <= y && y <= top + (*i)->pixels)
+						if(top <= y && y <= top + m->pixels)
 						{
 							comp.which = comp.item;
-							comp.item_index = i - container_.begin();
-							const nana::rectangle & r = (*i)->close;
+							comp.item_index = i;
+							const nana::rectangle & r = m->close;
 							if(r.width && r.height)
 								comp.is_close = (r.x <= x && x < static_cast<int>(r.x + r.width)) && (r.y <= y && y <= static_cast<int>(r.y + r.height));
 							else
@@ -423,8 +419,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 					}
 					else
 						break;
-
-					top += (*i)->pixels;
+					top += m->pixels;
 				}
 			}
 			if(comp != trace_)
@@ -446,7 +441,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			{
 				if(trace_.item_index < container_.size())
 				{
-					std::vector<item_t*>::iterator i = container_.begin() + trace_.item_index;
+					auto i = container_.begin() + trace_.item_index;
 					item_t * m = *i;
 
 					if(other_.login_object)
@@ -523,9 +518,8 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			if(lbs.forget.size())
 				m->forget.caption(lbs.forget);
 
-			for(std::vector<item_t*>::iterator i = container_.begin(); i != container_.end(); ++i)
+			for(auto & m : container_)
 			{
-				m = *i;
 				if(lbs.user.size())
 				{
 					m->user.tip_string(lbs.user);
@@ -665,7 +659,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 		void _m_do_verify(const gui::eventinfo& ei)
 		{
 			tooltip_.close();
-			if(ei.keyboard.key == nana::gui::keyboard::enter)
+			if(ei.keyboard.key == keyboard::enter)
 			{
 				_m_verify();
 			}
@@ -680,13 +674,13 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 
 			if(user.size() == 0)
 			{
-				nana::gui::API::focus_window(m->user.handle());
+				API::focus_window(m->user.handle());
 				nana::point pos = m->user.pos();
 				tooltip_.show(other_.wd->handle(), pos.x, pos.y + m->user.size().height, lbstrings_.require_user);
 			}
 			else if(pass.size() == 0)
 			{
-				nana::gui::API::focus_window(m->password.handle());
+				API::focus_window(m->password.handle());
 				nana::point pos = m->password.pos();
 				tooltip_.show(other_.wd->handle(), pos.x, pos.y + m->password.size().height, lbstrings_.require_password);
 			}
@@ -737,17 +731,14 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 				API::update_window(other_.wd->handle());
 		}
 
-		void _m_init_widgets(nana::gui::widget& wd)
+		void _m_init_widgets(widget& wd)
 		{
 			if(false == wd.empty())
 			{
-				for(std::vector<item_t*>::iterator i = container_.begin(); i != container_.end(); ++i)
-				{
-					item_t * m = *i;
-					this->_m_init_widget(m);
-				}
+				for(auto itemptr : container_)
+					_m_init_widget(itemptr);
 
-				this->_m_init_widget(mode_.item);
+				_m_init_widget(mode_.item);
 				mode_.valid = container_.empty();
 
 				btn_login_.create(wd);
@@ -768,7 +759,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			if(other_.wd && other_.wd->empty() && m && m->user.empty())
 				return;
 
-			nana::gui::widget& wd = *other_.wd;
+			auto& wd = *other_.wd;
 			m->pixels = 0;
 			m->user.create(wd);
 			m->user.multi_lines(false);
@@ -871,7 +862,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 	void trigger::attached(graph_reference graph)
 	{
 		impl_->attached(graph);
-		window wd = impl_->widget()->handle();
+		window wd = impl_->widget_ptr()->handle();
 		using namespace API::dev;
 		make_drawer_event<events::mouse_move>(wd);
 		make_drawer_event<events::mouse_up>(wd);
@@ -880,7 +871,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 
 	void trigger::detached()
 	{
-		API::dev::umake_drawer_event(impl_->widget()->handle());
+		API::dev::umake_drawer_event(impl_->widget_ptr()->handle());
 		impl_->detached();
 	}
 

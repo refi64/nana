@@ -233,10 +233,7 @@ namespace nana{ namespace gui{
 						{
 							if(to == i->index)
 							{
-								if(front)
-									cont_.insert(i, from);
-								else
-									cont_.insert(++i, from);
+								cont_.insert((front ? i : ++i), from);
 								break;
 							}
 						}

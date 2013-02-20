@@ -21,7 +21,7 @@ namespace nana{namespace gui{
 		{
 			//button_drawer
 			//@brief:	Draw the button
-			class trigger: public nana::gui::drawer_trigger
+			class trigger: public drawer_trigger
 			{
 			public:
 				struct bgimage_tag;

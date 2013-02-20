@@ -122,18 +122,17 @@ namespace detail
 							return child;
 					}
 				}
-				return 0;
+				return nullptr;
 			}
 
 			node_type* insert(node_type* node, const nana::string& key, const element_type& elem)
 			{
-				if(0 == node)
-				{
+				if(nullptr == node)
 					return insert(key, elem);
-				}
-				else if(check(node))
+				
+				if(check(node))
 				{
-					node_type *newnode = 0;
+					node_type **new_node_ptr;
 					if(node->child)
 					{
 						node_type* child = node->child;
@@ -150,21 +149,23 @@ namespace detail
 						while(child->next)
 							child = child->next;
 
-						newnode = child->next = new node_type(node);
+						new_node_ptr = &(child->next);
 					}
 					else
-						newnode = node->child = new node_type(node);
+						new_node_ptr = &(node->child);
 
-					newnode->value.first = key;
-					newnode->value.second = elem;
-					return newnode;
+					*new_node_ptr = new node_type(node);
+
+					(*new_node_ptr)->value.first = key;
+					(*new_node_ptr)->value.second = elem;
+					return (*new_node_ptr);
 				}
-				return 0;
+				return nullptr;
 			}
 
 			node_type* insert(const nana::string& key, const element_type& elem)
 			{
-				node_type * node = _m_locate<true>(key);
+				auto node = _m_locate<true>(key);
 				if(node)
 					node->value.second = elem;
 				return node;
@@ -202,7 +203,7 @@ namespace detail
 			template<typename Functor>
 			void for_each(node_type* node, Functor f)
 			{
-				if(0 == node) node = root_.child;
+				if(nullptr == node) node = root_.child;
 				int state = 0;	//0: Sibling, the last is a sibling of node
 								//1: Owner, the last is the owner of node
 								//>= 2: Children, the last is is a child of the node that before this node.
@@ -255,7 +256,7 @@ namespace detail
 			template<typename Functor>
 			void for_each(node_type* node, Functor f) const
 			{
-				if(0 == node) node = root_.child;
+				if(nullptr == node) node = root_.child;
 				int state = 0;	//0: Sibling, the last is a sibling of node
 								//1: Owner, the last is the owner of node
 								//>= 2: Children, the last is is a child of the node that before this node.
@@ -308,7 +309,7 @@ namespace detail
 			template<typename PredAllowChild>
 			unsigned child_size_if(const nana::string& key, PredAllowChild pac) const
 			{
-				const node_type * node = _m_locate(key);
+				auto node = _m_locate(key);
 				return (node ? child_size_if<PredAllowChild>(*node, pac) : 0);
 			}
 
@@ -316,7 +317,6 @@ namespace detail
 			unsigned child_size_if(const node_type& node, PredAllowChild pac) const
 			{
 				unsigned size = 0;
-
 				const node_type* pnode = node.child;
 				while(pnode)
 				{
@@ -332,7 +332,7 @@ namespace detail
 			template<typename PredAllowChild>
 			unsigned distance_if(const node_type * node, PredAllowChild pac) const
 			{
-				if(node == 0)	return 0;
+				if(nullptr == node)	return 0;
 				const node_type * iterator = root_.child;
 
 				unsigned off = 0;
@@ -350,27 +350,25 @@ namespace detail
 					else
 						iterator = iterator->next;
 
-					while(0 == iterator && stack.size())
+					while((nullptr == iterator) && stack.size())
 					{
 						iterator = stack.top()->next;
 						stack.pop();
 					}
 				}
-
 				return off;
 			}
 
 			template<typename PredAllowChild>
 			node_type* advance_if(node_type* node, unsigned off, PredAllowChild pac)
 			{
-				if(node == 0)	node = root_.child;
+				if(nullptr == node)	node = root_.child;
 
 				std::stack<node_type* > stack;
 
 				while(node && off)
 				{
 					--off;
-
 					if(node->child && pac(*node))
 					{
 						stack.push(node);
@@ -379,7 +377,7 @@ namespace detail
 					else
 						node = node->next;
 
-					while(0 == node && stack.size())
+					while(nullptr == node && stack.size())
 					{
 						node = stack.top();
 						stack.pop();
@@ -401,26 +399,25 @@ namespace detail
 				bool operator()(const nana::string& key_node)
 				{
 					node_type *child = node->child;
-					node_type *tail = 0;
+					node_type *tail = nullptr;
 					while(child)
 					{
 						if(key_node == child->value.first)
-							break;
+						{
+							node = child;
+							return true;
+						}
 						tail = child;
 						child = child->next;
 					}
 
-					if(child == 0)
-					{
-						child = new node_type(node);
-						if(tail)
-							tail->next = child;
-						else
-							node->child = child;
+					child = new node_type(node);
+					if(tail)
+						tail->next = child;
+					else
+						node->child = child;
 
-						child->value.first = key_node;
-					}
-
+					child->value.first = key_node;
 					node = child;
 					return true;
 				}
@@ -437,7 +434,7 @@ namespace detail
 
 				bool operator()(const nana::string& key_node)
 				{
-					return ((node = _m_find(node->child, key_node)) != 0);
+					return ((node = _m_find(node->child, key_node)) != nullptr);
 				}
 
 				node_type *node;
@@ -452,7 +449,7 @@ namespace detail
 
 					node = node->next;
 				}
-				return 0;
+				return nullptr;
 			}
 
 			template<typename Function>
@@ -461,7 +458,7 @@ namespace detail
 				if(key.size())
 				{
 					nana::string::size_type beg = 0;
-					nana::string::size_type end = key.find_first_of(STR("\\/"));
+					auto end = key.find_first_of(STR("\\/"));
 
 					while(end != nana::string::npos)
 					{
@@ -471,7 +468,7 @@ namespace detail
 								return;
 						}
 
-						nana::string::size_type next = key.find_first_not_of(STR("\\/"), end);
+						auto next = key.find_first_not_of(STR("\\/"), end);
 						if(next != nana::string::npos)
 						{
 							beg = next;

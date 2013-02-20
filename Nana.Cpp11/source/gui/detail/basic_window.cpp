@@ -278,29 +278,29 @@ namespace nana{	namespace gui{
 				}
 			}
 
-			void basic_window::_m_initialize(basic_window* parent)
+			void basic_window::_m_initialize(basic_window* agrparent)
 			{
-				if(this->other.category == category::root_tag::value)
+				if(other.category == category::root_tag::value)
 				{
-					if(parent && (nana::system::this_thread_id() != parent->thread_id))
-						parent = 0;
+					if(agrparent && (nana::system::this_thread_id() != agrparent->thread_id))
+						agrparent = nullptr;
 
-					while(parent && (parent->other.category != nana::gui::category::root_tag::value))
-						parent = parent->parent;
+					while(agrparent && (agrparent->other.category != category::root_tag::value))
+						agrparent = agrparent->parent;
 				
-					this->owner = parent;
-					this->parent = 0;
-					this->index = 0;
+					owner = agrparent;
+					parent = nullptr;
+					index = 0;
 				}
 				else
 				{
-					this->parent = parent;
-					this->owner = 0;
-					this->root_widget = parent->root_widget;
-					this->root = parent->root;
-					this->root_graph = parent->root_graph;
-					this->index = static_cast<unsigned>(parent->children.size());
-					parent->children.push_back(this);
+					parent = agrparent;
+					owner = nullptr;
+					root_widget = agrparent->root_widget;
+					root = agrparent->root;
+					root_graph = agrparent->root_graph;
+					index = static_cast<unsigned>(agrparent->children.size());
+					agrparent->children.push_back(this);
 				}
 				this->predef_cursor = cursor::arrow;
 				this->flags.capture = false;
@@ -322,18 +322,17 @@ namespace nana{	namespace gui{
 
 				this->effect.edge_nimbus = effects::edge_nimbus::none;
 
-				this->together.caret = 0;
+				this->together.caret = nullptr;
 				this->flags.refreshing = false;
 				this->flags.destroying = false;
 
-				this->extra_width = 0;
-				this->extra_height = 0;
+				extra_width = extra_height = 0;
 
 				//The window must keep its thread_id same as its parent if it is a child.
 				//Otherwise, its root buffer would be mapped repeatly if it is in its parent thread.
-				this->thread_id = nana::system::this_thread_id();
-				if(parent && (this->thread_id != parent->thread_id))
-					this->thread_id = parent->thread_id;
+				thread_id = nana::system::this_thread_id();
+				if(agrparent && (thread_id != agrparent->thread_id))
+					thread_id = agrparent->thread_id;
 			}
 		//end struct basic_window
 	}//end namespace detail

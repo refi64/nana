@@ -30,7 +30,7 @@ namespace nana{ namespace gui
 			class drawer_impl;
 			
 			class trigger
-				: public nana::gui::drawer_trigger
+				: public drawer_trigger
 			{
 			public:
 				typedef extra_events ext_event_type;
@@ -45,15 +45,15 @@ namespace nana{ namespace gui
 				void attached(graph_reference);
 				void detached();
 				void refresh(graph_reference);
-				void focus(graph_reference, const nana::gui::eventinfo&);
-				void mouse_enter(graph_reference, const nana::gui::eventinfo&);
-				void mouse_leave(graph_reference, const nana::gui::eventinfo&);
-				void mouse_down(graph_reference, const nana::gui::eventinfo&);
-				void mouse_up(graph_reference, const nana::gui::eventinfo&);
-				void mouse_move(graph_reference, const nana::gui::eventinfo&);
-				void mouse_wheel(graph_reference, const nana::gui::eventinfo&);
-				void key_down(graph_reference, const nana::gui::eventinfo&);
-				void key_char(graph_reference, const nana::gui::eventinfo&);
+				void focus(graph_reference, const eventinfo&);
+				void mouse_enter(graph_reference, const eventinfo&);
+				void mouse_leave(graph_reference, const eventinfo&);
+				void mouse_down(graph_reference, const eventinfo&);
+				void mouse_up(graph_reference, const eventinfo&);
+				void mouse_move(graph_reference, const eventinfo&);
+				void mouse_wheel(graph_reference, const eventinfo&);
+				void key_down(graph_reference, const eventinfo&);
+				void key_char(graph_reference, const eventinfo&);
 			private:
 				drawer_impl * drawer_;
 			};

@@ -137,7 +137,7 @@ namespace detail
 			{
 				//Test if the root widget is overlapped the specified widget
 				//the pos of root widget is (0, 0)
-				if(nana::gui::overlap(visual, wd->root_widget->rect) == false)
+				if(overlap(visual, wd->root_widget->rect) == false)
 					return false;
 			}
 
@@ -145,7 +145,7 @@ namespace detail
 			{
 				nana::rectangle self_rect = visual;
 				nana::rectangle prnt_rect(parent->root_x, parent->root_y,parent->rect.width, parent->rect.height);
-				nana::gui::overlap(prnt_rect, self_rect, visual);
+				overlap(prnt_rect, self_rect, visual);
 			}
 
 			return true;
@@ -174,7 +174,7 @@ namespace detail
 						rect.width = cover->rect.width;
 						rect.height = cover->rect.height;
 
-						if(nana::gui::overlap(vis_rect, rect, block.r))
+						if(overlap(vis_rect, rect, block.r))
 						{
 							block.window = cover;
 							blocks.push_back(block);
@@ -248,7 +248,7 @@ namespace detail
 						nana::rectangle r = wd->rect;
 						typename std::vector<core_window_t*>::reverse_iterator layers_rend = layers.rend();
 
-						for(typename std::vector<core_window_t*>::reverse_iterator i = layers.rbegin(); i != layers_rend; ++i)
+						for(auto i = layers.rbegin(); i != layers_rend; ++i)
 						{
 							core_window_t * pre = *i;
 							if(pre->visible)
@@ -261,7 +261,7 @@ namespace detail
 									if(child->index < term->index)
 									{
 										nana::rectangle ovlp;
-										if(child->visible && nana::gui::overlap(r, child->rect, ovlp))
+										if(child->visible && overlap(r, child->rect, ovlp))
 										{
 											if(child->other.category != category::lite_widget_tag::value)
 												glass_buffer.bitblt(nana::rectangle(ovlp.x - pre->rect.x, ovlp.y - pre->rect.y, ovlp.width, ovlp.height), child->drawer.graphics, nana::point(ovlp.x - child->rect.x, ovlp.y - child->rect.y));
@@ -284,7 +284,7 @@ namespace detail
 						if(child->index < wd->index)
 						{
 							nana::rectangle ovlp;
-							if(child->visible && nana::gui::overlap(wd->rect, child->rect, ovlp))
+							if(child->visible && overlap(wd->rect, child->rect, ovlp))
 							{
 								if(child->other.category != category::lite_widget_tag::value)
 									glass_buffer.bitblt(nana::rectangle(ovlp.x - wd->rect.x, ovlp.y - wd->rect.y, ovlp.width, ovlp.height), child->drawer.graphics, nana::point(ovlp.x - child->rect.x, ovlp.y - child->rect.y));
@@ -312,10 +312,8 @@ namespace detail
 			nana::rectangle rect;
 			nana::rectangle child_rect;
 
-			for(typename core_window_t::container_type::iterator i = wd->children.begin(), end = wd->children.end(); i != end; ++i)
+			for(auto child : wd->children)
 			{
-				core_window_t * child = *i;
-
 				//it will not past children if no drawer and visible is false.
 				if((false == child->visible) || (child->drawer.graphics.empty() && (child->other.category != category::lite_widget_tag::value)))
 					continue;
@@ -327,7 +325,7 @@ namespace detail
 					child_rect.width = child->rect.width;
 					child_rect.height = child->rect.height;
 
-					if(nana::gui::overlap(child_rect, parent_rect, rect))
+					if(overlap(child_rect, parent_rect, rect))
 					{
 						if(child->other.category != category::lite_widget_tag::value)
 						{
@@ -387,7 +385,7 @@ namespace detail
 			for(auto wd : data_sect.glass_window_cont)
 			{
 				if(wd == sigwnd || !wd->visible ||
-					(false == nana::gui::overlap(wd->root_x, wd->root_y, wd->rect.width, wd->rect.height, sigwnd->root_x, sigwnd->root_y, sigwnd->rect.width, sigwnd->rect.height)))
+					(false == overlap(wd->root_x, wd->root_y, wd->rect.width, wd->rect.height, sigwnd->root_x, sigwnd->root_y, sigwnd->rect.width, sigwnd->rect.height)))
 					continue;
 
 				//Test a parent of the glass window is invisible.

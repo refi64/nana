@@ -49,7 +49,7 @@ namespace API
 			if(std::is_base_of<detail::event_type_tag, event_t>::value)
 			{
 				auto & wd_manager = bedrock::instance().wd_manager;
-				nana::gui::internal_scope_guard isg;
+				internal_scope_guard isg;
 				if(wd_manager.available(reinterpret_cast<bedrock::core_window_t*>(wd)))
 					return reinterpret_cast<bedrock::core_window_t*>(wd)->drawer.make_event(event_t::identifier, wd);
 			}
@@ -109,7 +109,7 @@ namespace API
 	}
 
 	template<typename Event>
-	void raise_event(window wd, const nana::gui::eventinfo& ei)
+	void raise_event(window wd, const eventinfo& ei)
 	{
 		typedef typename std::remove_pointer<typename std::remove_reference<Event>::type>::type event_t;
 		if(std::is_base_of<detail::event_type_tag, event_t>::value)
@@ -214,7 +214,7 @@ namespace API
 	bool calc_screen_point(window, point&);
 	bool calc_window_point(window, point&);
 
-	nana::gui::window find_window(const nana::point& mspos);
+	window find_window(const nana::point& mspos);
 
 	void register_menu_window(window, bool has_keyboard);
 	bool attach_menubar(window menubar);

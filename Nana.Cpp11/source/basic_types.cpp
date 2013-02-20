@@ -76,6 +76,11 @@ namespace nana
 		size::size():width(0), height(0){}
 		size::size(unsigned width, unsigned height):width(width), height(height){}
 
+		bool size::is_zero() const
+		{
+			return (width == 0 || height == 0);
+		}
+
 		bool size::operator==(const size& rhs) const
 		{
 			return (width == rhs.width) && (height == rhs.height);

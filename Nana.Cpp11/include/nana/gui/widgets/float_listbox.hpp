@@ -55,7 +55,7 @@ namespace nana{ namespace gui{
 			class drawer_impl;
 
 			class trigger
-				: public nana::gui::drawer_trigger
+				: public drawer_trigger
 			{
 			public:
 				trigger();

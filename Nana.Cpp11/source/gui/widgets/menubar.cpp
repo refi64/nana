@@ -370,7 +370,7 @@ namespace gui
 					API::focus_window(widget_->handle());
 
 					std::size_t index = items_->find(ei.keyboard.key);
-					if(index != npos && (index != state_.active || state_.menu == 0))
+					if(index != npos && (index != state_.active || nullptr == state_.menu))
 					{
 						_m_close_menu();
 						state_.menu_active = true;
@@ -457,8 +457,7 @@ namespace gui
 						state_.passive_close = false;
 						state_.menu->close();
 						state_.passive_close = true;
-
-						state_.menu = 0;
+						state_.menu = nullptr;
 						return true;
 					}
 					return false;
@@ -466,8 +465,7 @@ namespace gui
 
 				void trigger::_m_unload_menu_window()
 				{
-					state_.menu = 0;
-
+					state_.menu = nullptr;
 					if(state_.passive_close)
 					{
 						_m_total_close();
@@ -511,7 +509,7 @@ namespace gui
 
 				void trigger::_m_draw()
 				{
-					graph_->rectangle(nana::gui::color::button_face, true);
+					graph_->rectangle(color::button_face, true);
 
 					item_renderer ird(*graph_);
 
@@ -539,9 +537,9 @@ namespace gui
 						if(state == ird.state_selected)
 						{
 							int x = item_pos.x + item_s.width;
-							graph_->line(x, item_pos.y + 2, x, item_pos.y + item_s.height - 1, color::gray_border);
-							x++;
-							graph_->line(x, item_pos.y + 2, x, item_pos.y + item_s.height - 1, color::button_face_shadow_end);
+							int y1 = item_pos.y + 2, y2 = item_pos.y + item_s.height - 1;
+							graph_->line(x, y1, x, y2, color::gray_border);
+							graph_->line(x + 1, y1, x + 1, y2, color::button_face_shadow_end);
 						}
 
 						//Draw text, the text is transformed from orignal for hotkey character
@@ -576,25 +574,25 @@ namespace gui
 		menubar::menubar(){}
 		menubar::menubar(window wd)
 		{
-			this->create(wd);
+			create(wd);
 		}
 
 		void menubar::create(window wd)
 		{
-			typedef widget_object<category::widget_tag, drawerbase::menubar::trigger> base;
-			base::create(wd, rectangle(nana::size(API::window_size(wd).width, 28)));
-			API::attach_menubar(this->handle());
+			widget_object<category::widget_tag, drawerbase::menubar::trigger>
+				::create(wd, rectangle(nana::size(API::window_size(wd).width, 28)));
+			API::attach_menubar(handle());
 		}
 
-		nana::gui::menu& menubar::push_back(const nana::string& text)
+		menu& menubar::push_back(const nana::string& text)
 		{
 			return *(get_drawer_trigger().push_back(text));
 		}
 
-		nana::gui::menu& menubar::at(std::size_t index) const
+		menu& menubar::at(std::size_t index) const
 		{
-			nana::gui::menu* p = get_drawer_trigger().at(index);
-			if(0 == p)
+			menu* p = get_drawer_trigger().at(index);
+			if(nullptr == p)
 				throw std::out_of_range("menubar::at, out of range");
 			return *p;
 		}

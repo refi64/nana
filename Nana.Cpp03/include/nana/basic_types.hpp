@@ -103,6 +103,7 @@ namespace nana
 		size();
 		size(unsigned width, unsigned height);
 
+		bool is_zero() const;
 		bool operator==(const size& rhs) const;
 		bool operator!=(const size& rhs) const;
 

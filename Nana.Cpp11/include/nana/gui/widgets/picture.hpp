@@ -20,11 +20,11 @@ namespace gui
 {
 	namespace xpicture
 	{
-		class picture_drawer: public nana::gui::drawer_trigger
+		class picture_drawer: public drawer_trigger
 		{
 		public:
 			picture_drawer();
-			void bind_window(nana::gui::widget&);
+			void bind_window(widget&);
 			void attached(graph_reference);
 			void load(const nana::char_t* file);
 			void load(const nana::paint::image&);
@@ -35,7 +35,7 @@ namespace gui
 			void refresh(graph_reference);
 			void _m_draw_background();
 		private:
-			nana::gui::widget* widget_;
+			widget* widget_;
 			nana::paint::graphics* graph_;
 
 			struct	runtime_type

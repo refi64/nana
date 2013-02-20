@@ -272,13 +272,13 @@ namespace xcheckbox
 			return static_cast<std::size_t>(i - ui_container_.begin());
 		}
 
-		void radio_group::_m_checked(const nana::gui::eventinfo& ei)
+		void radio_group::_m_checked(const eventinfo& ei)
 		{
 			for(auto & i : ui_container_)
 				i.uiobj->check(ei.window == i.uiobj->handle());
 		}
 
-		void radio_group::_m_destroy(const nana::gui::eventinfo& ei)
+		void radio_group::_m_destroy(const eventinfo& ei)
 		{
 			auto i = std::find_if(ui_container_.begin(), ui_container_.end(), [&ei](decltype(*ui_container_.begin()) & x)
 					{

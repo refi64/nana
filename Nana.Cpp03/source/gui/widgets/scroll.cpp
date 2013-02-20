@@ -228,14 +228,15 @@ namespace nana{ namespace gui{
 					{
 						unsigned half = width / 2;
 						graph.rectangle(x + (width - half), y, half, height, color_x, true);
-						graph.shadow_rectangle(x, y, width - half, height, 0xFFFFFF, color_x, false);
+						width -= half;
 					}
 					else
 					{
 						unsigned half = height / 2;
 						graph.rectangle(x, y + height - half, width, half, color_x, true);
-						graph.shadow_rectangle(x, y, width, height - half, 0xFFFFFF, color_x, true); 
+						height -= half;
 					}
+					graph.shadow_rectangle(x, y, width, height, 0xFFFFFF, color_x, !vertical_);
 				}
 			}
 
@@ -248,30 +249,26 @@ namespace nana{ namespace gui{
 			{
 				if(metrics_.range == 0 || metrics_.peak <= metrics_.range) return;
 
-				unsigned scale = vertical_ ? graph.height() : graph.width();
+				unsigned pixels = vertical_ ? graph.height() : graph.width();
 
 				int pos = 0;
 				unsigned len = 0;
 
-				if(scale > fixedsize * 2)
+				if(pixels > fixedsize * 2)
 				{
-					scale -= (fixedsize * 2);
-					len = static_cast<unsigned>(scale * metrics_.range / metrics_.peak);
+					pixels -= (fixedsize * 2);
+					len = static_cast<unsigned>(pixels * metrics_.range / metrics_.peak);
 					
 					if(len < fixedsize)
 						len = fixedsize;
 
-					if(len)
+					if(metrics_.value)
 					{
-						if(metrics_.value == 0)
-							pos = 0;
-						else if(metrics_.value + metrics_.range >= metrics_.peak)
-						{
+						pos = static_cast<int>(pixels - len);
+						if(metrics_.value + metrics_.range >= metrics_.peak)
 							metrics_.value = metrics_.peak - metrics_.range;
-							pos = static_cast<int>(scale - len);
-						}
 						else
-							pos = static_cast<int>((metrics_.value * (scale - len)) /(metrics_.peak - metrics_.range));
+							pos = static_cast<int>((metrics_.value * pos) /(metrics_.peak - metrics_.range));
 					}
 				}
 

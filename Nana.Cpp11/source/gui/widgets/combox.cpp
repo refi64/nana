@@ -25,7 +25,7 @@ namespace nana{ namespace gui{
 			{
 			public:
 				typedef nana::paint::graphics & graph_reference;
-				typedef nana::gui::widget	& widget_reference;
+				typedef widget	& widget_reference;
 
 				enum class where_t{unknown, text, push_button};
 				enum class state_t{none, mouse_over, pressed};
@@ -455,7 +455,7 @@ namespace nana{ namespace gui{
 			private:
 				nana::gui::float_listbox::module_type module_;
 				mutable std::vector<nana::any*>	anyobj_;
-				nana::gui::widget * widget_;
+				widget * widget_;
 				nana::paint::graphics * graph_;
 
 				drawerbase::float_listbox::item_renderer* item_renderer_;

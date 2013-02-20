@@ -495,13 +495,13 @@ namespace gadget
 
 					switch(act)
 					{
-					case nana::gui::mouse_action::normal:
+					case gui::mouse_action::normal:
 						colormap = (checked ? &bmp_checked : &bmp_unchecked);
 						break;
-					case nana::gui::mouse_action::over:
+					case gui::mouse_action::over:
 						colormap = (checked ? &bmp_checked_highlight : &bmp_unchecked_highlight);
 						break;
-					case nana::gui::mouse_action::pressed:
+					case gui::mouse_action::pressed:
 						colormap = &bmp_checked_press;
 						break;
 					default:

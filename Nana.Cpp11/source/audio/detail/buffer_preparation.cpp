@@ -43,11 +43,8 @@ namespace nana{	namespace audio
 				if(thr_.joinable())
 					thr_.join();
 
-				typedef std::vector<meta*>::iterator iterator;
-				for(iterator i = prepared_.begin(); i != prepared_.end(); ++i)
-				{
-					delete [] reinterpret_cast<char*>(*i);
-				}
+				for(auto metaptr : prepared_)
+					delete [] reinterpret_cast<char*>(metaptr);
 			}
 
 			buffer_preparation::meta * buffer_preparation::read()
@@ -60,14 +57,14 @@ namespace nana{	namespace audio
 					//Before waiting, checks the thread whether it is finished
 					//it indicates the preparation is finished.
 					if(false == running_)
-						return 0;
+						return nullptr;
 
 					wait_for_buffer_ = true;
 					cond_buffer_.wait(lock);
 
 					//NO more buffers
 					if(0 == buffer_.size())
-						return 0;
+						return nullptr;
 				}
 				meta * m = buffer_.front();
 				buffer_.erase(buffer_.begin());

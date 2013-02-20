@@ -31,11 +31,11 @@ namespace nana
 			basic_synchronized(const Wait_Object_Type& wait_object)
 				:identifier_(&wait_object)
 			{
-				lock_type * lock = 0;
+				lock_type * lock = nullptr;
 				
 				{
 					auto_locker_type al(total_lock_);
-					container_type::iterator iter = locks_.find(identifier_);
+					auto iter = locks_.find(identifier_);
 					if(iter == locks_.end())
 					{
 						lock = new lock_type;	//throw std::bad_alloc???
@@ -53,7 +53,7 @@ namespace nana
 			~basic_synchronized()
 			{
 				auto_locker_type al(total_lock_);
-				container_type::iterator iter = locks_.find(identifier_);
+				auto iter = locks_.find(identifier_);
 
 				if(iter != locks_.end()) //??? is this if test useless?
 				{

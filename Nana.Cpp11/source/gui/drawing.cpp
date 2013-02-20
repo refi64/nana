@@ -20,10 +20,10 @@ namespace gui
 	//@brief:	This name is only visible for this compiling-unit
 	namespace restrict
 	{
-		typedef gui::detail::bedrock::core_window_t core_window_t;
-		extern gui::detail::bedrock& bedrock;
+		typedef detail::bedrock::core_window_t core_window_t;
+		extern detail::bedrock& bedrock;
 
-		inline nana::gui::detail::drawer& get_drawer(window wd)
+		inline detail::drawer& get_drawer(window wd)
 		{
 			return reinterpret_cast<core_window_t*>(wd)->drawer;
 		}

@@ -1028,12 +1028,12 @@ namespace nana{ namespace gui{
 
 		void menu::append(const nana::string& text, const menu::event_fn_t& f)
 		{
-			impl_->mbuilder.data().items.push_back(drawerbase::menu::menu_item_type(text, f));
+			impl_->mbuilder.data().items.emplace_back(text, f);
 		}
 
 		void menu::append_splitter()
 		{
-			impl_->mbuilder.data().items.push_back(drawerbase::menu::menu_item_type());
+			impl_->mbuilder.data().items.emplace_back();
 		}
 
 		void menu::clear()

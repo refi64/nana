@@ -83,7 +83,7 @@ namespace nana
 				template<typename Tag>
 				void set(Tag & tag, const std::string& name)
 				{
-					typename Tag::table_t::iterator i = tag.table.find(name);
+					auto i = tag.table.find(name);
 					if(i != tag.table.end())
 						tag.employee = &(i->second->refer());
 				}
@@ -99,7 +99,7 @@ namespace nana
 					{
 						typename Tag::cloneable_t * obj = typename Tag::template generator<ImageProcessor>::type().clone();
 						tag.table[name] = obj;
-						if(0 == tag.employee)
+						if(nullptr == tag.employee)
 							tag.employee = &(obj->refer());
 					}
 				}
@@ -107,17 +107,16 @@ namespace nana
 				template<typename Tag>
 				typename Tag::interface_t* _m_read(const Tag& tag, const std::string& name) const
 				{
-					typename Tag::table_t::const_iterator i = tag.table.find(name);
+					auto i = tag.table.find(name);
 					return (i != tag.table.end() ? &(i->second->refer()) : tag.employee);
 				}
 
 				template<typename Tag>
 				void _m_release(Tag & tag)
 				{
-					for(typename Tag::table_t::iterator i = tag.table.begin(); i != tag.table.end(); ++i)
-					{
-						i->second->self_delete();
-					}
+					for(auto m : tag.table)
+						m.second->self_delete();
+
 					tag.table.clear();
 				}
 			};

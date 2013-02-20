@@ -66,7 +66,7 @@ namespace gui
 				}
 			private:
 				nana::paint::graphics * graph_;
-				nana::gui::widget	*widget_;
+				widget	*widget_;
 				int text_off_;
 				bool selected_;
 				nana::string	text_;
@@ -77,7 +77,7 @@ namespace gui
 			{
 			public:
 				tooltip_window(window wd, const nana::point& pos, const nana::size& size)
-					: widget_object<category::root_tag, tlwnd_drawer>(wd, false, rectangle(pos, size), nana::gui::appear::bald<nana::gui::appear::floating>())
+					: widget_object<category::root_tag, tlwnd_drawer>(wd, false, rectangle(pos, size), appear::bald<appear::floating>())
 				{
 					API::take_active(handle(), false, nullptr);
 				}
@@ -179,7 +179,7 @@ namespace gui
 
 				trigger::node_type* trigger::insert(const nana::string& path, const nana::string& title, const nana::any& v)
 				{
-					node_type * x = attr_.tree_cont.insert(path, treebox_node_type(title, v));
+					auto x = attr_.tree_cont.insert(path, treebox_node_type(title, v));
 					if(x && attr_.auto_draw && _m_draw(true))
 						API::update_window(widget_->handle());
 					return x;
@@ -464,7 +464,7 @@ namespace gui
 
 					switch(ei.keyboard.key)
 					{
-					case nana::gui::keyboard::up:
+					case keyboard::up:
 						if(node_state_.selected && node_state_.selected != attr_.tree_cont.get_root()->child)
 						{
 							node_type * prev = node_state_.selected->owner;
@@ -490,7 +490,7 @@ namespace gui
 							redraw = true;
 						}
 						break;
-					case nana::gui::keyboard::down:
+					case keyboard::down:
 						if(node_state_.selected)
 						{
 							node_type * node = node_state_.selected;
@@ -521,7 +521,7 @@ namespace gui
 							}
 						}
 						break;
-					case nana::gui::keyboard::left:
+					case keyboard::left:
 						if(node_state_.selected)
 						{
 							if(node_state_.selected->value.second.expanded == false)
@@ -539,7 +539,7 @@ namespace gui
 							scroll = true;
 						}
 						break;
-					case nana::gui::keyboard::right:
+					case keyboard::right:
 						if(node_state_.selected)
 						{
 							if(node_state_.selected->value.second.expanded == false)
@@ -568,13 +568,12 @@ namespace gui
 
 				void trigger::key_char(graph_reference, const eventinfo& ei)
 				{
-					const node_type * node = _m_find_track_node(ei.keyboard.key);
+					auto node = const_cast<node_type*>(_m_find_track_node(ei.keyboard.key));
 
 					if(node && (node != node_state_.selected))
 					{
-						_m_set_selected(const_cast<node_type*>(node));
-
-						_m_adjust(const_cast<node_type*>(node), 4);
+						_m_set_selected(node);
+						_m_adjust(node, 4);
 						_m_draw(false);
 						API::lazy_refresh();
 					}
@@ -604,12 +603,12 @@ namespace gui
 						{
 							if('a' <= s[i] && s[i] <= 'z')
 							{
-								if(pattern[i] != s[i] - ('a' - 'A')) return false;
+								if(pattern[i] != s[i] - ('a' - 'A'))
+									return false;
 							}
 							else
 								if(pattern[i] != s[i]) return false;
 						}
-
 						return true;
 					}
 					return false;
@@ -629,19 +628,16 @@ namespace gui
 
 							if(node->value.second.expanded)
 							{
-								const trigger::node_type * t = find_track_child_node(node, end, pattern, len, finish);
-								if(t)
+								auto t = find_track_child_node(node, end, pattern, len, finish);
+								if(t || finish)
 									return t;
-								else if(finish)
-									return nullptr;
 							}
-
 							node = node->next;
 						}
 					}
 
 					finish = (node && (node == end));
-					return 0;
+					return nullptr;
 				}
 
 				const trigger::node_type* trigger::_m_find_track_node(nana::char_t key)
@@ -708,10 +704,7 @@ namespace gui
 
 							if(nullptr == node->next)
 							{
-								node = node->owner;
-								if(node)
-									node = node->next;
-
+								node = (node->owner ? node->owner->next : nullptr);
 								if(nullptr == node)
 								{
 									node = attr_.tree_cont.get_root()->child;
@@ -759,7 +752,6 @@ namespace gui
 					attr_.tree_cont.for_each<item_locator&>(node_desc_.first, nl);
 
 					bool redraw = false;
-
 					node_state_.event_node = nl.node();
 
 					if(nl.node() && (nl.what() != item_locator::object::none))
@@ -768,7 +760,6 @@ namespace gui
 						{
 							node_state_.highlight_object = nl.what();
 							node_state_.highlight = nl.node();
-
 							redraw = (node_state_.highlight_object != item_locator::object::none);
 						}
 					}
@@ -776,7 +767,7 @@ namespace gui
 					{
 						redraw = true;
 						node_state_.highlight_object = 0;
-						node_state_.highlight = 0;
+						node_state_.highlight = nullptr;
 						_m_close_tooltip_window();
 					}
 
@@ -802,11 +793,14 @@ namespace gui
 					{
 						node_state_.tooltip = new tooltip_window(widget_->handle(), pos, size);
 						node_state_.tooltip->show_text(node->value.second.text, node_desc_.text_offset + node_desc_.image_width, (node == node_state_.selected), this->_m_image(node));
+
 						node_state_.tooltip->make_event<events::mouse_leave>(*this, &trigger::_m_close_tooltip_window);
 						node_state_.tooltip->make_event<events::mouse_move>(*this, &trigger::_m_mouse_move_tooltip_window);
-						node_state_.tooltip->make_event<events::mouse_down>(*this, &trigger::_m_click_tooltip_window);
-						node_state_.tooltip->make_event<events::mouse_up>(*this, &trigger::_m_click_tooltip_window);
-						node_state_.tooltip->make_event<events::dbl_click>(*this, &trigger::_m_click_tooltip_window);
+
+						auto click_fn = nana::make_fun(*this, &trigger::_m_click_tooltip_window);
+						node_state_.tooltip->make_event<events::mouse_down>(click_fn);
+						node_state_.tooltip->make_event<events::mouse_up>(click_fn);
+						node_state_.tooltip->make_event<events::dbl_click>(click_fn);
 					}
 				}
 
@@ -822,7 +816,7 @@ namespace gui
 
 				void trigger::_m_mouse_move_tooltip_window()
 				{
-					nana::point pos = nana::gui::API::cursor_position();
+					nana::point pos = API::cursor_position();
 					API::calc_window_point(widget_->handle(), pos);
 
 					if(pos.x >= static_cast<int>(_m_visible_width()))
@@ -865,7 +859,7 @@ namespace gui
 							_m_show_scrollbar();
 
 						//draw background
-						this->graph_->rectangle(this->widget_->background(), true);
+						graph_->rectangle(widget_->background(), true);
 
 						_m_draw_tree();
 						return true;
@@ -882,7 +876,7 @@ namespace gui
 				{
 					if(graph_)
 					{
-						return this->graph_->width() - (shape_.scrollbar.empty() ? 0 : shape_.scrollbar.size().width);
+						return graph_->width() - (shape_.scrollbar.empty() ? 0 : shape_.scrollbar.size().width);
 					}
 					return 0;
 				}
@@ -909,9 +903,10 @@ namespace gui
 							using namespace nana::gui;
 							shape_.prev_first_value = 0;
 							shape_.scrollbar.create(*widget_, nana::rectangle(graph_->width() - 16, 0, 16, graph_->height()));
-							shape_.scrollbar.make_event<events::mouse_down>(*this, &trigger::_m_event_scrollbar);
-							shape_.scrollbar.make_event<events::mouse_move>(*this, &trigger::_m_event_scrollbar);
-							shape_.scrollbar.make_event<events::mouse_wheel>(*this, &trigger::_m_event_scrollbar);
+							auto scroll_fn = nana::make_fun(*this, &trigger::_m_event_scrollbar);
+							shape_.scrollbar.make_event<events::mouse_down>(scroll_fn);
+							shape_.scrollbar.make_event<events::mouse_move>(scroll_fn);
+							shape_.scrollbar.make_event<events::mouse_wheel>(scroll_fn);
 						}
 
 						shape_.scrollbar.amount(visual_items);
@@ -1062,7 +1057,7 @@ namespace gui
 							if(false == _m_adjust(adjust_.node ? adjust_.node : node_desc_.first, 1))
 							{
 								adjust_.offset_x_adjust = 0;
-								adjust_.node = 0;
+								adjust_.node = nullptr;
 								adjust_.scroll_timestamp = 0;
 								adjust_.timer.enable(false);
 								return;
@@ -1085,7 +1080,7 @@ namespace gui
 						}
 
 						_m_draw(false);
-						API::update_window(this->widget_->handle());
+						API::update_window(widget_->handle());
 
 						if(node_state_.tooltip)
 						{
@@ -1138,18 +1133,15 @@ namespace gui
 						if(pos_.y > static_cast<int>(drawer_.graph_->height()))
 							return 0;
 
-						if(node.child && node.value.second.expanded)
-							return 1;
-
-						return 2;
+						return (node.child && node.value.second.expanded ? 1 : 2);
 					}
 
-					unsigned trigger::item_renderer::width(const trigger::item_renderer::node_type &node) const
+					unsigned trigger::item_renderer::width(const node_type &node) const
 					{
 						return drawer_.node_width(&node);
 					}
 
-					void trigger::item_renderer::_m_draw_arrow(const trigger::item_renderer::node_type& node, unsigned item_height, bool expand)
+					void trigger::item_renderer::_m_draw_arrow(const node_type& node, unsigned item_height, bool expand)
 					{
 						using namespace nana::paint;
 						const unsigned color = (&node == drawer_.node_state_.highlight && drawer_.node_state_.highlight_object == item_locator::object::arrow ? 0x1CC4F7 : 0x0);
@@ -1166,7 +1158,7 @@ namespace gui
 													color, style, dir);
 					}
 
-					void trigger::item_renderer::_m_background(const trigger::item_renderer::node_type& node, bool has_child, bool expand)
+					void trigger::item_renderer::_m_background(const node_type& node, bool has_child, bool expand)
 					{
 						using namespace nana::paint;
 
@@ -1214,12 +1206,11 @@ namespace gui
 				//end class item_renderer
 
 				//class item_locator
-
 					trigger::item_locator::item_locator(trigger& drawer, int item_pos, int x, int y)
 						:drawer_(drawer), item_pos_(item_pos), item_ypos_(1), pos_(x, y), object_(object::none), node_(nullptr)
 					{}
 
-					int trigger::item_locator::operator()(trigger::tree_cont_type::node_type &node, int affect)
+					int trigger::item_locator::operator()(tree_cont_type::node_type &node, int affect)
 					{
 						switch(affect)
 						{
@@ -1246,9 +1237,7 @@ namespace gui
 						item_ypos_ += drawer_._m_node_height();
 
 						if(node.value.second.expanded && node.child)
-						{
 							return 1;
-						}
 
 						return 2;
 					}
@@ -1275,7 +1264,7 @@ namespace gui
 				//end class item_locator
 
 				//struct pred_allow_child
-					bool trigger::pred_allow_child::operator()(const trigger::tree_cont_type::node_type& node)
+					bool trigger::pred_allow_child::operator()(const tree_cont_type::node_type& node)
 					{
 						return node.value.second.expanded;
 					}

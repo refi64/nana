@@ -80,7 +80,7 @@ namespace nana{ namespace gui{
 
 			template<bool Vertical>
 			class trigger
-				: public nana::gui::drawer_trigger
+				: public drawer_trigger
 			{
 			public:
 				typedef metrics_type::size_type size_type;
@@ -254,7 +254,7 @@ namespace nana{ namespace gui{
 						{
 						case buttons::first:
 						case buttons::second:
-							this->make_step(metrics_.what == buttons::second, 1);
+							make_step(metrics_.what == buttons::second, 1);
 							timer_.interval(1000);
 							timer_.enable(true);
 							break;
@@ -303,7 +303,7 @@ namespace nana{ namespace gui{
 
 				void mouse_wheel(graph_reference graph, const eventinfo& ei)
 				{
-					if(this->make_step(ei.wheel.upwards == false, 3))
+					if(make_step(ei.wheel.upwards == false, 3))
 					{
 						drawer_.draw(graph, metrics_.what);
 						API::lazy_refresh();
@@ -312,12 +312,12 @@ namespace nana{ namespace gui{
 			private:
 				void _m_tick()
 				{
-					this->make_step(metrics_.what == buttons::second, 1);
+					make_step(metrics_.what == buttons::second, 1);
 					API::refresh_window(widget_->handle());
 					timer_.interval(100);
 				}
 			private:
-				nana::gui::widget * widget_;
+				widget * widget_;
 				nana::paint::graphics * graph_;
 				metrics_type metrics_;
 				drawer	drawer_;

@@ -108,7 +108,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 				API::lazy_refresh();
 		}
 
-		void drawer::mouse_up(graph_reference graph, const nana::gui::eventinfo& ei)
+		void drawer::mouse_up(graph_reference graph, const eventinfo& ei)
 		{
 			if(editor_->mouse_up(ei.mouse.left_button, ei.mouse.x, ei.mouse.y))
 				API::lazy_refresh();
@@ -129,7 +129,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 				API::lazy_refresh();
 		}
 
-		void drawer::mouse_leave(graph_reference, const nana::gui::eventinfo&)
+		void drawer::mouse_leave(graph_reference, const eventinfo&)
 		{
 			if(editor_->mouse_enter(false))
 				API::lazy_refresh();

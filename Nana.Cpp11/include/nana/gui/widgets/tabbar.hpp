@@ -112,7 +112,7 @@ namespace nana{ namespace gui{
 			class layouter;
 
 			class trigger
-				: public nana::gui::drawer_trigger
+				: public drawer_trigger
 			{
 			public:
 				enum toolbox_button_t{ButtonAdd, ButtonScroll, ButtonList, ButtonClose};
@@ -129,7 +129,7 @@ namespace nana{ namespace gui{
 				layouter& layouter_object();
 				std::size_t length() const;
 				bool close_fly(bool);
-				void relate(size_t, nana::gui::window);
+				void relate(size_t, window);
 				void tab_color(std::size_t i, bool is_bgcolor, nana::color_t);
 				void tab_image(size_t, const nana::paint::image&);
 				void text(std::size_t i, const nana::string&);
@@ -268,10 +268,10 @@ namespace nana{ namespace gui{
 		{
 			drawer_trigger_t & t = get_drawer_trigger();
 			t.push_back(text, value_type());
-			nana::gui::API::update_window(*this);
+			API::update_window(*this);
 		}
 
-		void relate(std::size_t pos, nana::gui::window wd)
+		void relate(std::size_t pos, window wd)
 		{
 			get_drawer_trigger().relate(pos, wd);
 		}
@@ -311,7 +311,7 @@ namespace nana{ namespace gui{
 				redraw |= tg.toolbox_button(tg.ButtonClose, enable);
 
 			if(redraw)
-				nana::gui::API::refresh_window(this->handle());
+				API::refresh_window(this->handle());
 		}
 
 		void text(std::size_t pos, const nana::string& str)

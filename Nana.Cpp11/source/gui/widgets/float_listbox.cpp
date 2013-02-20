@@ -121,7 +121,7 @@ namespace nana{ namespace gui{
 			class drawer_impl
 			{
 			public:
-				typedef nana::gui::widget& widget_reference;
+				typedef widget& widget_reference;
 				typedef nana::paint::graphics& graph_reference;
 
 				static const unsigned npos = static_cast<unsigned>(-1);

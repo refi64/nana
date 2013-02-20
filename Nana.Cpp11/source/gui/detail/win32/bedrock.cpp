@@ -152,7 +152,7 @@ namespace detail
 			: event_pump_ref_count(0), window_count(0), event_window(nullptr)
 		{
 			cursor.window = nullptr;
-			cursor.predef_cursor = nana::gui::cursor::arrow;
+			cursor.predef_cursor = cursor::arrow;
 		}
 	};
 
@@ -634,7 +634,7 @@ namespace detail
 		if(trivial_message(root_window, message, wParam, lParam, window_proc_value))
 			return window_proc_value;
 
-		static auto& bedrock = nana::gui::detail::bedrock::instance();
+		static auto& bedrock = bedrock::instance();
 		static restrict::TRACKMOUSEEVENT track = {sizeof track, 0x00000002};
 
 		auto native_window = reinterpret_cast<native_window_type>(root_window);
@@ -1109,7 +1109,7 @@ namespace detail
 
 					if(msgwnd)
 					{
-						if((wParam == 9) && (false == (msgwnd->flags.tab & nana::gui::detail::tab_type::eating))) //Tab
+						if((wParam == 9) && (false == (msgwnd->flags.tab & tab_type::eating))) //Tab
 						{
 							auto the_next = bedrock.wd_manager.tabstop_next(msgwnd);
 							if(the_next)
@@ -1141,9 +1141,9 @@ namespace detail
 						ei.keyboard.ignore = false;
 
 						ei.identifier = event_tag::key_char;
-						ei.window = reinterpret_cast<nana::gui::window>(msgwnd);
+						ei.window = reinterpret_cast<window>(msgwnd);
 
-						bedrock.evt_manager.answer(event_tag::key_char, reinterpret_cast<nana::gui::window>(msgwnd), ei, event_manager::event_kind::user);
+						bedrock.evt_manager.answer(event_tag::key_char, reinterpret_cast<window>(msgwnd), ei, event_manager::event_kind::user);
 
 						if((ei.keyboard.ignore == false) && bedrock.wd_manager.available(msgwnd))
 							bedrock.fire_event_for_drawer(event_tag::key_char, msgwnd, ei, &context);
@@ -1287,7 +1287,7 @@ namespace detail
 		}
 	}
 
-	native_window_type bedrock::get_menu(nana::gui::native_window_type owner, bool is_keyboard_condition)
+	native_window_type bedrock::get_menu(native_window_type owner, bool is_keyboard_condition)
 	{
 		if(	(impl_->menu.owner == nullptr) ||
 			(owner && (impl_->menu.owner == owner))
@@ -1323,7 +1323,7 @@ namespace detail
 		}
 	}
 
-	void bedrock::get_key_state(nana::gui::detail::tag_keyboard& kb)
+	void bedrock::get_key_state(tag_keyboard& kb)
 	{
 		kb.ctrl = (0 != (::GetKeyState(VK_CONTROL) & 0x80));
 	}

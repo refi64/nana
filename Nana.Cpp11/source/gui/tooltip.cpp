@@ -18,7 +18,7 @@ namespace nana{ namespace gui{
 		namespace tooltip
 		{
 			class drawer
-				: public nana::gui::drawer_trigger
+				: public drawer_trigger
 			{
 			public:
 				void set_tooltip_text(const nana::string& text)
@@ -26,7 +26,6 @@ namespace nana{ namespace gui{
 					text_ = text;
 
 					nana::size txt_s;
-
 					nana::string::size_type beg = 0;
 					nana::string::size_type off = text.find('\n', beg);
 
@@ -35,16 +34,15 @@ namespace nana{ namespace gui{
 						nana::size s = graph_->text_extent_size(text_.c_str() + beg, off - beg);
 						if(s.width > txt_s.width)
 							txt_s.width = s.width;
-						txt_s.height += s.height + 2;
+						txt_s.height += (s.height + 2);
 						beg = off + 1;
 					}
 
 					nana::size s = graph_->text_extent_size(text_.c_str() + beg);
 					if(s.width > txt_s.width)
 						txt_s.width = s.width;
-					txt_s.height += s.height;
 
-					widget_->size(txt_s.width + 10, txt_s.height + 10);
+					widget_->size(txt_s.width + 10, txt_s.height + s.height + 10);
 				}
 			private:
 				void bind_window(widget_reference widget)
@@ -93,7 +91,7 @@ namespace nana{ namespace gui{
 				uiform()
 					:base_type(nana::rectangle(), appear::bald<appear::floating>())
 				{
-					API::take_active(this->handle(), false, 0);
+					API::take_active(this->handle(), false, nullptr);
 					timer_.interval(500);
 					timer_.make_tick(std::bind(&uiform::_m_tick, this));
 				}
@@ -122,7 +120,6 @@ namespace nana{ namespace gui{
 					:window_(nullptr), count_ref_(0)
 				{}
 			public:
-
 				static std::recursive_mutex& mutex()
 				{
 					static std::recursive_mutex rcs_mutex;
@@ -135,9 +132,9 @@ namespace nana{ namespace gui{
 					if(destroy)
 					{
 						delete ptr;
-						ptr = 0;
+						ptr = nullptr;
 					}
-					else if(ptr == 0)
+					else if(nullptr == ptr)
 					{
 						ptr = new controller;
 					}
@@ -156,13 +153,12 @@ namespace nana{ namespace gui{
 
 				void set(window wd, const nana::string& str)
 				{
-					pair_t * p = _m_get(wd);
-					p->second = str;
+					_m_get(wd)->second = str;
 				}
 
 				void show(int x, int y, const nana::string& text)
 				{
-					if(0 == window_)
+					if(nullptr == window_)
 						window_ = new uiform;
 
 					window_->set_tooltip_text(text);
@@ -182,7 +178,7 @@ namespace nana{ namespace gui{
 				void close()
 				{
 					delete window_;
-					window_ = 0;
+					window_ = nullptr;
 				}
 			private:
 				void _m_enter(const eventinfo& ei)
@@ -198,7 +194,7 @@ namespace nana{ namespace gui{
 				void _m_leave(const eventinfo& ei)
 				{
 					delete window_;
-					window_ = 0;
+					window_ = nullptr;
 				}
 
 				void _m_destroy(const eventinfo& ei)
@@ -213,7 +209,7 @@ namespace nana{ namespace gui{
 					}
 				}
 			private:
-				pair_t* _m_get(nana::gui::window wd)
+				pair_t* _m_get(window wd)
 				{
 					for(auto pr : cont_)
 					{
@@ -222,13 +218,13 @@ namespace nana{ namespace gui{
 					}
 
 					API::make_event<events::mouse_enter>(wd, std::bind(&self_type::_m_enter, this, std::placeholders::_1));
-					API::make_event<events::mouse_leave>(wd, std::bind(&self_type::_m_leave, this, std::placeholders::_1));
-					API::make_event<events::mouse_down>(wd, std::bind(&self_type::_m_leave, this, std::placeholders::_1));
+					auto leave_fn = std::bind(&self_type::_m_leave, this, std::placeholders::_1);
+					API::make_event<events::mouse_leave>(wd, leave_fn);
+					API::make_event<events::mouse_down>(wd, leave_fn);
 					API::make_event<events::destroy>(wd, std::bind(&self_type::_m_destroy, this, std::placeholders::_1));
 
 					pair_t * newp = new pair_t(wd, nana::string());
 					cont_.push_back(newp);
-
 					return newp;
 				}
 			private:
@@ -282,7 +278,7 @@ namespace nana{ namespace gui{
 			std::lock_guard<decltype(ctrl::mutex())> lock(ctrl::mutex());
 			ctrl::object()->close();
 		}
-	//};//class tooltip
+	//end class tooltip
 
 }//namespace gui
 }//namespace nana

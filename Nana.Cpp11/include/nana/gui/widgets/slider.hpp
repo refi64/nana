@@ -67,7 +67,7 @@ namespace nana{ namespace gui{
 			class controller;
 
 			class trigger
-				: public nana::gui::drawer_trigger
+				: public drawer_trigger
 			{
 			public:
 				typedef controller controller_t;

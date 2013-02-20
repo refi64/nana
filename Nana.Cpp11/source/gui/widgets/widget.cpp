@@ -149,7 +149,7 @@ namespace gui
 			return (handle()? dummy_bool_type(1):0);
 		}
 
-		widget::operator nana::gui::window() const
+		widget::operator window() const
 		{
 			return handle();
 		}

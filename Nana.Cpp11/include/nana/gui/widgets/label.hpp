@@ -26,7 +26,7 @@ namespace nana{ namespace gui{
 
 			//class trigger
 			//@brief:	draw the label
-			class trigger: public nana::gui::drawer_trigger
+			class trigger: public drawer_trigger
 			{
 				struct impl_t;
 			public:

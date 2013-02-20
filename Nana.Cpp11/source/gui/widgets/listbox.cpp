@@ -173,7 +173,6 @@ namespace nana{ namespace gui{
 						else if(m.visible)
 							x += m.pixels;
 					}
-
 					return x;
 				}
 
@@ -230,17 +229,9 @@ namespace nana{ namespace gui{
 							}
 						}
 
-						for(auto i = cont_.begin();i != cont_.end();  ++i)
-						{
-							if(to == i->index)
-							{
-								if(front)
-									cont_.insert(i, from);
-								else
-									cont_.insert(++i, from);
-								break;
-							}
-						}
+						auto i = std::find_if(cont_.begin(), cont_.end(), [to](const container::value_type& m)->bool{ return (to == m.index); } );
+						if(i != cont_.end())
+							cont_.insert((front ? i : ++i), from);
 					}
 				}
 			private:
@@ -2064,14 +2055,15 @@ namespace nana{ namespace gui{
 
 				void trigger::_m_draw_border()
 				{
-					nana::paint::graphics * graph = essence_->graph;
+					auto & graph = *essence_->graph;
+					auto size = graph.size();
 					//Draw Border
-					graph->rectangle(0x9CB6C5, false);
-					graph->line(1, 1, 1, graph->height() - 2, 0xFFFFFF);
-					graph->line(graph->width() - 2, 1, graph->width() - 2, graph->height() - 2, 0xFFFFFF);
+					graph.rectangle(0x9CB6C5, false);
+					graph.line(1, 1, 1, size.height - 2, 0xFFFFFF);
+					graph.line(size.width - 2, 1, size.width - 2, size.height - 2, 0xFFFFFF);
 
 					if((essence_->scroll.h.empty() == false) && (essence_->scroll.v.empty() == false))
-						graph->rectangle(graph->width() - 1 - essence_->scroll.scale, graph->height() - 1 - essence_->scroll.scale, essence_->scroll.scale, essence_->scroll.scale, nana::gui::color::button_face, true);
+						graph.rectangle(size.width - 1 - essence_->scroll.scale, size.height - 1 - essence_->scroll.scale, essence_->scroll.scale, essence_->scroll.scale, nana::gui::color::button_face, true);
 				}
 
 				void trigger::bind_window(widget_reference wd)

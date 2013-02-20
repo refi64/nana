@@ -191,10 +191,7 @@ namespace detail
 		::LOGFONT logfont;
 		memset(&logfont, 0, sizeof logfont);
 
-		if(0 == name || 0 == *name)
-			strcpy(logfont.lfFaceName, def_font_ptr_->name.c_str());
-		else
-			strcpy(logfont.lfFaceName, name);
+		strcpy(logfont.lfFaceName, (name && *name ? name : def_font_ptr_->name.c_str()));
 
 		logfont.lfCharSet = DEFAULT_CHARSET;
 		HDC hdc = ::GetDC(0);
@@ -227,11 +224,11 @@ namespace detail
 
 	//event_register
 	//@brief: some event is needed to register for system.
-	void platform_spec::event_register_filter(nana::gui::native_window_type wd, unsigned eventid)
+	void platform_spec::event_register_filter(gui::native_window_type wd, unsigned eventid)
 	{
 		switch(eventid)
 		{
-		case nana::gui::detail::event_tag::mouse_drop:
+		case gui::detail::event_tag::mouse_drop:
 			::DragAcceptFiles(reinterpret_cast<HWND>(wd), true);
 			break;
 		}
@@ -243,12 +240,12 @@ namespace detail
 		return object;
 	}
 
-	void platform_spec::keep_window_icon(nana::gui::native_window_type wd, const nana::paint::image& img)
+	void platform_spec::keep_window_icon(gui::native_window_type wd, const paint::image& img)
 	{
 		iconbase_[wd] = img;
 	}
 
-	void platform_spec::release_window_icon(nana::gui::native_window_type wd)
+	void platform_spec::release_window_icon(gui::native_window_type wd)
 	{
 		iconbase_.erase(wd);
 	}

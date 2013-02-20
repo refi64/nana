@@ -421,12 +421,12 @@ namespace nana{
 			//event, when the client receives the event, the specified window has been already
 			//destroyed. This is a feature which is different from Windows. So the following
 			//works should be handled before calling XDestroyWindow.
-			nana::gui::detail::bedrock & bedrock = nana::gui::detail::bedrock::instance();
+			auto & bedrock = bedrock::instance();
 			if(wd == bedrock.get_menu())
 				bedrock.empty_menu();
 
 			restrict::spec.remove(wd);
-			nana::gui::detail::bedrock::core_window_t * iwd = bedrock.wd_manager.root(wd);
+			auto iwd = bedrock.wd_manager.root(wd);
 			if(iwd)
 			{
 				bedrock.wd_manager.destroy(iwd);

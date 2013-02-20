@@ -82,7 +82,7 @@ namespace nana{	namespace paint
 	bool pixel_buffer::open(drawable_type drawable)
 	{
 		nana::size sz = nana::paint::detail::drawable_size(drawable);
-		if(0 == sz.width || 0 == sz.height) return false;
+		if(sz.is_zero()) return false;
 
 		auto * sp = storage_.get();
 		if(nullptr == sp || storage_->pixel_size != sz)
@@ -143,7 +143,7 @@ namespace nana{	namespace paint
 		if(want_r.height == 0) want_r.height = sz.height - want_r.y;
 
 		nana::rectangle r;
-		if(false == nana::gui::overlap(nana::rectangle(0, 0, sz.width, sz.height), want_r, r))
+		if(false == gui::overlap(nana::rectangle(0, 0, sz.width, sz.height), want_r, r))
 			return false;
 #if defined(NANA_WINDOWS)
 		BITMAPINFO bmpinfo;
@@ -489,7 +489,7 @@ namespace nana{	namespace paint
 		}
 	}
 
-	void pixel_buffer::paste(nana::gui::native_window_type wd, int x, int y) const
+	void pixel_buffer::paste(gui::native_window_type wd, int x, int y) const
 	{
 		pixel_buffer_storage * sp = storage_.get();
 		if(nullptr == wd || nullptr == sp)	return;
@@ -549,7 +549,7 @@ namespace nana{	namespace paint
 		//Test if the line intersects the rectangle, and retrive the two points that
 		//are always in the area of rectangle, good_pos_beg is left point, good_pos_end is right.
 		nana::point good_pos_beg, good_pos_end;
-		if(nana::gui::intersection(nana::rectangle(sp->pixel_size), pos_beg, pos_end, good_pos_beg, good_pos_end))
+		if(gui::intersection(nana::rectangle(sp->pixel_size), pos_beg, pos_end, good_pos_beg, good_pos_end))
 			(*(sp->img_pro.line))->process(*this, good_pos_beg, good_pos_end, color, fade_rate);
 	}
 
@@ -733,7 +733,7 @@ namespace nana{	namespace paint
 		if(nullptr == sp) return;
 
 		nana::rectangle rct;
-		if(false == nana::gui::overlap(nana::rectangle(sp->pixel_size), draw_rct, rct))
+		if(false == gui::overlap(nana::rectangle(sp->pixel_size), draw_rct, rct))
 			return;
 
 		int deltapx = int(vertical ? rct.height : rct.width);
@@ -813,7 +813,7 @@ namespace nana{	namespace paint
 		if(nullptr == sp) return;
 
 		nana::rectangle good_src_r, good_dst_r;
-		if(nana::gui::overlap(src_r, sp->pixel_size, r, paint::detail::drawable_size(drawable), good_src_r, good_dst_r))
+		if(gui::overlap(src_r, sp->pixel_size, r, paint::detail::drawable_size(drawable), good_src_r, good_dst_r))
 			(*(sp->img_pro.stretch))->process(*this, good_src_r, drawable, good_dst_r);
 	}
 
@@ -840,7 +840,7 @@ namespace nana{	namespace paint
 		nana::rectangle s_r(s_pos.x, s_pos.y, r_dst.width, r_dst.height);
 
 		nana::rectangle s_good_r, d_good_r;
-		if(nana::gui::overlap(s_r, sp->pixel_size, r_dst, paint::detail::drawable_size(dw_dst), s_good_r, d_good_r))
+		if(gui::overlap(s_r, sp->pixel_size, r_dst, paint::detail::drawable_size(dw_dst), s_good_r, d_good_r))
 			(*(sp->img_pro.blend))->process(dw_dst, d_good_r, *this, nana::point(s_good_r.x, s_good_r.y), fade_rate);
 	}
 }//end namespace paint

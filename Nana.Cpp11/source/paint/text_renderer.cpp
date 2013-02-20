@@ -154,7 +154,7 @@ namespace nana
 						unsigned line_pixels = 0;
 						int xpos = x;
 						int orig_top = top;
-						std::vector<nana::size>::iterator i_ts_keeper = ts_keeper.begin();
+						auto i_ts_keeper = ts_keeper.begin();
 						for(auto & i : reordered)
 						{
 							if(line_pixels < i_ts_keeper->height)
@@ -261,7 +261,7 @@ namespace nana
 					else
 					{
 						int xpos = x;
-						std::vector<nana::size>::iterator i_ts_keeper = ts_keeper.begin(); 
+						auto i_ts_keeper = ts_keeper.begin(); 
 						for(auto & i : reordered)
 						{
 							std::size_t len = i.end - i.begin;
@@ -343,7 +343,7 @@ namespace nana
 						str_w += ts.width;
 					}
 
-					std::vector<nana::size>::iterator i_ts_keeper = ts_keeper.begin();
+					auto i_ts_keeper = ts_keeper.begin();
 					//Test whether the text needs the new line.
 					if(x + static_cast<int>(str_w) > endpos)
 					{

@@ -36,7 +36,7 @@ namespace skeletons
 
 		textbase()
 		{
-			text_cont_.push_back(string_type());
+			text_cont_.emplace_back();
 		}
 
 		bool empty() const
@@ -304,7 +304,7 @@ namespace skeletons
 		{
 			if(text_cont_.size() <= pos)
 			{
-				text_cont_.push_back(text);
+				text_cont_.emplace_back(text);
 				pos = text_cont_.size() - 1;
 			}
 			else
@@ -326,11 +326,11 @@ namespace skeletons
 			}
 			else
 			{
-				text_cont_.push_back(string_type(str));
+				text_cont_.emplace_back(str);
 				line = text_cont_.size() - 1;
 			}
 
-			this->_m_make_max(line);
+			_m_make_max(line);
 		}
 
 		void insert(size_type line, size_type pos, char_type ch)
@@ -346,11 +346,11 @@ namespace skeletons
 			}
 			else
 			{
-				text_cont_.push_back(string_type(1, ch));
+				text_cont_.emplace_back(1, ch);
 				line = text_cont_.size() - 1;
 			}
 
-			this->_m_make_max(line);
+			_m_make_max(line);
 		}
 
 		void insertln(size_type line, const string_type& str)
@@ -400,7 +400,7 @@ namespace skeletons
 			if(text_cont_.size() && (pos < text_cont_.size() - 1))
 			{
 				text_cont_[pos] += text_cont_[pos + 1];
-				text_cont_.erase(text_cont_.begin() + pos + 1);
+				text_cont_.erase(text_cont_.begin() + (pos + 1));
 				_m_make_max(pos);
 				if(pos < attr_max_.line)
 					--attr_max_.line;

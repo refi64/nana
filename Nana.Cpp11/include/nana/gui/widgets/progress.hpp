@@ -43,7 +43,7 @@ namespace gui
 				bool _m_check_changing(unsigned) const;
 			private:
 				static const unsigned border = 2;
-				nana::gui::widget * widget_;
+				widget * widget_;
 				nana::paint::graphics* graph_;
 				unsigned draw_width_;
 				bool has_value_;

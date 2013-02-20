@@ -103,9 +103,9 @@ namespace detail
 		{
 			eventinfo ei;
 			ei.elapse.timer = object;
-			nana::gui::detail::bedrock::instance().evt_manager.answer(
+			bedrock::instance().evt_manager.answer(
 				detail::event_tag::elapse,
-				reinterpret_cast<nana::gui::window>(object), ei,
+				reinterpret_cast<window>(object), ei,
 				event_manager::event_kind::user);
 		}
 

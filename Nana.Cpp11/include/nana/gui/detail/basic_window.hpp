@@ -101,7 +101,7 @@ namespace detail
 			if(parent)
 			{
 				_m_init_pos_and_size(parent, r);
-				this->_m_initialize(parent);
+				_m_initialize(parent);
 			}
 		}
 

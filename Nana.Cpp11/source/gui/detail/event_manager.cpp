@@ -127,7 +127,7 @@ namespace detail
 		//delete a handler
 		void event_manager::umake(event_handle eh)
 		{
-			if(0 == eh) return;
+			if(nullptr == eh) return;
 			
 			abstract_handler* abs_handler = reinterpret_cast<abstract_handler*>(eh);
 

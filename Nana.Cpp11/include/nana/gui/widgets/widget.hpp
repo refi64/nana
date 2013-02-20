@@ -97,7 +97,7 @@ namespace gui
 
 		void umake_event(event_handle eh) const;
 		operator dummy_bool_type() const;
-		operator nana::gui::window() const;
+		operator window() const;
 	protected:
 		//protected members, a derived class must call this implementation if it overrides an implementation
 		virtual void _m_complete_creation();
@@ -152,9 +152,7 @@ namespace gui
 			if(wd && this->empty())
 			{
 				handle_ = API::dev::create_widget(wd, r);
-				
 				API::dev::attach_signal(handle_, *this, &widget_object::signal);
-
 				static_cast<drawer_trigger&>(trigger_).bind_window(*this);
 				API::dev::attach_drawer(handle_, trigger_);
 				if(visible)

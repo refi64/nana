@@ -27,7 +27,7 @@ namespace gui
 			class renderer_interface
 			{
 			public:
-				typedef nana::gui::widget	&	widget_reference;
+				typedef widget	&	widget_reference;
 				typedef nana::paint::graphics&	graph_reference;
 
 				virtual ~renderer_interface(){}
@@ -665,7 +665,7 @@ namespace gui
 						{
 							for(auto & r : section->areas)
 							{
-								if(nana::gui::is_hit_the_rectangle(r, x, y))
+								if(is_hit_the_rectangle(r, x, y))
 								{
 									API::window_cursor(trace_.wd, cursor::hand);
 									trace_.url = section->url;
@@ -895,7 +895,7 @@ namespace gui
 			//@brief: Draw the button
 				struct trigger::impl_t
 				{
-					nana::gui::widget * wd;
+					widget * wd;
 					nana::paint::graphics * graph;
 					renderer_interface * renderer;
 
@@ -914,7 +914,7 @@ namespace gui
 					{
 						if((enabled != format_state_) && wd)
 						{
-							nana::gui::internal_scope_guard isg;
+							internal_scope_guard isg;
 							renderer_interface * rnd_if = renderer;
 							if(enabled)
 							{

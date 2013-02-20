@@ -665,7 +665,7 @@ namespace gui
 							std::vector<nana::rectangle>::iterator i = (*u)->areas.begin(), end = (*u)->areas.end();
 							for(; i != end; ++i)
 							{
-								if(nana::gui::is_hit_the_rectangle(*i, x, y))
+								if(is_hit_the_rectangle(*i, x, y))
 								{
 									API::window_cursor(trace_.wd, cursor::hand);
 									
@@ -914,7 +914,7 @@ namespace gui
 					{
 						if((enabled != format_state_) && wd)
 						{
-							nana::gui::internal_scope_guard isg;
+							internal_scope_guard isg;
 							renderer_interface * rnd_if = renderer;
 							if(enabled)
 							{

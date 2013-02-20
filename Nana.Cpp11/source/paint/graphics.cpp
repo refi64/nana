@@ -251,7 +251,7 @@ namespace paint
 		{
 			if(handle_ == nullptr || size_ != nana::size(width, height))
 			{
-				nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
+				auto & spec = nana::detail::platform_spec::instance();
 
 				//The object will be delete while dwptr_ is performing a release.
 				drawable_type dw = new nana::detail::drawable_impl_type;
@@ -834,7 +834,7 @@ namespace paint
 			{
 				nana::rectangle s_r(s_pos.x, s_pos.y, r.width, r.height);
 				nana::rectangle s_good_r, d_good_r;
-				if(nana::gui::overlap(s_r, size_, r, dst.size_, s_good_r, d_good_r) == false)
+				if(gui::overlap(s_r, size_, r, dst.size_, s_good_r, d_good_r) == false)
 					return;
 
 				pixel_buffer pixbuf(handle_, s_good_r.y, s_good_r.height);

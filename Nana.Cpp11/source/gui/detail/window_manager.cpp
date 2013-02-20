@@ -53,7 +53,7 @@ namespace detail
 
 
 	//class shortkey_container::
-		bool shortkey_container::make(nana::gui::window wd, unsigned long key)
+		bool shortkey_container::make(window wd, unsigned long key)
 		{
 			if(wd == nullptr) return false;
 			if(key < 0x61) key += (0x61 - 0x41);
@@ -266,7 +266,7 @@ namespace detail
 			switch(evtid)
 			{
 			case events::mouse_drop::identifier:
-				wd->flags.dropable = (is_make ? true : (bedrock::instance().evt_manager.the_number_of_handles(reinterpret_cast<nana::gui::window>(wd), evtid, false) != 0));
+				wd->flags.dropable = (is_make ? true : (bedrock::instance().evt_manager.the_number_of_handles(reinterpret_cast<window>(wd), evtid, false) != 0));
 				break;
 			}
 		}
@@ -1029,9 +1029,9 @@ namespace detail
 					{
 						wd->flags.capture = true;
 						native_interface::capture_window(wd->root, value);
-						core_window_t* prev = attr_.capture.window;
+						auto prev = attr_.capture.window;
 						if(prev && prev != wd)
-							attr_.capture.history.push_back(std::make_pair(prev, attr_.capture.ignore_children));
+							attr_.capture.history.emplace_back(prev, attr_.capture.ignore_children);
 
 						attr_.capture.window = wd;
 						attr_.capture.ignore_children = true;
@@ -1058,12 +1058,12 @@ namespace detail
 						attr_.capture.inside = _m_effective(last.first, pos.x, pos.y);
 					}
 					else
-						attr_.capture.window = 0;
+						attr_.capture.window = nullptr;
 				}
 				else
-					attr_.capture.window = 0;
+					attr_.capture.window = nullptr;
 
-				if(wd && (0 == attr_.capture.window))
+				if(wd && (nullptr == attr_.capture.window))
 					native_interface::capture_window(wd->root, false);
 			}
 			else
@@ -1148,11 +1148,11 @@ namespace detail
 					if(i != end)
 					{
 						++i;
-						core_window_t* ts = (i != end? (*i) : (*(container.begin())));
+						core_window_t* ts = (i != end? (*i) : container.front());
 						return (ts != wd ? ts : 0);
 					}
 					else
-						return *(container.begin());
+						return container.front();
 				}
 			}
 			return nullptr;

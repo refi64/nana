@@ -107,7 +107,7 @@ namespace nana{	namespace gui{	namespace widgets
 			bool mouse_up(bool left_button, int screen_x, int screen_y);
 		private:
 			bool _m_scroll_text(bool vertical);
-			void _m_on_scroll(const nana::gui::eventinfo& ei);
+			void _m_on_scroll(const eventinfo& ei);
 			void _m_scrollbar();
 			nana::size _m_text_area() const;
 			void _m_get_scrollbar_size();

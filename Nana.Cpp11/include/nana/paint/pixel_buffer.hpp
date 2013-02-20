@@ -56,7 +56,7 @@ namespace nana{	namespace paint
 
 		void paste(drawable_type, int x, int y) const;
 		void paste(const nana::rectangle& src_r, drawable_type, int x, int y) const;
-		void paste(nana::gui::native_window_type, int x, int y) const;
+		void paste(gui::native_window_type, int x, int y) const;
 		void stretch(const std::string& name);
 		void stretch(const nana::rectangle& src_r, drawable_type, const nana::rectangle& r) const;
 		void blend(const std::string& name);

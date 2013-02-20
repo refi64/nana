@@ -128,9 +128,8 @@ namespace detail
 		if(fade_rate <= 0) return;
 		if(fade_rate > 1) fade_rate = 1;
 
-		nana::size sz = drawable_size(dw);
 		nana::rectangle r;
-		if(false == nana::gui::overlap(nana::rectangle(0, 0, sz.width, sz.height), nana::rectangle(x, y, width, height), r))
+		if(false == gui::overlap(drawable_size(dw), nana::rectangle(x, y, width, height), r))
 			return;
 
 		unsigned red = static_cast<unsigned>((color & 0xFF0000) * fade_rate);
@@ -157,12 +156,11 @@ namespace detail
 
 	nana::size raw_text_extent_size(drawable_type dw, const nana::char_t* text, std::size_t len)
 	{
-		if(0 == dw || 0 == text || 0 == len) return nana::size(0, 0);
+		if(nullptr == dw || nullptr == text || 0 == len) return nana::size();
 #if defined(NANA_WINDOWS)
 		::SIZE size;
 		if(::GetTextExtentPoint32(dw->context, text, static_cast<int>(len), &size))
 			return nana::size(size.cx, size.cy);
-		return nana::size();
 #elif defined(NANA_X11)
 	#if defined(NANA_UNICODE)
 		std::string utf8str = nana::charset(nana::string(text, len));
@@ -178,11 +176,12 @@ namespace detail
 		return nana::size(logic.width, logic.height);
 	#endif
 #endif
+		return nana::size();
 	}
 
 	nana::size text_extent_size(drawable_type dw, const nana::char_t * text, std::size_t len)
 	{
-		if(0 == dw || 0 == text || 0 == len) return nana::size(0, 0);
+		if(nullptr == dw || nullptr == text || 0 == len) return nana::size();
 		nana::size extents;
 #if defined(NANA_WINDOWS)
 		::SIZE size;

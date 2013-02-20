@@ -179,7 +179,7 @@ namespace gui
 
 			~handle_manager()
 			{
-				this->delete_trash(0);
+				delete_trash(0);
 			}
 
 			void insert(handle_type handle, unsigned tid)
@@ -201,12 +201,12 @@ namespace gui
 			{
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-				typename holder_map::iterator i = holder_.find(handle);
+				auto i = holder_.find(handle);
 				if(holder_.end() != i)
 				{
 					is_queue<std::is_same<cond_type, nana::null_type>::value, std::vector<handle_type> >::erase(handle, queue_);
 					cacher_.insert(handle, false);
-					trash_.push_back(holder_pair(i->first, i->second));
+					trash_.emplace_back(i->first, i->second);
 					holder_.erase(i);
 				}
 			}
@@ -220,18 +220,19 @@ namespace gui
 					deleter_type del_functor;
 					if(tid == 0)
 					{
-						for(typename std::vector<holder_pair>::iterator i = trash_.begin(); i != trash_.end(); ++i)
-							del_functor(i->first);
+						for(auto & m : trash_)
+							del_functor(m.first);
 						trash_.clear();
 					}
 					else
 					{
-						for(typename std::vector<holder_pair>::iterator i = trash_.begin(); i != trash_.end();)
+						for(auto i = trash_.begin(), end = trash_.end(); i != end;)
 						{
 							if(tid == i->second)
 							{
 								del_functor(i->first);
 								i = trash_.erase(i);
+								end = trash_.end();
 							}
 							else
 								++i;
@@ -244,8 +245,7 @@ namespace gui
 			{
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
 				if(queue_.size())
-					return *(queue_.end() - 1);
-
+					return queue_.back();
 				return handle_type();
 			}
 
@@ -258,7 +258,7 @@ namespace gui
 			{
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
 				if(index < queue_.size())
-					return *(queue_.begin() + index);
+					return queue_[index];
 				return handle_type();
 			}
 
@@ -291,7 +291,7 @@ namespace gui
 				{
 					if(cond_type::is_queue(handle))
 					{
-						typename std::vector<handle_type>::iterator it = std::find(queue.begin(), queue.end(), handle);
+						auto it = std::find(queue.begin(), queue.end(), handle);
 						if(it != queue.end())
 							queue.erase(it);
 					}

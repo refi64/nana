@@ -17,10 +17,10 @@ namespace nana{ namespace gui{
 		{
 			//class drawer
 			class drawer
-				: public nana::gui::drawer_trigger
+				: public drawer_trigger
 			{
 			public:
-				typedef nana::gui::widgets::skeletons::text_editor text_editor;
+				typedef widgets::skeletons::text_editor text_editor;
 
 				drawer();
 				bool border(bool);
@@ -45,14 +45,14 @@ namespace nana{ namespace gui{
 				void _m_text_area(unsigned width, unsigned height);
 				void _m_draw_border(graph_reference);
 			private:
-				nana::gui::widget*	widget_;
+				widget*	widget_;
 				struct status_type
 				{
 					bool border;
 					bool has_focus;		//Indicates whether it has the keyboard focus
 				}status_;
 
-				nana::gui::widgets::skeletons::text_editor * editor_;
+				widgets::skeletons::text_editor * editor_;
 			};
 		}//end namespace textbox
 	}//end namespace drawerbase

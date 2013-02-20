@@ -128,21 +128,24 @@ namespace nana{	namespace gui
 
 		struct comp_sort_by_type
 		{
-			bool operator()(const nana::string& a, nana::any* anyptr_a, const nana::string& b, nana::any* anyptr_b) const
+			bool operator()(const nana::string& a, nana::any* anyptr_a, const nana::string& b, nana::any* anyptr_b, bool reverse) const
 			{
-				if(anyptr_a->get<item_fs>()->directory) return true;
-				if(anyptr_b->get<item_fs>()->directory) return false;
-				return (a != b && a < b);
+				int dir1 = anyptr_a->get<item_fs>()->directory ? 1 : 0;
+				int dir2 = anyptr_b->get<item_fs>()->directory ? 1 : 0;
+				if(dir1 != dir2)
+					return (reverse ? dir1 < dir2 : dir1 > dir2);
+
+				return (reverse ? a > b : a < b);
 			}
 		};
 
 		struct comp_sort_by_size
 		{
-			bool operator()(const nana::string& a, nana::any* anyptr_a, const nana::string& b, nana::any* anyptr_b) const
+			bool operator()(const nana::string& a, nana::any* anyptr_a, const nana::string& b, nana::any* anyptr_b, bool reverse) const
 			{
 				item_fs * fsa = anyptr_a->get<item_fs>();
 				item_fs * fsb = anyptr_b->get<item_fs>();
-				return (fsa->bytes < fsb->bytes);
+				return (reverse ? fsa->bytes > fsb->bytes : fsa->bytes < fsb->bytes);
 			}
 		};
 	public:

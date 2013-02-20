@@ -157,17 +157,20 @@ namespace nana{	namespace gui
 			ls_file_.append_header(STR("Size"), 70);
 			ls_file_.make_event<events::dbl_click>(*this, &filebox_implement::_m_sel_file);
 			ls_file_.make_event<events::mouse_down>(*this, &filebox_implement::_m_sel_file);
-			ls_file_.set_sort_compare(2, [](const nana::string& a, nana::any* anyptr_a, const nana::string& b, nana::any* anyptr_b) -> bool
+			ls_file_.set_sort_compare(2, [](const nana::string& a, nana::any* anyptr_a, const nana::string& b, nana::any* anyptr_b, bool reverse) -> bool
 				{
-					if(anyptr_a->get<item_fs>()->directory) return true;
-					if(anyptr_b->get<item_fs>()->directory) return false;
-					return (a != b && a < b);
+					int dir1 = anyptr_a->get<item_fs>()->directory ? 1 : 0;
+					int dir2 = anyptr_b->get<item_fs>()->directory ? 1 : 0;
+					if(dir1 != dir2)
+						return (reverse ? dir1 < dir2 : dir1 > dir2);
+
+					return (reverse ? a > b : a < b);
 				});
-			ls_file_.set_sort_compare(3, [this](const nana::string&, nana::any* anyptr_a, const nana::string&, nana::any* anyptr_b) -> bool
+			ls_file_.set_sort_compare(3, [this](const nana::string&, nana::any* anyptr_a, const nana::string&, nana::any* anyptr_b, bool reverse) -> bool
 				{
 					item_fs * fsa = anyptr_a->get<item_fs>();
 					item_fs * fsb = anyptr_b->get<item_fs>();
-					return (fsa->bytes < fsb->bytes);
+					return (reverse ? fsa->bytes > fsb->bytes : fsa->bytes < fsb->bytes);
 				});
 
 			lb_file_.create(*this);

@@ -36,7 +36,7 @@ namespace nana{ namespace gui{
 					unsigned pixels;
 					bool visible;
 					size_type index;
-					std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*)> weak_ordering;
+					std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> weak_ordering;
 				};
 
 				typedef std::vector<item_t> container;
@@ -60,7 +60,7 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*)> fetch_comp(std::size_t index) const
+				std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> fetch_comp(std::size_t index) const
 				{
 					if(index < cont_.size())
 					{
@@ -313,10 +313,10 @@ namespace nana{ namespace gui{
 				typedef std::list<category> container;
 				mutable extra_events ext_event;
 
-				std::function<std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*)>(std::size_t) > fetch_ordering_comparer;
+				std::function<std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)>(std::size_t) > fetch_ordering_comparer;
 
 				es_lister()
-					: widget_(nullptr), sorted_index_(npos), neg_sorted_(false)
+					: widget_(nullptr), sorted_index_(npos), sorted_reverse_(false)
 				{
 					category cg;
 					cg.expand = true;
@@ -367,7 +367,7 @@ namespace nana{ namespace gui{
 										auto & my = cat.items[y];
 										auto & a = mx.texts[sorted_index_];
 										auto & b = my.texts[sorted_index_];
-										return (a == b ? false : (weak_ordering_comp(a, mx.anyobj, b, my.anyobj) != neg_sorted_));
+										return weak_ordering_comp(a, mx.anyobj, b, my.anyobj, sorted_reverse_);
 									});
 							}
 						}
@@ -380,7 +380,7 @@ namespace nana{ namespace gui{
 								std::sort(bi, ei, [&cat, &weak_ordering_comp, this](std::size_t x, std::size_t y){
 										auto & a = cat.items[x].texts[sorted_index_];
 										auto & b = cat.items[y].texts[sorted_index_];
-										return (neg_sorted_ ? a > b : a < b);
+										return (sorted_reverse_ ? a > b : a < b);
 									});
 							}
 						}
@@ -394,10 +394,10 @@ namespace nana{ namespace gui{
 						if(index != sorted_index_)
 						{
 							sorted_index_ = index;
-							neg_sorted_ = false;
+							sorted_reverse_ = false;
 						}
 						else
-							neg_sorted_ = !neg_sorted_;
+							sorted_reverse_ = !sorted_reverse_;
 
 						sort();
 						return true;
@@ -411,9 +411,9 @@ namespace nana{ namespace gui{
 					return sorted_index_;
 				}
 
-				bool neg_sorted() const
+				bool sort_reverse() const
 				{
-					return neg_sorted_;
+					return sorted_reverse_;
 				}
 
 				void create(const nana::string& text)
@@ -1132,7 +1132,7 @@ namespace nana{ namespace gui{
 			private:
 				nana::gui::listbox * widget_;
 				std::size_t sorted_index_;		//It stands for the index of header which is used to sort.
-				bool		neg_sorted_;
+				bool		sorted_reverse_;
 				container list_;
 			};//end class es_lister
 
@@ -1707,7 +1707,7 @@ namespace nana{ namespace gui{
 
 					if(item.index == essence_->lister.sort_index())
 					{
-						nana::paint::gadget::directions::t dir = essence_->lister.neg_sorted() ? nana::paint::gadget::directions::to_south : nana::paint::gadget::directions::to_north;
+						nana::paint::gadget::directions::t dir = essence_->lister.sort_reverse() ? nana::paint::gadget::directions::to_south : nana::paint::gadget::directions::to_north;
 						nana::paint::gadget::arrow_16_pixels(graph, x + (item.pixels - 16) / 2, -4, 0x0, 0, dir);
 					}
 				}
@@ -2542,7 +2542,7 @@ namespace nana{ namespace gui{
 			get_drawer_trigger().update();
 		}
 
-		void listbox::set_sort_compare(size_type sub, std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*)> strick_ordering)
+		void listbox::set_sort_compare(size_type sub, std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> strick_ordering)
 		{
 			get_drawer_trigger().essence().header.get_item(sub).weak_ordering = std::move(strick_ordering);
 		}

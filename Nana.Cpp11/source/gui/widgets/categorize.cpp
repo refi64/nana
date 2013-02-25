@@ -201,12 +201,12 @@ namespace nana{	namespace gui{
 				{
 					node_handle root = tree_.get_root();
 					for(node_handle i = cur_; i && (i != root); i = i->owner)
-						seqv.insert(seqv.begin(), i);
+						seqv.insert(seqv.cbegin(), i);
 
 					if(index < seqv.size())
 					{
 						if(index)
-							seqv.erase(seqv.begin(), seqv.begin() + index);
+							seqv.erase(seqv.cbegin(), seqv.cbegin() + index);
 						return true;
 					}
 					return false;
@@ -228,7 +228,7 @@ namespace nana{	namespace gui{
 					std::vector<node_handle> v;
 					node_handle root = tree_.get_root();
 					for(node_handle i = cur_; i && (i != root); i = i->owner)
-						v.insert(v.begin(), i);
+						v.insert(v.cbegin(), i);
 
 					nana::string str;
 					bool not_head = false;
@@ -253,7 +253,7 @@ namespace nana{	namespace gui{
 					std::vector<node_handle> v;
 					node_handle root = tree_.get_root();
 					for(node_handle i = cur_; i && (i != root); i = i->owner)
-						v.insert(v.begin(), i);
+						v.insert(v.cbegin(), i);
 
 					return (index < v.size() ? v[index] : nullptr);
 				}
@@ -346,7 +346,6 @@ namespace nana{	namespace gui{
 			public:
 				typedef tree_wrapper container;
 				typedef container::node_handle node_handle;
-
 				typedef renderer::ui_element	ui_element;
 
 				enum class mode
@@ -563,8 +562,8 @@ namespace nana{	namespace gui{
 						std::vector<node_handle> v;
 						if(treebase_.seq(0, v))
 						{
-							auto end = v.begin() + head_;
-							for(auto i = v.begin(); i != end; ++i)
+							auto end = v.cbegin() + head_;
+							for(auto i = v.cbegin(); i != end; ++i)
 								style_.module.items.push_back((*i)->value.first);
 						}
 						r = style_.active_item_rectangle;
@@ -613,10 +612,10 @@ namespace nana{	namespace gui{
 
 					if(is_draw)
 					{
-						this->draw();
+						draw();
 						API::update_window(window_);
 					}
-					style_.listbox = 0;
+					style_.listbox = nullptr;
 				}
 			private:
 				unsigned _m_item_fix_scale() const

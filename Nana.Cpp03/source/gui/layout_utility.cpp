@@ -28,18 +28,6 @@ namespace gui
 		return true;
 	}
 
-	bool overlap(int x, int y, unsigned width, unsigned height,
-				 int x2, int y2, unsigned width2, unsigned height2)
-	{
-		if(y + static_cast<int>(height) <= y2)	return false;
-		if(y >= y2 + static_cast<int>(height2))	return false;
-
-		if(x + static_cast<int>(width) <= x2)	return false;
-		if(x >= x2 + static_cast<int>(width2))	return false;
-
-		return true;
-	}
-
 	//overlap, compute the overlap area between r1 and r2. the rect is for root
 	bool overlap(const rectangle& r1,
 						const rectangle& r2,
@@ -57,28 +45,6 @@ namespace gui
 			li1 = long_long_t(r1.y) + r1.height;
 			li2 = long_long_t(r2.y) + r2.height;
 			r.height = static_cast<unsigned>(li1 < li2 ? li1 - r.y: li2 - r.y);
-			return true;
-		}
-		return false;
-	}
-
-	bool overlap(int x, int y, unsigned width, unsigned height,
-				 int x2, int y2, unsigned width2, unsigned height2,
-				 rectangle& r)
-	{
-		if(overlap(x, y, width, height, x2, y2, width2, height2))
-		{
-			r.x = x < x2 ? x2 : x;
-			r.y = y < y2 ? y2 : y;
-
-			long_long_t li1 = long_long_t(x) + width;
-			long_long_t li2 = long_long_t(x2) + width2;
-			r.width = static_cast<unsigned>(li1 < li2 ? li1 - r.x: li2 - r.x);
-
-			li1 = long_long_t(y) + height;
-			li2 = long_long_t(y2) + height2;
-			r.height = static_cast<unsigned>(li1 < li2 ? li1 - r.y: li2 - r.y);
-
 			return true;
 		}
 		return false;
@@ -281,22 +247,11 @@ namespace gui
 		return true;
 	}
 
-
-	int get_min(int x, int y)
+	bool is_hit_the_rectangle(const rectangle& r, int x, int y)
 	{
-		return (x < y ? x : y);
-	}
-
-	int get_max(int x, int y)
-	{
-		return (x < y ? y : x);
-	}
-
-	bool is_hit_the_rectangle(const rectangle& rect, int x, int y)
-	{
-		return	(rect.x <= x) && (x < rect.x + static_cast<int>(rect.width))
+		return	(r.x <= x) && (x < r.x + static_cast<int>(r.width))
 				&&
-				(rect.y <= y) && (y < rect.y + static_cast<int>(rect.height));
+				(r.y <= y) && (y < r.y + static_cast<int>(r.height));
 	}
 }
 };

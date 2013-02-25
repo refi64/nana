@@ -64,7 +64,7 @@ namespace nana{ namespace gui{
 
 		void _m_destroy(const eventinfo& ei)
 		{
-			for(auto i = triggers_.begin(); i != triggers_.end(); ++i)
+			for(auto i = triggers_.cbegin(); i != triggers_.cend(); ++i)
 			{
 				if(i->wd == ei.window)
 				{

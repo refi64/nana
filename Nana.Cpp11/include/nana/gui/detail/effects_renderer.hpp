@@ -40,10 +40,10 @@ namespace nana{	namespace gui{
 					native_window_type native = root_wd->root;
 					std::size_t pixels = weight();
 
-					nana::paint::graphics * graph = root_wd->root_graph;
+					auto graph = root_wd->root_graph;
 
 					std::vector<core_window_t*> erase;
-					std::vector<nana::rectangle>	r_set;
+					std::vector<rectangle>	r_set;
 					nana::rectangle r;
 					for(auto & action : nimbus)
 					{
@@ -68,10 +68,11 @@ namespace nana{	namespace gui{
 						if(el == wd)
 							rendered = true;
 
-						r.x = el->root_x - static_cast<int>(pixels);
-						r.y = el->root_y - static_cast<int>(pixels);
-						r.width = static_cast<unsigned>(el->rect.width + (pixels << 1));
-						r.height = static_cast<unsigned>(el->rect.height + (pixels << 1));
+						r.x = el->pos_root.x - static_cast<int>(pixels);
+						r.y = el->pos_root.y - static_cast<int>(pixels);
+						r.width = static_cast<unsigned>(el->dimension.width + (pixels << 1));
+						r.height = static_cast<unsigned>(el->dimension.height + (pixels << 1));
+
 						graph->paste(native, r, r.x, r.y);
 					}
 
@@ -100,12 +101,12 @@ namespace nana{	namespace gui{
 				nana::rectangle r(visual);
 				r.pare_off(-static_cast<int>(weight()));
 				nana::rectangle good_r;
-				if(nana::gui::overlap(r, nana::rectangle(wd->root_graph->size()), good_r))
+				if(overlap(r, nana::rectangle(wd->root_graph->size()), good_r))
 				{
-					if(	(good_r.x < wd->root_x) || (good_r.y < wd->root_y) ||
+					if(	(good_r.x < wd->pos_root.x) || (good_r.y < wd->pos_root.y) ||
 						(good_r.x + good_r.width > visual.x + visual.width) || (good_r.y + good_r.height > visual.y + visual.height))
 					{
-						nana::paint::graphics * graph = wd->root_graph;
+						auto graph = wd->root_graph;
 						nana::paint::pixel_buffer pixbuf(graph->handle(), r);
 
 						pixel_rgb_t px0, px1, px2, px3;

@@ -191,7 +191,7 @@ namespace nana{ namespace gui{
 				{
 					menu_item_type m(text, f);
 					if(pos < root_.items.size())
-						root_.items.insert(root_.items.begin() + pos, m);
+						root_.items.insert(root_.items.cbegin() + pos, m);
 					else
 						root_.items.push_back(m);
 				}
@@ -211,21 +211,6 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				void remove_sub_menu(std::size_t pos)
-				{
-					if(root_.items.size() <= pos) return;
-
-					menu_item_type & item = root_.items[pos];
-					if(item.sub_menu)
-					{
-						auto i = std::find(item.sub_menu->owner.begin(), item.sub_menu->owner.end(), &root_);
-						if(i != item.sub_menu->owner.end())
-							item.sub_menu->owner.erase(i);
-
-						item.sub_menu = nullptr;
-					}
-				}
-
 				void destroy()
 				{
 					for(auto i : root_.owner)
@@ -238,7 +223,7 @@ namespace nana{ namespace gui{
 					for(auto & m : root_.items)
 					{
 						if(m.sub_menu)
-							for(auto i = m.sub_menu->owner.begin(); i != m.sub_menu->owner.end();)
+							for(auto i = m.sub_menu->owner.cbegin(); i != m.sub_menu->owner.cend();)
 							{
 								if((*i) == &root_)
 									i = m.sub_menu->owner.erase(i);
@@ -1055,7 +1040,7 @@ namespace nana{ namespace gui{
 		{
 			auto & items = impl_->mbuilder.data().items;
 			if(index < items.size())
-				items.erase(items.begin() + index);
+				items.erase(items.cbegin() + index);
 		}
 
 		void menu::image(std::size_t index, const paint::image& img)

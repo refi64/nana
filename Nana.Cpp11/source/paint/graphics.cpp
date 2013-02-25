@@ -600,12 +600,12 @@ namespace paint
 
 		void graphics::rectangle(nana::color_t color, bool solid)
 		{
-			this->rectangle(0, 0, size_.width, size_.height, color, solid);
+			rectangle(0, 0, size_.width, size_.height, color, solid);
 		}
 
 		void graphics::rectangle(const nana::rectangle & r, color_t color, bool solid)
 		{
-			this->rectangle(r.x, r.y, r.width, r.height, color, solid);
+			rectangle(r.x, r.y, r.width, r.height, color, solid);
 		}
 
 		void graphics::round_rectangle(int x, int y, unsigned width, unsigned height, unsigned radius_x, unsigned radius_y, color_t color, bool solid, color_t color_if_solid)
@@ -643,7 +643,7 @@ namespace paint
 
 		void graphics::round_rectangle(const nana::rectangle& r, unsigned radius_x, unsigned radius_y, color_t color, bool solid, color_t color_if_solid)
 		{
-			this->round_rectangle(r.x, r.y, r.width, r.height, radius_x, radius_y, color, solid, color_if_solid);
+			round_rectangle(r.x, r.y, r.width, r.height, radius_x, radius_y, color, solid, color_if_solid);
 		}
 
 		void graphics::shadow_rectangle(const nana::rectangle& r, color_t beg_color, color_t end_color, bool vertical)

@@ -60,8 +60,8 @@ namespace filesystem
 			:text_(nana::charset(text))
 		{
 #endif
-			string_t::size_type pos = text_.find_last_of(splstr);
-			for(; pos != string_t::npos && (pos + 1 == text_.size()); pos = text_.find_last_of(splstr))
+			auto pos = text_.find_last_of(splstr);
+			for(; (pos != string_t::npos) && (pos + 1 == text_.size()); pos = text_.find_last_of(splstr))
 				text_.erase(pos);
 		}
 

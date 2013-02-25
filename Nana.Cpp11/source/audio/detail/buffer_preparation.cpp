@@ -67,7 +67,7 @@ namespace nana{	namespace audio
 						return nullptr;
 				}
 				meta * m = buffer_.front();
-				buffer_.erase(buffer_.begin());
+				buffer_.erase(buffer_.cbegin());
 				return m;
 			}
 

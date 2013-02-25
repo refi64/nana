@@ -220,7 +220,7 @@ namespace nana{ namespace gui{
 
 				void move_items(bool upwards, bool recycle)
 				{
-					if(0 == state_.lister)
+					if(nullptr == state_.lister)
 					{
 						std::size_t orig_i = module_.index;
 						if(upwards)
@@ -337,7 +337,7 @@ namespace nana{ namespace gui{
 			private:
 				void _m_lister_close_sig()
 				{
-					state_.lister = 0;	//The lister closes by itself.
+					state_.lister = nullptr;	//The lister closes by itself.
 					if(module_.index != module_.npos && module_.index != state_.item_index_before_selection)
 					{
 						option(module_.index, true);
@@ -444,10 +444,7 @@ namespace nana{ namespace gui{
 								}
 							}
 
-							nana::point pos(2, 2);
-							pos.x += (image_pixels_ - imgsz.width) / 2;
-							pos.y += (vpix - imgsz.height) / 2;
-
+							nana::point pos((image_pixels_ - imgsz.width) / 2 + 2, (vpix - imgsz.height) / 2 + 2);
 							img.stretch(img.size(), *graph_, nana::rectangle(pos, imgsz));
 						}
 					}
@@ -484,7 +481,7 @@ namespace nana{ namespace gui{
 				trigger::~trigger()
 				{
 					delete drawer_;
-					drawer_ = 0;
+					drawer_ = nullptr;
 				}
 
 				drawer_impl& trigger::get_drawer_impl()
@@ -646,7 +643,7 @@ namespace nana{ namespace gui{
 
 				void trigger::key_char(graph_reference graph, const eventinfo& ei)
 				{
-					widgets::skeletons::text_editor * editor = drawer_->editor();
+					auto editor = drawer_->editor();
 					if(drawer_->widget_ptr()->enabled() && editor->attr().editable)
 					{
 						switch(ei.keyboard.key)
@@ -779,7 +776,7 @@ namespace nana{ namespace gui{
 		{
 			internal_scope_guard isg;
 			get_drawer_trigger().get_drawer_impl().text(str);
-			API::refresh_window(this->handle());
+			API::refresh_window(*this);
 		}
 
 		nana::any * combox::_m_anyobj(std::size_t i, bool allocate_if_empty) const

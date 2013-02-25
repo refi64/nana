@@ -265,11 +265,11 @@ namespace xcheckbox
 
 		std::size_t radio_group::checked() const
 		{
-			auto i = std::find_if(ui_container_.begin(), ui_container_.end(), [](decltype(*ui_container_.begin())& x)
+			auto i = std::find_if(ui_container_.cbegin(), ui_container_.cend(), [](decltype(*ui_container_.cbegin())& x)
 				{
 					return (x.uiobj->checked());
 				});
-			return static_cast<std::size_t>(i - ui_container_.begin());
+			return static_cast<std::size_t>(i - ui_container_.cbegin());
 		}
 
 		void radio_group::_m_checked(const eventinfo& ei)
@@ -280,11 +280,11 @@ namespace xcheckbox
 
 		void radio_group::_m_destroy(const eventinfo& ei)
 		{
-			auto i = std::find_if(ui_container_.begin(), ui_container_.end(), [&ei](decltype(*ui_container_.begin()) & x)
+			auto i = std::find_if(ui_container_.cbegin(), ui_container_.cend(), [&ei](decltype(*ui_container_.cbegin()) & x)
 					{
 						return (ei.window == x.uiobj->handle());
 					});
-			if(i != ui_container_.end())
+			if(i != ui_container_.cend())
 				ui_container_.erase(i);
 		}
 	//end class radio_group

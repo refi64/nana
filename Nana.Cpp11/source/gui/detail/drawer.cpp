@@ -305,12 +305,12 @@ namespace gui
 		{
 			if(realizer_)
 			{
-				drawer_trigger * old = realizer_;
-				realizer_ = 0;
-				old->detached();
-				return old;
+				auto rmp = realizer_;
+				realizer_ = nullptr;
+				rmp->detached();
+				return rmp;
 			}
-			return 0;
+			return nullptr;
 		}
 
 		void drawer::clear()

@@ -42,7 +42,7 @@ namespace skeletons
 		bool empty() const
 		{
 			return (text_cont_.size() == 0 ||
-					((text_cont_.size() == 1) && (text_cont_.begin()->size() == 0)));
+					((text_cont_.size() == 1) && (text_cont_[0].size() == 0)));
 		}
 
 		void load(const char* tfs)
@@ -233,7 +233,7 @@ namespace skeletons
 			{
 				if(text_cont_.size() > 1)
 				{
-					for(auto i = text_cont_.begin(), end = text_cont_.end() - 1; i != end; ++i)
+					for(auto i = text_cont_.cbegin(), end = text_cont_.cend() - 1; i != end; ++i)
 					{
 						std::string mbs = nana::charset(*i);
 						ofs.write(mbs.c_str(), mbs.size());
@@ -268,7 +268,7 @@ namespace skeletons
 				if(text_cont_.size() > 1)
 				{
 					std::string mbs;
-					for(auto i = text_cont_.begin(), end = text_cont_.end() - 1; i != end; ++i)
+					for(auto i = text_cont_.cbegin(), end = text_cont_.cend() - 1; i != end; ++i)
 					{
 						mbs = nana::charset(*i).to_bytes(encoding);
 						mbs += "\r\n";
@@ -356,7 +356,7 @@ namespace skeletons
 		void insertln(size_type line, const string_type& str)
 		{
 			if(line < text_cont_.size())
-				text_cont_.insert(text_cont_.begin() + line, str);
+				text_cont_.insert(text_cont_.cbegin() + line, str);
 			else
 				text_cont_.push_back(str);
 
@@ -381,7 +381,7 @@ namespace skeletons
 		void erase(size_type pos)
 		{
 			if(pos < text_cont_.size())
-				text_cont_.erase(text_cont_.begin() + pos);
+				text_cont_.erase(text_cont_.cbegin() + pos);
 
 			if(pos == attr_max_.line)
 				_m_scan_for_max();
@@ -400,7 +400,7 @@ namespace skeletons
 			if(text_cont_.size() && (pos < text_cont_.size() - 1))
 			{
 				text_cont_[pos] += text_cont_[pos + 1];
-				text_cont_.erase(text_cont_.begin() + (pos + 1));
+				text_cont_.erase(text_cont_.cbegin() + (pos + 1));
 				_m_make_max(pos);
 				if(pos < attr_max_.line)
 					--attr_max_.line;

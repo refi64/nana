@@ -174,7 +174,7 @@ namespace gui
 			typedef HandleType	handle_type;
 			typedef Condition	cond_type;
 			typedef Deleter		deleter_type;
-			typedef std::map<handle_type, unsigned>	holder_map;
+			typedef std::map<handle_type, unsigned>	handle_map_t;
 			typedef std::pair<handle_type, unsigned>	holder_pair;
 
 			~handle_manager()
@@ -201,8 +201,8 @@ namespace gui
 			{
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-				auto i = holder_.find(handle);
-				if(holder_.end() != i)
+				auto i = static_cast<const handle_map_t&>(holder_).find(handle);
+				if(holder_.cend() != i)
 				{
 					is_queue<std::is_same<cond_type, nana::null_type>::value, std::vector<handle_type> >::erase(handle, queue_);
 					cacher_.insert(handle, false);
@@ -226,13 +226,13 @@ namespace gui
 					}
 					else
 					{
-						for(auto i = trash_.begin(), end = trash_.end(); i != end;)
+						for(auto i = trash_.cbegin(), end = trash_.cend(); i != end;)
 						{
 							if(tid == i->second)
 							{
 								del_functor(i->first);
 								i = trash_.erase(i);
-								end = trash_.end();
+								end = trash_.cend();
 							}
 							else
 								++i;
@@ -273,7 +273,7 @@ namespace gui
 			void all(std::vector<handle_type> & v) const
 			{
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
-				std::copy(queue_.begin(), queue_.end(), std::back_inserter(v));
+				std::copy(queue_.cbegin(), queue_.cend(), std::back_inserter(v));
 			}
 		private:
 
@@ -291,9 +291,9 @@ namespace gui
 				{
 					if(cond_type::is_queue(handle))
 					{
-						auto it = std::find(queue.begin(), queue.end(), handle);
-						if(it != queue.end())
-							queue.erase(it);
+						auto i = std::find(queue.cbegin(), queue.cend(), handle);
+						if(i != queue.cend())
+							queue.erase(i);
 					}
 				}
 			};
@@ -309,7 +309,7 @@ namespace gui
 		private:
 			mutable std::recursive_mutex mutex_;
 			mutable cache<const handle_type, bool, 5> cacher_;
-			std::map<handle_type, unsigned>	holder_;
+			handle_map_t	holder_;
 			std::vector<handle_type>	queue_;
 			std::vector<holder_pair>	trash_;
 		};//end class handle_manager

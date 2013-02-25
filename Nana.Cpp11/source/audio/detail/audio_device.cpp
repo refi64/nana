@@ -224,7 +224,7 @@ namespace nana{namespace audio
 					{
 						std::lock_guard<decltype(queue_lock_)> lock(self->queue_lock_);
 						m = self->done_queue_.front();
-						self->done_queue_.erase(self->done_queue_.begin());
+						self->done_queue_.erase(self->done_queue_.cbegin());
 					}
 					wave_native_if.out_unprepare(handle, m, sizeof(WAVEHDR));
 					self->buf_prep_->revert(m);

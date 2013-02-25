@@ -254,7 +254,7 @@ namespace threads
 					if(container_.tasks.size())
 					{
 						pto->task_ptr = container_.tasks.front();
-						container_.tasks.erase(container_.tasks.begin());
+						container_.tasks.erase(container_.tasks.cbegin());
 					}
 				}
 				else

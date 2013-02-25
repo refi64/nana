@@ -179,12 +179,12 @@ namespace nana{ namespace gui{
 				size_type neighbor(size_type index, bool front) const
 				{
 					size_type n = npos;
-					for(auto i = cont_.begin(); i != cont_.end(); ++i)
+					for(auto i = cont_.cbegin(); i != cont_.cend(); ++i)
 					{
 						if(i->index == index)
 						{
 							if(front)	return n;
-							for(++i; i != cont_.end(); ++i)
+							for(++i; i != cont_.cend(); ++i)
 							{
 								if(i->visible) return i->index;
 							}
@@ -229,8 +229,8 @@ namespace nana{ namespace gui{
 							}
 						}
 
-						auto i = std::find_if(cont_.begin(), cont_.end(), [to](const container::value_type& m)->bool{ return (to == m.index); } );
-						if(i != cont_.end())
+						auto i = std::find_if(cont_.cbegin(), cont_.cend(), [to](const container::value_type& m)->bool{ return (to == m.index); } );
+						if(i != cont_.cend())
 							cont_.insert((front ? i : ++i), from);
 					}
 				}
@@ -337,10 +337,10 @@ namespace nana{ namespace gui{
 
 				nana::any * anyobj(size_type cat, size_type index, bool allocate_if_empty) const
 				{
-					auto i = _m_at(cat);
-					if(index < i->items.size())
+					auto& catobj = *_m_at(cat);
+					if(index < catobj.items.size())
 					{
-						const item_t & item = i->items[index];
+						const item_t & item = catobj.items[index];
 						if(item.anyobj)
 							return item.anyobj;
 						if(allocate_if_empty)
@@ -428,23 +428,23 @@ namespace nana{ namespace gui{
 				{
 					item_t item;
 					item.texts.push_back(text);
-					auto i = _m_at(cat);
-					i->items.push_back(item);
-					i->sorted.push_back(i->items.size() - 1);
+					auto & catobj = *_m_at(cat);
+					catobj.items.push_back(item);
+					catobj.sorted.push_back(catobj.items.size() - 1);
 				}
 
 				bool insert(size_type cat, size_type index, const nana::string& text)
 				{
-					auto i = _m_at(cat);
+					auto & catobj = *_m_at(cat);
 					item_t item;
 					item.texts.push_back(text);
-					if(index < i->items.size())
-						i->items.insert(i->items.begin() + index, item);
-					else if(index == i->items.size())
-						i->items.push_back(item);
+					if(index < catobj.items.size())
+						catobj.items.insert(catobj.items.cbegin() + index, item);
+					else if(index == catobj.items.size())
+						catobj.items.push_back(item);
 					else
 						return false;
-					i->sorted.push_back(i->items.size() - 1);
+					catobj.sorted.push_back(catobj.items.size() - 1);
 					return true;
 				}
 
@@ -469,9 +469,9 @@ namespace nana{ namespace gui{
 
 				void clear(size_type cat)
 				{
-					auto i = _m_at(cat);
-					i->items.clear();
-					i->sorted.clear();
+					auto& catobj = *_m_at(cat);
+					catobj.items.clear();
+					catobj.sorted.clear();
 				}
 
 				void clear()
@@ -586,10 +586,10 @@ namespace nana{ namespace gui{
 				{
 					if(subitem < header_size)
 					{
-						auto i = _m_at(cat);
-						if(index < i->items.size())
+						auto & catobj = *_m_at(cat);
+						if(index < catobj.items.size())
 						{
-							auto & cont = i->items[index].texts;
+							auto & cont = catobj.items[index].texts;
 							if(subitem >= cont.size())
 							{	//If the index of specified sub item is over the number of sub items that item contained,
 								//it fills the non-exist items.
@@ -608,11 +608,11 @@ namespace nana{ namespace gui{
 
 				void erase(size_type cat, size_type index)
 				{
-					auto i = _m_at(cat);
-					if(index < i->items.size())
+					auto & catobj = *_m_at(cat);
+					if(index < catobj.items.size())
 					{
-						i->items.erase(i->items.begin() + index);
-						i->sorted.erase(std::find(i->sorted.begin(), i->sorted.end(), i->items.size()));
+						catobj.items.erase(catobj.items.cbegin() + index);
+						catobj.sorted.erase(std::find(catobj.sorted.begin(), catobj.sorted.end(), catobj.items.size()));
 						sort();
 					}
 				}
@@ -622,15 +622,13 @@ namespace nana{ namespace gui{
 					auto i = _m_at(cat);
 
 					//If the category is the first one, it just clears the items instead of removing whole category.
-					if(cat)
-					{
-						list_.erase(i);
-					}
-					else
+					if(0 == cat)
 					{
 						i->items.clear();
 						i->sorted.clear();
 					}
+					else
+						list_.erase(i);
 				}
 
 				void erase()
@@ -640,7 +638,7 @@ namespace nana{ namespace gui{
 					i->items.clear();
 					i->sorted.clear();
 					if(list_.size() > 1)
-						list_.erase(++i, list_.end());
+						list_.erase(++i, list_.cend());
 				}
 
 				bool expand(size_type cat, bool exp)
@@ -768,7 +766,7 @@ namespace nana{ namespace gui{
 					else
 					{
 						bool good = false;
-						for(std::size_t i = 0; i < list_.size(); ++i)
+						for(std::size_t i = 0, size = list_.size(); i < size; ++i)
 						{
 							if(size_item(i))
 							{
@@ -854,7 +852,7 @@ namespace nana{ namespace gui{
 				{
 					if(categ < list_.size())
 					{
-						auto i = list_.begin();
+						auto i = list_.cbegin();
 						std::advance(i, categ);
 						if(index < i->items.size() && (sub < i->items[index].texts.size()))
 							return i->items[index].texts[sub];
@@ -1089,7 +1087,7 @@ namespace nana{ namespace gui{
 							return true;
 						}
 
-						while(i != list_.begin())
+						while(i != list_.cbegin())
 						{
 							--i;
 							--categ;
@@ -1125,7 +1123,7 @@ namespace nana{ namespace gui{
 					if(index >= list_.size())
 						throw std::out_of_range("Nana.GUI.Listbox: invalid category index");
 
-					auto i = list_.begin();
+					auto i = list_.cbegin();
 					std::advance(i, index);
 					return i;
 				}
@@ -1775,7 +1773,7 @@ namespace nana{ namespace gui{
 					int y = rect.y;
 					int txtoff = (essence_->item_size - essence_->text_height) / 2;
 
-					auto i_categ = lister.cat_container().begin();
+					auto i_categ = lister.cat_container().cbegin();
 					std::advance(i_categ, essence_->scroll.offset_y.x);
 
 					size_type catg_idx = essence_->scroll.offset_y.x;
@@ -1807,7 +1805,7 @@ namespace nana{ namespace gui{
 						}
 						else
 						{
-							for(auto i = i_categ->items.begin() + essence_->scroll.offset_y.y; i != i_categ->items.end(); ++i, ++item_idx)
+							for(auto i = i_categ->items.cbegin() + essence_->scroll.offset_y.y; i != i_categ->items.cend(); ++i, ++item_idx)
 							{
 								if(n-- == 0)	break;
 								state = (tracker.first == catg_idx && tracker.second == item_idx	?
@@ -1965,8 +1963,7 @@ namespace nana{ namespace gui{
 							if((0 == index) && essence_->if_image)
 							{
 								ext_w += 18;
-								if(item.img)
-									item.img.stretch(nana::rectangle(), *graph, nana::rectangle(item_xpos + 5, y + img_off, 16, 16));
+								item.img.stretch(nana::rectangle(), *graph, nana::rectangle(item_xpos + 5, y + img_off, 16, 16));
 							}
 							graph->string(item_xpos + 5 + ext_w, y + txtoff, txtcolor, item.texts[index]);
 
@@ -1992,7 +1989,7 @@ namespace nana{ namespace gui{
 				void _m_draw_border(int x, int y, unsigned width) const
 				{
 					//Draw selecting inner rectangle
-					nana::paint::graphics * graph = essence_->graph;
+					auto graph = essence_->graph;
 					graph->rectangle(x , y , width, essence_->item_size, 0x99DEFD, false);
 
 					graph->rectangle(x + 1, y + 1, width - 2, essence_->item_size - 2, 0xFFFFFF, false);
@@ -2032,15 +2029,12 @@ namespace nana{ namespace gui{
 
 				void trigger::draw()
 				{
-					nana::rectangle rect;
+					nana::rectangle r;
 
-					if(essence_->header.visible())
-					{
-						if(essence_->rect_header(rect))
-							drawer_header_->draw(rect);
-					}
-					if(essence_->rect_lister(rect))
-						drawer_lister_->draw(rect);
+					if(essence_->header.visible() && essence_->rect_header(r))
+						drawer_header_->draw(r);
+					if(essence_->rect_lister(r))
+						drawer_lister_->draw(r);
 					_m_draw_border();
 				}
 

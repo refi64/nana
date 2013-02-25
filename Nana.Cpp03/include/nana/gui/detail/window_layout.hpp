@@ -163,10 +163,8 @@ namespace detail
 			nana::rectangle rect;
 			while(wd->parent)
 			{
-				typename core_window_t::cont_type::value_type *end = &(wd->parent->children[0]) + wd->parent->children.size();
-				typename core_window_t::cont_type::value_type *i = std::find(&(wd->parent->children[0]), end, wd);
-
-				++i;	//move to the next widget
+				typename core_window_t::container::value_type *end = &(wd->parent->children[0]) + wd->parent->children.size();
+				typename core_window_t::container::value_type *i = std::find(&(wd->parent->children[0]), end, wd) + 1;	//move to the widget that next to wd
 				for(; i != end; ++i)
 				{
 					core_window_t* cover = *i;
@@ -286,7 +284,7 @@ namespace detail
 					else
 						glass_buffer.bitblt(nana::rectangle(0, 0, wd->rect.width, wd->rect.height), wd->parent->drawer.graphics, nana::point(wd->rect.x, wd->rect.y));
 
-					for(typename core_window_t::cont_type::iterator i = wd->parent->children.begin(); i != wd->parent->children.end(); ++i)
+					for(typename core_window_t::container::iterator i = wd->parent->children.begin(); i != wd->parent->children.end(); ++i)
 					{
 						core_window_t * x = *i;
 						if(x->index < wd->index)
@@ -320,7 +318,7 @@ namespace detail
 			nana::rectangle rect;
 			nana::rectangle child_rect;
 
-			for(typename core_window_t::container_type::iterator i = wd->children.begin(), end = wd->children.end(); i != end; ++i)
+			for(typename core_window_t::container::iterator i = wd->children.begin(), end = wd->children.end(); i != end; ++i)
 			{
 				core_window_t * child = *i;
 
@@ -390,52 +388,40 @@ namespace detail
 
 		//_m_notify_glasses
 		//@brief:	Notify the glass windows that are overlapped with the specified vis_rect
-		static void _m_notify_glasses(core_window_t* const sigwnd, const nana::rectangle& r_visual)
+		static void _m_notify_glasses(core_window_t* const sigwd, const nana::rectangle& r_visual)
 		{
-			if(0 == data_sect.glass_window_cont.size())
-				return;
-
-			typename std::vector<core_window_t*>::iterator i = data_sect.glass_window_cont.begin(), end = data_sect.glass_window_cont.end();
-			for(; i != end; ++i)
+			nana::rectangle r_of_sigwd(sigwd->root_x, sigwd->root_y, sigwd->rect.width, sigwd->rect.height);
+			for(typename std::vector<core_window_t*>::iterator i = data_sect.glass_window_cont.begin(), end = data_sect.glass_window_cont.end();
+				i != end; ++i)
 			{
 				core_window_t* x = *i;
-				if(	x == sigwnd || !x->visible ||
-					(false == nana::gui::overlap(x->root_x, x->root_y, x->rect.width, x->rect.height, sigwnd->root_x, sigwnd->root_y, sigwnd->rect.width, sigwnd->rect.height)))
+				if(	x == sigwd || !x->visible ||
+					(false == nana::gui::overlap(nana::rectangle(x->root_x, x->root_y, x->rect.width, x->rect.height), r_of_sigwd)))
 					continue;
 
 				//Test a parent of the glass window is invisible.
-				bool visible = true;
 				for(core_window_t *p = x->parent; p; p = p->parent)
-				{
 					if(false == p->visible)
-					{
-						visible = false;
-						break;
-					}
-				}
+						return;
 
-				if(visible)
+				if(sigwd->parent == x->parent)
 				{
-					if(sigwnd->parent == x->parent)
-					{
-						if(sigwnd->index < x->index)
-							_m_paint_glass_window(x, true);
-					}
-					else if(sigwnd == x->parent)
-					{
+					if(sigwd->index < x->index)
 						_m_paint_glass_window(x, true);
-					}
-					else
-					{
-						//test if sigwnd is a parent of glass window x, or a slibing of the glass window, or a child of the slibing of the glass window.
-						core_window_t *p = x->parent;
-						core_window_t * signode = sigwnd;
-						while(signode->parent && (signode->parent != p))
-							signode = signode->parent;
+				}
+				else if(sigwd == x->parent)
+				{
+					_m_paint_glass_window(x, true);
+				}
+				else
+				{
+					//test if sigwnd is a parent of glass window x, or a slibing of the glass window, or a child of the slibing of the glass window.
+					core_window_t *p = x->parent, *signode = sigwd;
+					while(signode->parent && (signode->parent != p))
+						signode = signode->parent;
 
-						if(signode->parent && (signode->index < x->index))// || (signode->other.category != category::widget_tag::value))
-							_m_paint_glass_window(x, true);
-					}
+					if(signode->parent && (signode->index < x->index))// || (signode->other.category != category::widget_tag::value))
+						_m_paint_glass_window(x, true);
 				}
 			}
 		}

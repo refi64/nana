@@ -372,13 +372,13 @@ namespace detail
 			if(event.xbutton.button == Button4 || event.xbutton.button == Button5)
 			{
 				ei.wheel.upwards = (event.xbutton.button == Button4);
-				ei.wheel.x = event.xbutton.x - wd->root_x;
-				ei.wheel.y = event.xbutton.y - wd->root_y;
+				ei.wheel.x = event.xbutton.x - wd->pos_root.x;
+				ei.wheel.y = event.xbutton.y - wd->pos_root.y;
 			}
 			else
 			{
-				ei.mouse.x = event.xbutton.x - wd->root_x;
-				ei.mouse.y = event.xbutton.y - wd->root_y;
+				ei.mouse.x = event.xbutton.x - wd->pos_root.x;
+				ei.mouse.y = event.xbutton.y - wd->pos_root.y;
 
 				ei.mouse.left_button = ei.mouse.mid_button = ei.mouse.right_button = false;
 				ei.mouse.shift = ei.mouse.ctrl = false;
@@ -398,8 +398,8 @@ namespace detail
 		}
 		else if(msg == MotionNotify)
 		{
-			ei.mouse.x = event.xmotion.x - wd->root_x;
-			ei.mouse.y = event.xmotion.y - wd->root_y;
+			ei.mouse.x = event.xmotion.x - wd->pos_root.x;
+			ei.mouse.y = event.xmotion.y - wd->pos_root.y;
 			ei.mouse.left_button = ei.mouse.mid_button = ei.mouse.right_button = false;
 
 			ei.mouse.shift = event.xmotion.state & ShiftMask;
@@ -413,8 +413,8 @@ namespace detail
 		}
 		else if(EnterNotify == msg)
 		{
-			ei.mouse.x = event.xcrossing.x - wd->root_x;
-			ei.mouse.y = event.xcrossing.y - wd->root_y;
+			ei.mouse.x = event.xcrossing.x - wd->pos_root.x;
+			ei.mouse.y = event.xcrossing.y - wd->pos_root.y;
 			ei.mouse.left_button = ei.mouse.mid_button = ei.mouse.right_button = false;
 
 			ei.mouse.shift = event.xcrossing.state & ShiftMask;
@@ -468,8 +468,8 @@ namespace detail
 					detail::tag_dropinfo di;
 					di.filenames.swap(*msg.u.mouse_drop.files);
 					delete msg.u.mouse_drop.files;
-					di.pos.x = msg.u.mouse_drop.x - msgwd->root_x;
-					di.pos.y = msg.u.mouse_drop.y - msgwd->root_y;
+					di.pos.x = msg.u.mouse_drop.x - msgwd->pos_root.x;
+					di.pos.y = msg.u.mouse_drop.y - msgwd->pos_root.y;
 					ei.dropinfo = & di;
 					ei.window = reinterpret_cast<window>(msgwd);
 					
@@ -566,7 +566,7 @@ namespace detail
 				}
 				break;
 			case ConfigureNotify:
-				if(msgwnd->rect.width != static_cast<unsigned>(xevent.xconfigure.width) || msgwnd->rect.height != static_cast<unsigned>(xevent.xconfigure.height))
+				if(msgwnd->dimension.width != static_cast<unsigned>(xevent.xconfigure.width) || msgwnd->dimension.height != static_cast<unsigned>(xevent.xconfigure.height))
 				{
 					ei.size.width = xevent.xconfigure.width;
 					ei.size.height = xevent.xconfigure.height;
@@ -988,8 +988,8 @@ namespace detail
 	void make_eventinfo_for_mouse(eventinfo& ei, detail::bedrock::core_window_t* wd, unsigned int msg, const event_mask& lparam)
 	{
 		ei.window = reinterpret_cast<window>(wd);
-		ei.mouse.x = lparam.pos.x - wd->root_x;
-		ei.mouse.y = lparam.pos.y - wd->root_y;
+		ei.mouse.x = lparam.pos.x - wd->pos_root.x;
+		ei.mouse.y = lparam.pos.y - wd->pos_root.y;
 	}
 
 
@@ -1058,7 +1058,7 @@ namespace detail
 							wd = wd->parent;
 					}
 					else if(wd->other.category == category::frame_tag::value)
-						wd = wd_manager.find_window(wd->root, wd->root_x, wd->root_y);
+						wd = wd_manager.find_window(wd->root, wd->pos_root.x, wd->pos_root.y);
 				}
 
 				wd_manager.update(wd, true, true);

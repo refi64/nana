@@ -122,8 +122,7 @@ namespace nana{	namespace gui{
 				if(0 == effective_range_.width || 0 == effective_range_.height)
 				{
 					rect.x = rect.y = 0;
-					rect.width = wd_->rect.width;
-					rect.height = wd_->rect.height;
+					rect = wd_->dimension;
 				}
 				else
 				{
@@ -182,7 +181,7 @@ namespace nana{	namespace gui{
 						paint_size_ = size;
 					}
 				
-					native_interface::caret_pos(wd_->root, wd_->root_x + pos.x, wd_->root_y + pos.y);
+					native_interface::caret_pos(wd_->root, wd_->pos_root.x + pos.x, wd_->pos_root.y + pos.y);
 				}
 			}
 		//end class caret_descriptor
@@ -249,8 +248,8 @@ namespace nana{	namespace gui{
 				if(category::root_tag::value == this->other.category)
 				{
 					this->root = wd;
-					this->rect.width = width;
-					this->rect.height = height;
+					dimension.width = width;
+					dimension.height = height;
 					this->extra_width = extra_width;
 					this->extra_height = extra_height;
 					this->root_widget = this;
@@ -266,15 +265,13 @@ namespace nana{	namespace gui{
 
 			void basic_window::_m_init_pos_and_size(basic_window* parent, const rectangle& r)
 			{
-				this->rect.width = r.width;
-				this->rect.height = r.height;
-				this->rect.x = this->root_x = r.x;
-				this->rect.y = this->root_y = r.y;
+				pos_owner = pos_root = r;
+				dimension = r;
 
 				if(parent)
 				{
-					this->root_x += parent->root_x;
-					this->root_y += parent->root_y;
+					pos_root.x += parent->pos_root.x;
+					pos_root.y += parent->pos_root.y;
 				}
 			}
 

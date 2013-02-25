@@ -173,7 +173,7 @@ namespace paint
 			if(filename.size())
 			{
 				nana::string fn;
-				std::transform(filename.begin(), filename.end(), std::back_inserter(fn), detail::toupper);
+				std::transform(filename.cbegin(), filename.cend(), std::back_inserter(fn), detail::toupper);
 
 				if(filename.size() >= 4)
 				{

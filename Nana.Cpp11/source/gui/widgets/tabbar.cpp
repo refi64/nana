@@ -373,7 +373,7 @@ namespace nana{ namespace gui{
 
 				const nana::any& at_no_bound_check(std::size_t i) const
 				{
-					const_iterator it = list_.begin();
+					const_iterator it = list_.cbegin();
 					std::advance(it, i);
 					return it->value;
 				}
@@ -684,7 +684,7 @@ namespace nana{ namespace gui{
 				{
 					if(i < list_.size())
 					{
-						const_iterator it = list_.begin();
+						const_iterator it = list_.cbegin();
 						std::advance(it, i);
 						return it->text;
 					}
@@ -763,7 +763,7 @@ namespace nana{ namespace gui{
 					}
 					else
 					{
-						iterator it = list_.begin();
+						auto it = list_.cbegin();
 						std::advance(it, i);
 						list_.insert(it, m);
 					}
@@ -873,24 +873,23 @@ namespace nana{ namespace gui{
 					if(x < 0 || x >= end) return npos;
 
 					int left = -static_cast<int>(basis_.scroll_pixels);
-					std::size_t index = 0;
+					std::size_t i = 0, size = list_.size();
 
-					for(const_iterator i = list_.begin(); i != list_.end(); ++i, ++index)
+					for(; i != size; ++i)
 					{
-						if(left < end)
+						if(left >= end)
 						{
-							if(left <= x && x < left + static_cast<int>(basis_.item_pixels))
-								break;
-						}
-						else
-						{
-							index = npos;
+							i = npos;
 							break;
 						}
+
+						if(left <= x && x < left + static_cast<int>(basis_.item_pixels))
+							break;
+
 						left += basis_.item_pixels;
 					}
 
-					if(index < list_.size())
+					if(i < list_.size())
 					{
 						trace_.item_part = trace_.body;
 						if(toolbox_.close_fly())
@@ -899,8 +898,9 @@ namespace nana{ namespace gui{
 							if((r.x <= x && x < r.x + static_cast<int>(r.width)) && (r.y <= y && y < r.y + static_cast<int>(r.height)))
 								trace_.item_part = trace_.close;
 						}
+						return i;
 					}
-					return (index < list_.size() ? index : npos);
+					return npos;
 				}
 
 				nana::rectangle _m_toolbox_area(toolbox::button_t btn) const
@@ -1011,7 +1011,7 @@ namespace nana{ namespace gui{
 
 					item_renderer::item_t active_m;
 
-					for(auto i = list_.begin(); i != list_.end(); ++i, ++index)
+					for(auto i = list_.cbegin(); i != list_.cend(); ++i, ++index)
 					{
 						if(m.r.x >= pixels) break;
 
@@ -1022,7 +1022,7 @@ namespace nana{ namespace gui{
 							if(index == this->basis_.active)
 								active_m = m;
 
-							item_t & item = *i;
+							const item_t & item = *i;
 							basis_.renderer->item(*basis_.graph, m, (index == basis_.active), _m_state(index));
 							if(is_close_fly)
 							{

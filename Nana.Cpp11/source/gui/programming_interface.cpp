@@ -49,7 +49,7 @@ namespace API
 				{
 					if(effects::edge_nimbus::none != iwd->effect.edge_nimbus)
 					{
-						for(auto i = cont.begin(); i != cont.end(); ++i)
+						for(auto i = cont.cbegin(); i != cont.cend(); ++i)
 							if(i->window == iwd)
 							{
 								cont.erase(i);
@@ -80,11 +80,11 @@ namespace API
 		{
 			if(wd)
 			{
-				restrict::core_window_t * const iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+				const auto iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 				internal_scope_guard isg;
 				if(restrict::window_manager.available(iwd))
 				{
-					iwd->drawer.graphics.make(iwd->rect.width, iwd->rect.height);
+					iwd->drawer.graphics.make(iwd->dimension.width, iwd->dimension.height);
 					iwd->drawer.graphics.rectangle(iwd->color.background, true);
 					iwd->drawer.attached(dr);
 					make_drawer_event<events::size>(wd);
@@ -163,7 +163,7 @@ namespace API
 				if((wd->thread_id == tid) && (wd->root != root))
 				{
 					root = wd->root;
-					if(roots.end() == std::find(roots.begin(), roots.end(), root))
+					if(roots.cend() == std::find(roots.cbegin(), roots.cend(), root))
 						roots.push_back(root);
 				}
 			}
@@ -412,12 +412,12 @@ namespace API
 	{
 		if(wd)
 		{
-			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+			auto iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 			{
 				return ( (iwd->other.category == category::root_tag::value) ?
-					restrict::interface_type::window_position(iwd->root) : nana::point(iwd->rect.x, iwd->rect.y));
+					restrict::interface_type::window_position(iwd->root) : iwd->pos_owner);
 			}
 		}
 		return nana::point();
@@ -496,7 +496,7 @@ namespace API
 		}
 	}
 
-	bool window_rectangle(window wd, rectangle& rect)
+	bool window_rectangle(window wd, rectangle& r)
 	{
 		if(wd)
 		{
@@ -504,13 +504,8 @@ namespace API
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 			{
-				rect.x = iwd->rect.x;
-				rect.y = iwd->rect.y;
-				if(iwd->other.category == category::root_tag::value)
-					restrict::interface_type::get_window_rect(iwd->root, rect);
-
-				rect.width = iwd->rect.width;
-				rect.height = iwd->rect.height;
+				r = iwd->pos_owner;
+				r = iwd->dimension;
 				return true;
 			}
 		}
@@ -1100,8 +1095,8 @@ namespace API
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 			{
-				pos.x += iwd->root_x;
-				pos.y += iwd->root_y;
+				pos.x += iwd->pos_root.x;
+				pos.y += iwd->pos_root.y;
 				return restrict::interface_type::calc_screen_point(iwd->root, pos);
 			}
 		}

@@ -222,8 +222,8 @@ namespace nana
 			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				auto last = fobjs.end() - 1;
-				for(auto i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.cend() - 1;
+				for(auto i = fobjs.cbegin(); i != last; ++i)
 					(*i)();
 				return (*last)();
 			}
@@ -252,8 +252,8 @@ namespace nana
 			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				auto last = fobjs.end() - 1;
-				for(auto i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.cend() - 1;
+				for(auto i = fobjs.cbegin(); i != last; ++i)
 					(*i)(p0);
 				return (*last)(p0);
 			}
@@ -282,8 +282,8 @@ namespace nana
 			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				auto last = fobjs.end() - 1;
-				for(auto i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.cend() - 1;
+				for(auto i = fobjs.cbegin(); i != last; ++i)
 					(*i)(p0, p1);
 				return (*last)(p0, p1);
 			}
@@ -312,8 +312,8 @@ namespace nana
 			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				auto last = fobjs.end() - 1;
-				for(auto i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.cend() - 1;
+				for(auto i = fobjs.cbegin(); i != last; ++i)
 					(*i)(p0, p1, p2);
 				return (*last)(p0, p1, p2);
 			}
@@ -342,8 +342,8 @@ namespace nana
 			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				auto last = fobjs.end() - 1;
-				for(auto i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.cend() - 1;
+				for(auto i = fobjs.cbegin(); i != last; ++i)
 					(*i)(p0, p1, p2, p3);
 				return (*last)(p0, p1, p2, p3);
 			}
@@ -372,8 +372,8 @@ namespace nana
 			auto & fobjs = this->_m_cont();
 			if(fobjs.size())
 			{
-				auto last = fobjs.end() - 1;
-				for(auto i = fobjs.begin(); i != last; ++i)
+				auto last = fobjs.cend() - 1;
+				for(auto i = fobjs.cbegin(); i != last; ++i)
 					(*i)(p0, p1, p2, p3, p4);
 				return (*last)(p0, p1, p2, p3, p4);
 			}

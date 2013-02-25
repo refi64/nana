@@ -22,15 +22,9 @@ namespace gui
 {
 	//overlap test if overlaped between r1 and r2
 	bool overlap(const rectangle& r1, const rectangle& r2);
-	bool overlap(int x, int y, unsigned width, unsigned height,
-				 int x2, int y2, unsigned width2, unsigned height2);
 
 	// overlap, compute the overlap area between r1 and r2. the r is for root
 	bool overlap(const rectangle& r1, const rectangle& r2, rectangle& r);
-
-	bool overlap(int x, int y, unsigned width, unsigned height,
-				 int x2, int y2, unsigned width2, unsigned height2,
-				 rectangle& r);
 
 	bool overlap(const rectangle& ir, const size& valid_input_area, const rectangle & dr, const size& valid_dst_area, rectangle& output_src_r, rectangle& output_dst_r);
 
@@ -44,9 +38,6 @@ namespace gui
 	//@brief:	Tests a rectangle whether it is wholly covered by another.
 	bool covered(const rectangle& underlying, //Rectangle 1 is must under rectangle 2
 						const rectangle& cover);
-
-	int get_min(int x, int y);
-	int get_max(int x, int y);
 
 	bool is_hit_the_rectangle(const rectangle& r, int x, int y);
 }//end namespace gui

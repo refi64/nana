@@ -81,8 +81,8 @@ namespace nana{
 		{
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-			auto i = map_.find(wd);
-			if(i != map_.end())
+			auto i = const_cast<const map_t&>(map_).find(wd);
+			if(i != map_.cend())
 			{
 				ext = i->second;
 				map_.erase(i);

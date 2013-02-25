@@ -109,8 +109,7 @@ namespace nana{ namespace gui{
 					{
 						nana::point refpos(1, static_cast<int>(topbar_height) + 1);
 
-						unsigned height = graph.height() - 2 - topbar_height;
-						nana::paint::graphics gbuf(width, height);
+						nana::paint::graphics gbuf(width, graph.height() - 2 - topbar_height);
 						gbuf.rectangle(0xF0F0F0, true);
 
 						switch(page_)
@@ -120,6 +119,8 @@ namespace nana{ namespace gui{
 							break;
 						case PageMonth:
 							_m_draw_months(refpos, gbuf);
+							break;
+						default:
 							break;
 						}
 

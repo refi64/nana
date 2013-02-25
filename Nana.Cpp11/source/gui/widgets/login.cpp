@@ -441,8 +441,8 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			{
 				if(trace_.item_index < container_.size())
 				{
-					auto i = container_.begin() + trace_.item_index;
-					item_t * m = *i;
+					auto i = container_.cbegin() + trace_.item_index;
+					const item_t * m = *i;
 
 					if(other_.login_object)
 					{

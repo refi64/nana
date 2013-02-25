@@ -261,8 +261,7 @@ namespace detail
 	{
 		typedef THWND		native_window_type;
 		typedef Bedrock		bedrock_type;
-		typedef std::vector<basic_window*> container_type;
-		typedef std::vector<basic_window*> tabstop_container_type;
+		typedef std::vector<basic_window*> container;
 
 		struct root_context
 		{
@@ -404,9 +403,6 @@ namespace detail
 				this->thread_id = parent->thread_id;
 		}
 	public:
-		typedef nana::color_t color_t;
-		typedef std::vector<basic_window*> cont_type;
-
 		nana::rectangle	rect;
 		nana::size	min_track_size;
 		nana::size	max_track_size;
@@ -471,8 +467,8 @@ namespace detail
 
 			struct	attr_root_tag
 			{
-				std::vector<basic_window*>	frames;	//initialization is null, it will be created while creating a frame widget. Refer to WindowManager::create_frame
-				std::vector<basic_window*>	tabstop;
+				container	frames;	//initialization is null, it will be created while creating a frame widget. Refer to WindowManager::create_frame
+				container	tabstop;
 				std::vector<edge_nimbus_action> effects_edge_nimbus;
 				basic_window	*focus;
 				basic_window	*menubar;
@@ -530,7 +526,7 @@ namespace detail
 		native_window_type	root;		//root Window handle
 		unsigned			thread_id;		//the identifier of the thread that created the window.
 		unsigned			index;
-		cont_type			children;
+		container			children;
 	};
 
 }//end namespace detail

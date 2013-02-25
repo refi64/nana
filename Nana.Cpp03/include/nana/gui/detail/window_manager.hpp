@@ -1077,6 +1077,7 @@ namespace detail
 		core_window_t* capture_window(core_window_t* wd, bool value)
 		{
 			nana::point pos = interface_type::cursor_position();
+			std::vector<std::pair<core_window_t*, bool> > & attr_cap = attr_.capture.history;
 			if(value)
 			{
 				if(wd != attr_.capture.window)
@@ -1090,7 +1091,7 @@ namespace detail
 						interface_type::capture_window(wd->root, value);
 						core_window_t* prev = attr_.capture.window;
 						if(prev && prev != wd)
-							attr_.capture.history.push_back(std::make_pair(prev, attr_.capture.ignore_children));
+							attr_cap.push_back(std::make_pair(prev, attr_.capture.ignore_children));
 
 						attr_.capture.window = wd;
 						attr_.capture.ignore_children = true;
@@ -1104,10 +1105,11 @@ namespace detail
 			}
 			else if(wd == attr_.capture.window)
 			{
-				if(attr_.capture.history.size())
+				attr_.capture.window = 0;
+				if(attr_cap.size())
 				{
-					std::pair<core_window_t*, bool> & last = attr_.capture.history[attr_.capture.history.size() - 1];
-					attr_.capture.history.erase(attr_.capture.history.begin() + (attr_.capture.history.size() - 1));
+					std::pair<core_window_t*, bool> last = attr_cap.back();
+					attr_cap.erase(attr_cap.end() - 1);
 
 					if(handle_manager_.available(last.first))
 					{
@@ -1117,27 +1119,23 @@ namespace detail
 						interface_type::calc_window_point(last.first->root, pos);
 						attr_.capture.inside = _m_effective(last.first, pos.x, pos.y);
 					}
-					else
-						attr_.capture.window = 0;
 				}
-				else
-					attr_.capture.window = 0;
 
 				if(wd && (0 == attr_.capture.window))
 					interface_type::capture_window(wd->root, false);
 			}
 			else
 			{
-				for(typename std::vector<std::pair<core_window_t*, bool> >::iterator it = attr_.capture.history.begin(); it != attr_.capture.history.end(); ++it)
+				for(typename std::vector<std::pair<core_window_t*, bool> >::iterator it = attr_cap.begin(); it != attr_cap.end(); ++it)
 				{
 					if(it->first == wd)
 					{
-						attr_.capture.history.erase(it);
+						attr_cap.erase(it);
 						break;
 					}
 				}
 
-				wd = attr_.capture.window;
+				return attr_.capture.window;
 			}
 			return wd;
 		}
@@ -1170,19 +1168,17 @@ namespace detail
 				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
-					typedef typename core_window_t::tabstop_container_type tabstop_cont_t;
-
-					tabstop_cont_t * cont = &(wd->root_widget->other.attribute.root->tabstop);
-					if(cont && cont->size())
+					typedef typename core_window_t::container container;
+					const container & tabs = wd->root_widget->other.attribute.root->tabstop;
+					if(tabs.size() > 1)
 					{
-						typename tabstop_cont_t::iterator i = std::find(cont->begin(), cont->end(), wd);
-						if(i == cont->begin())
+						container::const_iterator i = std::find(tabs.begin(), tabs.end(), wd);
+						if(i != tabs.end())
 						{
-							if(cont->size() > 1)
-								return (*cont)[cont->size() - 1];
+							if(tabs.begin() == i)
+								return tabs.back();
+							return *(i - 1);
 						}
-						else if(i != cont->end())
-							return *(--i);
 					}
 				}
 			}
@@ -1205,13 +1201,13 @@ namespace detail
 			}
 			else if(nana::gui::detail::tab_type::tabstop & wd->flags.tab)
 			{
-				typedef typename core_window_t::tabstop_container_type tabstop_cont_t;
+				typedef typename core_window_t::container cont_t;
 
-				tabstop_cont_t & container = root_wd->other.attribute.root->tabstop;
+				cont_t& container = root_wd->other.attribute.root->tabstop;
 				if(container.size())
 				{
-					typename tabstop_cont_t::iterator end = container.end();
-					typename tabstop_cont_t::iterator i = std::find(container.begin(), end, wd);
+					typename cont_t::iterator end = container.end();
+					typename cont_t::iterator i = std::find(container.begin(), end, wd);
 					if(i != end)
 					{
 						++i;
@@ -1386,10 +1382,10 @@ namespace detail
 			//test if wd is a TABSTOP window
 			if(wd->flags.tab & nana::gui::detail::tab_type::tabstop)
 			{
-				typename core_window_t::tabstop_container_type & tabstop = root_wd->other.attribute.root->tabstop;
-				typename core_window_t::tabstop_container_type::iterator i = std::find(tabstop.begin(), tabstop.end(), wd);
-				if(i != tabstop.end())
-					tabstop.erase(i);
+				typename core_window_t::container & tabs = root_wd->other.attribute.root->tabstop;
+				typename core_window_t::container::iterator i = std::find(tabs.begin(), tabs.end(), wd);
+				if(i != tabs.end())
+					tabs.erase(i);
 			}
 
 			if(wd->effect.edge_nimbus)
@@ -1412,7 +1408,7 @@ namespace detail
 
 			if(wd->parent && (wd->parent->children.size() > 1))
 			{
-				typename core_window_t::cont_type::iterator it = wd->parent->children.begin(), end = wd->parent->children.end();
+				typename core_window_t::container::iterator it = wd->parent->children.begin(), end = wd->parent->children.end();
 				for(; it != end; ++it)
 				{
 					if((*it)->index > wd->index)

@@ -57,7 +57,7 @@ namespace detail
 					queue_ = newbuf;
 				}
 
-				auto iter = container.begin();
+				auto iter = container.cbegin();
 				abstract_handler * *i = queue_ + size_;
 				abstract_handler * * const end = i + size;
 				while(i < end)
@@ -136,22 +136,23 @@ namespace detail
 
 			if(handle_manager_.available(abs_handler))
 			{
-				this->write_off_bind(eh);
+				write_off_bind(eh);
 
 				auto v = abs_handler->container;
-				auto i = std::find(v->begin(), v->end(), abs_handler);
-				if(i != v->end())
+				auto i = std::find(v->cbegin(), v->cend(), abs_handler);
+				if(i != v->cend())
 				{
 					v->erase(i);
-					if(v->size() == 0)
+					if(0 == v->size())
 					{
-						auto i = nana_runtime::callbacks.table[abs_handler->event_identifier].find(abs_handler->window);
-						auto & handler_pair = i->second;
-						if(handler_pair.first.size() == 0 && handler_pair.second.size() == 0)
-							nana_runtime::callbacks.table[abs_handler->event_identifier].erase(i);
+						auto & evt = nana_runtime::callbacks.table[abs_handler->event_identifier];
+						auto i_evt = evt.find(abs_handler->window);
+						auto & pair_v  = i_evt->second;
+						if((0 == pair_v.first.size()) && (0 == pair_v.second.size()))
+							evt.erase(i_evt);
 					}
-					handle_manager_(abs_handler);
 				}
+				handle_manager_(abs_handler);
 			}
 		}
 
@@ -177,8 +178,9 @@ namespace detail
 					std::for_each(hdpair.first.rbegin(), hdpair.first.rend(), deleter_wrapper);
 					if(only_for_drawer)
 					{
-						hdpair.first.clear();
-						if(0 == hdpair.second.size())
+						if(hdpair.second.size())
+							hdpair.first.clear();
+						else
 							i->erase(element);
 					}
 					else
@@ -247,8 +249,8 @@ namespace detail
 			if(eh && reinterpret_cast<abstract_handler*>(eh)->listener)
 			{
 				auto & v = bind_cont_[reinterpret_cast<abstract_handler*>(eh)->listener];
-				auto i = std::find(v.begin(), v.end(), eh);
-				if(i != v.end())
+				auto i = std::find(v.cbegin(), v.cend(), eh);
+				if(i != v.cend())
 				{
 					if(v.size() > 1)
 						v.erase(i);

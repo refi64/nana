@@ -440,8 +440,8 @@ namespace detail
 		case WM_LBUTTONUP: case WM_RBUTTONUP: case WM_MBUTTONUP:
 		case WM_LBUTTONDBLCLK: case WM_MBUTTONDBLCLK: case WM_RBUTTONDBLCLK:
 		case WM_MOUSEMOVE:
-			ei.mouse.x = pmdec.mouse.x - wd->root_x;
-			ei.mouse.y = pmdec.mouse.y - wd->root_y;
+			ei.mouse.x = pmdec.mouse.x - wd->pos_root.x;
+			ei.mouse.y = pmdec.mouse.y - wd->pos_root.y;
 			ei.mouse.shift = pmdec.mouse.button.shift;
 			ei.mouse.ctrl = pmdec.mouse.button.ctrl;
 
@@ -939,8 +939,8 @@ namespace detail
 					::ScreenToClient(reinterpret_cast<HWND>(msgwnd->root), &point);
 
 					ei.wheel.upwards = (pmdec.mouse.button.wheel_delta >= 0);
-					ei.wheel.x = static_cast<short>(point.x - msgwnd->root_x);
-					ei.wheel.y = static_cast<short>(point.y - msgwnd->root_y);
+					ei.wheel.x = static_cast<short>(point.x - msgwnd->pos_root.x);
+					ei.wheel.y = static_cast<short>(point.y - msgwnd->pos_root.y);
 
 					bedrock.raise_event(event_tag::mouse_wheel, msgwnd, ei, true);
 				}
@@ -1414,7 +1414,7 @@ namespace detail
 							wd = wd->parent;
 					}
 					else if(wd->other.category == category::frame_tag::value)
-						wd = wd_manager.find_window(wd->root, wd->root_x, wd->root_y);
+						wd = wd_manager.find_window(wd->root, wd->pos_root.x, wd->pos_root.y);
 				}
 
 				wd_manager.update(wd, true, true);

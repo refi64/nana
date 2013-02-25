@@ -69,7 +69,7 @@ namespace gui
 
 			bool picture_drawer::bgstyle(bool is_stretch, nana::arrange arg, int beg, int end)
 			{
-				if(backimg_.image.empty() == false)
+				if(backimg_.image)
 				{
 					backimg_.is_stretch = is_stretch;
 					backimg_.arg = arg;
@@ -110,7 +110,7 @@ namespace gui
 					if(backimg_.image.empty() == false)
 					{
 						nana::size imgsize = backimg_.image.size();
-						nana::size gsize(graph.width(), graph.height());
+						nana::size gsize = graph.size();
 
 						switch(backimg_.arg)
 						{
@@ -258,10 +258,8 @@ namespace gui
 				{
 					if(false == API::glass_window(*widget_))
 					{
-						unsigned bkcolor = widget_->background();
-
 						if(runtime_.background_shadow_end == runtime_.background_shadow_start)
-							graph_->rectangle((runtime_.background_shadow_end ? runtime_.background_shadow_end : bkcolor), true);
+							graph_->rectangle((runtime_.background_shadow_end ? runtime_.background_shadow_end : widget_->background()), true);
 						else
 							graph_->shadow_rectangle(graph_->size(), runtime_.background_shadow_start, runtime_.background_shadow_end, !runtime_.horizontal);
 					}
@@ -293,7 +291,7 @@ namespace gui
 
 		void picture::bgstyle(bool stretchable, nana::arrange arg, int beg, int end)
 		{
-			if(this->get_drawer_trigger().bgstyle(stretchable, arg, beg, end))
+			if(get_drawer_trigger().bgstyle(stretchable, arg, beg, end))
 				API::refresh_window(*this);
 		}
 

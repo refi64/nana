@@ -14,6 +14,62 @@ namespace gui
 		typedef std::pair<window, unsigned>	fixed_t;
 		typedef std::pair<window, int>	percent_t;
 
+		class number_t
+		{
+		public:
+			enum class kind{integer, real, percent};
+
+			number_t()
+				: kind_(kind::integer)
+			{
+				value_.integer = 0;
+			}
+
+			kind kind_of() const
+			{
+				return kind_;
+			}
+
+			int integer() const
+			{
+				if(kind::integer == kind_)
+					return value_.integer;
+				return value_.real;
+			}
+
+			double real() const
+			{
+				if(kind::integer == kind_)
+					return value_.integer;
+				return value_.real;
+			}
+
+			void assign(int i)
+			{
+				kind_ = kind::integer;
+				value_.integer = i;
+			}
+
+			void assign(double d)
+			{
+				kind_ = kind::real;
+				value_.real = d;
+			}
+
+			void assign_percent(double d)
+			{
+				kind_ = kind::percent;
+				value_.real = d;
+			}
+		private:
+			kind kind_;
+			union valueset
+			{
+				int integer;
+				double real;
+			}value_;
+		};
+
 		class field_t
 		{
 		public:
@@ -181,7 +237,7 @@ namespace gui
 			enum class kind{arrange, vertical_arrange, grid};
 
 			division(kind k, std::string&& n)
-				: kind_of_division(k), name(std::move(n)), fixed(0), percent(0), field(nullptr)
+				: kind_of_division(k), name(std::move(n)), field(nullptr)
 			{}
 
 			virtual ~division()
@@ -192,10 +248,22 @@ namespace gui
 				}
 			}
 
+			bool is_fixed() const
+			{
+				return ((weight.kind_of() == number_t::kind::integer) && (weight.integer() != 0));
+			}
+
+			bool is_percent() const
+			{
+				return ((weight.kind_of() == number_t::kind::percent) && (weight.real() != 0));
+			}
+
+			//return the fixed pixels and adjustable items.
 			std::pair<unsigned, std::size_t> fixed_pixels(kind match_kind) const
 			{
-				if(fixed)
-					return std::pair<unsigned, std::size_t>(fixed, 1);
+				//this is a weight fixed division
+				if(is_fixed())
+					return std::pair<unsigned, std::size_t>(weight.integer(), 1);
 
 				std::pair<unsigned, std::size_t> pair;
 				if(field && (kind_of_division == match_kind))
@@ -203,13 +271,13 @@ namespace gui
 				
 				for(auto child : children)
 				{
-					if(0 == child->fixed) //it is adjustable
+					if(false == child->is_fixed()) //it is adjustable
 					{
-						if(0 == child->percent)
+						if(false == child->is_percent())
 							++pair.second;
 					}
 					else
-						pair.first += child->fixed;
+						pair.first += static_cast<unsigned>(child->weight.integer());
 				}
 				return pair;
 			}
@@ -221,8 +289,7 @@ namespace gui
 			const std::string name;
 			std::vector<division*> children;
 			nana::rectangle area;
-			unsigned fixed;
-			unsigned percent;
+			number_t weight;
 			field_t * field;
 		};
 
@@ -249,17 +316,17 @@ namespace gui
 					child->area.y = area.y;
 					child->area.height = area.height;
 
-					unsigned adj_px = child->fixed;
+					unsigned adj_px = static_cast<unsigned>(child->weight.kind_of() == number_t::kind::integer ? child->weight.integer() : 0);
 					if(0 == adj_px) //the child is adjustable
 					{
-						if(false == child->percent)
+						if(false == child->is_percent())
 						{
 							adj_px = child->fixed_pixels(kind::arrange).first;
 							if(adj_px <= adjustable_pixels)
 								adj_px = adjustable_pixels;
 						}
 						else
-							adj_px = area.width * child->percent / 100;
+							adj_px = area.width * child->weight.real() / 100;
 					}
 					left += static_cast<int>(adj_px);
 					child->area.width = adj_px;
@@ -320,17 +387,17 @@ namespace gui
 					child->area.y = top;
 					child->area.width = area.width;
 
-					unsigned adj_px = child->fixed;
+					unsigned adj_px = static_cast<unsigned>(child->weight.kind_of() == number_t::kind::integer ? child->weight.integer() : 0);
 					if(0 == adj_px) //the child is adjustable
 					{
-						if(false == child->percent)
+						if(false == child->is_percent())
 						{
 							adj_px = child->fixed_pixels(kind::vertical_arrange).first;
 							if(adj_px <= adjustable_pixels)
 								adj_px = adjustable_pixels;
 						}
 						else
-							adj_px = area.height * child->percent / 100;
+							adj_px = area.height * child->weight.real() / 100;
 					}
 					top += static_cast<int>(adj_px);
 					child->area.height = adj_px;
@@ -395,6 +462,10 @@ namespace gui
 			{
 				API::umake_event(event_size_handle);
 				delete root_division;
+				for(auto & pair : fields)
+				{
+					delete pair.second;
+				}
 			}
 		};
 
@@ -405,6 +476,8 @@ namespace gui
 			{
 				div_start, div_end,
 				identifier, vertical, grid, number,
+				weight,
+				equal,
 				eof, error
 			};
 
@@ -417,6 +490,11 @@ namespace gui
 				return idstr_;
 			}
 
+			number_t number() const
+			{
+				return number_;
+			}
+
 			token read()
 			{
 				_m_eat_whitespace();
@@ -426,6 +504,9 @@ namespace gui
 				{
 				case '\0':
 					return token::eof;
+				case '=':
+					++sp_;
+					return token::equal;
 				case '<':
 					++sp_;
 					return token::div_start;
@@ -433,7 +514,15 @@ namespace gui
 					++sp_;
 					return token::div_end;
 				case '.': case '-':
-					readbytes = _m_number(sp_, *sp_ == '-');
+					if(*sp_ == '-')
+					{
+						readbytes = _m_number(sp_ + 1, true);
+						if(readbytes)
+							++ readbytes;
+					}
+					else
+						readbytes = _m_number(sp_, false);
+						
 					if(readbytes)
 					{
 						sp_ += readbytes;
@@ -460,7 +549,31 @@ namespace gui
 						ch = *++sp_;
 
 					idstr_.assign(idstart, sp_);
-					if(idstr_ == "vertical")
+
+					if(idstr_ == "weight")
+					{
+						if(token::equal != read())
+							_m_throw_error("an equal sign is required after \'weight\'");
+
+						const char* p = sp_;
+						for(; *p == ' '; ++p);
+
+						std::size_t len = 0;
+						if(*p == '-')
+						{
+							len = _m_number(p + 1, true);
+							if(len)	++len;
+						}
+						else
+							len = _m_number(p, false);
+
+						if(0 == len)
+							_m_throw_error("the \'weight\' requires a number(integer or real or percent)");
+						
+						sp_ += len + (p - sp_);
+						return token::weight;
+					}
+					else if(idstr_ == "vertical")
 						return token::vertical;
 					else if(idstr_ == "grid")
 						return token::grid;
@@ -475,6 +588,13 @@ namespace gui
 			{
 				std::stringstream ss;
 				ss<<"place: invalid character '"<<err_char<<"' at "<<(sp_ - divstr_);
+				throw std::runtime_error(ss.str());
+			}
+
+			void _m_throw_error(const std::string& err)
+			{
+				std::stringstream ss;
+				ss<<"place: "<<err<<" at "<<(sp_ - divstr_);
 				throw std::runtime_error(ss.str());
 			}
 
@@ -497,13 +617,16 @@ namespace gui
 				const char* allstart = sp;
 				_m_eat_whitespace();
 
-				integer_ = 0;
-				real_ = 0;
+				number_.assign(0);
+
+				bool gotcha = false;
+				int integer = 0;
+				double real = 0;
 				//read the integral part.
 				const char* istart = sp;
 				while('0' <= *sp && *sp <= '9')
 				{
-					integer_ = integer_ * 10 + (*sp - '0');
+					integer = integer * 10 + (*sp - '0');
 					++sp;
 				}
 				const char* iend = sp;
@@ -514,26 +637,33 @@ namespace gui
 					const char* rstart = sp;
 					while('0' <= *sp && *sp <= '9')
 					{
-						real_ += (*sp - '0') / (div *= 10);
+						real += (*sp - '0') / (div *= 10);
 						++sp;
 					}
 
 					if(rstart != sp)
 					{
-						is_integer_ = false;
-						real_ += integer_;
-						if(negative)
-							real_ = - real_;
-						return sp - allstart;
-
+						real += integer;
+						number_.assign(negative ? -real : real);
+						gotcha = true;
 					}
 				}
-				if(istart != iend)
+				else if(istart != iend)
 				{
-					is_integer_ = true;
-					if(negative)
-						integer_ = - integer_;
-					return sp - allstart;
+					number_.assign(negative ? - integer : integer);
+					gotcha = true;
+				}
+
+				if(gotcha)
+				{
+					for(;*sp == ' '; ++sp);
+					if('%' == *sp)
+					{
+						if(number_t::kind::integer == number_.kind_of())
+							number_.assign_percent(number_.integer());
+						return sp - allstart;
+					}
+					return sp - allstart - 1;
 				}
 				return 0;
 			}
@@ -541,9 +671,7 @@ namespace gui
 			const char* divstr_;
 			const char* sp_;
 			std::string idstr_;
-			bool is_integer_;
-			int	integer_;
-			double real_;
+			number_t number_;
 		};
 	public:
 		place()
@@ -649,6 +777,8 @@ namespace gui
 			token div_type = token::eof;
 			std::string name;
 
+			number_t weight;
+
 			std::vector<division*> children;
 			for(token tk = tknizer.read(); tk != token::eof; tk = tknizer.read())
 			{
@@ -661,6 +791,9 @@ namespace gui
 				case token::vertical:
 				case token::grid:
 					div_type = tk;
+					break;
+				case token::weight:
+					weight = tknizer.number();
 					break;
 				case token::div_end:
 					exit_for = true;
@@ -700,6 +833,7 @@ namespace gui
 				break;
 			}
 
+			div->weight = weight;
 			div->field = field;
 			div->children.swap(children);
 			return div;

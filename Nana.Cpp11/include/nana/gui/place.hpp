@@ -60,7 +60,7 @@ namespace gui
 			void assign_percent(double d)
 			{
 				kind_ = kind::percent;
-				value_.real = d;
+				value_.real = d / 100;
 			}
 		private:
 			kind kind_;
@@ -321,6 +321,7 @@ namespace gui
 			std::vector<division*> children;
 			nana::rectangle area;
 			number_t weight;
+			number_t gap;
 			field_t * field;
 		};
 
@@ -338,17 +339,27 @@ namespace gui
 				if(field)
 					pair.first += field->percent_pixels(area.width);
 				
-				unsigned adjustable_pixels = (pair.second && pair.first < area.width ? ((area.width - pair.first) / pair.second) : 0);
+				unsigned gap_size = static_cast<unsigned>(gap.kind_of() == number_t::kind::integer ? gap.integer() : area.width * gap.real());
 				
-				int left = area.x;
+				double percent_pixels = 0;
+				for(auto child: children)
+				{
+					if(child->is_percent())
+						percent_pixels += area.width * child->weight.real();
+				}
+
+				pair.first += static_cast<unsigned>(percent_pixels);
+				double adjustable_pixels = (pair.second && pair.first < area.width ? (double(area.width - pair.first) / pair.second) : 0.0);
+				
+				double left = area.x;
 				for(auto child : children)
 				{
-					child->area.x = left;
+					child->area.x = static_cast<int>(left);
 					child->area.y = area.y;
 					child->area.height = area.height;
 
-					unsigned adj_px = static_cast<unsigned>(child->weight.kind_of() == number_t::kind::integer ? child->weight.integer() : 0);
-					if(0 == adj_px) //the child is adjustable
+					double adj_px = static_cast<unsigned>(child->weight.kind_of() == number_t::kind::integer ? child->weight.integer() : 0);
+					if(adj_px <= DBL_EPSILON) //the child is adjustable
 					{
 						if(false == child->is_percent())
 						{
@@ -357,41 +368,42 @@ namespace gui
 								adj_px = adjustable_pixels;
 						}
 						else
-							adj_px = static_cast<unsigned>(area.width * child->weight.real() / 100);
+							adj_px = static_cast<unsigned>(area.width * child->weight.real());
 					}
-					left += static_cast<int>(adj_px);
-					child->area.width = adj_px;
+					left += adj_px;
+					child->area.width = static_cast<unsigned>(adj_px) - (static_cast<unsigned>(adj_px) > gap_size ? gap_size : 0);
 					child->collocate();
 				}
 
 				if(field)
 				{
+					unsigned adj_px = static_cast<unsigned>(adjustable_pixels) - (static_cast<unsigned>(adjustable_pixels) > gap_size ? gap_size : 0);
 					nana::rectangle r = area;
 					for(auto & el : field->container())
 					{
-						r.x = left;
+						r.x = static_cast<int>(left);
 						switch(el.kind_of_element)
 						{
 						case field_t::element_t::kind::fixed:
 							r.width = el.u.fixed_ptr->second;
-							API::move_window(el.u.fixed_ptr->first, left, r.y, r.width, r.height);
-							left += static_cast<int>(r.width);
+							API::move_window(el.u.fixed_ptr->first, r.x, r.y, r.width, r.height);
+							left += r.width;
 							break;
 						case field_t::element_t::kind::gap:
-							left += static_cast<int>(el.u.gap_value);
+							left += el.u.gap_value;
 							break;
 						case field_t::element_t::kind::percent:
 							r.width = area.width * el.u.percent_ptr->second / 100;
-							API::move_window(el.u.percent_ptr->first, left, r.y, r.width, r.height);
-							left += static_cast<int>(r.width);
+							API::move_window(el.u.percent_ptr->first, r.x, r.y, r.width, r.height);
+							left += r.width;
 							break;
 						case field_t::element_t::kind::window:
-							API::move_window(el.u.handle, left, r.y, adjustable_pixels, r.height);
-							left += static_cast<int>(adjustable_pixels);
+							API::move_window(el.u.handle, r.x, r.y, adj_px, r.height);
+							left += adjustable_pixels;
 							break;
 						case field_t::element_t::kind::room:
-							API::move_window(el.u.room_ptr->first, left, r.y, adjustable_pixels, r.height);
-							left += static_cast<int>(adjustable_pixels);
+							API::move_window(el.u.room_ptr->first, r.x, r.y, adj_px, r.height);
+							left += adjustable_pixels;
 							break;
 						}
 					}
@@ -413,17 +425,29 @@ namespace gui
 				if(field)
 					pair.first += field->percent_pixels(area.height);
 				
-				unsigned adjustable_pixels = (pair.second && pair.first < area.height ? ((area.height - pair.first) / pair.second) : 0);
 				
-				int top = area.y;
+				unsigned gap_size = static_cast<unsigned>(gap.kind_of() == number_t::kind::integer ? gap.integer() : area.width * gap.real());
+				
+				double percent_pixels = 0;
+				for(auto child: children)
+				{
+					if(child->is_percent())
+						percent_pixels += area.height * child->weight.real();
+				}
+
+				pair.first += static_cast<unsigned>(percent_pixels);
+				double adjustable_pixels = (pair.second && pair.first < area.height ? (double(area.height - pair.first) / pair.second) : 0.0);
+
+				
+				double top = area.y;
 				for(auto child : children)
 				{
 					child->area.x = area.x;
-					child->area.y = top;
+					child->area.y = static_cast<int>(top);
 					child->area.width = area.width;
 
-					unsigned adj_px = static_cast<unsigned>(child->weight.kind_of() == number_t::kind::integer ? child->weight.integer() : 0);
-					if(0 == adj_px) //the child is adjustable
+					double adj_px = static_cast<unsigned>(child->weight.kind_of() == number_t::kind::integer ? child->weight.integer() : 0);
+					if(adj_px <= DBL_EPSILON) //the child is adjustable
 					{
 						if(false == child->is_percent())
 						{
@@ -432,41 +456,42 @@ namespace gui
 								adj_px = adjustable_pixels;
 						}
 						else
-							adj_px = static_cast<unsigned>(area.height * child->weight.real() / 100);
+							adj_px = area.height * child->weight.real();
 					}
-					top += static_cast<int>(adj_px);
-					child->area.height = adj_px;
+					top += adj_px;
+					child->area.height = static_cast<unsigned>(adj_px) - (static_cast<unsigned>(adj_px) > gap_size ? gap_size : 0);
 					child->collocate();
 				}
 
 				if(field)
 				{
+					unsigned adj_px = static_cast<unsigned>(adjustable_pixels) - (static_cast<unsigned>(adjustable_pixels) > gap_size ? gap_size : 0);
 					nana::rectangle r = area;
 					for(auto & el : field->container())
 					{
-						r.y = top;
+						r.y = static_cast<int>(top);
 						switch(el.kind_of_element)
 						{
 						case field_t::element_t::kind::fixed:
 							r.height = el.u.fixed_ptr->second;
-							API::move_window(el.u.fixed_ptr->first, r.x, top, r.width, r.height);
-							top += static_cast<int>(r.height);
+							API::move_window(el.u.fixed_ptr->first, r.x, r.y, r.width, r.height);
+							top += r.height;
 							break;
 						case field_t::element_t::kind::gap:
-							top += static_cast<int>(el.u.gap_value);
+							top += el.u.gap_value;
 							break;
 						case field_t::element_t::kind::percent:
 							r.height = area.height * el.u.percent_ptr->second / 100;
-							API::move_window(el.u.percent_ptr->first, r.x, top, r.width, r.height);
-							top += static_cast<int>(r.height);
+							API::move_window(el.u.percent_ptr->first, r.x, r.y, r.width, r.height);
+							top += r.height;
 							break;
 						case field_t::element_t::kind::window:
-							API::move_window(el.u.handle, r.x, top, r.width, adjustable_pixels);
-							top += static_cast<int>(adjustable_pixels);
+							API::move_window(el.u.handle, r.x, r.y, r.width, adj_px);
+							top += adjustable_pixels;
 							break;
 						case field_t::element_t::kind::room:
-							API::move_window(el.u.room_ptr->first, r.x, top, r.width, adjustable_pixels);
-							top += static_cast<int>(adjustable_pixels);
+							API::move_window(el.u.room_ptr->first, r.x, r.y, r.width, adj_px);
+							top += adjustable_pixels;
 							break;
 						}
 					}
@@ -486,6 +511,12 @@ namespace gui
 
 			virtual void collocate()
 			{
+				if(nullptr == field)
+					return;
+
+				unsigned gap_size = (gap.kind_of() == number_t::kind::percent ?
+					static_cast<unsigned>(area.width * gap.real()) : static_cast<unsigned>(gap.integer()));
+
 				if(dimension.first <= 1 && dimension.second <= 1)
 				{
 					std::size_t n_of_wd = _m_number_of_window();
@@ -506,13 +537,16 @@ namespace gui
 					auto i = field->container().begin(), end = field->container().end();
 
 					bool exit_for = false;
-					int y = area.y;
-					unsigned block_w = area.width / edge;
-					unsigned block_h = area.height / ((n_of_wd / edge) + (n_of_wd % edge ? 1 : 0));
+					double y = area.y;
+					double block_w = area.width / double(edge);
+					double block_h = area.height / double((n_of_wd / edge) + (n_of_wd % edge ? 1 : 0));
+					unsigned uns_block_w = static_cast<unsigned>(block_w);
+					unsigned uns_block_h = static_cast<unsigned>(block_h);
+					unsigned height = (uns_block_h > gap_size ? uns_block_h - gap_size : uns_block_h);
 
 					for(std::size_t u = 0; u < edge; ++u)
 					{
-						int x = area.x;
+						double x = area.x;
 						for(std::size_t v = 0; v < edge; ++v)
 						{
 							i = _m_search(i, end);
@@ -537,22 +571,24 @@ namespace gui
 								break;
 							case field_t::element_t::kind::window:
 								wd = i->u.handle;
-								value = block_w;
+								value = static_cast<unsigned>(block_w);
 								break;
 							}
 							++i;
-							
-							API::move_window(wd, x, y, (value > block_w ? block_w : value), block_h);
-							x += static_cast<int>(block_w);
+
+							unsigned width = (value > uns_block_w ? uns_block_w : value);
+							if(width > gap_size)	width -= gap_size;
+							API::move_window(wd, static_cast<int>(x), static_cast<int>(y), width, height);
+							x += block_w;
 						}
 						if(exit_for) break;
-						y += static_cast<int>(block_h);
+						y += block_h;
 					}
 				}
 				else
 				{
-					unsigned block_w = area.width / dimension.first;
-					unsigned block_h = area.height / dimension.second;
+					double block_w = area.width / double(dimension.first);
+					double block_h = area.height / double(dimension.second);
 
 					char *table = new char[dimension.first * dimension.second];
 					memset(table, 0, dimension.first * dimension.second);
@@ -561,6 +597,7 @@ namespace gui
 					std::size_t lbp = 0;
 					bool exit_for = false;
 
+					
 					for(std::size_t c = 0; c < dimension.second; ++c)
 					{
 						for(std::size_t l = 0; l < dimension.first; ++l)
@@ -585,41 +622,51 @@ namespace gui
 									room.second = dimension.second - c;
 							}
 
-								window wd = nullptr;
-								unsigned value = 0;
+							window wd = nullptr;
+							unsigned value = 0;
 
-								switch(i->kind_of_element)
-								{
-								case field_t::element_t::kind::fixed:
-									wd = i->u.fixed_ptr->first;
-									value = i->u.fixed_ptr->second;
-									break;
-								case field_t::element_t::kind::percent:
-									wd = i->u.percent_ptr->first;
-									value = i->u.percent_ptr->second * area.width / 100;
-									break;
-								case field_t::element_t::kind::window:
-									wd = i->u.handle;
-									value = block_w;
-									break;
-								}
+							switch(i->kind_of_element)
+							{
+							case field_t::element_t::kind::fixed:
+								wd = i->u.fixed_ptr->first;
+								value = i->u.fixed_ptr->second;
+								break;
+							case field_t::element_t::kind::percent:
+								wd = i->u.percent_ptr->first;
+								value = i->u.percent_ptr->second * area.width / 100;
+								break;
+							case field_t::element_t::kind::window:
+								wd = i->u.handle;
+								value = static_cast<unsigned>(block_w);
+								break;
+							}
 
-								if(room.first <= 1 && room.second <= 1)
-								{
-									API::move_window(wd, area.x + l * block_w, area.y + c * block_h, block_w, block_h);
-									table[l + lbp] = 1;
-								}
-								else
-								{
-									API::move_window(i->u.room_ptr->first, area.x + l * block_w, area.y + c * block_h, block_w * room.first, block_h * room.second);
+							int pos_x = area.x + static_cast<int>(l * block_w);
+							int pos_y = area.y + static_cast<int>(c * block_h);
+							if(room.first <= 1 && room.second <= 1)
+							{
+								unsigned width = static_cast<unsigned>(block_w), height = static_cast<unsigned>(block_h);
+								if(width > gap_size)	width -= gap_size;
+								if(height > gap_size)	height -= gap_size;
 
-									for(std::size_t y = 0; y < room.second; ++y)
-										for(std::size_t x = 0; x < room.first; ++x)
-										{
-											table[l + x + lbp + y * dimension.first] = 1;
-										}
-								}
-								++i;
+								API::move_window(wd, pos_x, pos_y, width, height);
+								table[l + lbp] = 1;
+							}
+							else
+							{
+								unsigned width = static_cast<unsigned>(block_w * room.first), height = static_cast<unsigned>(block_h * room.second);
+								if(width > gap_size)	width -= gap_size;
+								if(height > gap_size)	height -= gap_size;
+
+								API::move_window(i->u.room_ptr->first, pos_x, pos_y, width, height);
+
+								for(std::size_t y = 0; y < room.second; ++y)
+									for(std::size_t x = 0; x < room.first; ++x)
+									{
+										table[l + x + lbp + y * dimension.first] = 1;
+									}
+							}
+							++i;
 						}
 
 						if(exit_for)
@@ -689,7 +736,7 @@ namespace gui
 			{
 				div_start, div_end,
 				identifier, vertical, grid, number, array,
-				weight,
+				weight, gap,
 				equal,
 				eof, error
 			};
@@ -801,26 +848,13 @@ namespace gui
 
 					if(idstr_ == "weight")
 					{
-						if(token::equal != read())
-							_m_throw_error("an equal sign is required after \'weight\'");
-
-						const char* p = sp_;
-						for(; *p == ' '; ++p);
-
-						std::size_t len = 0;
-						if(*p == '-')
-						{
-							len = _m_number(p + 1, true);
-							if(len)	++len;
-						}
-						else
-							len = _m_number(p, false);
-
-						if(0 == len)
-							_m_throw_error("the \'weight\' requires a number(integer or real or percent)");
-						
-						sp_ += len + (p - sp_);
+						_m_attr_number_value();
 						return token::weight;
+					}
+					else if(idstr_ == "gap")
+					{
+						_m_attr_number_value();
+						return token::gap;
 					}
 					else if(idstr_ == "vertical")
 						return token::vertical;
@@ -838,6 +872,29 @@ namespace gui
 				std::stringstream ss;
 				ss<<"place: invalid character '"<<err_char<<"' at "<<(sp_ - divstr_);
 				throw std::runtime_error(ss.str());
+			}
+
+			void _m_attr_number_value()
+			{
+				if(token::equal != read())
+					_m_throw_error("an equal sign is required after \'"+ idstr_ +"\'");
+
+				const char* p = sp_;
+				for(; *p == ' '; ++p);
+
+				std::size_t len = 0;
+				if(*p == '-')
+				{
+					len = _m_number(p + 1, true);
+					if(len)	++len;
+				}
+				else
+					len = _m_number(p, false);
+
+				if(0 == len)
+					_m_throw_error("the \'" + idstr_ + "\' requires a number(integer or real or percent)");
+						
+				sp_ += len + (p - sp_);
 			}
 
 			void _m_throw_error(const std::string& err)
@@ -1034,6 +1091,7 @@ namespace gui
 			std::string name;
 
 			number_t weight;
+			number_t gap;
 			std::vector<number_t> array;
 
 			std::vector<division*> children;
@@ -1058,6 +1116,13 @@ namespace gui
 					//the integer and percent are allowed for weight.
 					if(weight.kind_of() == number_t::kind::real)
 						weight.assign(static_cast<int>(weight.real()));
+					break;
+				case token::gap:
+					gap = tknizer.number();
+					//If the gap is type of real, convert it to integer.
+					//the integer and percent are allowed for gap.
+					if(gap.kind_of() == number_t::kind::real)
+						gap.assign(static_cast<int>(gap.real()));
 					break;
 				case token::div_end:
 					exit_for = true;
@@ -1120,6 +1185,7 @@ namespace gui
 			}
 			
 			div->weight = weight;
+			div->gap = gap;
 			div->field = field;
 			div->children.swap(children);
 			return div;

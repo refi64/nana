@@ -447,14 +447,14 @@ namespace drawerbase
 		{
 			nana::rectangle r(graph.size());
 			r.pare_off(1);
-			unsigned color_start = color::button_face_shadow_start, color_end = gui::color::button_face_shadow_end;
+			nana::color_t color_start = nana::paint::graphics::mix(attr_.bgcolor, 0xFFFFFF, 0.2);
+			nana::color_t color_end = nana::paint::graphics::mix(attr_.bgcolor, 0x0, 0.95);
+
 			if(attr_.act_state == state::pressed)
 			{
 				r.x = r.y = 2;
-				color_start = gui::color::button_face_shadow_end;
-				color_end = gui::color::button_face_shadow_start;
+				std::swap(color_start, color_end);
 			}
-
 			graph.shadow_rectangle(r, color_start, color_end, true);
 		}
 

@@ -40,7 +40,7 @@ namespace nana{namespace gui{
 	public:
 		typedef nana::gui::appear appear;
 
-		form(const rectangle& = API::make_center(300, 150), const appearance& = appearance());
+		form(const rectangle& = API::make_center(300, 200), const appearance& = appearance());
 		form(window, const appearance& = appearance());
 		form(window, const rectangle&, const appearance& = appearance());
 	};

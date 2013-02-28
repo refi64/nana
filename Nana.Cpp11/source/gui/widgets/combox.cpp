@@ -352,8 +352,7 @@ namespace nana{ namespace gui{
 					if(state_.state == state_t::pressed)
 					{
 						r.pare_off(2);
-						color_start = gui::color::button_face_shadow_end;
-						color_end = gui::color::button_face_shadow_start;
+						std::swap(color_start, color_end);
 					}
 					else
 						r.pare_off(1);

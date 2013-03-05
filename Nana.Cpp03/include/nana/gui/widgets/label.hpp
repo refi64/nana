@@ -66,6 +66,7 @@ namespace nana{ namespace gui{
 		void add_format_listener(const nana::functor<void(command::t, const nana::string&)> &);
 		nana::size measure() const;
 		unsigned extent_size() const;
+		void text_align(align::t);
 	private:
 		void _m_caption(const nana::string&);
 	};

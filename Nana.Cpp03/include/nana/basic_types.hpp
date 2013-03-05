@@ -143,6 +143,14 @@ namespace nana
 		bool operator==(t) const;
 		bool operator!=(t) const;
 	};
+
+	//The definition of text alignment
+	struct align
+	{
+		enum t{
+			left, center, right
+		};
+	};
 }//end namespace nana
 
 #endif

@@ -2,14 +2,14 @@
  *	A textbase class implementation
  *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
- *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	Distributed under the Nana Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/widgets/skeletons/textbase.hpp
  *	@description: This class manages the multi-line text and provides some operation on text
  */
- 
+
 #ifndef NANA_GUI_WIDGET_DETAIL_TEXTBASE_HPP
 #define NANA_GUI_WIDGET_DETAIL_TEXTBASE_HPP
 #include <string>
@@ -153,7 +153,7 @@ namespace skeletons
 				char c = *s;
 				*s = *(s + 3);
 				*(s + 3) = c;
-				
+
 				c = *(s + 1);
 				*(s + 1) = *(s + 2);
 				*(s + 2) = c;
@@ -168,7 +168,7 @@ namespace skeletons
 			std::ifstream ifs(tfs);
 			std::string str;
 			bool big_endian = true;
-			
+
 			if(ifs.good())
 			{
 				std::getline(ifs, str);
@@ -213,7 +213,7 @@ namespace skeletons
 					if(nana::unicode::utf16 == encoding)
 						byte_order_translate_2bytes(str);
 					else
-						byte_order_translate_4bytes(str);					
+						byte_order_translate_4bytes(str);
 				}
 
 				text_cont_.push_back(nana::charset(str, encoding));
@@ -277,14 +277,14 @@ namespace skeletons
 				}
 				std::string mbs = nana::charset(text_cont_.back()).to_bytes(encoding);
 				ofs.write(mbs.c_str(), static_cast<std::streamsize>(mbs.size()));
-			}		
+			}
 		}
 
 		size_type lines() const
 		{
 			return text_cont_.size();
 		}
-		
+
 		const string_type& getline(size_type pos) const
 		{
 			if(pos < text_cont_.size())
@@ -318,7 +318,7 @@ namespace skeletons
 			if(line < text_cont_.size())
 			{
 				string_type& lnstr = text_cont_[line];
-				
+
 				if(pos < lnstr.size())
 					lnstr.insert(pos, str);
 				else
@@ -338,7 +338,7 @@ namespace skeletons
 			if(line < text_cont_.size())
 			{
 				string_type& lnstr = text_cont_[line];
-				
+
 				if(pos < lnstr.size())
 					lnstr.insert(pos, 1, ch);
 				else
@@ -356,7 +356,7 @@ namespace skeletons
 		void insertln(size_type line, const string_type& str)
 		{
 			if(line < text_cont_.size())
-				text_cont_.insert(text_cont_.cbegin() + line, str);
+				text_cont_.insert(text_cont_.begin() + line, str);
 			else
 				text_cont_.push_back(str);
 
@@ -375,32 +375,32 @@ namespace skeletons
 
 				if(attr_max_.line == line)
 					_m_scan_for_max();
-			}	
+			}
 		}
-		
+
 		void erase(size_type pos)
 		{
 			if(pos < text_cont_.size())
-				text_cont_.erase(text_cont_.cbegin() + pos);
+				text_cont_.erase(text_cont_.begin() + pos);
 
 			if(pos == attr_max_.line)
 				_m_scan_for_max();
 			else if(pos < attr_max_.line)
 				attr_max_.line--;
 		}
-		
+
 		void erase_all()
 		{
 			std::deque<string_type>().swap(text_cont_);
 			attr_max_.reset();
 		}
-		
+
 		void merge(size_type pos)
 		{
 			if(text_cont_.size() && (pos < text_cont_.size() - 1))
 			{
 				text_cont_[pos] += text_cont_[pos + 1];
-				text_cont_.erase(text_cont_.cbegin() + (pos + 1));
+				text_cont_.erase(text_cont_.begin() + (pos + 1));
 				_m_make_max(pos);
 				if(pos < attr_max_.line)
 					--attr_max_.line;
@@ -431,7 +431,7 @@ namespace skeletons
 				++n;
 			}
 		}
-		
+
 	private:
 		std::deque<string_type>	text_cont_;
 		mutable std::shared_ptr<string_type> nullstr_;

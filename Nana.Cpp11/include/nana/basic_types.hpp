@@ -134,6 +134,12 @@ namespace nana
 	{
 		unknown, horizontal, vertical, horizontal_vertical
 	};
+
+	//The definition of text alignment
+	enum class align
+	{
+		left, center, right
+	};
 }//end namespace nana
 
 #endif

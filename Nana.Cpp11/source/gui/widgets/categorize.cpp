@@ -201,12 +201,12 @@ namespace nana{	namespace gui{
 				{
 					node_handle root = tree_.get_root();
 					for(node_handle i = cur_; i && (i != root); i = i->owner)
-						seqv.insert(seqv.cbegin(), i);
+						seqv.insert(seqv.begin(), i);
 
 					if(index < seqv.size())
 					{
 						if(index)
-							seqv.erase(seqv.cbegin(), seqv.cbegin() + index);
+							seqv.erase(seqv.begin(), seqv.begin() + index);
 						return true;
 					}
 					return false;
@@ -228,7 +228,7 @@ namespace nana{	namespace gui{
 					std::vector<node_handle> v;
 					node_handle root = tree_.get_root();
 					for(node_handle i = cur_; i && (i != root); i = i->owner)
-						v.insert(v.cbegin(), i);
+						v.insert(v.begin(), i);
 
 					nana::string str;
 					bool not_head = false;
@@ -253,7 +253,7 @@ namespace nana{	namespace gui{
 					std::vector<node_handle> v;
 					node_handle root = tree_.get_root();
 					for(node_handle i = cur_; i && (i != root); i = i->owner)
-						v.insert(v.cbegin(), i);
+						v.insert(v.begin(), i);
 
 					return (index < v.size() ? v[index] : nullptr);
 				}

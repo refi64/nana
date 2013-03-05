@@ -12,8 +12,8 @@ SOURCES = [The source file of your application.]
 NANAINC	= $(NANAPATH)/include
 NANALIB = $(NANAPATH)/build/bin/nana.a
 
-INCS	= -I$(NANAINC) -I/usr/include/freetype2
-LIBS	= -lX11 -lpthread -lXpm -lrt -ldl -lXft -lpng -lasound #-l$(NANALIB)
+INCS	= -I$(NANAINC)
+LIBS	= -lX11 -lpthread -lXpm -lrt -ldl -lXft -lpng -lasound
 
 LINKOBJ	= $(SOURCES:.cpp=.o)
 

@@ -176,6 +176,7 @@
     <ClCompile Include="..\..\source\gui\layout.cpp" />
     <ClCompile Include="..\..\source\gui\layout_utility.cpp" />
     <ClCompile Include="..\..\source\gui\msgbox.cpp" />
+    <ClCompile Include="..\..\source\gui\place.cpp" />
     <ClCompile Include="..\..\source\gui\programming_interface.cpp" />
     <ClCompile Include="..\..\source\gui\timer.cpp" />
     <ClCompile Include="..\..\source\gui\tooltip.cpp" />

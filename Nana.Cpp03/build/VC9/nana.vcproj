@@ -241,6 +241,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\..\source\gui\place.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\..\source\gui\programming_interface.cpp"
 						>
 					</File>

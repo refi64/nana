@@ -2,8 +2,8 @@
  *	Event Manager Implementation
  *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
- *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	Distributed under the Nana Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/detail/event_manager.cpp
@@ -128,7 +128,7 @@ namespace detail
 		void event_manager::umake(event_handle eh)
 		{
 			if(nullptr == eh) return;
-			
+
 			abstract_handler* abs_handler = reinterpret_cast<abstract_handler*>(eh);
 
 			//Thread-Safe Required!
@@ -139,7 +139,7 @@ namespace detail
 				write_off_bind(eh);
 
 				auto v = abs_handler->container;
-				auto i = std::find(v->cbegin(), v->cend(), abs_handler);
+				auto i = std::find(v->begin(), v->end(), abs_handler);
 				if(i != v->cend())
 				{
 					v->erase(i);
@@ -162,7 +162,7 @@ namespace detail
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
 			auto *end = nana_runtime::callbacks.table + event_tag::count;
-			
+
 			auto deleter_wrapper = [this](abstract_handler * handler)
 			{
 				this->write_off_bind(reinterpret_cast<event_handle>(handler));
@@ -207,7 +207,7 @@ namespace detail
 		bool event_manager::answer(unsigned eventid, window wd, const eventinfo& ei, event_kind evtkind)
 		{
 			if(eventid >= event_tag::count)	return false;
-			
+
 			inner_event_manager::handler_queue queue;
 			{
 				//Thread-Safe Required!
@@ -215,7 +215,7 @@ namespace detail
 
 				auto * evtobj = nana_runtime::callbacks.table + eventid;
 				auto element = evtobj->find(wd);
-				
+
 				if(element != evtobj->end()) //Test if the window installed event_id event
 				{
 					//copy all the handlers to the queue to avoiding dead-locking from the callback function that deletes the event handler
@@ -236,7 +236,7 @@ namespace detail
 			}
 			ei.identifier = eventid;
 			queue.invoke(handle_manager_, ei);
-			return (queue.size() != 0);			
+			return (queue.size() != 0);
 		}
 
 		void event_manager::remove_trash_handle(unsigned tid)
@@ -249,14 +249,14 @@ namespace detail
 			if(eh && reinterpret_cast<abstract_handler*>(eh)->listener)
 			{
 				auto & v = bind_cont_[reinterpret_cast<abstract_handler*>(eh)->listener];
-				auto i = std::find(v.cbegin(), v.cend(), eh);
+				auto i = std::find(v.begin(), v.end(), eh);
 				if(i != v.cend())
 				{
 					if(v.size() > 1)
 						v.erase(i);
 					else
 						bind_cont_.erase(reinterpret_cast<abstract_handler*>(eh)->listener);
-				}			
+				}
 			}
 		}
 
@@ -276,7 +276,7 @@ namespace detail
 				if(element != evtobj->end()) //Test if the window installed event_id event
 					return (is_for_drawer ? element->second.first : element->second.second).size();
 			}
-			return 0;			
+			return 0;
 		}
 
 		//_m_make
@@ -297,7 +297,7 @@ namespace detail
 			abs_handler->window = wd;
 			abs_handler->listener = listener;
 			abs_handler->event_identifier = eventid;
-			
+
 			{
 				//Thread-Safe Required!
 				std::lock_guard<decltype(mutex_)> lock(mutex_);

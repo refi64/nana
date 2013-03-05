@@ -57,7 +57,7 @@ namespace nana{ namespace gui
 		{}
 
 		form::form(window owner, const appearance& apr)
-			: form_base_t(owner, false, API::make_center(owner, 300, 150), apr)
+			: form_base_t(owner, false, API::make_center(owner, 300, 200), apr)
 		{}
 
 		form::form(window owner, const rectangle& r, const appearance& apr)

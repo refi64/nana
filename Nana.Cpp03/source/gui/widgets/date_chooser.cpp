@@ -23,7 +23,7 @@ namespace nana{ namespace gui{
 			//class trigger: public gui::drawer_trigger
 
 				trigger::trigger()
-					: widget_(0), chose_(false), page_(PageDate), pos_(WhereNone)
+					: widget_(0), chose_(false), page_(page::date), pos_(where::none)
 				{
 					const nana::string ws[] = {STR("S"), STR("M"), STR("T"), STR("W"), STR("T"), STR("F"), STR("S")};
 					const nana::string ms[] = {STR("January"), STR("February"), STR("March"), STR("April"), STR("May"), STR("June"), STR("July"), STR("August"), STR("September"), STR("October"), STR("November"), STR("December")};
@@ -67,7 +67,7 @@ namespace nana{ namespace gui{
 					color_.bkcolor = 0x88C4FF;
 				}
 
-				int trigger::_m_pos_where(graph_reference graph, int x, int y)
+				trigger::where::t trigger::_m_pos_where(graph_reference graph, int x, int y)
 				{
 					int xend = static_cast<int>(graph.width()) - 1;
 					int yend = static_cast<int>(graph.height()) - 1;
@@ -76,22 +76,19 @@ namespace nana{ namespace gui{
 						if(static_cast<int>(border_size) < x && x < xend)
 						{
 							if(x < border_size + 16)
-								return WhereLeftButton;
+								return where::left_button;
 							else if(xend - border_size - 16 < x)
-								return WhereRightButton;
-							else
-								return WhereTopbar;
+								return where::right_utton;
+							return where::topbar;
 						}
-						else
-							return WhereNone;
 					}
 					else if(topbar_height < y && y < yend)
 					{
 						trace_pos_.x = x;
 						trace_pos_.y = y;
-						return WhereTextArea;
+						return where::textarea;
 					}
-					return WhereNone;
+					return where::none;
 				}
 
 				void trigger::_m_draw(graph_reference graph)
@@ -115,10 +112,10 @@ namespace nana{ namespace gui{
 
 						switch(page_)
 						{
-						case PageDate:
+						case page::date:
 							_m_draw_days(refpos, gbuf);
 							break;
-						case PageMonth:
+						case page::month:
 							_m_draw_months(refpos, gbuf);
 							break;
 						}
@@ -133,15 +130,15 @@ namespace nana{ namespace gui{
 
 					const nana::color_t color = color_.normal;
 
-					nana::paint::gadget::arrow_16_pixels(graph, border_size, ypos, (pos_ == WhereLeftButton ? color_.highlight : color), 1, nana::paint::gadget::directions::to_west);
-					nana::paint::gadget::arrow_16_pixels(graph, graph.width() - (border_size + 16 + 1), ypos, (pos_ == WhereRightButton ? color_.highlight : color), 1, nana::paint::gadget::directions::to_east);
+					nana::paint::gadget::arrow_16_pixels(graph, border_size, ypos, (pos_ == where::left_button ? color_.highlight : color), 1, nana::paint::gadget::directions::to_west);
+					nana::paint::gadget::arrow_16_pixels(graph, graph.width() - (border_size + 16 + 1), ypos, (pos_ == where::right_utton ? color_.highlight : color), 1, nana::paint::gadget::directions::to_east);
 
 					if(graph.width() > 32 + border_size * 2)
 					{
 						std::stringstream ss;
 						ss<<chmonth_.year;
 						nana::string str;
-						if(page_ == PageDate)
+						if(page_ == page::date)
 						{
 							str += monthstr_[chmonth_.month - 1];
 							str += STR("  ");
@@ -155,7 +152,7 @@ namespace nana{ namespace gui{
 						int xpos = (graph.width() - txt_s.width) / 2;
 						if(xpos < border_size + 16) xpos = 16 + border_size + 1;
 
-						graph.string(xpos, ypos, (pos_ == WhereTopbar ? color_.highlight : color), str);
+						graph.string(xpos, ypos, (pos_ == where::topbar ? color_.highlight : color), str);
 					}
 				}
 
@@ -165,12 +162,12 @@ namespace nana{ namespace gui{
 					const unsigned width = graph.width();
 					const unsigned height = graph.height();
 
-					if(PageDate == page_)
+					if(page::date == page_)
 					{
 						dbasis.line_s = height / 7.0;
 						dbasis.row_s = width / 7.0;
 					}
-					else if(PageMonth == page_)
+					else if(page::month == page_)
 					{
 						dbasis.line_s = height / 3.0;
 						dbasis.row_s = width / 4.0;
@@ -190,13 +187,13 @@ namespace nana{ namespace gui{
 					tpos.x -= dbasis.refpos.x;
 					tpos.y -= dbasis.refpos.y;
 
-					if(pos_ == WhereTextArea
+					if(pos_ == where::textarea
 						&& r.x <= tpos.x
 						&& tpos.x < r.x + static_cast<int>(r.width)
 						&& r.y <= tpos.y
 						&& tpos.y < r.y + static_cast<int>(r.height))
 					{
-						if((page_ != PageDate) || y)
+						if((page_ != page::date) || y)
 						{
 							color = color_.highlight;
 							graph.rectangle(r, color_.bkcolor, true);
@@ -340,11 +337,11 @@ namespace nana{ namespace gui{
 
 					int lines;
 					int rows;
-					if(page_ == PageDate)
+					if(page_ == page::date)
 					{
 						lines = rows = 7;
 					}
-					else if(page_ == PageMonth)
+					else if(page_ == page::month)
 					{
 						lines = 3;
 						rows = 4;
@@ -359,16 +356,12 @@ namespace nana{ namespace gui{
 						y = static_cast<int>(y / dbasis_.line_s);
 
 						int n = y * rows + x + 1;
-						if(page_ == PageDate)
+						if(page_ == page::date)
 						{
 							if(n < 8) return false; //Here is week title bar
-							n -= 7;
 
 							int dw = nana::date::day_of_week(chmonth_.year, chmonth_.month, 1);
-							if(dw)
-								n -= dw;
-							else
-								n -= 7;
+							n -= (dw ? dw + 7 : 14);
 						}
 						res = n;
 						return true;
@@ -376,7 +369,7 @@ namespace nana{ namespace gui{
 					return false;
 				}
 
-				void trigger::_m_perf_transform(int tfid, graph_reference graph,  graph_reference dirtybuf, graph_reference newbuf, const nana::point& refpos)
+				void trigger::_m_perf_transform(transform_action::t tfid, graph_reference graph,  graph_reference dirtybuf, graph_reference newbuf, const nana::point& refpos)
 				{
 					const int sleep_time = 15;
 					const int count = 20;
@@ -384,7 +377,7 @@ namespace nana{ namespace gui{
 					double delta_h = dirtybuf.height() / double(count);
 					double fade = 1.0 / count;
 
-					if(tfid == TransformToRight)
+					if(tfid == transform_action::to_right)
 					{
 						nana::rectangle dr(0, refpos.y, 0, dirtybuf.height());
 						nana::rectangle nr(refpos.x, refpos.y, 0, newbuf.height());
@@ -403,7 +396,7 @@ namespace nana{ namespace gui{
 							nana::system::sleep(sleep_time);
 						}
 					}
-					else if(tfid == TransformToLeft)
+					else if(tfid == transform_action::to_leave)
 					{
 						double delta = dirtybuf.width() / double(count);
 
@@ -424,7 +417,7 @@ namespace nana{ namespace gui{
 							nana::system::sleep(sleep_time);
 						}
 					}
-					else if(tfid == TransformLeave)
+					else if(tfid == transform_action::to_leave)
 					{
 						nana::paint::graphics dzbuf(newbuf.width(), newbuf.height());
 						nana::paint::graphics nzbuf(newbuf.width(), newbuf.height());
@@ -453,7 +446,7 @@ namespace nana{ namespace gui{
 							nana::system::sleep(sleep_time);
 						}
 					}
-					else if(tfid == TransformEnter)
+					else if(tfid == transform_action::to_enter)
 					{
 						nana::paint::graphics dzbuf(newbuf.width(), newbuf.height());
 						nana::paint::graphics nzbuf(newbuf.width(), newbuf.height());
@@ -510,8 +503,8 @@ namespace nana{ namespace gui{
 
 				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
 				{
-					int pos = this->_m_pos_where(graph, ei.mouse.x, ei.mouse.y);
-					if(pos == pos_ && pos_ != WhereTextArea) return;
+					where::t pos = _m_pos_where(graph, ei.mouse.x, ei.mouse.y);
+					if(pos == pos_ && pos_ != where::textarea) return;
 					pos_ = pos;
 					_m_draw(graph);
 					API::lazy_refresh();
@@ -519,8 +512,8 @@ namespace nana{ namespace gui{
 
 				void trigger::mouse_leave(graph_reference graph, const eventinfo&)
 				{
-					if(WhereNone == pos_) return;
-					pos_ = WhereNone;
+					if(where::none == pos_) return;
+					pos_ = where::none;
 					_m_draw(graph);
 					API::lazy_refresh();
 				}
@@ -528,27 +521,27 @@ namespace nana{ namespace gui{
 				void trigger::mouse_up(graph_reference graph, const eventinfo& ei)
 				{
 					bool redraw = true;
-					int pos = this->_m_pos_where(graph, ei.mouse.x, ei.mouse.y);
-					int tfid = TransformNone;
+					where::t pos = _m_pos_where(graph, ei.mouse.x, ei.mouse.y);
+					transform_action::t tfid = transform_action::none;
 
-					if(pos == WhereTopbar)
+					if(pos == where::topbar)
 					{
 						switch(page_)
 						{
-						case PageDate:
-							page_ = PageMonth;
-							tfid = TransformLeave;
+						case page::date:
+							page_ = page::month;
+							tfid = transform_action::to_leave;
 							break;
 						default:
 							redraw = false;
 						}
 					}
-					else if(pos == WhereTextArea)
+					else if(pos == where::textarea)
 					{
 						int ret = 0;
 						switch(page_)
 						{
-						case PageDate:
+						case page::date:
 							if(_m_get_trace(ei.mouse.x, ei.mouse.y, ret))
 							{
 								if(ret < 1)
@@ -558,7 +551,7 @@ namespace nana{ namespace gui{
 										--chmonth_.year;
 										chmonth_.month = 12;
 									}
-									tfid = TransformToRight;
+									tfid = transform_action::to_right;
 								}
 								else
 								{
@@ -570,7 +563,7 @@ namespace nana{ namespace gui{
 											++chmonth_.year;
 											chmonth_.month = 1;
 										}
-										tfid = TransformToLeft;
+										tfid = transform_action::to_left;
 									}
 									else //Selecting a day in this month
 									{
@@ -582,38 +575,38 @@ namespace nana{ namespace gui{
 								}
 							}
 							break;
-						case PageMonth:
+						case page::month:
 							if(_m_get_trace(ei.mouse.x, ei.mouse.y, ret))
 								chmonth_.month = ret;
-							page_ = PageDate;
-							tfid = TransformEnter;
+							page_ = page::date;
+							tfid = transform_action::to_enter;
 							break;
 						default:
 							redraw = false;
 						}
 					}
-					else if(pos == WhereLeftButton || pos == WhereRightButton)
+					else if(pos == where::left_button || pos == where::right_utton)
 					{
 						int end_m;
 						int beg_m;
 						int step;
-						if(pos == WhereLeftButton)
+						if(pos == where::left_button)
 						{
 							end_m = 1;
 							beg_m = 12;
 							step = -1;
-							tfid = TransformToRight;
+							tfid = transform_action::to_right;
 						}
 						else
 						{
 							end_m = 12;
 							beg_m = 1;
 							step = 1;
-							tfid = TransformToLeft;
+							tfid = transform_action::to_left;
 						}
 						switch(page_)
 						{
-						case PageDate:
+						case page::date:
 							if(chmonth_.month == end_m)
 							{
 								chmonth_.month = beg_m;
@@ -622,7 +615,7 @@ namespace nana{ namespace gui{
 							else
 								chmonth_.month += step;
 							break;
-						case PageMonth:
+						case page::month:
 							chmonth_.year += step;
 							break;
 						default:
@@ -632,7 +625,7 @@ namespace nana{ namespace gui{
 
 					if(redraw)
 					{
-						if(tfid != TransformNone)
+						if(tfid != transform_action::none)
 						{
 							nana::point refpos(1, static_cast<int>(topbar_height) + 1);
 							nana::rectangle r(0, 0, graph.width() - 2, graph.height() - 2 - topbar_height);
@@ -644,7 +637,7 @@ namespace nana{ namespace gui{
 							nana::paint::graphics gbuf(r.width, r.height);
 							gbuf.bitblt(r, graph, refpos);
 
-							this->_m_perf_transform(tfid, graph, dirtybuf, gbuf, refpos);
+							_m_perf_transform(tfid, graph, dirtybuf, gbuf, refpos);
 						}
 						else
 							_m_draw(graph);

@@ -226,13 +226,13 @@ namespace gui
 					}
 					else
 					{
-						for(auto i = trash_.cbegin(), end = trash_.cend(); i != end;)
+						for(auto i = trash_.begin(), end = trash_.end(); i != end;)
 						{
 							if(tid == i->second)
 							{
 								del_functor(i->first);
 								i = trash_.erase(i);
-								end = trash_.cend();
+								end = trash_.end();
 							}
 							else
 								++i;
@@ -291,8 +291,8 @@ namespace gui
 				{
 					if(cond_type::is_queue(handle))
 					{
-						auto i = std::find(queue.cbegin(), queue.cend(), handle);
-						if(i != queue.cend())
+						auto i = std::find(queue.begin(), queue.end(), handle);
+						if(i != queue.end())
 							queue.erase(i);
 					}
 				}

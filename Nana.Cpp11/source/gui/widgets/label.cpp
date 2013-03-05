@@ -32,7 +32,7 @@ namespace gui
 
 				virtual ~renderer_interface(){}
 				virtual void parse(window, const nana::string&) = 0;
-				virtual void render(widget_reference, graph_reference) = 0;
+				virtual void render(widget_reference, graph_reference, align) = 0;
 				virtual unsigned extent_size(graph_reference) = 0;
 				virtual nana::size measure(graph_reference) = 0;
 				virtual void bind_listener(std::function<void(command, const nana::string&)> &&) = 0;
@@ -51,13 +51,13 @@ namespace gui
 					wd_ = wd;
 				}
 
-				void render(widget_reference wd, graph_reference graph)
+				void render(widget_reference wd, graph_reference graph, align text_align)
 				{
 					nana::string text = API::window_caption(wd_);
 					nana::string::size_type len = text.length();
 					if(len)
 					{
-						nana::paint::text_renderer tr(graph);
+						nana::paint::text_renderer tr(graph, text_align);
 						tr.render(0, 0, wd.foreground(), text.c_str(), len, graph.width());
 					}
 					return;
@@ -585,7 +585,7 @@ namespace gui
 					content_.parse(s);
 				}
 
-				void render(widget_reference wd, graph_reference graph)
+				void render(widget_reference wd, graph_reference graph, align text_align)
 				{
 					trace_.wd = wd;
 
@@ -708,7 +708,7 @@ namespace gui
 					if(trace_.target.size())
 						listener_(command::click, trace_.target);
 				}
-
+			private:
 				unsigned _m_line_pixels(graph_reference graph, const content::line_container * line) const
 				{
 					nana::paint::font font;
@@ -797,7 +797,7 @@ namespace gui
 					return (s->url.size() || s->target.size());
 				}
 
-				nana::point _m_draw_string(unsigned line_pixels, int x, int y, graph_reference graph, const nana::string& str,  const content::line_container::value_type s)
+				nana::point _m_draw_string(unsigned line_height, int x, int y, graph_reference graph, const nana::string& str,  const content::line_container::value_type s)
 				{
 					const unsigned text_area = graph.width();
 					nana::color_t clr = s->color == 0xFF000000 ? color_fg_ : s->color;
@@ -811,7 +811,7 @@ namespace gui
 						nana::size ts = graph.text_extent_size(str.c_str() + off, str.size() - off);
 						if(ts.width <= dw)
 						{
-							graph.string(x, y + (line_pixels - ts.height) / 2, clr, str.c_str() + off, str.size() - off);
+							graph.string(x, y + (line_height - ts.height) / 2, clr, str.c_str() + off, str.size() - off);
 							if(_m_want_area(s))
 							{
 								r.x = x;
@@ -837,7 +837,7 @@ namespace gui
 									if(len > 1 || text_area > ts.width)
 										--len;
 
-									y += line_pixels;
+									y += line_height;
 									dw = graph.width();
 								}
 								else
@@ -860,7 +860,7 @@ namespace gui
 								r.height = ts.height;
 								s->areas.push_back(r);
 							}
-							graph.string(x, draw_y_pos + (line_pixels - ts.height) / 2, clr, str.c_str() + off, len);
+							graph.string(x, draw_y_pos + (line_height - ts.height) / 2, clr, str.c_str() + off, len);
 						}
 
 						//The text is splitted for a new line
@@ -898,9 +898,11 @@ namespace gui
 					widget * wd;
 					nana::paint::graphics * graph;
 					renderer_interface * renderer;
+					align	text_align;
 
 					impl_t()
-						: wd(nullptr), graph(nullptr), format_state_(false)
+						:	wd(nullptr), graph(nullptr), text_align(align::left),
+							format_state_(false)
 					{
 						renderer = new simple_renderer;
 					}
@@ -1012,7 +1014,7 @@ namespace gui
 					else
 						graph.rectangle(API::background(wd), true);
 
-					impl_->renderer->render(*impl_->wd, graph);
+					impl_->renderer->render(*impl_->wd, graph, impl_->text_align);
 				}
 
 			//end class label_drawer
@@ -1081,6 +1083,17 @@ namespace gui
 
 			auto impl = get_drawer_trigger().impl();
 			return impl->renderer->extent_size(*(impl->graph));
+		}
+
+		void label::text_align(align dir)
+		{
+			internal_scope_guard isg;
+			auto impl = get_drawer_trigger().impl();
+			if(impl->text_align != dir)
+			{
+				impl->text_align = dir;
+				API::refresh_window(*this);
+			}
 		}
 
 		void label::_m_caption(const nana::string& s)

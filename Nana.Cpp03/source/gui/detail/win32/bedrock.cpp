@@ -421,8 +421,42 @@ namespace detail
 				//Empty these rest messages, there is not a window to process these messages.
 				while(::PeekMessage(&msg, 0, 0, 0, PM_REMOVE));
 			}
-		}catch(...)
-		{}
+		}
+		catch(...)
+		{
+			internal_scope_guard isg;
+
+			std::vector<core_window_t*> v;
+			wd_manager.all_handles(v);
+			if(v.size())
+			{
+				std::vector<native_window_type> roots;
+				native_window_type root = 0;
+				unsigned tid = nana::system::this_thread_id();
+				for(std::vector<core_window_t*>::iterator i = v.begin(), end = v.end(); i != end; ++i)
+				{
+					core_window_t * wd = *i;
+					if((wd->thread_id == tid) && (wd->root != root))
+					{
+						root = wd->root;
+						if(roots.end() == std::find(roots.begin(), roots.end(), root))
+							roots.push_back(root);
+					}
+				}
+
+				std::for_each(roots.begin(), roots.end(), interface_type::close_window);
+			}
+
+			wd_manager.internal_lock().forward();
+
+			if(0 == --(context->event_pump_ref_count))
+			{
+				if(0 == modal_window || 0 == context->window_count)
+					remove_thread_context();
+			}
+
+			throw;
+		}
 
 		wd_manager.internal_lock().forward();
 
@@ -431,7 +465,7 @@ namespace detail
 			if(0 == modal_window || 0 == context->window_count)
 				remove_thread_context();
 		}
-	}//end bedrock::event_loop
+	}//end pump_event
 
 	void make_eventinfo(eventinfo& ei, bedrock::core_window_t* wnd, unsigned msg, const parameter_decoder& pmdec)
 	{

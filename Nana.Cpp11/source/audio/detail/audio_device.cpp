@@ -120,7 +120,7 @@ namespace nana{namespace audio
 					case 32:
 						format = SND_PCM_FORMAT_S32_LE;	break;
 					}
-					
+
 					if(::snd_pcm_hw_params_set_format(handle_, params, format) < 0)
 					{
 						close();
@@ -169,7 +169,7 @@ namespace nana{namespace audio
 #endif
 					handle_ = nullptr;
 				}
-			}	
+			}
 
 			void audio_device::prepare(buffer_preparation & buf_prep)
 			{
@@ -224,7 +224,7 @@ namespace nana{namespace audio
 					{
 						std::lock_guard<decltype(queue_lock_)> lock(self->queue_lock_);
 						m = self->done_queue_.front();
-						self->done_queue_.erase(self->done_queue_.cbegin());
+						self->done_queue_.erase(self->done_queue_.begin());
 					}
 					wave_native_if.out_unprepare(handle, m, sizeof(WAVEHDR));
 					self->buf_prep_->revert(m);

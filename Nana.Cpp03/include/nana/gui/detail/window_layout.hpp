@@ -164,22 +164,27 @@ namespace detail
 			while(wd->parent)
 			{
 				typename core_window_t::container::value_type *end = &(wd->parent->children[0]) + wd->parent->children.size();
-				typename core_window_t::container::value_type *i = std::find(&(wd->parent->children[0]), end, wd) + 1;	//move to the widget that next to wd
-				for(; i != end; ++i)
+				typename core_window_t::container::value_type *i = std::find(&(wd->parent->children[0]), end, wd);
+
+				if(i != end)
 				{
-					core_window_t* cover = *i;
-
-					if(cover->visible && (cover->flags.glass == false))
+					//move to the widget that next to wd
+					for(++i; i != end; ++i)
 					{
-						rect.x = cover->root_x;
-						rect.y = cover->root_y;
-						rect.width = cover->rect.width;
-						rect.height = cover->rect.height;
+						core_window_t* cover = *i;
 
-						if(nana::gui::overlap(vis_rect, rect, block.r))
+						if(cover->visible && (cover->flags.glass == false))
 						{
-							block.window = cover;
-							blocks.push_back(block);
+							rect.x = cover->root_x;
+							rect.y = cover->root_y;
+							rect.width = cover->rect.width;
+							rect.height = cover->rect.height;
+
+							if(overlap(vis_rect, rect, block.r))
+							{
+								block.window = cover;
+								blocks.push_back(block);
+							}
 						}
 					}
 				}

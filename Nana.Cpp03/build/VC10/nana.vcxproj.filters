@@ -282,5 +282,8 @@
     <ClCompile Include="..\..\source\threads\mutex.cpp">
       <Filter>Source Files\nana\threads</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\gui\place.cpp">
+      <Filter>Source Files\nana\gui</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

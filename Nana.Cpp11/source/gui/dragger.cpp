@@ -64,7 +64,7 @@ namespace nana{ namespace gui{
 
 		void _m_destroy(const eventinfo& ei)
 		{
-			for(auto i = triggers_.cbegin(); i != triggers_.cend(); ++i)
+			for(auto i = triggers_.begin(); i != triggers_.end(); ++i)
 			{
 				if(i->wd == ei.window)
 				{
@@ -121,7 +121,7 @@ namespace nana{ namespace gui{
 				break;
 			}
 		}
-		
+
 	private:
 		bool dragging_;
 		nana::point origin_;

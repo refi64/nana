@@ -197,7 +197,7 @@ namespace threads
 						}
 					}
 					nana::system::sleep(100);
-				}			
+				}
 			}
 		private:
 			pool_throbj* _m_pick_up_an_idle()
@@ -254,7 +254,7 @@ namespace threads
 					if(container_.tasks.size())
 					{
 						pto->task_ptr = container_.tasks.front();
-						container_.tasks.erase(container_.tasks.cbegin());
+						container_.tasks.pop_front();
 					}
 				}
 				else

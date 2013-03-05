@@ -229,8 +229,8 @@ namespace nana{ namespace gui{
 							}
 						}
 
-						auto i = std::find_if(cont_.cbegin(), cont_.cend(), [to](const container::value_type& m)->bool{ return (to == m.index); } );
-						if(i != cont_.cend())
+						auto i = std::find_if(cont_.begin(), cont_.end(), [to](const container::value_type& m)->bool{ return (to == m.index); } );
+						if(i != cont_.end())
 							cont_.insert((front ? i : ++i), from);
 					}
 				}
@@ -439,7 +439,7 @@ namespace nana{ namespace gui{
 					item_t item;
 					item.texts.push_back(text);
 					if(index < catobj.items.size())
-						catobj.items.insert(catobj.items.cbegin() + index, item);
+						catobj.items.insert(catobj.items.begin() + index, item);
 					else if(index == catobj.items.size())
 						catobj.items.push_back(item);
 					else
@@ -611,7 +611,7 @@ namespace nana{ namespace gui{
 					auto & catobj = *_m_at(cat);
 					if(index < catobj.items.size())
 					{
-						catobj.items.erase(catobj.items.cbegin() + index);
+						catobj.items.erase(catobj.items.begin() + index);
 						catobj.sorted.erase(std::find(catobj.sorted.begin(), catobj.sorted.end(), catobj.items.size()));
 						sort();
 					}
@@ -638,7 +638,7 @@ namespace nana{ namespace gui{
 					i->items.clear();
 					i->sorted.clear();
 					if(list_.size() > 1)
-						list_.erase(++i, list_.cend());
+						list_.erase(++i, list_.end());
 				}
 
 				bool expand(size_type cat, bool exp)
@@ -1281,7 +1281,7 @@ namespace nana{ namespace gui{
 					const nana::size sz = graph->size();
 					unsigned header_s = header.pixels();
 					window wd = lister.wd_ptr()->handle();
-		
+
 					//H scroll enabled
 					bool h = (header_s > sz.width - 4);
 
@@ -1845,7 +1845,7 @@ namespace nana{ namespace gui{
 								_m_draw_item(i_categ->items[lister.absolute(catg_idx, pos)], x, y, txtoff, header_w, rect, subitems, bkcolor, txtcolor, state);
 								y += essence_->item_size;
 								++item_idx;
-							}						
+							}
 						}
 						else
 						{
@@ -1924,7 +1924,7 @@ namespace nana{ namespace gui{
 					graph->rectangle(r.x, y, show_w, essence_->item_size, bkcolor, true);
 
 					int img_off = (essence_->if_image ? (essence_->item_size - 16) / 2 : 0);
-					
+
 					int item_xpos = x;
 					bool first = true;
 
@@ -2093,7 +2093,7 @@ namespace nana{ namespace gui{
 				{
 					essence_->text_height = graph.text_extent_size(STR("jHWn0123456789/<?'{[|\\_")).height;
 					essence_->item_size = essence_->text_height + 6;
-					essence_->suspension_width = graph.text_extent_size(STR("...")).width;			
+					essence_->suspension_width = graph.text_extent_size(STR("...")).width;
 				}
 
 				void trigger::refresh(graph_reference)
@@ -2118,7 +2118,7 @@ namespace nana{ namespace gui{
 					}
 
 					if(essence_->ptr_state == essence_t::state_t::grabed)
-					{	
+					{
 						nana::point pos(ei.mouse.x, ei.mouse.y);
 						essence_->widget_to_header(pos);
 
@@ -2177,7 +2177,7 @@ namespace nana{ namespace gui{
 							essence_->pointer_where.first = essence_t::where_t::unknown;
 							essence_->ptr_state = state_t::normal;
 						}
-						
+
 						draw();
 						API::lazy_refresh();
 					}
@@ -2229,7 +2229,7 @@ namespace nana{ namespace gui{
 						}
 						else
 							update = lister.select_for_all(false); //unselect all items due to the blank area being clicked
-						
+
 						if(update)
 						{
 							nana::rectangle r;

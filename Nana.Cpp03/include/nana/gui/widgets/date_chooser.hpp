@@ -21,15 +21,28 @@ namespace nana{ namespace gui{
 	{
 		namespace date_chooser
 		{
-			class trigger : public gui::drawer_trigger
+			class trigger : public drawer_trigger
 			{
 			public:
 				static const int topbar_height = 34;
 				static const int border_size = 3;
 
-				enum{TransformNone, TransformToLeft, TransformToRight, TransformEnter, TransformLeave};
-				enum{WhereNone, WhereLeftButton, WhereRightButton, WhereTopbar, WhereTextArea};
-				enum{PageDate, PageMonth, PageYear};
+				struct transform_action
+				{
+					enum t{none, to_left, to_right, to_enter, to_leave};
+				};
+
+				struct where
+				{
+					enum t{none, left_button, right_utton, topbar, textarea};
+				};
+
+				struct page
+				{
+					enum t{
+						date, month
+					};
+				};
 
 				struct drawing_basis
 				{
@@ -45,7 +58,7 @@ namespace nana{ namespace gui{
 				void month_name(unsigned index, const nana::string& str);
 			private:
 				void _m_init_color();
-				int _m_pos_where(graph_reference graph, int x, int y);
+				where::t _m_pos_where(graph_reference graph, int x, int y);
 				void _m_draw(graph_reference graph);
 				void _m_draw_topbar(graph_reference graph);
 				void _m_make_drawing_basis(drawing_basis& dbasis, graph_reference graph, const nana::point& refpos);
@@ -55,7 +68,7 @@ namespace nana{ namespace gui{
 				void _m_draw_days(const nana::point& refpos, graph_reference graph);
 				void _m_draw_months(const nana::point& refpos, graph_reference graph);
 				bool _m_get_trace(int x, int y, int & res);
-				void _m_perf_transform(int tfid, graph_reference, graph_reference dirtybuf, graph_reference newbuf, const nana::point& refpos);
+				void _m_perf_transform(transform_action::t tfid, graph_reference, graph_reference dirtybuf, graph_reference newbuf, const nana::point& refpos);
 			private:
 				void refresh(graph_reference);
 				void bind_window(widget_reference);
@@ -70,9 +83,9 @@ namespace nana{ namespace gui{
 
 				nana::gui::widget * widget_;
 				
-				bool chose_;
-				unsigned	page_;
-				int			pos_;
+				bool	chose_;
+				page::t	page_;
+				where::t	pos_;
 				nana::point trace_pos_;
 
 				drawing_basis	dbasis_;

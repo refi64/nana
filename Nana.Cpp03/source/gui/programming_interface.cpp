@@ -149,9 +149,10 @@ namespace API
 		}
 	}//end namespace dev
 
+	//exit
+	//close all windows in current thread
 	void exit()
 	{
-		//restrict::window_manager.exit();
 		internal_scope_guard isg;
 
 		std::vector<restrict::core_window_t*> v;
@@ -172,10 +173,7 @@ namespace API
 				}
 			}
 
-			for(std::vector<native_window_type>::iterator i = roots.begin(), end = roots.end(); i != end; ++i)
-			{
-				restrict::interface_type::close_window(*i);
-			}
+			std::for_each(roots.begin(), roots.end(), restrict::interface_type::close_window);
 		}
 	}
 

@@ -199,7 +199,7 @@ namespace nana{ namespace gui{
 
 				void _m_destroy(const eventinfo& ei)
 				{
-					for(auto i = cont_.cbegin(); i != cont_.cend(); ++i)
+					for(auto i = cont_.begin(); i != cont_.end(); ++i)
 					{
 						if((*i)->first == ei.window)
 						{

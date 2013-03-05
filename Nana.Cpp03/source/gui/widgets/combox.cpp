@@ -99,9 +99,9 @@ namespace nana{ namespace gui{
 					return 0;
 				}
 
-				void text_area(unsigned width, unsigned height)
+				void text_area(const nana::size& s)
 				{
-					nana::rectangle r(2, 2, width > 19 ? width - 19 : 0, height > 4 ? height - 4 : 0);
+					nana::rectangle r(2, 2, s.width > 19 ? s.width - 19 : 0, s.height > 4 ? s.height - 4 : 0);
 					if(image_enabled_)
 					{
 						unsigned place = image_pixels_ + 2;
@@ -248,11 +248,9 @@ namespace nana{ namespace gui{
 				void draw()
 				{
 					bool enb = widget_->enabled();
-					nana::size sz = widget_->size();
-
 					if(editor_)
 					{
-						text_area(sz.width, sz.height);
+						text_area(widget_->size());
 						editor_->redraw(state_.focused);
 					}
 					_m_draw_push_button(enb);
@@ -372,28 +370,16 @@ namespace nana{ namespace gui{
 					int bottom = graph_->height() - 2;
 					int mid = top + (bottom - top) * 5 / 18;
 
-					nana::color_t topcol, topcol_ln, botcol, botcol_ln;
-					if(this->has_lister() || (state_.state == StatePress && state_.pointer_where == WherePushButton))
-					{
-						topcol_ln = nana::paint::graphics::mix(0x3F476C, 0x0, 0.8);
-						botcol_ln = nana::paint::graphics::mix(0x031141, 0x0, 0.8);
-						topcol = nana::paint::graphics::mix(0x3F83B4, 0x0, 0.8);
-						botcol = nana::paint::graphics::mix(0x0C4A95, 0x0, 0.8);					
-					}
+					double percent = 1;
+					if(has_lister() || (state_.state == StatePress && state_.pointer_where == WherePushButton))
+						percent = 0.8;
 					else if(state_.state == this->StateMouseOver)
-					{
-						topcol_ln = nana::paint::graphics::mix(0x3F476C, 0xFFFFFF, 0.9);
-						botcol_ln = nana::paint::graphics::mix(0x031141, 0xFFFFFF, 0.9);
-						topcol = nana::paint::graphics::mix(0x3F83B4, 0xFFFFFF, 0.9);
-						botcol = nana::paint::graphics::mix(0x0C4A95, 0xFFFFFF, 0.9);
-					}
-					else
-					{
-						topcol_ln = 0x3F476C;
-						botcol_ln = 0x031141;
-						topcol = 0x3F83B4;
-						botcol = 0x0C4A95;
-					}
+						percent = 0.9;
+
+					nana::color_t topcol_ln = nana::paint::graphics::mix(0x3F476C, 0xFFFFFF, percent),
+						botcol_ln = nana::paint::graphics::mix(0x031141, 0xFFFFFF, percent),
+						topcol = nana::paint::graphics::mix(0x3F83B4, 0xFFFFFF, percent),
+						botcol = nana::paint::graphics::mix(0x0C4A95, 0xFFFFFF, percent);
 
 					graph_->line(left, top, left, mid, topcol_ln);
 					graph_->line(right - 1, top, right - 1, mid, topcol_ln);

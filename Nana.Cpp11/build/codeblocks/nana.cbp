@@ -62,6 +62,7 @@
 		<Unit filename="../../source/gui/layout.cpp" />
 		<Unit filename="../../source/gui/layout_utility.cpp" />
 		<Unit filename="../../source/gui/msgbox.cpp" />
+		<Unit filename="../../source/gui/place.cpp" />
 		<Unit filename="../../source/gui/programming_interface.cpp" />
 		<Unit filename="../../source/gui/timer.cpp" />
 		<Unit filename="../../source/gui/tooltip.cpp" />

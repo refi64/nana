@@ -49,7 +49,7 @@ namespace API
 				{
 					if(effects::edge_nimbus::none != iwd->effect.edge_nimbus)
 					{
-						for(auto i = cont.cbegin(); i != cont.cend(); ++i)
+						for(auto i = cont.begin(); i != cont.end(); ++i)
 							if(i->window == iwd)
 							{
 								cont.erase(i);
@@ -146,9 +146,10 @@ namespace API
 		}
 	}//end namespace dev
 
+	//exit
+	//close all windows in current thread
 	void exit()
 	{
-		//restrict::window_manager.exit();
 		internal_scope_guard isg;
 
 		std::vector<restrict::core_window_t*> v;
@@ -156,7 +157,7 @@ namespace API
 		if(v.size())
 		{
 			std::vector<native_window_type> roots;
-			native_window_type root = 0;
+			native_window_type root = nullptr;
 			unsigned tid = nana::system::this_thread_id();
 			for(auto wd : v)
 			{
@@ -828,7 +829,7 @@ namespace API
 			if(restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)))
 				return reinterpret_cast<restrict::core_window_t*>(wd)->color.active;
 		}
-		return 0;	
+		return 0;
 	}
 
 	color_t active(window wd, color_t col)

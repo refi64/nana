@@ -763,7 +763,7 @@ namespace nana{ namespace gui{
 					}
 					else
 					{
-						auto it = list_.cbegin();
+						auto it = list_.begin();
 						std::advance(it, i);
 						list_.insert(it, m);
 					}

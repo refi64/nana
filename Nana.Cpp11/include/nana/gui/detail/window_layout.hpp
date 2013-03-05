@@ -154,17 +154,21 @@ namespace detail
 			while(wd->parent)
 			{
 				auto *end = &(wd->parent->children[0]) + wd->parent->children.size();
-				auto *i = std::find(&(wd->parent->children[0]), end, wd) + 1;	//find the widget that next to wd.
+				auto *i = std::find(&(wd->parent->children[0]), end, wd);
 
-				for(; i != end; ++i)
+				if(i != end)
 				{
-					core_window_t* cover = *i;
-					if(cover->visible && (cover->flags.glass == false))
+					//find the widget that next to wd.
+					for(++i; i < end; ++i)
 					{
-						if(overlap(vis_rect, rectangle(cover->pos_root, cover->dimension), block.r))
+						core_window_t* cover = *i;
+						if(cover->visible && (cover->flags.glass == false))
 						{
-							block.window = cover;
-							blocks.push_back(block);
+							if(overlap(vis_rect, rectangle(cover->pos_root, cover->dimension), block.r))
+							{
+								block.window = cover;
+								blocks.push_back(block);
+							}
 						}
 					}
 				}
@@ -177,8 +181,8 @@ namespace detail
 		{
 			if((wd->other.category == category::widget_tag::value) && (wd->flags.glass != isglass))
 			{
-				auto i = std::find(data_sect.glass_window_cont.cbegin(), data_sect.glass_window_cont.cend(), wd);
-				if(i != data_sect.glass_window_cont.cend())
+				auto i = std::find(data_sect.glass_window_cont.begin(), data_sect.glass_window_cont.end(), wd);
+				if(i != data_sect.glass_window_cont.end())
 				{
 					if(false == isglass)
 					{

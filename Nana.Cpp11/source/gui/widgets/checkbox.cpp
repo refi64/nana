@@ -2,8 +2,8 @@
  *	A CheckBox Implementation
  *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
- *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	Distributed under the Nana Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/widgets/checkbox.cpp
@@ -280,11 +280,11 @@ namespace xcheckbox
 
 		void radio_group::_m_destroy(const eventinfo& ei)
 		{
-			auto i = std::find_if(ui_container_.cbegin(), ui_container_.cend(), [&ei](decltype(*ui_container_.cbegin()) & x)
+			auto i = std::find_if(ui_container_.begin(), ui_container_.end(), [&ei](decltype(*ui_container_.begin()) & x)
 					{
 						return (ei.window == x.uiobj->handle());
 					});
-			if(i != ui_container_.cend())
+			if(i != ui_container_.end())
 				ui_container_.erase(i);
 		}
 	//end class radio_group

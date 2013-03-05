@@ -21,15 +21,15 @@ namespace nana{ namespace gui{
 	{
 		namespace date_chooser
 		{
-			class trigger : public gui::drawer_trigger
+			class trigger : public drawer_trigger
 			{
 			public:
 				static const int topbar_height = 34;
 				static const int border_size = 3;
 
 				enum class transform_action{none, to_left, to_right, to_enter, to_leave};
-				enum{WhereNone, WhereLeftButton, WhereRightButton, WhereTopbar, WhereTextArea};
-				enum{PageDate, PageMonth, PageYear};
+				enum class where{none, left_button, right_button, topbar, textarea};
+				enum class page{date, month};
 
 				struct drawing_basis
 				{
@@ -45,7 +45,7 @@ namespace nana{ namespace gui{
 				void month_name(unsigned index, const nana::string&);
 			private:
 				void _m_init_color();
-				int _m_pos_where(graph_reference, int x, int y);
+				where _m_pos_where(graph_reference, int x, int y);
 				void _m_draw(graph_reference);
 				void _m_draw_topbar(graph_reference);
 				void _m_make_drawing_basis(drawing_basis&, graph_reference, const nana::point& refpos);
@@ -68,11 +68,11 @@ namespace nana{ namespace gui{
 				nana::string weekstr_[7];
 				nana::string monthstr_[12];
 
-				nana::gui::widget * widget_;
+				widget * widget_;
 				
 				bool chose_;
-				unsigned	page_;
-				int			pos_;
+				page	page_;
+				where	pos_;
 				nana::point trace_pos_;
 
 				drawing_basis	dbasis_;

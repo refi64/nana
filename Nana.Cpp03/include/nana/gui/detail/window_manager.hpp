@@ -229,7 +229,7 @@ namespace detail
 			:window(wd), root_graph_object(width, height)
 		{}
 	};
-	
+
 	class reversible_mutex
 		: public nana::threads::recursive_mutex
 	{
@@ -1172,7 +1172,7 @@ namespace detail
 					const container & tabs = wd->root_widget->other.attribute.root->tabstop;
 					if(tabs.size() > 1)
 					{
-						container::const_iterator i = std::find(tabs.begin(), tabs.end(), wd);
+						typename container::const_iterator i = std::find(tabs.begin(), tabs.end(), wd);
 						if(i != tabs.end())
 						{
 							if(tabs.begin() == i)

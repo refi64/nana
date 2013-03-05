@@ -2,8 +2,8 @@
  *	Window Manager Implementation
  *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
- *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	Distributed under the Nana Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/detail/window_manager.cpp
@@ -83,11 +83,11 @@ namespace detail
 		void shortkey_container::umake(window wd)
 		{
 			if(wd == nullptr) return;
-			auto i = std::find_if(keybase_.cbegin(), keybase_.cend(), [wd](const item_type& m){
+			auto i = std::find_if(keybase_.begin(), keybase_.end(), [wd](const item_type& m){
 					return (m.handle ==wd);
 				});
 
-			if(i != keybase_.cend())
+			if(i != keybase_.end())
 				keybase_.erase(i);
 		}
 
@@ -113,7 +113,7 @@ namespace detail
 		{
 			auto i = maptable_.find(wd);
 			if(i == maptable_.end()) return;
-			
+
 			auto u = i->second.find(identifier);
 			if(u == i->second.end()) return;
 
@@ -189,7 +189,7 @@ namespace detail
 				if(thr_.refcnt && (thr_.tid == nana::system::this_thread_id()))
 				{
 					std::size_t cnt = thr_.refcnt;
-					
+
 					stack_.push_back(thr_);
 					thr_.tid = 0;
 					thr_.refcnt = 0;
@@ -471,8 +471,8 @@ namespace detail
 				if(parent)
 				{
 					auto & children = parent->children;
-					auto i = std::find(children.cbegin(), children.cend(), wd);
-					if(i != children.cend())
+					auto i = std::find(children.begin(), children.end(), wd);
+					if(i != children.end())
 						children.erase(i);
 				}
 				_m_destroy(wd);
@@ -1051,7 +1051,7 @@ namespace detail
 				if(attr_cap.size())
 				{
 					std::pair<core_window_t*, bool> last = attr_cap.back();
-					attr_cap.erase(attr_cap.cend() - 1);
+					attr_cap.pop_back();
 
 					if(handle_manager_.available(last.first))
 					{
@@ -1068,10 +1068,10 @@ namespace detail
 			}
 			else
 			{
-				auto i = std::find_if(attr_cap.cbegin(), attr_cap.cend(),
+				auto i = std::find_if(attr_cap.begin(), attr_cap.end(),
 					[wd](const std::pair<core_window_t*, bool> & x){ return (x.first == wd);});
 
-				if(i != attr_cap.cend())
+				if(i != attr_cap.end())
 					attr_cap.erase(i);
 				return attr_.capture.window;
 			}
@@ -1287,7 +1287,7 @@ namespace detail
 			if(wd->flags.tab & detail::tab_type::tabstop)
 			{
 				auto & tabstop = root_attr->tabstop;
-				auto i = std::find(tabstop.cbegin(), tabstop.cend(), wd);
+				auto i = std::find(tabstop.begin(), tabstop.end(), wd);
 				if(i != tabstop.cend())
 					tabstop.erase(i);
 			}
@@ -1295,7 +1295,7 @@ namespace detail
 			if(effects::edge_nimbus::none != wd->effect.edge_nimbus)
 			{
 				auto & cont = root_attr->effects_edge_nimbus;
-				for(auto i = cont.cbegin(); i != cont.cend(); ++i)
+				for(auto i = cont.begin(); i != cont.end(); ++i)
 					if(i->window == wd)
 					{
 						cont.erase(i);
@@ -1323,8 +1323,8 @@ namespace detail
 			{
 				//remove the frame handle from the WM frames manager.
 				auto & frames = root_attr->frames;
-				auto i = std::find(frames.cbegin(), frames.cend(), wd);
-				if(i != frames.cend())
+				auto i = std::find(frames.begin(), frames.end(), wd);
+				if(i != frames.end())
 					frames.erase(i);
 
 				//The frame widget does not have an owner, and close their element windows without activating owner.

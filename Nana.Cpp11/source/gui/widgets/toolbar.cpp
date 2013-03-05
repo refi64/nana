@@ -71,7 +71,7 @@ namespace nana{ namespace gui{
 					item_type* m = new item_type(text, img, type);
 
 					if(pos < cont_.size())
-						cont_.insert(cont_.cbegin() + pos, m);
+						cont_.insert(cont_.begin() + pos, m);
 					else
 						cont_.push_back(m);
 				}
@@ -89,7 +89,7 @@ namespace nana{ namespace gui{
 				void insert(size_type pos)
 				{
 					if(pos < cont_.size())
-						cont_.insert(cont_.cbegin() + pos, static_cast<item_type*>(nullptr)); //both works in C++0x and C++2003
+						cont_.insert(cont_.begin() + pos, static_cast<item_type*>(nullptr)); //both works in C++0x and C++2003
 					else
 						cont_.push_back(nullptr);
 				}

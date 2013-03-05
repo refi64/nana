@@ -8,7 +8,6 @@ SRCROOT	= ../../source
 NANA_INC= $(INCROOT)/nana
 
 INCS	= -I$(INCROOT) -I/usr/include/freetype2
-LIBS	= -lX11 -lpthread -lXpm -lrt -ldl
 
 BIN	= nana.a
 

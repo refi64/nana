@@ -191,7 +191,7 @@ namespace nana{ namespace gui{
 				{
 					menu_item_type m(text, f);
 					if(pos < root_.items.size())
-						root_.items.insert(root_.items.cbegin() + pos, m);
+						root_.items.insert(root_.items.begin() + pos, m);
 					else
 						root_.items.push_back(m);
 				}
@@ -223,7 +223,7 @@ namespace nana{ namespace gui{
 					for(auto & m : root_.items)
 					{
 						if(m.sub_menu)
-							for(auto i = m.sub_menu->owner.cbegin(); i != m.sub_menu->owner.cend();)
+							for(auto i = m.sub_menu->owner.begin(); i != m.sub_menu->owner.end();)
 							{
 								if((*i) == &root_)
 									i = m.sub_menu->owner.erase(i);
@@ -478,7 +478,7 @@ namespace nana{ namespace gui{
 
 					const unsigned item_h_px = _m_item_height();
 					nana::rectangle item_r(2, 2, graph_->width() - 4, item_h_px);
-					
+
 					unsigned strpixels = item_r.width - 60;
 
 					int text_top_off = (item_h_px - graph_->text_extent_size(STR("jh({[")).height) / 2;
@@ -992,7 +992,7 @@ namespace nana{ namespace gui{
 			drawerbase::menu::menu_builder	mbuilder;
 			drawerbase::menu::menu_window *	uiobj;
 			std::function<void()> destroy_answer;
-			std::map<std::size_t, info> sub_container;		
+			std::map<std::size_t, info> sub_container;
 		};
 
 		menu::menu()
@@ -1040,7 +1040,7 @@ namespace nana{ namespace gui{
 		{
 			auto & items = impl_->mbuilder.data().items;
 			if(index < items.size())
-				items.erase(items.cbegin() + index);
+				items.erase(items.begin() + index);
 		}
 
 		void menu::image(std::size_t index, const paint::image& img)

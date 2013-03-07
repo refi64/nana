@@ -242,7 +242,7 @@ namespace nana{ namespace gui{
 
 				void detach()
 				{
-					graph_ = 0;
+					graph_ = nullptr;
 				}
 
 				void resize()
@@ -304,7 +304,6 @@ namespace nana{ namespace gui{
 							items += state_.offset_y;
 
 							const unsigned item_pixels = state_.renderer->item_pixels(*graph_);
-
 							nana::rectangle item_r(2, 2, graph_->width() - outter_w, item_pixels);
 
 							state_.renderer->image(_m_image_enabled(), image_pixels_);
@@ -320,9 +319,7 @@ namespace nana{ namespace gui{
 						_m_open_scrollbar(*widget_, pages);
 					}
 					else
-					{
 						graph_->string(4, 4, 0x808080, STR("Empty Listbox, No Module!"));
-					}
 
 					//Draw border
 					graph_->rectangle(0x0, false);
@@ -425,7 +422,7 @@ namespace nana{ namespace gui{
 
 				void trigger::bind_window(widget_reference widget)
 				{
-					drawer_->attach(&widget, 0);
+					drawer_->attach(&widget, nullptr);
 				}
 
 				void trigger::attached(graph_reference graph)

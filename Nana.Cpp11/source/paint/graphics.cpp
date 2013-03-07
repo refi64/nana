@@ -82,24 +82,24 @@ namespace paint
 		font::font(const nana::char_t* name, unsigned size, bool bold, bool italic, bool underline, bool strike_out)
 			: impl_(new impl_type)
 		{
-			this->make(name, size, bold, italic, underline, strike_out);
+			make(name, size, bold, italic, underline, strike_out);
 		}
 
 		font::~font()
 		{
 			delete impl_;
-			impl_ = 0;
+			impl_ = nullptr;
 		}
 
 		bool font::empty() const
 		{
-			return ((0 == impl_) || (nullptr == impl_->font_ptr));
+			return ((nullptr == impl_) || (nullptr == impl_->font_ptr));
 		}
 
 		void font::make(const nana::char_t* name, unsigned size, bool bold, bool italic, bool underline, bool strike_out)
 		{
 			size = nana::detail::platform_spec::instance().font_size_to_height(size);
-			this->make_raw(name, size, bold ? 700 : 400, italic, underline, strike_out);
+			make_raw(name, size, bold ? 700 : 400, italic, underline, strike_out);
 		}
 
 		void font::make_raw(const nana::char_t*name, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out)
@@ -150,7 +150,7 @@ namespace paint
 
 		native_font_type font::handle() const
 		{
-			if(empty())	return 0;
+			if(empty())	return nullptr;
 			return reinterpret_cast<native_font_type>(impl_->font_ptr->handle);
 		}
 
@@ -193,7 +193,7 @@ namespace paint
 		graphics::graphics(unsigned width, unsigned height)
 			:handle_(nullptr), changed_(true)
 		{
-			this->make(width, height);
+			make(width, height);
 		}
 
 		graphics::graphics(const nana::size& sz)
@@ -285,7 +285,7 @@ namespace paint
 					::DeleteDC(cdc);
 					delete dw;
 					dw = nullptr;
-					this->release();
+					release();
 				}
 
 				::ReleaseDC(0, hdc);
@@ -318,8 +318,8 @@ namespace paint
 		void graphics::resize(unsigned width, unsigned height)
 		{
 			graphics duplicate(*this);
-			this->make(width, height);
-			this->bitblt(0, 0, duplicate);
+			make(width, height);
+			bitblt(0, 0, duplicate);
 		}
 
 		void graphics::typeface(const font& f)
@@ -382,7 +382,7 @@ namespace paint
 			sz.height = extents.cy;
 			delete [] dx;
 #elif defined(NANA_X11)
-			sz = this->text_extent_size(str + begin, end - begin);
+			sz = text_extent_size(str + begin, end - begin);
 #endif
 			return sz;
 		}
@@ -441,7 +441,7 @@ namespace paint
 				bidi.linestr(str.c_str(), str.size(), reordered);
 				for(auto & i: reordered)
 				{
-					nana::size t = this->text_extent_size(i.begin, i.end - i.begin);
+					nana::size t = text_extent_size(i.begin, i.end - i.begin);
 					sz.width += t.width;
 					if(sz.height < t.height)
 						sz.height = t.height;
@@ -502,20 +502,20 @@ namespace paint
 			bidi.linestr(str, len, reordered);
 			for(auto & i : reordered)
 			{
-				this->string(x, y, col, i.begin, i.end - i.begin);
-				x += static_cast<int>(this->text_extent_size(i.begin, i.end - i.begin).width);
+				string(x, y, col, i.begin, i.end - i.begin);
+				x += static_cast<int>(text_extent_size(i.begin, i.end - i.begin).width);
 			}
 			return static_cast<unsigned>(x - origin_x);
 		}
 
 		void graphics::string(int x, int y, color_t color, const nana::string& str, std::size_t len)
 		{
-			this->string(x, y, color, str.c_str(), len);
+			string(x, y, color, str.c_str(), len);
 		}
 
 		void graphics::string(int x, int y, color_t color, const nana::string& str)
 		{
-			this->string(x, y, color, str.c_str(), str.size());
+			string(x, y, color, str.c_str(), str.size());
 		}
 
 		void graphics::string(int x, int y, color_t color, const nana::char_t* str, std::size_t len)
@@ -560,7 +560,7 @@ namespace paint
 
 		void graphics::string(int x, int y, color_t c, const nana::char_t* str)
 		{
-			this->string(x, y, c, str, nana::strlen(str));
+			string(x, y, c, str, nana::strlen(str));
 		}
 
 		void graphics::set_pixel(int x, int y, color_t color)
@@ -1015,7 +1015,7 @@ namespace paint
 		void graphics::release()
 		{
 			dwptr_.reset();
-			handle_ = 0;
+			handle_ = nullptr;
 			size_.width = size_.height = 0;
 		}
 
@@ -1034,7 +1034,7 @@ namespace paint
 				bmpInfo.bmiHeader.biBitCount = 24;
 
 				HDC hdcMem = ::CreateCompatibleDC(handle_->context);
-				BYTE *pData = 0;
+				BYTE *pData = nullptr;
 				HBITMAP hBmp = CreateDIBSection(hdcMem, &bmpInfo, DIB_RGB_COLORS, reinterpret_cast<void**>(&pData), 0, 0);
 
 				::SelectObject(hdcMem, hBmp);

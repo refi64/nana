@@ -199,9 +199,7 @@ namespace nana{	namespace gui{
 
 				bool seq(std::size_t index, std::vector<node_handle> & seqv) const
 				{
-					node_handle root = tree_.get_root();
-					for(node_handle i = cur_; i && (i != root); i = i->owner)
-						seqv.insert(seqv.begin(), i);
+					_m_read_node_path(seqv);
 
 					if(index < seqv.size())
 					{
@@ -226,9 +224,7 @@ namespace nana{	namespace gui{
 				nana::string path() const
 				{
 					std::vector<node_handle> v;
-					node_handle root = tree_.get_root();
-					for(node_handle i = cur_; i && (i != root); i = i->owner)
-						v.insert(v.begin(), i);
+					_m_read_node_path(v);
 
 					nana::string str;
 					bool not_head = false;
@@ -240,7 +236,7 @@ namespace nana{	namespace gui{
 							not_head = true;
 						str += i->value.first;
 					}
-					return str;
+					return std::move(str);
 				}
 
 				void path(const nana::string& key)
@@ -251,10 +247,7 @@ namespace nana{	namespace gui{
 				node_handle at(std::size_t index) const
 				{
 					std::vector<node_handle> v;
-					node_handle root = tree_.get_root();
-					for(node_handle i = cur_; i && (i != root); i = i->owner)
-						v.insert(v.begin(), i);
-
+					_m_read_node_path(v);
 					return (index < v.size() ? v[index] : nullptr);
 				}
 
@@ -335,6 +328,13 @@ namespace nana{	namespace gui{
 					return false;
 				}
 			private:
+				void _m_read_node_path(std::vector<node_handle>& v) const
+				{
+					node_handle root = tree_.get_root();
+					for(node_handle i = cur_; i && (i != root); i = i->owner)
+						v.insert(v.begin(), i);
+				}
+			private:
 				container tree_;
 				nana::string splitstr_;
 				node_handle cur_;
@@ -402,7 +402,7 @@ namespace nana{	namespace gui{
 
 					renderer & rd = proto_.ui_renderer->refer();
 					rd.background(*graph_, window_, r, ui_el_);
-					if(this->head_)
+					if(head_)
 						rd.root_arrow(*graph_, _m_make_root_rectangle(), style_.state);
 					_m_draw_items(r);
 					rd.border(*graph_);
@@ -865,9 +865,9 @@ namespace nana{	namespace gui{
 
 				void trigger::_m_attach_adapter_to_drawer() const
 				{
-					if(this->ext_event_adapter_)
+					if(ext_event_adapter_)
 					{
-						drawerbase::categorize::ext_event_raw_tag & ee = scheme_->ext_event();
+						auto & ee = scheme_->ext_event();
 						if(ee.selected == nullptr)
 							ee.selected = nana::make_fun(*ext_event_adapter_, &ext_event_adapter_if::selected);
 					}

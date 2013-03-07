@@ -574,7 +574,7 @@ namespace nana{	namespace gui{
 					style_.listbox = &(form_loader<nana::gui::float_listbox>()(window_, r));
 					style_.listbox->set_module(style_.module, 16);
 					style_.listbox->show();
-					style_.listbox->make_event<events::unload>(*this, &scheme::_m_list_closed);
+					style_.listbox->make_event<events::destroy>(*this, &scheme::_m_list_closed);
 				}
 
 				void _m_list_closed()

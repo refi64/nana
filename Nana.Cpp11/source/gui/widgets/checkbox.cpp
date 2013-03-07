@@ -203,7 +203,7 @@ namespace xcheckbox
 
 		void checkbox::style(checker_t chk)
 		{
-			this->get_drawer_trigger().style(static_cast<drawer_trigger_t::check_renderer_t::checker_t>(chk));
+			get_drawer_trigger().style(static_cast<drawer_trigger_t::check_renderer_t::checker_t>(chk));
 			API::refresh_window(*this);
 		}
 
@@ -225,18 +225,13 @@ namespace xcheckbox
 
 		void checkbox::open_check_image(const nana::paint::image& img)
 		{
-			this->get_drawer_trigger().check_renderer().open_background_image(img);
+			get_drawer_trigger().check_renderer().open_background_image(img);
 		}
 
 		void checkbox::set_check_image(mouse_action act, checkbox::checker_t chk, bool checked, const nana::rectangle& r)
 		{
-			drawer_trigger_t::check_renderer_t::checker_t ichk;
-			if(checkbox::blocker == chk)
-				ichk = nana::paint::gadget::check_renderer::blocker;
-			else
-				ichk = nana::paint::gadget::check_renderer::clasp;
-
-			this->get_drawer_trigger().check_renderer().set_image_state(act, ichk, checked, r);
+			typedef nana::paint::gadget::check_renderer checks;
+			get_drawer_trigger().check_renderer().set_image_state(act, (checkbox::blocker == chk ? checks::blocker : checks::clasp), checked, r);
 		}
 	//end class checkbox
 

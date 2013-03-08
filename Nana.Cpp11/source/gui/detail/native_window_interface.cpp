@@ -491,7 +491,7 @@ namespace nana{
 					::PostMessage(reinterpret_cast<HWND>(wd), nana::detail::messages::remote_thread_destroy_window, 0, 0);
 			}
 #elif defined(NANA_X11)
-			//Under X, XDestroyWindow destroy the specified window and generats a DestroyNotify
+			//Under X, XDestroyWindow destroys the specified window and generats a DestroyNotify
 			//event, when the client receives the event, the specified window has been already
 			//destroyed. This is a feature which is different from Windows. So the following
 			//works should be handled before calling XDestroyWindow.
@@ -499,10 +499,20 @@ namespace nana{
 			if(wd == bedrock.get_menu())
 				bedrock.empty_menu();
 
+			Display* disp = restrict::spec.open_display();
 			restrict::spec.remove(wd);
 			auto iwd = bedrock.wd_manager.root(wd);
 			if(iwd)
 			{
+				{
+					//Before calling window_manager::destroy, make sure the window is invisible.
+					//It is a behavior like Windows.
+					nana::detail::platform_scope_guard psg;
+					restrict::spec.set_error_handler();
+					::XUnmapWindow(disp, reinterpret_cast<Window>(wd));
+					::XFlush(disp);
+					restrict::spec.rev_error_handler();
+				}
 				bedrock.wd_manager.destroy(iwd);
 				bedrock.evt_manager.umake(reinterpret_cast<gui::window>(iwd), false);
 				bedrock.rt_manager.remove_if_exists(iwd);
@@ -511,7 +521,7 @@ namespace nana{
 
 			nana::detail::platform_scope_guard psg;
 			restrict::spec.set_error_handler();
-			::XDestroyWindow(restrict::spec.open_display(), reinterpret_cast<Window>(wd));
+			::XDestroyWindow(disp, reinterpret_cast<Window>(wd));
 			restrict::spec.rev_error_handler();
 #endif
 		}

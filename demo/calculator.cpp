@@ -182,27 +182,27 @@ int main()
 	auto & opkeys_field = place.field("opkeys");
 	wchar_t keys[] = L"C¡À%/789X456-123+0.=";
 	nana::paint::font keyfont(nullptr, 10, true);
-	for(auto i = std::begin(keys), end = std::end(keys); i != end; ++i)
+	for(auto key : keys)
 	{
 		auto p = std::shared_ptr<button>(new button(fm));
-		p->caption(nana::string(1, *i));
+		p->caption(nana::string(1, key));
 		p->typeface(keyfont);
 		op_keys.push_back(p);
 
-		if('0' != *i)
+		if('0' != key)
 		{
-			if('=' == *i)
+			if('=' == key)
 			{
 				p->background(0x7ACC);
 				p->foreground(0xFFFFFF);
 			}
-			opkeys_field<<*p<<2;
+			opkeys_field<<*p;
 		}
 		else
-			opkeys_field<<place.room(*p, 2, 1)<<2;
+			opkeys_field<<place.room(*p, 2, 1);
 
 		//Make event answer for keys.
-		if(('0' <= *i && *i <= '9') || (*i == '.'))
+		if(('0' <= key && key <= '9') || ('.' == key))
 			p->make_event<events::click>(std::bind(numkey_pressed, std::ref(state), std::placeholders::_1));
 		else
 			p->make_event<events::click>(std::bind(opkey_pressed, std::ref(state), std::placeholders::_1));

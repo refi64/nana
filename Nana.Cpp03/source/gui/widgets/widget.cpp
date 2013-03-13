@@ -159,7 +159,7 @@ namespace gui
 
 		nana::string widget::_m_caption() const
 		{
-			return API::window_caption(handle());
+			return API::dev::window_caption(handle());
 		}
 		
 		void widget::_m_caption(const nana::string& str)

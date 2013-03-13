@@ -53,7 +53,7 @@ namespace gui
 
 				void render(widget_reference wd, graph_reference graph, align text_align)
 				{
-					nana::string text = API::window_caption(wd_);
+					nana::string text = API::dev::window_caption(wd_);
 					nana::string::size_type len = text.length();
 					if(len)
 					{
@@ -65,7 +65,7 @@ namespace gui
 
 				unsigned extent_size(graph_reference graph)
 				{
-					nana::string text = API::window_caption(wd_);
+					nana::string text = API::dev::window_caption(wd_);
 					nana::string::size_type len = text.length();
 					if(len)
 					{
@@ -77,7 +77,7 @@ namespace gui
 
 				nana::size measure(graph_reference graph)
 				{
-					nana::string text = API::window_caption(wd_);
+					nana::string text = API::dev::window_caption(wd_);
 
 					nana::size extsize;
 					if(0 == text.length())
@@ -1054,7 +1054,7 @@ namespace gui
 			if(impl->format(f))
 			{
 				window wd = *this;
-				impl->renderer->parse(wd, API::window_caption(wd));
+				impl->renderer->parse(wd, API::dev::window_caption(wd));
 				API::refresh_window(wd);
 			}
 		}

@@ -586,10 +586,6 @@ namespace nana{	namespace gui
 		//return the fixed pixels and adjustable items.
 		std::pair<unsigned, std::size_t> fixed_pixels(kind match_kind) const
 		{
-			//this is a weight fixed division
-			if(is_fixed())
-				return std::pair<unsigned, std::size_t>(weight.integer(), 1);
-
 			std::pair<unsigned, std::size_t> pair;
 			if(field && (kind_of_division == match_kind))
 				pair = field->fixed_and_adjustable();
@@ -634,7 +630,7 @@ namespace nana{	namespace gui
 				pair.first += field->percent_pixels(area.width);
 				
 			unsigned gap_size = static_cast<unsigned>(gap.kind_of() == number_t::kind::integer ? gap.integer() : area.width * gap.real());
-				
+
 			double percent_pixels = 0;
 			for(auto child: children)
 			{
@@ -652,8 +648,8 @@ namespace nana{	namespace gui
 				child->area.y = area.y;
 				child->area.height = area.height;
 
-				double adj_px = static_cast<unsigned>(child->weight.kind_of() == number_t::kind::integer ? child->weight.integer() : 0);
-				if(adj_px <= DBL_EPSILON) //the child is adjustable
+				double adj_px;
+				if(false == child->is_fixed()) //the child is adjustable
 				{
 					if(false == child->is_percent())
 					{
@@ -664,6 +660,9 @@ namespace nana{	namespace gui
 					else
 						adj_px = static_cast<unsigned>(area.width * child->weight.real());
 				}
+				else
+					adj_px = child->weight.integer();
+
 				left += adj_px;
 				child->area.width = static_cast<unsigned>(adj_px) - (static_cast<unsigned>(adj_px) > gap_size ? gap_size : 0);
 				child->collocate();
@@ -745,8 +744,8 @@ namespace nana{	namespace gui
 				child->area.y = static_cast<int>(top);
 				child->area.width = area.width;
 
-				double adj_px = static_cast<unsigned>(child->weight.kind_of() == number_t::kind::integer ? child->weight.integer() : 0);
-				if(adj_px <= DBL_EPSILON) //the child is adjustable
+				double adj_px;
+				if(false == child->is_fixed()) //the child is adjustable
 				{
 					if(false == child->is_percent())
 					{
@@ -757,6 +756,9 @@ namespace nana{	namespace gui
 					else
 						adj_px = area.height * child->weight.real();
 				}
+				else
+					adj_px = child->weight.integer();
+
 				top += adj_px;
 				child->area.height = static_cast<unsigned>(adj_px) - (static_cast<unsigned>(adj_px) > gap_size ? gap_size : 0);
 				child->collocate();

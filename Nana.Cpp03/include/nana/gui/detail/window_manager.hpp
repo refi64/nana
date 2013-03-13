@@ -80,11 +80,12 @@ namespace detail
 
 	struct signals
 	{
-		enum{caption, destroy, size, count};
+		enum{caption, read_caption, destroy, size, count};
 
 		union
 		{
 			const nana::char_t* caption;
+			nana::string * str;
 			struct
 			{
 				unsigned width;
@@ -300,6 +301,15 @@ namespace detail
 		void detach_signal(core_window_t* wd)
 		{
 			signal_manager_.umake(wd);
+		}
+
+		nana::string signal_fire_caption(core_window_t* wd)
+		{
+			nana::string str;
+			detail::signals sig;
+			sig.info.str = & str;
+			signal_manager_.fireaway(wd, detail::signals::read_caption, sig);
+			return str;
 		}
 
 		void signal_fire_caption(core_window_t* wd, const nana::char_t* str)

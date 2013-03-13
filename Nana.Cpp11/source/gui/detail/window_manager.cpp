@@ -261,6 +261,15 @@ namespace detail
 			signal_manager_.fireaway(wd, detail::signals::caption, sig);
 		}
 
+		nana::string window_manager::signal_fire_caption(core_window_t* wd)
+		{
+			nana::string str;
+			detail::signals sig;
+			sig.info.str = &str;
+			signal_manager_.fireaway(wd, detail::signals::read_caption, sig);
+			return str;
+		}
+
 		void window_manager::event_filter(core_window_t* wd, bool is_make, unsigned evtid)
 		{
 			switch(evtid)

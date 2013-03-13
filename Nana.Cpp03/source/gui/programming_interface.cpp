@@ -111,6 +111,23 @@ namespace API
 			restrict::bedrock.evt_manager.umake(wd, true);
 		}
 
+		nana::string window_caption(window wd)
+		{
+			if(wd)
+			{
+				restrict::core_window_t * const iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+				internal_scope_guard isg;
+
+				if(restrict::window_manager.available(iwd))
+				{
+					if(iwd->other.category == category::root_tag::value)
+						return restrict::interface_type::window_caption(iwd->root);
+					return iwd->title;
+				}
+			}
+			return nana::string();
+		}
+
 		void window_caption(window wd, const nana::string& title)
 		{
 			if(wd)
@@ -620,11 +637,7 @@ namespace API
 			restrict::core_window_t * const iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
-			{
-				if(iwd->other.category == category::root_tag::value)
-					return restrict::interface_type::window_caption(iwd->root);
-				return iwd->title;
-			}
+				return restrict::window_manager.signal_fire_caption(iwd);
 		}
 		return nana::string();
 	}

@@ -185,8 +185,11 @@ namespace gui
 			case detail::signals::caption:
 				this->_m_caption(sig.info.caption);
 				break;
+			case detail::signals::read_caption:
+				*sig.info.str = this->_m_caption();
+				break;
 			case detail::signals::destroy:
-				handle_ = 0; break;
+				handle_ = nullptr; break;
 			}
 		}
 	private:
@@ -239,6 +242,9 @@ namespace gui
 			{
 			case detail::signals::caption:
 				this->_m_caption(sig.info.caption);
+				break;
+			case detail::signals::read_caption:
+				*sig.info.str = this->_m_caption();
 				break;
 			case detail::signals::destroy:
 				handle_ = 0; break;
@@ -311,6 +317,9 @@ namespace gui
 			case detail::signals::caption:
 				this->_m_caption(sig.info.caption);
 				break;
+			case detail::signals::read_caption:
+				*sig.info.str = this->_m_caption();
+				break;
 			case detail::signals::destroy:
 				handle_ = 0; break;
 			}
@@ -379,6 +388,9 @@ namespace gui
 			{
 			case detail::signals::caption:
 				this->_m_caption(sig.info.caption);
+				break;
+			case detail::signals::read_caption:
+				*sig.info.str = this->_m_caption();
 				break;
 			case detail::signals::destroy:
 				handle_ = 0; break;

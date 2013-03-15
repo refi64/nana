@@ -659,7 +659,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 		void _m_do_verify(const gui::eventinfo& ei)
 		{
 			tooltip_.close();
-			if(ei.keyboard.key == keyboard::enter)
+			if(ei.keyboard.key == static_cast<char_t>(keyboard::enter))
 			{
 				_m_verify();
 			}

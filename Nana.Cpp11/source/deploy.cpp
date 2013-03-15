@@ -12,7 +12,6 @@
  */
 
 #include <nana/deploy.hpp>
-#include <nana/auto_buf.hpp>
 
 #if defined(NANA_WINDOWS)
 	#include <windows.h>

@@ -212,7 +212,7 @@ namespace detail
 			if(wd && wd->parent && wd->flags.glass)
 			{
 				auto & glass_buffer = wd->other.glass_buffer;
-				if(glass_buffer.empty() || glass_buffer.size() != wd->dimension)
+				if(glass_buffer.empty() || (glass_buffer.size() != wd->dimension))
 				{
 					glass_buffer.make(wd->dimension.width, wd->dimension.height);
 					copy_from_buffer = false;

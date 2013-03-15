@@ -643,7 +643,7 @@ namespace nana{ namespace gui{
 						case keyboard::sync:
 							editor->paste();	break;
 						case keyboard::tab:
-							editor->put(keyboard::tab); break;
+							editor->put(static_cast<char_t>(keyboard::tab)); break;
 						default:
 							if(ei.keyboard.key >= 0xFF || (32 <= ei.keyboard.key && ei.keyboard.key <= 126))
 								editor->put(ei.keyboard.key);

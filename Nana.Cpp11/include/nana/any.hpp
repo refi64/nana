@@ -39,7 +39,7 @@ namespace nana
 			{
 				if(this != &rhs)
 				{
-					const object_type * other = dynamic_cast<const object_type*>(&rhs);
+					auto other = dynamic_cast<const object_type*>(&rhs);
 					if(other)
 						object = other->object;	
 				}
@@ -48,7 +48,7 @@ namespace nana
 			
 			virtual bool same(const super_type& rhs) const
 			{
-				return (dynamic_cast<const object_type*>(&rhs) != 0);
+				return (dynamic_cast<const object_type*>(&rhs) != nullptr);
 			}
 			
 			virtual super_type* clone() const
@@ -116,7 +116,7 @@ namespace nana
 				object_type<type>* obj = dynamic_cast<object_type<type>*>(super_);
 				if(obj) return &(obj->object);
 			}
-			return 0;
+			return nullptr;
 		}
 		
 		template<typename T>
@@ -125,7 +125,7 @@ namespace nana
 			typedef typename std::remove_const<T>::type type;
 			type *obj = get<type>();
 
-			if(obj == 0)
+			if(nullptr == obj)
 				throw std::bad_cast();
 
 			return *obj;

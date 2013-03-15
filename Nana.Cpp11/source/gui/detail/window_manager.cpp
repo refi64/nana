@@ -52,7 +52,7 @@ namespace detail
 	//end class signal_manager
 
 
-	//class shortkey_container::
+	//class shortkey_container
 		bool shortkey_container::make(window wd, unsigned long key)
 		{
 			if(wd == nullptr) return false;
@@ -236,7 +236,7 @@ namespace detail
 
 		std::size_t window_manager::number_of_core_window() const
 		{
-			return this->handle_manager_.size();
+			return handle_manager_.size();
 		}
 
 		window_manager::mutex_type& window_manager::internal_lock() const
@@ -336,7 +336,7 @@ namespace detail
 
 				//create Root graphics Buffer and manage it
 				root_table_type::value_type rt_window_data(wd, result.width, result.height);
-				root_table_type::value_type* value = root_table_.insert(result.handle, rt_window_data);
+				auto* value = root_table_.insert(result.handle, rt_window_data);
 				if(value)
 				{
 					value->root_graph_object = rt_window_data.root_graph_object;

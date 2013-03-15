@@ -284,7 +284,7 @@ namespace drawerbase
 
 		void trigger::key_char(graph_reference, const eventinfo& ei)
 		{
-			if(ei.keyboard.key == gui::keyboard::enter)
+			if(ei.keyboard.key == static_cast<char_t>(gui::keyboard::enter))
 			{
 				eventinfo e;
 				e.mouse.ctrl = false;

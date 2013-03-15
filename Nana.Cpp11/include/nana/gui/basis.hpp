@@ -49,19 +49,17 @@ namespace gui
 	typedef detail::window_handle_impl*	window;
 	typedef detail::event_handle_impl*	event_handle;
 
-	namespace keyboard
+
+	enum class keyboard
 	{
-		enum
-		{
-			select_all = 0x1,
-			alt = 18,
-			backspace = 0x8, tab = 0x9,
-			esc = 0x1B, enter = 0xD,
-			cancel = 0x3, sync = 0x16,
-			pageup = 33, pagedown,
-			left = 37, up, right, down,
-			insert = 45, del,
-		};
+		select_all = 0x1,
+		alt = 18,
+		backspace = 0x8, tab = 0x9,
+		esc = 0x1B, enter = 0xD,
+		cancel = 0x3, sync = 0x16,
+		pageup = 33, pagedown,
+		left = 37, up, right, down,
+		insert = 45, del,
 	};
 
 	namespace color

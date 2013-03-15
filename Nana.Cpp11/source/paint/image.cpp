@@ -12,7 +12,6 @@
 #include <nana/config.hpp>
 #include PLATFORM_SPEC_HPP
 #include <nana/paint/image.hpp>
-#include <nana/auto_buf.hpp>
 #include <algorithm>
 #include <fstream>
 #include <iterator>

@@ -47,7 +47,7 @@ namespace detail
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-			if(_m_find_by_timer_object(timer) == 0)
+			if(nullptr == _m_find_by_timer_object(timer))
 			{
 #if defined(NANA_WINDOWS)
 				timer_handle handle = reinterpret_cast<timer_handle>(::SetTimer(0, 0, interval, timer_trigger_proc));
@@ -83,7 +83,7 @@ namespace detail
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-			timer_handle* old = _m_find_by_timer_object(timer);
+			auto old = _m_find_by_timer_object(timer);
 			if(old)
 			{
 #if defined(NANA_WINDOWS)
@@ -111,6 +111,8 @@ namespace detail
 
 		timer_trigger::timer_handle* timer_trigger::_m_find_by_timer_object(timer_object t)
 		{
+			//Thread-Safe Required!
+			std::lock_guard<decltype(mutex_)> lock(mutex_);
 			auto i = holder_timer_.find(t);
 			return (i != holder_timer_.end() ? &(i->second) : nullptr);
 		}

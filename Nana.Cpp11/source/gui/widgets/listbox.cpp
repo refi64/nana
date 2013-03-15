@@ -1597,8 +1597,8 @@ namespace nana{ namespace gui{
 						if(static_cast<int>(item.pixels) != new_w)
 						{
 							essence_->header.item_width(item_spliter_, (new_w < static_cast<int>(essence_->suspension_width + 20) ? essence_->suspension_width + 20 : new_w));
-							unsigned new_w = essence_->header.pixels();
-							if(new_w < rect.width + essence_->scroll.offset_x)
+							auto new_w = essence_->header.pixels();
+							if(new_w < (rect.width + essence_->scroll.offset_x))
 							{
 								essence_->scroll.offset_x = (new_w > rect.width ? new_w - rect.width : 0);
 							}
@@ -2330,7 +2330,7 @@ namespace nana{ namespace gui{
 					{
 					case keyboard::up:
 					case keyboard::down:
-						essence_->lister.move_select(ei.keyboard.key == keyboard::up);
+						essence_->lister.move_select(ei.keyboard.key == static_cast<char_t>(keyboard::up));
 						essence_->trace_selected_item();
 						draw();
 						API::lazy_refresh();

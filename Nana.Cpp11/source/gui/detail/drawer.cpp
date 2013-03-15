@@ -78,7 +78,7 @@ namespace gui
 			};
 
 		//class drawer
-		drawer::drawer():realizer_(0), refreshing_(false)
+		drawer::drawer():realizer_(nullptr), refreshing_(false)
 		{
 		}
 

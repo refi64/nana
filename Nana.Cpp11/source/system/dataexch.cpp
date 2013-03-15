@@ -11,7 +11,6 @@
  */
 
 #include <nana/system/dataexch.hpp>
-#include <nana/auto_buf.hpp>
 #include <nana/traits.hpp>
 #if defined(NANA_WINDOWS)
 	#include <windows.h>

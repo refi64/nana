@@ -8,7 +8,7 @@ namespace nana
 		//struct super_type
 			any::super_type::~super_type(){}
 			
-			any::super_type& any::super_type::operator=(const any::super_type &rhs)
+			any::super_type& any::super_type::operator=(const super_type &rhs)
 			{
 				return assign(rhs);
 			}
@@ -19,7 +19,7 @@ namespace nana
 		{}
 		
 		any::any(const any& rhs)
-			:super_(rhs.super_ ? rhs.super_->clone() : 0)
+			:super_(rhs.super_ ? rhs.super_->clone() : nullptr)
 		{}
 
 		any::any(any&& r)
@@ -38,10 +38,7 @@ namespace nana
 			if(this != &rhs)
 			{
 				delete super_;
-				super_ = 0;
-				
-				if(rhs.super_)
-					super_ = rhs.super_->clone();
+				super_ = (rhs.super_ ? rhs.super_->clone() : nullptr);
 			}
 			return *this;	
 		}

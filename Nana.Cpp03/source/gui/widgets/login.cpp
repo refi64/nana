@@ -320,9 +320,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 
 		void draw()
 		{
-			if(API::glass_window(other_.wd->handle()))
-				API::make_glass_background(other_.wd->handle());
-			else
+			if(false == API::glass_window(other_.wd->handle()))
 				other_.graph->rectangle(other_.wd->background(), true);
 
 			nana::size gsize = other_.graph->size();

@@ -42,16 +42,6 @@ namespace nana{	namespace gui{	namespace widgets
 			_m_scrollbar();
 		}
 
-		void text_editor::store(const char* tfs) const
-		{
-			textbase_.store(tfs);
-		}
-
-		void text_editor::store(const char* tfs, nana::unicode encoding) const
-		{
-			textbase_.store(tfs, encoding);
-		}
-
 		bool text_editor::text_area(const nana::rectangle& r)
 		{
 			if(text_area_.area == r)
@@ -228,9 +218,9 @@ namespace nana{	namespace gui{	namespace widgets
 			return do_draw;
 		}
 
-		std::size_t text_editor::text_lines() const
+		const textbase<nana::char_t> & text_editor::textbase() const
 		{
-			return textbase_.lines();
+			return textbase_;
 		}
 
 		bool text_editor::getline(std::size_t pos, nana::string& text) const
@@ -452,7 +442,7 @@ namespace nana{	namespace gui{	namespace widgets
 			}
 			return false;
 		}
-	//public:
+
 		void text_editor::draw_scroll_rectangle()
 		{
 			if(text_area_.vscroll && text_area_.hscroll)
@@ -497,8 +487,11 @@ namespace nana{	namespace gui{	namespace widgets
 	//public:
 		void text_editor::put(const nana::string& text)
 		{
+			//Do not forget to assign the _m_erase_select() to caret
+			//because _m_put() will insert the text at the position where the caret is.
 			points_.caret = _m_erase_select();
 			points_.caret = _m_put(text);
+
 			if(graph_)
 			{
 				_m_adjust_caret_into_screen();
@@ -551,43 +544,40 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::enter()
 		{
-			if(attributes_.multi_lines)
+			if(false == attributes_.multi_lines)
+				return;
+
+			bool need_refresh;
+
+			if((need_refresh = select_.a != select_.b))
+				points_.caret = _m_erase_select();
+
+			const string_type& lnstr = textbase_.getline(points_.caret.y);
+			++points_.caret.y;
+
+			if(lnstr.size() > points_.caret.x)
 			{
-				bool need_refresh = false;
-
-				if(select_.a != select_.b)
-				{
-					points_.caret = _m_erase_select();
-					need_refresh = true;
-				}
-
-				const string_type& lnstr = textbase_.getline(points_.caret.y);
-
-				if(lnstr.size() > points_.caret.x)
-				{
-					textbase_.insertln(points_.caret.y + 1, lnstr.c_str() + points_.caret.x);
-					textbase_.erase(points_.caret.y, points_.caret.x, lnstr.size() - points_.caret.x);
-				}
-				else
-				{
-					if(textbase_.lines() == 0) textbase_.insertln(0, STR(""));
-					textbase_.insertln(points_.caret.y + 1, STR(""));
-				}
-
-				points_.caret.x = 0;
-				points_.caret.y++;
-
-				if(points_.offset.x || (points_.caret.y < textbase_.lines()) || textbase_.getline(points_.caret.y).size())
-				{
-					points_.offset.x = 0;
-					need_refresh = true;
-				}
-
-				if(_m_adjust_caret_into_screen() || need_refresh)
-					redraw(true);
-
-				_m_scrollbar();
+				textbase_.insertln(points_.caret.y, lnstr.c_str() + points_.caret.x);
+				textbase_.erase(points_.caret.y - 1, points_.caret.x, lnstr.size() - points_.caret.x);
 			}
+			else
+			{
+				if(textbase_.lines() == 0) textbase_.insertln(0, STR(""));
+				textbase_.insertln(points_.caret.y, STR(""));
+			}
+
+			points_.caret.x = 0;
+
+			if(points_.offset.x || (points_.caret.y < textbase_.lines()) || textbase_.getline(points_.caret.y).size())
+			{
+				points_.offset.x = 0;
+				need_refresh = true;
+			}
+
+			if(_m_adjust_caret_into_screen() || need_refresh)
+				redraw(true);
+
+			_m_scrollbar();
 		}
 
 		void text_editor::del()
@@ -1078,19 +1068,19 @@ namespace nana{	namespace gui{	namespace widgets
 
 			while(true)
 			{
-				nana::string::size_type nl = text.find('\n', beg);
+				auto nl = text.find('\n', beg);
 				if(nana::string::npos == nl) break;
 
-				if(nl && (text.at(nl - 1) == 0xD))
+				if(nl && (text[nl - 1] == 0xD))
 					text.erase(--nl, 1);
-				else if(nl < text.size() - 1 && text.at(nl + 1) == 0xD)
+				else if(nl < text.size() - 1 && text[nl + 1] == 0xD)
 					text.erase(nl + 1, 1);
 
 				beg = nl + 1;
 				++lines;
 			}
 
-			nana::string::size_type pos = text.find_last_not_of(nana::char_t(0));
+			auto pos = text.find_last_not_of(nana::char_t(0));
 			if(pos != text.npos)
 				text.erase(pos + 1);
 			return lines;
@@ -1215,11 +1205,9 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::_m_update_line(std::size_t textline) const
 		{
+			//Test whether the specified line is on the screen/
 			if(textline < static_cast<std::size_t>(points_.offset.y))
-			{
-				//the line is not on the screen
 				return;
-			}
 			
 			int top = _m_text_top_base() + static_cast<int>(line_height() * (textline - points_.offset.y));
 			graph_.rectangle(text_area_.area.x, top, text_area_.area.width, line_height(), API::background(window_), true);

@@ -133,11 +133,8 @@ namespace xcheckbox
 
 			void drawer::_m_draw_background(graph_reference graph)
 			{
-				window wd = *widget_;
-				if(API::glass_window(wd))
-					API::make_glass_background(wd);
-				else
-					graph.rectangle(API::background(wd), true);
+				if(false == API::glass_window(*widget_))
+					graph.rectangle(API::background(*widget_), true);
 			}
 
 			void drawer::_m_draw_checkbox(graph_reference graph, unsigned first_line_height)

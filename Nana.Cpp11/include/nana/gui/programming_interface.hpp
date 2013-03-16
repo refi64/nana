@@ -201,7 +201,6 @@ namespace API
 	
 	bool glass_window(window);
 	bool glass_window(window, bool);
-	void make_glass_background(window);
 
 	void take_active(window, bool has_active, window take_if_has_active_false);
 

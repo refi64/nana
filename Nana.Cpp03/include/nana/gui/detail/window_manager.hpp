@@ -751,6 +751,16 @@ namespace detail
 								for(std::vector<native_window_type>::iterator i = cont.begin(); i != cont.end(); ++i)
 									interface_type::window_size(*i, width, height);
 							}
+							else
+							{
+								//update the glass buffer of glass window.
+								if(wd->flags.glass && wd->parent)
+								{
+									wd->other.glass_buffer.make(width, height);
+									wndlayout_type::make_glass(wd);
+									wd->other.glass_buffer.paste(wd->drawer.graphics, 0, 0);
+								}
+							}
 						}
 						gui::eventinfo ei;
 						ei.identifier = event_tag::size;
@@ -832,13 +842,19 @@ namespace detail
 			if(wd->visible)
 			{
 				for(core_window_t* pnt = wd->parent ; pnt; pnt = pnt->parent)
-				{
 					if(pnt->visible == false)
 					{
-						if(redraw) wd->drawer.refresh();
+						if(redraw)
+						{
+							if(wd->flags.glass)
+							{
+								wndlayout_type::make_glass(wd);
+								wd->other.glass_buffer.paste(wd->drawer.graphics, 0, 0);
+							}
+							wd->drawer.refresh();
+						}
 						return true;
 					}
-				}
 
 				if(force || (false == belong_to_lazy(wd)))
 				{
@@ -1246,17 +1262,6 @@ namespace detail
 					return wndlayout_type::glass_window(wd, isglass);
 			}
 			return false;
-		}
-
-		void make_glass_background(core_window_t * wd)
-		{
-			if(wd)
-			{
-				//Thread-Safe Required!
-				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
-				if(handle_manager_.available(wd))
-					wndlayout_type::make_glass(wd, true, true);
-			}
 		}
 
 		bool calc_window_point(core_window_t* wd, nana::point& pos)

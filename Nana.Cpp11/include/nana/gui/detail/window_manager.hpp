@@ -352,7 +352,6 @@ namespace detail
 		void remove_trash_handle(unsigned tid);
 
 		bool glass_window(core_window_t*, bool isglass);
-		void make_glass_background(core_window_t *);
 
 		bool calc_window_point(core_window_t*, nana::point& pos);
 

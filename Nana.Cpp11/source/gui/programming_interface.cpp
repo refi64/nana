@@ -1026,11 +1026,6 @@ namespace API
 		return restrict::window_manager.glass_window(reinterpret_cast<restrict::core_window_t*>(wd), isglass);
 	}
 
-	void make_glass_background(window wd)
-	{
-		restrict::window_manager.make_glass_background(reinterpret_cast<restrict::core_window_t*>(wd));
-	}
-
 	void take_active(window wd, bool active, window take_if_active_false)
 	{
 		if(wd)

@@ -698,6 +698,16 @@ namespace detail
 								for(auto natwd : wd->other.attribute.frame->attach)
 									native_interface::window_size(natwd, width, height);
 							}
+							else
+							{
+								//update the glass buffer of glass window.
+								if(wd->flags.glass && wd->parent)
+								{
+									wd->other.glass_buffer.make(width, height);
+									wndlayout_type::make_glass(wd);
+									wd->other.glass_buffer.paste(wd->drawer.graphics, 0, 0);
+								}
+							}
 						}
 						gui::eventinfo ei;
 						ei.identifier = event_tag::size;
@@ -780,7 +790,15 @@ namespace detail
 				for(core_window_t* pnt = wd->parent ; pnt; pnt = pnt->parent)
 					if(pnt->visible == false)
 					{
-						if(redraw) wd->drawer.refresh();
+						if(redraw)
+						{
+							if(wd->flags.glass)
+							{
+								wndlayout_type::make_glass(wd);
+								wd->other.glass_buffer.paste(wd->drawer.graphics, 0, 0);
+							}
+							wd->drawer.refresh();
+						}
 						return true;
 					}
 
@@ -1180,17 +1198,6 @@ namespace detail
 					return wndlayout_type::glass_window(wd, isglass);
 			}
 			return false;
-		}
-
-		void window_manager::make_glass_background(core_window_t * wd)
-		{
-			if(wd)
-			{
-				//Thread-Safe Required!
-				std::lock_guard<decltype(mutex_)> lock(mutex_);
-				if(handle_manager_.available(wd))
-					wndlayout_type::make_glass(wd, true, true);
-			}
 		}
 
 		bool window_manager::calc_window_point(core_window_t* wd, nana::point& pos)

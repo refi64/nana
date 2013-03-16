@@ -32,9 +32,7 @@ namespace nana{	namespace gui
 
 			void drawer::refresh(graph_reference graph)
 			{
-				if(API::glass_window(window_))
-					API::make_glass_background(window_);
-				else
+				if(false == API::glass_window(window_))
 					graph.rectangle(API::background(window_), true);
 			}
 			//end class drawer

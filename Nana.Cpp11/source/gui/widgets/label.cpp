@@ -662,9 +662,7 @@ namespace gui
 					for(unsigned i = 0; (line = content_.getline(i)); ++i)
 					{
 						for(auto section : *line)
-						{
 							for(auto & r : section->areas)
-							{
 								if(is_hit_the_rectangle(r, x, y))
 								{
 									API::window_cursor(trace_.wd, cursor::hand);
@@ -680,8 +678,6 @@ namespace gui
 									}
 									return;
 								}
-							}
-						}
 					}
 
 					leave();
@@ -999,19 +995,12 @@ namespace gui
 					impl_->renderer->click();
 				}
 
-				void trigger::notify_background_change(graph_reference graph)
-				{
-					refresh(graph);
-				}
-
 				void trigger::refresh(graph_reference graph)
 				{
 					if(0 == impl_->wd) return;
 
 					window wd = impl_->wd->handle();
-					if(API::glass_window(wd))
-						API::make_glass_background(wd);
-					else
+					if(false == API::glass_window(wd))
 						graph.rectangle(API::background(wd), true);
 
 					impl_->renderer->render(*impl_->wd, graph, impl_->text_align);

@@ -180,17 +180,11 @@ namespace nana{ namespace gui{
 
 				void draw()
 				{
-					if(nullptr == other_.graph || other_.graph->size().is_zero())
-						return;
-
-					//Background, if the window is a glass window then initialize the background.
-					bool isglass = API::glass_window(other_.wd);
-					if(isglass)
-						API::make_glass_background(other_.wd);
-
-					proto_.renderer->refer().background(other_.wd, *other_.graph, isglass);
-
-					_m_draw_objects();
+					if(other_.graph && !other_.graph->size().is_zero())
+					{
+						proto_.renderer->refer().background(other_.wd, *other_.graph, API::glass_window(other_.wd));
+						_m_draw_objects();
+					}
 				}
 
 				void vertical(bool v)

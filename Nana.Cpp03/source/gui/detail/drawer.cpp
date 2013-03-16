@@ -30,7 +30,6 @@ namespace gui
 		void drawer_trigger::bind_window(widget_reference){}
 		void drawer_trigger::attached(graph_reference){}	//none-const
 		void drawer_trigger::detached(){}	//none-const
-		void drawer_trigger::notify_background_change(graph_reference){}
 		void drawer_trigger::typeface_changed(graph_reference){}
 		void drawer_trigger::refresh(graph_reference){}
 
@@ -86,16 +85,6 @@ namespace gui
 		drawer::~drawer()
 		{
 			clear();
-		}
-
-			// the event is fired by window_layout
-		void drawer::notify_background_change()
-		{
-			if(realizer_)
-			{
-				realizer_->notify_background_change(graphics);
-				_m_draw_dynamic_drawing_object();
-			}
 		}
 
 		void drawer::typeface_changed()

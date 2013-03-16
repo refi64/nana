@@ -39,7 +39,6 @@ namespace nana{ namespace gui{
 				void attached(graph_reference);
 				void detached();
 				void refresh(graph_reference);
-				void notify_background_change(graph_reference);
 				void mouse_move(graph_reference, const eventinfo&);
 				void mouse_leave(graph_reference, const eventinfo&);
 				void click(graph_reference, const eventinfo&);

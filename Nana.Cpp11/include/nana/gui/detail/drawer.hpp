@@ -36,8 +36,6 @@ namespace gui
 		virtual void attached(graph_reference);	//none-const
 		virtual void detached();	//none-const
 
-		//@brief: If the widget is a glass window, and the widgets under the glass widget are changed, nana.gui will invoke a notify_background_change
-		virtual void notify_background_change(graph_reference);
 		virtual void typeface_changed(graph_reference);
 		virtual void refresh(graph_reference);
 
@@ -76,8 +74,7 @@ namespace gui
 
 			drawer();
 			~drawer();
-			// the event is fired by window_layout
-			void notify_background_change();
+
 			void typeface_changed();
 			void click(const eventinfo&);
 			void dbl_click(const eventinfo&);

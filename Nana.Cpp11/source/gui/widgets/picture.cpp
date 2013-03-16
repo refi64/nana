@@ -254,17 +254,12 @@ namespace gui
 
 			void picture_drawer::_m_draw_background()
 			{
-				if(graph_)
+				if(graph_ && (false == API::glass_window(*widget_)))
 				{
-					if(false == API::glass_window(*widget_))
-					{
-						if(runtime_.background_shadow_end == runtime_.background_shadow_start)
-							graph_->rectangle((runtime_.background_shadow_end ? runtime_.background_shadow_end : widget_->background()), true);
-						else
-							graph_->shadow_rectangle(graph_->size(), runtime_.background_shadow_start, runtime_.background_shadow_end, !runtime_.horizontal);
-					}
+					if(runtime_.background_shadow_end == runtime_.background_shadow_start)
+						graph_->rectangle((runtime_.background_shadow_end ? runtime_.background_shadow_end : widget_->background()), true);
 					else
-						API::make_glass_background(*widget_);
+						graph_->shadow_rectangle(graph_->size(), runtime_.background_shadow_start, runtime_.background_shadow_end, !runtime_.horizontal);
 				}
 			}
 		//end class picture_drawer

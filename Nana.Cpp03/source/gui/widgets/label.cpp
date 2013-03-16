@@ -995,19 +995,12 @@ namespace gui
 					impl_->renderer->click();
 				}
 
-				void trigger::notify_background_change(graph_reference graph)
-				{
-					refresh(graph);
-				}
-
 				void trigger::refresh(graph_reference graph)
 				{
 					if(0 == impl_->wd) return;
 
 					nana::gui::window wd = impl_->wd->handle();
-					if(API::glass_window(wd))
-						API::make_glass_background(wd);
-					else
+					if(false == API::glass_window(wd))
 						graph.rectangle(0, 0, graph.width(), graph.height(), API::background(wd), true);
 
 					impl_->renderer->render(*impl_->wd, graph, impl_->text_align);

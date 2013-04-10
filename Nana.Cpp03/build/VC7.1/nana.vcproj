@@ -141,6 +141,9 @@
 					Name="gui"
 					Filter="">
 					<File
+						RelativePath="..\..\source\gui\animation.cpp">
+					</File>
+					<File
 						RelativePath="..\..\source\gui\basis.cpp">
 					</File>
 					<File

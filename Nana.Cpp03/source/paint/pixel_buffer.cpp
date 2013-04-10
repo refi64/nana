@@ -1,10 +1,10 @@
 /*
  *	Pixel Buffer Implementation
- *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0.
+ *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/paint/pixel_buffer.cpp
  */
@@ -89,7 +89,7 @@ namespace nana{	namespace paint
 		if(want_r.height == 0) want_r.height = sz.height - want_r.y;
 
 		nana::rectangle r;
-		if(false == nana::gui::overlap(nana::rectangle(0, 0, sz.width, sz.height), want_r, r))
+		if(false == nana::gui::overlap(sz, want_r, r))
 			return false;
 #if defined(NANA_WINDOWS)
 		BITMAPINFO bmpinfo;

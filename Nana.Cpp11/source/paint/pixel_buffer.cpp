@@ -1,10 +1,10 @@
 /*
  *	Pixel Buffer Implementation
- *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0.
+ *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/paint/pixel_buffer.cpp
  */
@@ -35,7 +35,7 @@ namespace nana{	namespace paint
 			paint::image_process::line_interface * const * line;
 
 			image_processor_tag()
-				: stretch_receptacle(0), blend_receptacle(0), line_receptacle(0)
+				: stretch_receptacle(nullptr), blend_receptacle(nullptr), line_receptacle(nullptr)
 			{
 				detail::image_process_provider & provider = detail::image_process_provider::instance();
 				stretch = provider.stretch();
@@ -143,7 +143,7 @@ namespace nana{	namespace paint
 		if(want_r.height == 0) want_r.height = sz.height - want_r.y;
 
 		nana::rectangle r;
-		if(false == gui::overlap(nana::rectangle(0, 0, sz.width, sz.height), want_r, r))
+		if(false == gui::overlap(sz, want_r, r))
 			return false;
 #if defined(NANA_WINDOWS)
 		BITMAPINFO bmpinfo;
@@ -243,7 +243,7 @@ namespace nana{	namespace paint
 
 	pixel_buffer::operator const void*() const
 	{
-		return (storage_ ? nullptr : this);
+		return (storage_ ? this : nullptr);
 	}
 
 	std::size_t pixel_buffer::bytes() const

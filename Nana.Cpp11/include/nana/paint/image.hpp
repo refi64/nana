@@ -1,10 +1,10 @@
 /*
  *	Paint Image Implementation
- *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
+ *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/paint/image.hpp
  *	@description:	class image is used for load an image file into memory.
@@ -26,11 +26,13 @@ namespace paint
 		class image_impl_interface;
 
 		image();
-		image(const image& rhs);
+		image(const image&);
+		image(image&&);
 		image(const nana::char_t* file);
 		image(const nana::string& filename);
 		~image();
-		image & operator=(const image& rhs);
+		image& operator=(const image& rhs);
+		image& operator=(image&&);
 		bool open(const nana::string& filename);
 		bool empty() const;
 		operator void*() const;

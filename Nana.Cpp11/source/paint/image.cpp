@@ -1,10 +1,10 @@
 /*
  *	Paint Image Implementation
- *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0.
+ *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/paint/image.cpp
  */
@@ -140,6 +140,10 @@ namespace paint
 			:	image_ptr_(rhs.image_ptr_)
 		{}
 
+		image::image(image&& r)
+			:	image_ptr_(std::move(r.image_ptr_))
+		{}
+
 		image::image(const nana::char_t* file)
 		{
 			if(file)
@@ -156,12 +160,19 @@ namespace paint
 			close();
 		}
 
-		image & image::operator=(const image& rhs)
+		image& image::operator=(const image& r)
 		{
-			if(this != &rhs)
-				image_ptr_ = rhs.image_ptr_;
+			if(this != &r)
+				image_ptr_ = r.image_ptr_;
 			
 			return * this;
+		}
+
+		image& image::operator=(image&& r)
+		{
+			if(this != &r)
+				image_ptr_ = std::move(r.image_ptr_);
+			return *this;
 		}
 
 		bool image::open(const nana::string& filename)

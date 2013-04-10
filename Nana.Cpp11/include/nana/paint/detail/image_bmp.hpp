@@ -81,7 +81,7 @@ namespace nana{	namespace paint
 					if(size <= sizeof(bitmap_file_header))
 						return false;
 
-					std::unique_ptr<char[]> buffer(new char[size]);
+					std::unique_ptr<char[]> buffer(new char[static_cast<int>(size)]);
 					
 					ifs.read(buffer.get(), size);
 					if(size == ifs.gcount())

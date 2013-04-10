@@ -1,10 +1,10 @@
 /*
  *	A Drawer Implementation
- *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0.
+ *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/detail/drawer.cpp
  */
@@ -76,15 +76,19 @@ namespace gui
 				void (drawer::* routine_)(const eventinfo&);
 			};
 
-		//template<typename Bedrock>
 		//class drawer
-		drawer::drawer():realizer_(0), refreshing_(false)
+		drawer::drawer()
+			:	realizer_(0), refreshing_(false)
 		{
 		}
 
 		drawer::~drawer()
 		{
-			clear();
+			std::vector<dynamic_drawing::object*>::iterator i = dynamic_drawing_objects_.begin();
+			for(; i != dynamic_drawing_objects_.end(); ++i)
+			{
+				delete (*i);
+			}
 		}
 
 		void drawer::typeface_changed()
@@ -304,17 +308,39 @@ namespace gui
 
 		void drawer::clear()
 		{
-			std::vector<nana::gui::detail::dynamic_drawing::object*>::iterator it = dynamic_drawing_objects_.begin();
-			for(; it != dynamic_drawing_objects_.end(); ++it)
-				delete *it;
+			std::vector<dynamic_drawing::object*> then;
+			std::vector<nana::gui::detail::dynamic_drawing::object*>::iterator i = dynamic_drawing_objects_.begin();
+			for(; i != dynamic_drawing_objects_.end(); ++i)
+			{
+				dynamic_drawing::object * p = *i;
+				if(p->diehard())
+					then.push_back(p);
+				else
+					delete p;
+			}
 
-			std::vector<nana::gui::detail::dynamic_drawing::object*>().swap(dynamic_drawing_objects_);
+			then.swap(dynamic_drawing_objects_);
 		}
 
-		void drawer::draw(const nana::functor<void(paint::graphics&)> & f)
+		void* drawer::draw(const nana::functor<void(paint::graphics&)> & f, bool diehard)
 		{
-			if(f)
-				dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::user_draw_function(f));
+			if(f.empty())
+			{
+				dynamic_drawing::user_draw_function * p = new dynamic_drawing::user_draw_function(f, diehard);
+				dynamic_drawing_objects_.push_back(p);
+				return (diehard ? p : 0);
+			}
+			return 0;
+		}
+
+		void drawer::erase(void * p)
+		{
+			if(p)
+			{
+				std::vector<dynamic_drawing::object*>::iterator i = std::find(dynamic_drawing_objects_.begin(), dynamic_drawing_objects_.end(), p);
+				if(i != dynamic_drawing_objects_.end())
+					dynamic_drawing_objects_.erase(i);
+			}
 		}
 
 		void drawer::string(int x, int y, unsigned color, const nana::char_t* text)

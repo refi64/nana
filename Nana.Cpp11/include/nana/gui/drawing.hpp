@@ -1,10 +1,10 @@
 /*
  *	A Drawing Implementation
- *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
+ *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/drawing.hpp
  */
@@ -21,6 +21,7 @@ namespace gui
 		:private nana::noncopyable
 	{
 	public:
+		typedef struct{}* diehard_t;
 		typedef std::function<void(paint::graphics&)> draw_fn_t;
 
 		drawing(window);
@@ -34,6 +35,10 @@ namespace gui
 		void bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::image& source, int srcx, int srcy);
 		void draw(const draw_fn_t&);
 		void draw(draw_fn_t&&);
+		diehard_t draw_diehard(const draw_fn_t&);
+		diehard_t draw_diehard(draw_fn_t&&);
+		void erase(diehard_t);
+
 		void line(int x, int y, int x2, int y2, unsigned color);
 		void rectangle(int x, int y, unsigned width, unsigned height, unsigned color, bool issolid);
 		void shadow_rectangle(int x, int y, unsigned width, unsigned height, nana::color_t beg, nana::color_t end, bool vertical);

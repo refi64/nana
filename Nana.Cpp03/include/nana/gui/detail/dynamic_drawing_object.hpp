@@ -1,10 +1,10 @@
 /*
  *	Dynamic Drawing Object Implementation
- *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
+ *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/detail/dynamic_drawing_object.hpp
  *
@@ -31,6 +31,12 @@ namespace dynamic_drawing
 	{
 	public:
 		virtual ~object(){}
+
+		virtual bool diehard() const
+		{
+			return false;
+		}
+
 		virtual void draw(nana::paint::graphics&) const = 0;
 	};
 
@@ -38,15 +44,21 @@ namespace dynamic_drawing
 		: public object
 	{
 	public:
-		user_draw_function(const nana::functor<void(nana::paint::graphics&)> & f)
-			: fn_(f)
+		user_draw_function(const nana::functor<void(nana::paint::graphics&)> & f, bool diehard)
+			: diehard_(diehard), fn_(f)
 		{}
+
+		bool diehard() const
+		{
+			return diehard_;
+		}
 
 		void draw(paint::graphics& graph) const
 		{
 			fn_(graph);
 		}
 	private:
+		bool diehard_;
 		nana::functor<void(nana::paint::graphics&)> fn_;
 	};
 

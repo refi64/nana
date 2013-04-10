@@ -1,10 +1,10 @@
 /*
  *	A Button Implementation
- *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0.
+ *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/widgets/button.cpp
  */
@@ -250,7 +250,7 @@ namespace drawerbase
 		{
 			if(attr_.enable_pushed && attr_.pressed)
 				return;
-			
+
 			attr_.act_state = (attr_.focused ? state::focused : state::normal);
 			_m_draw(graph);
 			API::lazy_refresh();

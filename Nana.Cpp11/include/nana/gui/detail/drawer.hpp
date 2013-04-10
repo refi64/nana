@@ -1,10 +1,10 @@
 /*
  *	A Drawer Implementation
- *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
+ *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/detail/drawer.hpp
  */
@@ -98,7 +98,8 @@ namespace gui
 			drawer_trigger* detached();
 		public:
 			void clear();
-			void draw(std::function<void(paint::graphics&)> &&);
+			void* draw(std::function<void(paint::graphics&)> &&, bool diehard);
+			void erase(void* diehard);
 			void string(int x, int y, unsigned color, const nana::char_t*);
 			void line(int x, int y, int x2, int y2, unsigned color);
 			void rectangle(int x, int y, unsigned width, unsigned height, unsigned color, bool issolid);

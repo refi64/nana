@@ -1,10 +1,10 @@
 /*
  *	A Drawing Implementation
- *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0. 
+ *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/drawing.cpp
  */
@@ -67,9 +67,20 @@ namespace gui
 		void drawing::draw(const draw_fn_t & f)
 		{
 			if(API::empty_window(handle_))	return;
-			restrict::get_drawer(handle_).draw(f);			
+			restrict::get_drawer(handle_).draw(f, false);			
 		}
 
+		drawing::diehard_t drawing::draw_diehard(const draw_fn_t& f)
+		{
+			if(API::empty_window(handle_))	return 0;
+			return reinterpret_cast<drawing::diehard_t>(restrict::get_drawer(handle_).draw(f, true));		
+		}
+
+		void drawing::erase(diehard_t d)
+		{
+			if(API::empty_window(handle_))
+				restrict::get_drawer(handle_).erase(d);
+		}
 
 		void drawing::line(int x, int y, int x2, int y2, unsigned color)
 		{

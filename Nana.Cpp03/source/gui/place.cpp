@@ -2,9 +2,9 @@
  *	An Implementation of Place for Layout
  *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0.
+ *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/place.cpp
  */
@@ -223,7 +223,7 @@ namespace nana{	namespace gui
 		void _m_throw_error(char err_char)
 		{
 			std::stringstream ss;
-			ss<<"place: invalid character '"<<err_char<<"' at "<<static_cast<std::size_t>(sp_ - divstr_);
+			ss<<"place: invalid character '"<<err_char<<"' at "<<static_cast<unsigned>(sp_ - divstr_);
 			throw std::runtime_error(ss.str());
 		}
 
@@ -253,7 +253,7 @@ namespace nana{	namespace gui
 		void _m_throw_error(const std::string& err)
 		{
 			std::stringstream ss;
-			ss<<"place: "<<err<<" at "<<static_cast<std::size_t>(sp_ - divstr_);
+			ss<<"place: "<<err<<" at "<<static_cast<unsigned>(sp_ - divstr_);
 			throw std::runtime_error(ss.str());
 		}
 

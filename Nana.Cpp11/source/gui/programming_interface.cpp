@@ -1,10 +1,10 @@
 /*
  *	Nana GUI Programming Interface Implementation
- *	Copyright(C) 2003-2012 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Nana Software License, Version 1.0.
+ *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
- *	http://nanapro.sourceforge.net/LICENSE_1_0.txt)
+ *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/programming_interface.cpp
  */
@@ -160,6 +160,17 @@ namespace API
 		window create_frame(window parent, const rectangle& r)
 		{
 			return reinterpret_cast<window>(restrict::window_manager.create_frame(reinterpret_cast<restrict::core_window_t*>(parent), r));
+		}
+
+		paint::graphics* window_graphics(window wd)
+		{
+			if(wd)
+			{
+				internal_scope_guard isg;
+				if(restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)))
+					return &reinterpret_cast<restrict::core_window_t*>(wd)->drawer.graphics;
+			}
+			return nullptr;
 		}
 	}//end namespace dev
 

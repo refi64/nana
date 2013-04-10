@@ -276,5 +276,8 @@
     <ClCompile Include="..\..\source\gui\place.cpp">
       <Filter>Source Files\gui</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\gui\animation.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

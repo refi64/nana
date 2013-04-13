@@ -64,7 +64,7 @@ void opkey_pressed(stateinfo& state, const eventinfo& ei)
 		state.operation = '+';
 		return;
 	}
-	else if(L'¡À' == d)
+	else if(0xB1 == d)
 	{
 		auto s = state.result.caption();
 		if(s.size())
@@ -180,7 +180,7 @@ int main()
 	std::vector<std::shared_ptr<button>> op_keys;
 
 	auto & opkeys_field = place.field("opkeys");
-	wchar_t keys[] = L"C¡À%/789X456-123+0.=";
+	wchar_t keys[] = L"C\261%/789X456-123+0.=";
 	nana::paint::font keyfont(nullptr, 10, true);
 	for(auto key : keys)
 	{

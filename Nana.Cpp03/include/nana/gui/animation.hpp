@@ -30,8 +30,8 @@ namespace nana{	namespace gui
 		typedef nana::functor<bool(std::size_t pos, paint::graphics&, nana::size&)> framebuilder;
 
 		frameset();
-		void push(const paint::image&);
-		void push(framebuilder& fb, std::size_t length);
+		void push_back(const paint::image&);
+		void push_back(framebuilder& fb, std::size_t length);
 	private:
 		struct impl_deleter
 		{
@@ -54,7 +54,7 @@ namespace nana{	namespace gui
 	public:
 		animation();
 
-		void push(const frameset& frms);
+		void push_back(const frameset& frms);
 		/*
 		void branch(const std::string& name, const frameset& frms)
 		{

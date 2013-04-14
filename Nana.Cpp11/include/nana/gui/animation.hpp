@@ -31,10 +31,10 @@ namespace nana{	namespace gui
 		struct impl;
 	public:
 		frameset();
-		void push(const paint::image&);
-		void push(paint::image&&);
-		void push(framebuilder& fb, std::size_t length);
-		void push(framebuilder&& fb, std::size_t length);
+		void push_back(const paint::image&);
+		void push_back(paint::image&&);
+		void push_back(framebuilder& fb, std::size_t length);
+		void push_back(framebuilder&& fb, std::size_t length);
 	private:
 		std::shared_ptr<impl> impl_;
 	};
@@ -52,7 +52,7 @@ namespace nana{	namespace gui
 	public:
 		animation();
 
-		void push(const frameset& frms);
+		void push_back(const frameset& frms);
 		/*
 		void branch(const std::string& name, const frameset& frms)
 		{

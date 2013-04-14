@@ -321,7 +321,7 @@ namespace nana{	namespace gui
 			: impl_(new impl)
 		{}
 
-		void frameset::push(const paint::image& m)
+		void frameset::push_back(const paint::image& m)
 		{
 			bool located = impl_->this_frame != impl_->frames.end();
 			impl_->frames.emplace_back(m);
@@ -329,21 +329,21 @@ namespace nana{	namespace gui
 				impl_->this_frame = impl_->frames.begin();
 		}
 
-		void frameset::push(paint::image&& m)
+		void frameset::push_back(paint::image&& m)
 		{
 			impl_->frames.emplace_back(std::move(m));
 			if(1 == impl_->frames.size())
 				impl_->this_frame = impl_->frames.begin();
 		}
 
-		void frameset::push(framebuilder&fb, std::size_t length)
+		void frameset::push_back(framebuilder&fb, std::size_t length)
 		{
 			impl_->frames.emplace_back(fb, length);
 			if(1 == impl_->frames.size())
 				impl_->this_frame = impl_->frames.begin();
 		}
 
-		void frameset::push(framebuilder&& fb, std::size_t length)
+		void frameset::push_back(framebuilder&& fb, std::size_t length)
 		{
 			impl_->frames.emplace_back(std::move(fb), length);
 			if(1 == impl_->frames.size())
@@ -561,7 +561,7 @@ namespace nana{	namespace gui
 
 		}
 
-		void animation::push(const frameset& frms)
+		void animation::push_back(const frameset& frms)
 		{
 			impl_->framesets.emplace_back(frms);
 			if(1 == impl_->framesets.size())

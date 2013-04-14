@@ -305,7 +305,7 @@ namespace nana{	namespace gui
 			: impl_(new impl)
 		{}
 
-		void frameset::push(const paint::image& m)
+		void frameset::push_back(const paint::image& m)
 		{
 			impl * ip = impl_.handle();
 			bool located = ip->this_frame != ip->frames.end();
@@ -314,7 +314,7 @@ namespace nana{	namespace gui
 				ip->this_frame = ip->frames.begin();
 		}
 
-		void frameset::push(framebuilder&fb, std::size_t length)
+		void frameset::push_back(framebuilder&fb, std::size_t length)
 		{
 			impl * ip = impl_.handle();
 			ip->frames.push_back(frame(fb, length));
@@ -568,7 +568,7 @@ namespace nana{	namespace gui
 
 		}
 
-		void animation::push(const frameset& frms)
+		void animation::push_back(const frameset& frms)
 		{
 			impl_->framesets.push_back(frms);
 			if(1 == impl_->framesets.size())

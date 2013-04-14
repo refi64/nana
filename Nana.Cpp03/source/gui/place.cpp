@@ -1234,7 +1234,7 @@ namespace nana{	namespace gui
 			return room_t(wd, std::pair<unsigned, unsigned>(w, h));
 		}
 
-		place::field_t& place::field(const char* name)
+		place::field_reference place::field(const char* name)
 		{
 			name = name ? name : "";
 

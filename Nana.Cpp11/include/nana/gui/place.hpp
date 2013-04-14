@@ -19,6 +19,7 @@ namespace nana
 namespace gui
 {
 	class place
+		: nana::noncopyable
 	{
 		typedef std::pair<window, unsigned>	fixed_t;
 		typedef std::pair<window, int>	percent_t;
@@ -38,12 +39,14 @@ namespace gui
 			virtual field_t& fasten(window wd)	= 0;
 		};
 	public:
+		typedef field_t & field_reference;
+
 		place();
 		place(window wd);
 		~place();
 
 		void div(const char* s);
-		field_t& field(const char* name);
+		field_reference field(const char* name);
 		void collocate();
 
 		static fixed_t fixed(window wd, unsigned size);

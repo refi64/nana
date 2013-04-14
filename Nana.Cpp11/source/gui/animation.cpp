@@ -379,7 +379,7 @@ namespace nana{	namespace gui
 		struct animation::impl
 		{
 			bool	looped;
-			bool	paused;
+			volatile bool	paused;
 
 			std::list<frameset> framesets;
 			std::map<std::string, branch_t> branches;
@@ -583,15 +583,30 @@ namespace nana{	namespace gui
 
 		void animation::looped(bool enable)
 		{
-			impl_->looped = enable;
+			if(impl_->looped != enable)
+			{
+				impl_->looped = enable;
+				if(enable)
+				{
+					std::unique_lock<std::mutex> lock(impl_->thr_variable->mutex);
+					if(0 == impl_->thr_variable->active)
+					{
+						impl_->thr_variable->active = 1;
+						impl_->thr_variable->condvar.notify_one();
+					}
+				}
+			}
 		}
 
 		void animation::play()
 		{
 			impl_->paused = false;
 			std::unique_lock<std::mutex> lock(impl_->thr_variable->mutex);
-			impl_->thr_variable->active = 1;
-			impl_->thr_variable->condvar.notify_one();
+			if(0 == impl_->thr_variable->active)
+			{
+				impl_->thr_variable->active = 1;
+				impl_->thr_variable->condvar.notify_one();
+			}
 		}
 
 		void animation::pause()

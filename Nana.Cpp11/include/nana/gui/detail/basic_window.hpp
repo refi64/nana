@@ -39,9 +39,10 @@ namespace detail
 		bool visible() const;
 		nana::size size() const;
 		void size(const nana::size&);
+
+		void update();
 	private:
 		void _m_visible(bool isshow);
-		void _m_real_paint();
 	private:
 		core_window_t*	wd_;
 		nana::point point_;
@@ -115,6 +116,9 @@ namespace detail
 		void _m_init_pos_and_size(basic_window* parent, const rectangle&);
 		void _m_initialize(basic_window* parent);
 	public:
+#if defined(NANA_LINUX)
+		point	pos_native;
+#endif
 		point	pos_root;	//coordinate for root window
 		point	pos_owner;
 		size	dimension;

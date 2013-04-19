@@ -621,7 +621,7 @@ namespace detail
 		}
 
 		//move the wnd and its all children window, x and y is a relatively coordinate for wnd's parent window
-		bool move(core_window_t* wd, int x, int y)
+		bool move(core_window_t* wd, int x, int y, bool passive)
 		{
 			if(wd)
 			{
@@ -638,10 +638,20 @@ namespace detail
 							wd->rect.x += mv_helper.delta_x_;
 							wd->rect.y += mv_helper.delta_y_;
 							this->_m_move_core(wd, mv_helper);
+
+							if(wd->together.caret && wd->together.caret->visible())
+								wd->together.caret->update();
+
+							gui::eventinfo ei;
+							ei.identifier = event_tag::move;
+							ei.window = reinterpret_cast<window>(wd);
+							ei.move.x = x;
+							ei.move.y = y;
+							bedrock_type::raise_event(event_tag::move, wd, ei, true);
 							return true;
 						}
 					}
-					else
+					else if(false == passive)
 						interface_type::move_window(wd->root, x, y);
 				}
 			}
@@ -668,6 +678,16 @@ namespace detail
 							wd->rect.y += mv_helper.delta_y_;
 							this->_m_move_core(wd, mv_helper);
 							moved = true;
+
+							if(wd->together.caret && wd->together.caret->visible())
+								wd->together.caret->update();
+
+							eventinfo ei;
+							ei.identifier = event_tag::move;
+							ei.window = reinterpret_cast<window>(wd);
+							ei.move.x = x;
+							ei.move.y = y;
+							bedrock_type::raise_event(event_tag::move, wd, ei, true);
 						}
 
 						if(size_changed)
@@ -683,7 +703,7 @@ namespace detail
 							wd->root_graph->make(width, height);
 							interface_type::move_window(wd->root, x, y, width, height);
 
-							gui::eventinfo ei;
+							eventinfo ei;
 							ei.identifier = event_tag::size;
 							ei.window = reinterpret_cast<window>(wd);
 							ei.size.width = width;
@@ -762,7 +782,7 @@ namespace detail
 								}
 							}
 						}
-						gui::eventinfo ei;
+						eventinfo ei;
 						ei.identifier = event_tag::size;
 						ei.window = reinterpret_cast<window>(wd);
 						ei.size.width = width;

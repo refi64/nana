@@ -40,6 +40,7 @@ namespace gui
 		virtual void refresh(graph_reference);
 
 		virtual void resize(graph_reference, const eventinfo&);
+		virtual void move(graph_reference, const eventinfo&);
 		virtual void click(graph_reference, const eventinfo&);
 		virtual void dbl_click(graph_reference, const eventinfo&);
 		virtual void mouse_enter(graph_reference, const eventinfo&);
@@ -86,6 +87,7 @@ namespace gui
 			void mouse_wheel(const eventinfo&);
 			void mouse_drop(const eventinfo&);
 			void resize(const eventinfo&);
+			void move(const eventinfo&);
 			void focus(const eventinfo&);
 			void key_down(const eventinfo&);
 			void key_char(const eventinfo&);

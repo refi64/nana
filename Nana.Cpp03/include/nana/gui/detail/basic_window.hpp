@@ -85,8 +85,7 @@ namespace detail
 		{
 			point_.x = x;
 			point_.y = y;
-
-			_m_real_paint();
+			update();
 		}
 
 		void effective_range(nana::rectangle rect)
@@ -111,7 +110,7 @@ namespace detail
 				if(effective_range_ != rect)
 				{
 					effective_range_ = rect;
-					_m_real_paint();
+					update();
 				}
 			}
 		}
@@ -144,21 +143,12 @@ namespace detail
 		void size(const nana::size& s)
 		{
 			size_ = s;
-			_m_real_paint();
+			update();
 
 			if(visible_)	this->visible(true);
 		}
-	private:
-		void _m_visible(bool isshow)
-		{
-			if(real_visible_state_ != isshow)
-			{
-				real_visible_state_ = isshow;
-				interface_type::caret_visible(wd_->root, isshow);
-			}
-		}
 
-		void _m_real_paint()
+		void update()
 		{
 			nana::point pos = point_;
 			nana::size	size = size_;
@@ -229,7 +219,15 @@ namespace detail
 				
 				interface_type::caret_pos(wd_->root, wd_->root_x + pos.x, wd_->root_y + pos.y);
 			}
-
+		}
+	private:
+		void _m_visible(bool isshow)
+		{
+			if(real_visible_state_ != isshow)
+			{
+				real_visible_state_ = isshow;
+				interface_type::caret_visible(wd_->root, isshow);
+			}
 		}
 	private:
 		core_window_t*	wd_;
@@ -407,6 +405,9 @@ namespace detail
 		nana::size	min_track_size;
 		nana::size	max_track_size;
 
+#if defined(NANA_LINUX)
+		nana::point pos_native;
+#endif
 		int	root_x;			//coordinate for root window
 		int	root_y;			//coordinate for root window
 		bool	visible;

@@ -456,7 +456,7 @@ namespace API
 	{
 		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 		internal_scope_guard isg;
-		if(restrict::window_manager.move(iwd, x, y))
+		if(restrict::window_manager.move(iwd, x, y, false))
 		{
 			if(category::root_tag::value != iwd->other.category)
 				iwd = reinterpret_cast<restrict::core_window_t*>(API::get_parent_window(wd));

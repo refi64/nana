@@ -41,7 +41,7 @@ namespace nana{	namespace gui{
 				point_.x = x;
 				point_.y = y;
 
-				_m_real_paint();
+				update();
 			}
 
 			void caret_descriptor::effective_range(nana::rectangle rect)
@@ -66,7 +66,7 @@ namespace nana{	namespace gui{
 					if(effective_range_ != rect)
 					{
 						effective_range_ = rect;
-						_m_real_paint();
+						update();
 					}
 				}
 			}
@@ -99,7 +99,7 @@ namespace nana{	namespace gui{
 			void caret_descriptor::size(const nana::size& s)
 			{
 				size_ = s;
-				_m_real_paint();
+				update();
 
 				if(visible_)	this->visible(true);
 			}
@@ -113,7 +113,7 @@ namespace nana{	namespace gui{
 				}
 			}
 
-			void caret_descriptor::_m_real_paint()
+			void caret_descriptor::update()
 			{
 				nana::point pos = point_;
 				nana::size	size = size_;

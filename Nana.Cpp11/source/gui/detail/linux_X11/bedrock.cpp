@@ -572,6 +572,13 @@ namespace detail
 					ei.size.height = xevent.xconfigure.height;
 					bedrock.wd_manager.size(msgwnd, ei.size.width, ei.size.height, true, true);
 				}
+				
+				if(msgwnd->pos_native.x != xevent.xconfigure.x || msgwnd->pos_native.y != xevent.xconfigure.y)
+				{
+					msgwnd->pos_native.x = xevent.xconfigure.x;
+					msgwnd->pos_native.y = xevent.xconfigure.y;
+					bedrock.event_move(msgwnd, xevent.xconfigure.x, xevent.xconfigure.y);
+				}
 				break;
 			case ButtonPress:
 				if(xevent.xbutton.button == Button4 || xevent.xbutton.button == Button5)
@@ -1063,6 +1070,18 @@ namespace detail
 
 				wd_manager.update(wd, true, true);
 			}
+		}
+	}
+
+	void bedrock::event_move(core_window_t * wd, int x, int y)
+	{
+		if(wd)
+		{
+			eventinfo ei;
+			ei.move.x = x;
+			ei.move.y = y;
+			if(raise_event(event_tag::move, wd, ei, false))
+				wd_manager.update(wd, true, true);
 		}
 	}
 

@@ -131,6 +131,7 @@ namespace detail
 		category::flags::widget,	//mouse_drop
 		category::flags::widget,	//expose
 		category::flags::widget,	//size
+		category::flags::widget,	//move
 		category::flags::root,		//unload
 		category::flags::widget,	//destroy
 		category::flags::widget,	//focus

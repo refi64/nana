@@ -39,6 +39,7 @@ namespace gui
 			detail::bedrock::instance().thread_context_lazy_refresh();
 		}
 
+		void drawer_trigger::move(graph_reference, const eventinfo&){}
 		void drawer_trigger::click(graph_reference, const eventinfo&){}
 		void drawer_trigger::dbl_click(graph_reference, const eventinfo&){}
 		void drawer_trigger::mouse_enter(graph_reference, const eventinfo&){}
@@ -181,6 +182,15 @@ namespace gui
 			if(realizer_)
 			{
 				realizer_->resize(graphics, ei);
+				_m_draw_dynamic_drawing_object();
+			}
+		}
+
+		void drawer::move(const eventinfo& ei)
+		{
+			if(realizer_)
+			{
+				realizer_->move(graphics, ei);
 				_m_draw_dynamic_drawing_object();
 			}
 		}
@@ -409,6 +419,8 @@ namespace gui
 				answer = &drawer::mouse_drop;	break;
 			case event_tag::size:
 				answer = &drawer::resize;	break;
+			case event_tag::move:
+				answer = &drawer::move;		break;
 			case event_tag::focus:
 				answer = &drawer::focus;	break;
 			case event_tag::key_down:

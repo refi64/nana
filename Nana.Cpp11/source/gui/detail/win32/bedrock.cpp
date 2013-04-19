@@ -637,6 +637,7 @@ namespace detail
 		{
 		case WM_DESTROY:
 		case WM_SIZE:
+		case WM_MOVE:
 		case WM_SETFOCUS:
 		case WM_KILLFOCUS:
 		case WM_PAINT:
@@ -754,6 +755,7 @@ namespace detail
 					bedrock.event_expose(msgwnd, true);
 				else if((reinterpret_cast<WINDOWPOS*>(lParam)->flags & SWP_HIDEWINDOW) && msgwnd->visible)
 					bedrock.event_expose(msgwnd, false);
+
 				def_window_proc = true;
 				break;
 			case WM_SETFOCUS:
@@ -1080,6 +1082,9 @@ namespace detail
 			case WM_SIZE:
 				if(wParam != SIZE_MINIMIZED)
 					bedrock.wd_manager.size(msgwnd, pmdec.size.width, pmdec.size.height, true, true);
+				break;
+			case WM_MOVE:
+				bedrock.event_move(msgwnd, (int)(short) LOWORD(lParam), (int)(short) HIWORD(lParam));
 				break;
 			case WM_PAINT:
 				{
@@ -1454,6 +1459,18 @@ namespace detail
 				wd_manager.update(wd, true, true);
 			}
 		}
+	}
+
+	void bedrock::event_move(core_window_t* wd, int x, int y)
+	{
+		if(wd)
+		{
+			eventinfo ei;
+			ei.move.x = x;
+			ei.move.y = y;
+			if(raise_event(event_tag::move, wd, ei, false))
+				wd_manager.update(wd, true, true);
+		}	
 	}
 
 	void bedrock::thread_context_destroy(core_window_t * wd)

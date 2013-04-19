@@ -82,6 +82,12 @@ namespace gui
 
 			struct
 			{
+				int x;
+				int y;
+			}move;
+
+			struct
+			{
 				mutable bool cancel;
 			}unload;
 
@@ -115,6 +121,7 @@ namespace gui
 				mouse_drop,
 				expose,
 				size,
+				move,
 				unload,
 				destroy,
 				focus,
@@ -161,6 +168,7 @@ namespace gui
 
 		typedef detail::event_template<detail::event_tag::expose>		expose;
 		typedef detail::event_template<detail::event_tag::size>			size;
+		typedef detail::event_template<detail::event_tag::move>			move;
 		typedef detail::event_template<detail::event_tag::unload>		unload;
 		typedef detail::event_template<detail::event_tag::destroy>		destroy;
 		typedef detail::event_template<detail::event_tag::focus>		focus;

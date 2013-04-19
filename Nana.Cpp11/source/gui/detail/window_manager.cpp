@@ -567,7 +567,7 @@ namespace detail
 		}
 
 		//move the wnd and its all children window, x and y is a relatively coordinate for wnd's parent window
-		bool window_manager::move(core_window_t* wd, int x, int y)
+		bool window_manager::move(core_window_t* wd, int x, int y, bool passive)
 		{
 			if(wd)
 			{
@@ -586,10 +586,20 @@ namespace detail
 							wd->pos_owner.x = x;
 							wd->pos_owner.y = y;
 							_m_move_core(wd, delta_x, delta_y);
+
+							if(wd->together.caret && wd->together.caret->visible())
+								wd->together.caret->update();
+
+							gui::eventinfo ei;
+							ei.identifier = event_tag::move;
+							ei.window = reinterpret_cast<window>(wd);
+							ei.move.x = x;
+							ei.move.y = y;
+							bedrock::raise_event(event_tag::move, wd, ei, true);
 							return true;
 						}
 					}
-					else
+					else if(false == passive)
 						native_interface::move_window(wd->root, x, y);
 				}
 			}
@@ -617,6 +627,16 @@ namespace detail
 							wd->pos_owner.y = y;
 							_m_move_core(wd, delta_x, delta_y);
 							moved = true;
+
+							if(wd->together.caret && wd->together.caret->visible())
+								wd->together.caret->update();
+
+							eventinfo ei;
+							ei.identifier = event_tag::move;
+							ei.window = reinterpret_cast<window>(wd);
+							ei.move.x = x;
+							ei.move.y = y;
+							bedrock::raise_event(event_tag::move, wd, ei, true);
 						}
 
 						if(size_changed)
@@ -709,7 +729,7 @@ namespace detail
 								}
 							}
 						}
-						gui::eventinfo ei;
+						eventinfo ei;
 						ei.identifier = event_tag::size;
 						ei.window = reinterpret_cast<window>(wd);
 						ei.size.width = width;

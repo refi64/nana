@@ -313,7 +313,7 @@ namespace detail
 		core_window_t* find_window(native_window_type root, int x, int y);
 
 		//move the wnd and its all children window, x and y is a relatively coordinate for wnd's parent window
-		bool move(core_window_t*, int x, int y);
+		bool move(core_window_t*, int x, int y, bool passive);
 		bool move(core_window_t*, int x, int y, unsigned width, unsigned height);
 
 

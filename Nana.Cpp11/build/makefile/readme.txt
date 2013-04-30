@@ -10,15 +10,15 @@ BIN	= [The bin file what you want to create.]
 SOURCES = [The source file of your application.]
 
 NANAINC	= $(NANAPATH)/include
-NANALIB = $(NANAPATH)/build/bin/nana.a
+NANALIB = $(NANAPATH)/build/bin
 
 INCS	= -I$(NANAINC)
-LIBS	= -lX11 -lpthread -lXft -lpng -lasound
+LIBS	= -L$(NANALIB) -lnana -lX11 -lpthread -lrt -lXft -lpng -lasound
 
 LINKOBJ	= $(SOURCES:.cpp=.o)
 
-$(BIN): $(LINKOBJ) $(NANALIB)
-	$(GCC) $(LINKOBJ) $(INCS) $(LIBS) $(NANALIB) -o $(BIN) -std=c++0x
+$(BIN): $(LINKOBJ) $(NANALIB)/libnana.a
+	$(GCC) $(LINKOBJ) $(INCS) $(LIBS) -o $(BIN) -std=c++0x
 
 .cpp.o:
 	$(GCC) -g -c $< -o $@ $(INCS) -std=c++0x

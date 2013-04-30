@@ -758,6 +758,13 @@ namespace nana{ namespace gui{
 				API::refresh_window(*this);
 		}
 
+		nana::string combox::_m_caption() const
+		{
+			internal_scope_guard isg;
+			auto editor = get_drawer_trigger().get_drawer_impl().editor();
+			return (editor ? editor->text() : nana::string());
+		}
+
 		void combox::_m_caption(const nana::string& str)
 		{
 			internal_scope_guard isg;

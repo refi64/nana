@@ -88,6 +88,8 @@ namespace nana{ namespace gui
 		nana::paint::image image(std::size_t) const;
 		void image_pixels(unsigned);
 	private:
+		//Override _m_caption for caption()
+		nana::string _m_caption() const;
 		void _m_caption(const nana::string&);
 		nana::any* _m_anyobj(std::size_t, bool allocate_if_empty) const;
 	};

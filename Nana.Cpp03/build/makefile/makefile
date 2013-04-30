@@ -9,7 +9,7 @@ NANA_INC= $(INCROOT)/nana
 
 INCS	= -I$(INCROOT) -I/usr/include/freetype2
 
-BIN	= nana.a
+BIN	= libnana.a
 
 SRC_NANA = $(wildcard $(SRCROOT)/*.cpp)
 SRC_DETAIL = $(wildcard $(SRCROOT)/detail/*.cpp)

@@ -671,17 +671,6 @@ namespace API
 		return cursor::arrow;
 	}
 
-	//paste a graphics into a window
-	void paste_graphics(const nana::paint::graphics& graph, int x, int y, window wd)
-	{
-		if(wd)
-		{
-			internal_scope_guard isg;
-			if(restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)))
-				graph.paste(reinterpret_cast<restrict::core_window_t*>(wd)->drawer.graphics, x, y);
-		}
-	}
-
 	bool tray_insert(native_window_type wd, const nana::char_t* tip, const nana::char_t* ico)
 	{
 		return restrict::interface_type::notify_icon_add(wd, tip, ico);

@@ -165,9 +165,6 @@ namespace API
 	void window_cursor(window, cursor::t);
 	cursor::t window_cursor(window);
 
-	//paste a graphics into a window
-	void paste_graphics(const nana::paint::graphics&, int x, int y, window);
-
 	bool tray_insert(native_window_type, const char_t* tip, const char_t* ico);
 	bool tray_delete(native_window_type);
 	void tray_tip(native_window_type, const char_t* text);

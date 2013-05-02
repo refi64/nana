@@ -28,7 +28,6 @@ namespace gui
 			void attached(graph_reference);
 			void load(const nana::char_t* file);
 			void load(const nana::paint::image&);
-			void bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& source, int src_x, int src_y);
 			void set_shadow_background(unsigned begin_color, unsigned end_color, bool horizontal);
 			bool bgstyle(bool is_stretch, nana::arrange, int beg, int end);
 		private:
@@ -69,7 +68,6 @@ namespace gui
 		void load(const nana::char_t* file);
 		void load(const nana::paint::image&);
 		void bgstyle(bool stretchable, nana::arrange arg, int beg, int end);
-		void bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& source, int src_x, int src_y);
 		void set_shadow_background(unsigned begin_color, unsigned end_color, bool horizontal);
 		void transparent(bool);
 		bool transparent() const;

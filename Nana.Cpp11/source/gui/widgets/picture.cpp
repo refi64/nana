@@ -52,12 +52,6 @@ namespace gui
 				backimg_.image = img;
 			}
 
-			void picture_drawer::bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& source, int src_x, int src_y)
-			{
-				if(graph_)
-					graph_->bitblt(nana::rectangle(x, y, width, height), source, nana::point(src_x, src_y));
-			}
-
 			void picture_drawer::set_shadow_background(unsigned begin_color, unsigned end_color, bool horizontal)
 			{
 				runtime_.background_shadow_end = end_color;
@@ -288,12 +282,6 @@ namespace gui
 		{
 			if(get_drawer_trigger().bgstyle(stretchable, arg, beg, end))
 				API::refresh_window(*this);
-		}
-
-		void picture::bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& source, int src_x, int src_y)
-		{
-			get_drawer_trigger().bitblt(x, y, width, height, source, src_x, src_y);
-			API::refresh_window(*this);
 		}
 
 		void picture::set_shadow_background(unsigned begin_color, unsigned end_color, bool horizontal)

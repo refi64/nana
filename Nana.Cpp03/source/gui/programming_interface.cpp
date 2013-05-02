@@ -79,7 +79,7 @@ namespace API
 
 	namespace dev
 	{
-		void attach_drawer(window wd, nana::gui::drawer_trigger& dr)
+		void attach_drawer(window wd, drawer_trigger& dr)
 		{
 			if(wd)
 			{
@@ -106,7 +106,7 @@ namespace API
 			}
 		}
 
-		void umake_drawer_event(nana::gui::window wd)
+		void umake_drawer_event(window wd)
 		{
 			restrict::bedrock.evt_manager.umake(wd, true);
 		}
@@ -238,12 +238,12 @@ namespace API
 		return text;
 	}
 
-	bool register_shortkey(nana::gui::window wd, unsigned long key)
+	bool register_shortkey(window wd, unsigned long key)
 	{
 		return restrict::window_manager.register_shortkey(reinterpret_cast<restrict::core_window_t*>(wd), key);
 	}
 
-	void unregister_shortkey(nana::gui::window wd)
+	void unregister_shortkey(window wd)
 	{
 		restrict::window_manager.unregister_shortkey(reinterpret_cast<restrict::core_window_t*>(wd));
 	}
@@ -270,7 +270,7 @@ namespace API
 		return result;
 	}
 
-	nana::rectangle make_center(nana::gui::window wd, unsigned width, unsigned height)
+	nana::rectangle make_center(window wd, unsigned width, unsigned height)
 	{
 		nana::rectangle r = make_center(width, height);
 
@@ -291,7 +291,7 @@ namespace API
 		restrict::window_manager.icon(reinterpret_cast<restrict::core_window_t*>(wd), img);
 	}
 
-	bool empty_window(nana::gui::window wd)
+	bool empty_window(window wd)
 	{
 		return (restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)) == false);
 	}
@@ -301,9 +301,9 @@ namespace API
 		return restrict::bedrock.root(reinterpret_cast<restrict::core_window_t*>(wd));
 	}
 
-	nana::gui::window root(nana::gui::native_window_type wd)
+	window root(native_window_type wd)
 	{
-		return reinterpret_cast<nana::gui::window>(restrict::window_manager.root(wd));
+		return reinterpret_cast<window>(restrict::window_manager.root(wd));
 	}
 
 	bool enabled_double_click(window wd, bool dbl)
@@ -332,12 +332,12 @@ namespace API
 		}
 	}
 
-	bool insert_frame(window frame, nana::gui::native_window_type native_window)
+	bool insert_frame(window frame, native_window_type native_window)
 	{
 		return restrict::window_manager.insert_frame(reinterpret_cast<restrict::core_window_t*>(frame), native_window);
 	}
 
-	nana::gui::native_window_type frame_container(window frame)
+	native_window_type frame_container(window frame)
 	{
 		if(frame)
 		{
@@ -348,7 +348,7 @@ namespace API
 		return 0;
 	}
 
-	nana::gui::native_window_type frame_element(window frame, unsigned index)
+	native_window_type frame_element(window frame, unsigned index)
 	{
 		if(frame)
 		{
@@ -414,7 +414,7 @@ namespace API
 		return 0;
 	}
 
-	nana::gui::window get_owner_window(nana::gui::window wd)
+	window get_owner_window(window wd)
 	{
 		if(wd)
 		{
@@ -422,7 +422,7 @@ namespace API
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd) && (iwd->other.category == category::root_tag::value))
 			{
-				nana::gui::native_window_type owner = restrict::interface_type::get_owner_window(iwd->root);
+				native_window_type owner = restrict::interface_type::get_owner_window(iwd->root);
 				if(owner)
 					return reinterpret_cast<window>(restrict::window_manager.root(owner));
 			}
@@ -554,7 +554,7 @@ namespace API
 		if(wd == 0) return false;
 
 		restrict::core_window_t* iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-		nana::gui::internal_scope_guard isg;
+		internal_scope_guard isg;
 		if(restrict::window_manager.available(iwd) == false) return false;
 
 		nana::size & ts = (true_for_max ? iwd->max_track_size : iwd->min_track_size);
@@ -588,7 +588,7 @@ namespace API
 		if(wd)
 		{
 			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-			nana::gui::internal_scope_guard isg;
+			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd) && (iwd->flags.enabled != enabled))
 			{
 				iwd->flags.enabled = enabled;
@@ -602,7 +602,7 @@ namespace API
 		if(wd)
 		{
 			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-			nana::gui::internal_scope_guard isg;
+			internal_scope_guard isg;
 			return (restrict::window_manager.available(iwd) ? iwd->flags.enabled : false);
 		}
 		return false;
@@ -679,18 +679,7 @@ namespace API
 		return cursor::arrow;
 	}
 
-	//paste a graphics into a window
-	void paste_graphics(const nana::paint::graphics& graph, int x, int y, window wd)
-	{
-		if(wd)
-		{
-			internal_scope_guard isg;
-			if(restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)))
-				graph.paste(reinterpret_cast<restrict::core_window_t*>(wd)->drawer.graphics, x, y);
-		}
-	}
-
-	bool tray_insert(nana::gui::native_window_type wd, const nana::char_t* tip, const nana::char_t* ico)
+	bool tray_insert(native_window_type wd, const nana::char_t* tip, const nana::char_t* ico)
 	{
 		return restrict::interface_type::notify_icon_add(wd, tip, ico);
 	}
@@ -720,12 +709,12 @@ namespace API
 		restrict::window_manager.tray_umake_event(wd);
 	}
 
-	bool is_focus_window(nana::gui::window wd)
+	bool is_focus_window(window wd)
 	{
 		if(wd)
 		{
 			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-			nana::gui::internal_scope_guard isg;
+			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 				return (iwd->root_widget->other.attribute.root->focus == iwd);
 		}
@@ -744,14 +733,14 @@ namespace API
 		restrict::window_manager.update(reinterpret_cast<restrict::core_window_t*>(wd), false, false);
 	}
 
-	nana::gui::window capture_window()
+	window capture_window()
 	{
-		return reinterpret_cast<nana::gui::window>(restrict::window_manager.capture_window());
+		return reinterpret_cast<window>(restrict::window_manager.capture_window());
 	}
 
-	nana::gui::window capture_window(nana::gui::window wd, bool value)
+	window capture_window(window wd, bool value)
 	{
-		return reinterpret_cast<nana::gui::window>(
+		return reinterpret_cast<window>(
 					restrict::window_manager.capture_window(reinterpret_cast<restrict::core_window_t*>(wd), value)
 		);
 	}
@@ -884,7 +873,7 @@ namespace API
 		return 0;
 	}
 
-	void create_caret(nana::gui::window wd, unsigned width, unsigned height)
+	void create_caret(window wd, unsigned width, unsigned height)
 	{
 		if(wd)
 		{
@@ -978,7 +967,7 @@ namespace API
 		}
 	}
 
-	bool caret_visible(nana::gui::window wd)
+	bool caret_visible(window wd)
 	{
 		if(wd)
 		{
@@ -990,14 +979,14 @@ namespace API
 		return false;
 	}
 
-	void tabstop(nana::gui::window wnd)
+	void tabstop(window wnd)
 	{
 		restrict::window_manager.tabstop(reinterpret_cast<restrict::core_window_t*>(wnd));
 	}
 
 	//eat_tabstop
 	//@brief: set a eating tab window that it processes a pressing of tab itself
-	void eat_tabstop(nana::gui::window wd, bool eat)
+	void eat_tabstop(window wd, bool eat)
 	{
 		if(wd)
 		{
@@ -1013,7 +1002,7 @@ namespace API
 		}
 	}
 
-	nana::gui::window move_tabstop(nana::gui::window wd, bool next)
+	window move_tabstop(window wd, bool next)
 	{
 		restrict::core_window_t* ts_wd;
 		if(next)
@@ -1024,7 +1013,7 @@ namespace API
 		restrict::window_manager.set_focus(ts_wd);
 		restrict::window_manager.update(ts_wd, false, false);
 
-		return reinterpret_cast<nana::gui::window>(ts_wd);
+		return reinterpret_cast<window>(ts_wd);
 	}
 
 	//glass_window
@@ -1040,7 +1029,7 @@ namespace API
 		return false;
 	}
 
-	bool glass_window(nana::gui::window wd, bool isglass)
+	bool glass_window(window wd, bool isglass)
 	{
 		return restrict::window_manager.glass_window(reinterpret_cast<restrict::core_window_t*>(wd), isglass);
 	}
@@ -1063,12 +1052,12 @@ namespace API
 		}
 	}
 
-	bool window_graphics(nana::gui::window wd, nana::paint::graphics& graph)
+	bool window_graphics(window wd, nana::paint::graphics& graph)
 	{
 		return restrict::window_manager.get_graphics(reinterpret_cast<restrict::core_window_t*>(wd), graph);
 	}
 
-	bool root_graphics(nana::gui::window wd, nana::paint::graphics& graph)
+	bool root_graphics(window wd, nana::paint::graphics& graph)
 	{
 		if(wd)
 		{
@@ -1083,17 +1072,17 @@ namespace API
 		return false;
 	}
 
-	bool get_visual_rectangle(nana::gui::window wd, nana::rectangle& r)
+	bool get_visual_rectangle(window wd, nana::rectangle& r)
 	{
 		return restrict::window_manager.get_visual_rectangle(reinterpret_cast<restrict::core_window_t*>(wd), r);
 	}
 
-	void typeface(nana::gui::window wd, const nana::paint::font& font)
+	void typeface(window wd, const nana::paint::font& font)
 	{
 		if(wd)
 		{
 			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-			nana::gui::internal_scope_guard isg;
+			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 			{
 				iwd->drawer.graphics.typeface(font);
@@ -1102,7 +1091,7 @@ namespace API
 		}
 	}
 
-	nana::paint::font typeface(nana::gui::window wd)
+	nana::paint::font typeface(window wd)
 	{
 		if(wd)
 		{
@@ -1130,7 +1119,7 @@ namespace API
 		return false;
 	}
 
-	bool calc_window_point(nana::gui::window wd, nana::point& pos)
+	bool calc_window_point(window wd, nana::point& pos)
 	{
 		return restrict::window_manager.calc_window_point(reinterpret_cast<restrict::core_window_t*>(wd), pos);
 	}
@@ -1148,7 +1137,7 @@ namespace API
 		return 0;
 	}
 
-	void register_menu_window(nana::gui::window wd, bool has_keyboard)
+	void register_menu_window(window wd, bool has_keyboard)
 	{
 		if(wd)
 		{
@@ -1173,7 +1162,7 @@ namespace API
 		return false;
 	}
 
-	void detach_menubar(nana::gui::window menubar)
+	void detach_menubar(window menubar)
 	{
 		if(menubar)
 		{
@@ -1198,16 +1187,16 @@ namespace API
 
 	bool is_window_zoomed(window wd, bool ask_for_max)
 	{
-		nana::gui::internal_scope_guard isg;
+		internal_scope_guard isg;
 		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 		if(restrict::window_manager.available(iwd))
 			return detail::bedrock::interface_type::is_window_zoomed(iwd->root, ask_for_max);
 		return false;
 	}
 
-	nana::gui::mouse_action::t mouse_action(window wd)
+	mouse_action::t mouse_action(window wd)
 	{
-		nana::gui::internal_scope_guard isg;
+		internal_scope_guard isg;
 		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 		if(restrict::window_manager.available(iwd))
 			return iwd->flags.action;

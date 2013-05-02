@@ -818,6 +818,11 @@ namespace nana{	namespace gui
 			return impl_->file;
 		}
 
+		bool filebox::show() const
+		{
+			return operator()();
+		}
+
 		bool filebox::operator()() const
 		{
 #if defined(NANA_WINDOWS)

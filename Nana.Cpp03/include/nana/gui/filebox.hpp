@@ -18,6 +18,7 @@ namespace nana{	namespace gui
 
 		nana::string file() const;
 		bool operator()() const;
+		bool show() const;
 	private:
 		implement * impl_;
 	};

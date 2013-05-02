@@ -972,21 +972,18 @@ namespace nana{
 		{
 #if defined(NANA_WINDOWS)
 			int length = ::GetWindowTextLength(reinterpret_cast<HWND>(wd));
-
-			if(length <= 0)	return STR("");
-
-			if(length > 260)
+			if(length > 0)
 			{
-				nana::char_t *buf = new nana::char_t[length];
-				::GetWindowText(reinterpret_cast<HWND>(wd), buf, length);
-				nana::string result = buf;
-				delete [] buf;
-				return result;
-			}
+				//One for NULL terminator which will written by GetWindowText.
+				nana::string str(length + 1, nana::char_t());
 
-			nana::char_t buf[260];
-			::GetWindowText(reinterpret_cast<HWND>(wd), buf, 260);
-			return buf;
+				::GetWindowText(reinterpret_cast<HWND>(wd), &(str[0]), length + 1);
+
+				//Remove the null terminator that writtien by GetWindowText
+				str.resize(length);
+				return str;
+			}
+			return nana::string();
 #elif defined(NANA_X11)
 			nana::detail::platform_scope_guard psg;
 			::XTextProperty txtpro;

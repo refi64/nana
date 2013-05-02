@@ -16,15 +16,20 @@ struct stateinfo
 {
 	enum class state{init, operated, assigned};
 
-	state	opstate;
-	wchar_t operation;
-	double oprand;
-	double outcome;
-	label & procedure;
-	label & result;
+	state		opstate;
+	wchar_t		operation;
+	double		oprand;
+	double		outcome;
+	label &		procedure;
+	label &		result;
 
 	stateinfo(label& proc, label& resl)
-		: opstate(state::init), operation('+'), oprand(0), outcome(0), procedure(proc), result(resl)
+		:	opstate  (state::init), 
+			operation('+'), 
+			oprand   (0), 
+			outcome  (0), 
+			procedure(proc), 
+			result   (resl)
 	{}
 };
 
@@ -166,7 +171,7 @@ int main()
 	//Use class place to layout the widgets.
 	place place(fm);
 	place.div(	"vertical<procedure weight=10%><result weight=15%>"
-		"<weight=2><<weight=2><opkeys grid [4, 5] gap=2>>");
+				"<weight=2><<weight=2><opkeys grid [4, 5] gap=2>>");
 
 	label procedure(fm), result(fm);
 	//Make the label right aligned.

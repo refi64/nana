@@ -334,7 +334,7 @@ namespace gui
 
 		void* drawer::draw(const nana::functor<void(paint::graphics&)> & f, bool diehard)
 		{
-			if(f.empty())
+			if(false == f.empty())
 			{
 				dynamic_drawing::user_draw_function * p = new dynamic_drawing::user_draw_function(f, diehard);
 				dynamic_drawing_objects_.push_back(p);

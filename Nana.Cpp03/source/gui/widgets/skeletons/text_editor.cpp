@@ -134,7 +134,10 @@ namespace nana{	namespace gui{	namespace widgets
 		unsigned text_editor::screen_lines() const
 		{
 			if(graph_ && (text_area_.area.height > text_area_.hscroll))
-				return (text_area_.area.height - text_area_.hscroll) / line_height();
+			{
+				unsigned lines = (text_area_.area.height - text_area_.hscroll) / line_height();
+				return (lines ? lines : 1);
+			}
 			return 0;
 		}
 

@@ -253,14 +253,20 @@ namespace nana{ namespace gui{
 				: public drawer_trigger
 			{
 			public:
-				unsigned static const npos = static_cast<unsigned>(-1);
+				std::size_t static const npos = static_cast<std::size_t>(-1);
 				typedef menu_item_type::item_proxy item_proxy;
 
 				renderer_interface * renderer;
 
 				menu_drawer()
 					:widget_(0), graph_(0), menu_(0)
-				{}
+				{
+					state_.active = npos;
+					state_.sub_window = false;
+					state_.nullify_mouse = false;
+
+					detail_.border.x = detail_.border.y = 2;
+				}
 
 				void bind_window(widget_reference widget)
 				{
@@ -275,6 +281,9 @@ namespace nana{ namespace gui{
 					make_drawer_event<events::mouse_move>(wd);
 					make_drawer_event<events::mouse_down>(wd);
 					make_drawer_event<events::mouse_leave>(wd);
+
+					//Get the current cursor pos to determinate the monitor
+					detail_.monitor_pos = API::cursor_position();
 				}
 
 				void detached()
@@ -312,7 +321,7 @@ namespace nana{ namespace gui{
 					draw();
 				}
 
-				unsigned long active() const
+				std::size_t active() const
 				{
 					return state_.active;
 				}
@@ -322,7 +331,7 @@ namespace nana{ namespace gui{
 					state_.nullify_mouse = true;
 					if(menu_->items.size())
 					{
-						unsigned long index = state_.active;
+						std::size_t index = state_.active;
 
 						bool end = false;
 						while(true)
@@ -352,7 +361,7 @@ namespace nana{ namespace gui{
 									if(end == false)
 									{
 										end = true;
-										index = static_cast<unsigned long>(menu_->items.size() - 1);
+										index = menu_->items.size() - 1;
 									}
 									else
 										break;
@@ -529,7 +538,7 @@ namespace nana{ namespace gui{
 						}
 					}
 				}
-
+			private:
 				static renderer_interface::attr _m_make_renderer_attr(bool active, const menu_item_type & m)
 				{
 					renderer_interface::attr attr;
@@ -604,23 +613,24 @@ namespace nana{ namespace gui{
 					size.width += detail_.border.x * 2;
 					size.height += detail_.border.y * 2;
 
-					if(widget_->size() != size)
-						widget_->size(size.width, size.height);
+					widget_->size(size.width, size.height);
+
+					nana::point pos;
+					API::calc_screen_point(*widget_, pos);
 
 					//get the screen coordinates of the widget pos.
-					nana::point pos;
-					nana::gui::API::calc_screen_point(widget_->handle(), pos);
-					nana::size ss = nana::gui::API::screen_size();
+					nana::rectangle scr_area = API::screen_area_from_point(detail_.monitor_pos);
 
-					if(pos.x + size.width > ss.width)
-						pos.x = static_cast<int>(ss.width - size.width);
-					if(pos.x < 0) pos.x = 0;
+					if(pos.x + size.width > scr_area.x + scr_area.width)
+						pos.x = static_cast<int>(scr_area.x + scr_area.width - size.width);
+					if(pos.x < scr_area.x) pos.x = scr_area.x;
 
-					if(pos.y + size.height > ss.height)
-						pos.y = static_cast<int>(ss.height - size.height);
-					if(pos.y < 0) pos.y = 0;
-					nana::gui::window owner = nana::gui::API::get_owner_window(widget_->handle());
-					nana::gui::API::calc_window_point(owner, pos);
+					if(pos.y + size.height > scr_area.y + scr_area.height)
+						pos.y = static_cast<int>(scr_area.y + scr_area.height - size.height);
+					if(pos.y < scr_area.y) pos.y = scr_area.y;
+
+					window owner = API::get_owner_window(*widget_);
+					API::calc_window_point(owner, pos);
 					widget_->move(pos.x, pos.y);
 				}
 			private:
@@ -630,22 +640,15 @@ namespace nana{ namespace gui{
 
 				struct state
 				{
-					state()
-						:active(npos), sub_window(false), nullify_mouse(false)
-					{}
-
-					unsigned long active;
-					unsigned long active_timestamp;
-					unsigned long sub_window: 1;
-					unsigned long nullify_mouse: 1;
+					std::size_t		active;
+					unsigned long	active_timestamp;
+					unsigned long	sub_window: 1;
+					unsigned long	nullify_mouse: 1;
 				}state_;
 
 				struct widget_detail
 				{
-					widget_detail()
-						:border(2, 2)
-					{}
-
+					nana::point monitor_pos;	//It used to determinate the monitor.
 					nana::upoint border;
 				}detail_;
 			};//end class menu_drawer
@@ -656,7 +659,7 @@ namespace nana{ namespace gui{
 				typedef menu_drawer drawer_type;
 				typedef widget_object<category::root_tag, menu_drawer> base_type;
 			public:
-				static const unsigned long npos = drawer_type::npos;
+				static const std::size_t npos = drawer_type::npos;
 				typedef menu_builder::item_type item_type;
 
 				menu_window(window wd, const point& pos, renderer_interface * rdptr)
@@ -801,7 +804,7 @@ namespace nana{ namespace gui{
 					while(object->submenu_.child)
 						object = object->submenu_.child;
 
-					unsigned long active = object->get_drawer_trigger().active();
+					std::size_t active = object->get_drawer_trigger().active();
 					if(active != npos)
 					{
 						menu_type * menu = object->get_drawer_trigger().data();
@@ -823,7 +826,7 @@ namespace nana{ namespace gui{
 									if(active > 0)
 									{
 										//clear the checked state in front of active if it is check_option.
-										unsigned i = active;
+										std::size_t i = active;
 										do
 										{
 											--i;
@@ -835,7 +838,7 @@ namespace nana{ namespace gui{
 										}while(i);
 									}
 
-									for(unsigned i = active + 1; i < menu->items.size(); ++i)
+									for(std::size_t i = active + 1; i < menu->items.size(); ++i)
 									{
 										menu_item_type & im = menu->items.at(i);
 										if(im.flags.splitter) break;

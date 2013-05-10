@@ -655,11 +655,11 @@ namespace nana{	namespace gui{	namespace widgets
 		{
 			switch(key)
 			{
-			case keyboard::left:	move_left();	break;
-			case keyboard::right:	move_right();	break;
-			case keyboard::up:		move_up();		break;
-			case keyboard::down:	move_down();	break;
-			case keyboard::del:		del();	break;
+			case keyboard::os_arrow_left:	move_left();	break;
+			case keyboard::os_arrow_right:	move_right();	break;
+			case keyboard::os_arrow_up:		move_up();		break;
+			case keyboard::os_arrow_down:	move_down();	break;
+			case keyboard::os_del:		del();	break;
 			default:
 				return false;
 			}

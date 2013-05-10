@@ -145,12 +145,12 @@ namespace nana{	namespace gui
 
 					sp_ = _m_eat_whitespace(sp_);
 					char ch = *sp_++;
+
+					if(ch == ']')
+						break;
+
 					if(ch != ',')
-					{
-						if(ch == ']')
-							break;
 						_m_throw_error("invalid array");
-					}
 				}
 				return token::array;
 			case '.': case '-':
@@ -184,13 +184,12 @@ namespace nana{	namespace gui
 				break;
 			}
 
-			char ch = *sp_;
-			if('_' == ch || ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z'))
+			if('_' == *sp_ || isalpha(*sp_))
 			{
 				const char * idstart = sp_++;
-				ch = *sp_;
-				while('_' == ch || ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ('0' <= ch && ch <= '9'))
-					ch = *++sp_;
+
+				while('_' == *sp_ || isalpha(*sp_) || isalnum(*sp_))
+					++sp_;
 
 				idstr_.assign(idstart, sp_);
 

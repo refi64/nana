@@ -994,9 +994,10 @@ namespace nana{
 			if(length > 0)
 			{
 				//One for NULL terminator which will written by GetWindowText.
-				nana::string str(length + 1, nana::char_t());
+				nana::string str;
+				str.resize(length + 1);
 
-				::GetWindowText(reinterpret_cast<HWND>(wd), &(str[0]), length + 1);
+				::GetWindowText(reinterpret_cast<HWND>(wd), &(str[0]), static_cast<int>(str.size()));
 
 				//Remove the null terminator that writtien by GetWindowText
 				str.resize(length);

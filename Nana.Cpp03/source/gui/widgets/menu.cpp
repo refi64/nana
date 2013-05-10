@@ -253,7 +253,6 @@ namespace nana{ namespace gui{
 				: public drawer_trigger
 			{
 			public:
-				std::size_t static const npos = static_cast<std::size_t>(-1);
 				typedef menu_item_type::item_proxy item_proxy;
 
 				renderer_interface * renderer;
@@ -659,7 +658,6 @@ namespace nana{ namespace gui{
 				typedef menu_drawer drawer_type;
 				typedef widget_object<category::root_tag, menu_drawer> base_type;
 			public:
-				static const std::size_t npos = drawer_type::npos;
 				typedef menu_builder::item_type item_type;
 
 				menu_window(window wd, const point& pos, renderer_interface * rdptr)
@@ -869,16 +867,16 @@ namespace nana{ namespace gui{
 				{
 					switch(ei.keyboard.key)
 					{
-					case keyboard::up:
+					case keyboard::os_arrow_up:
 						this->goto_next(false);
 						break;
-					case keyboard::down:
+					case keyboard::os_arrow_down:
 						this->goto_next(true);
 						break;
-					case keyboard::left:
+					case keyboard::os_arrow_left:
 						this->exit_submenu();
 						break;
-					case keyboard::right:
+					case keyboard::os_arrow_right:
 						this->goto_submenu();
 						break;
 					case keyboard::enter:

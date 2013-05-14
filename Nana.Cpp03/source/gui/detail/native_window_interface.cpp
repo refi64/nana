@@ -129,7 +129,7 @@ namespace nana{
 		{
 #if defined(NANA_WINDOWS)
 			POINT native_pos = {pos.x, pos.y};
-			HMONITOR monitor = ::MonitorFromPoint(native_pos, MONITOR_DEFAULTTONEAREST);
+			HMONITOR monitor = ::MonitorFromPoint(native_pos, 2 /*MONITOR_DEFAULTTONEAREST*/);
 
 			MONITORINFO mi;
 			mi.cbSize = sizeof mi;

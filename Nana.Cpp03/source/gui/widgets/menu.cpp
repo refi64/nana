@@ -388,7 +388,7 @@ namespace nana{ namespace gui{
 				{
 					if(state_.nullify_mouse == false)
 					{
-						unsigned long index = _m_get_index_by_pos(x, y);
+						std::size_t index = _m_get_index_by_pos(x, y);
 						if(index != state_.active)
 						{
 							if(index == npos && menu_->items.at(state_.active).sub_menu && state_.sub_window)
@@ -418,14 +418,14 @@ namespace nana{ namespace gui{
 					state_.sub_window = subw;
 				}
 
-				menu_type* retrive_sub_menu(nana::point& pos, unsigned long interval) const
+				menu_type* retrive_sub_menu(nana::point& pos, std::size_t interval) const
 				{
 					if(state_.active != npos && (nana::system::timestamp() - state_.active_timestamp >= interval))
 					{
 						pos.x = graph_->width() - 2;
 						pos.y = 2;
 
-						unsigned long index = 0;
+						std::size_t index = 0;
 						for(menu_builder::const_iterator it = menu_->items.begin(); it != menu_->items.end(); ++it, ++index)
 						{
 							if(false == it->flags.splitter)
@@ -446,7 +446,7 @@ namespace nana{ namespace gui{
 				//send_shortkey has 3 states, 0 = UNKNOWN KEY, 1 = ITEM, 2 = GOTO SUBMENU
 				int send_shortkey(nana::char_t key)
 				{
-					unsigned long index = 0;
+					std::size_t index = 0;
 					for(menu_builder::iterator it = menu_->items.begin(); it != menu_->items.end(); ++it, ++index)
 					{
 						if(it->hotkey == key)
@@ -493,7 +493,7 @@ namespace nana{ namespace gui{
 					unsigned item_height = _m_item_height();
 					int text_top_off = (_m_item_height() - graph_->text_extent_size(STR("jh({[")).height) / 2;
 
-					unsigned long index = 0;
+					std::size_t index = 0;
 					for(menu_builder::const_iterator it = menu_->items.begin(); it != menu_->items.end(); ++it, ++index)
 					{
 						if(false == it->flags.splitter)
@@ -548,7 +548,7 @@ namespace nana{ namespace gui{
 					return attr;
 				}
 
-				unsigned long _m_get_index_by_pos(int x, int y) const
+				std::size_t _m_get_index_by_pos(int x, int y) const
 				{
 					if(	(x < static_cast<int>(detail_.border.x)) ||
 						(x > static_cast<int>(graph_->width() - detail_.border.x)) ||
@@ -557,7 +557,7 @@ namespace nana{ namespace gui{
 						return npos;
 
 					int pos = detail_.border.y;
-					unsigned long index = 0;
+					std::size_t index = 0;
 					for(menu_type::const_iterator it = menu_->items.begin(); it != menu_->items.end(); ++it)
 					{
 						unsigned h = (it->flags.splitter ? 1 : _m_item_height());

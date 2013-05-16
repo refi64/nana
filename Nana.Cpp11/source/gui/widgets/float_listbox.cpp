@@ -172,7 +172,7 @@ namespace nana{ namespace gui{
 				{
 					if(module_ && module_->items.size())
 					{
-						unsigned init_index = state_.index;
+						std::size_t init_index = state_.index;
 						if(state_.index != npos)
 						{
 							unsigned last_offset_y = 0;
@@ -298,14 +298,14 @@ namespace nana{ namespace gui{
 						if(graph_->width() > outter_w && graph_->height() > 4 )
 						{
 							//Draw items
-							unsigned items = static_cast<unsigned>(pages ? module_->max_items : module_->items.size());							
+							std::size_t items = (pages ? module_->max_items : module_->items.size());							
 							items += state_.offset_y;
 
 							const unsigned item_pixels = state_.renderer->item_pixels(*graph_);
 							nana::rectangle item_r(2, 2, graph_->width() - outter_w, item_pixels);
 
 							state_.renderer->image(_m_image_enabled(), image_pixels_);
-							for(unsigned i = state_.offset_y; i < items; ++i)
+							for(std::size_t i = state_.offset_y; i < items; ++i)
 							{
 								item_renderer::state_t state = item_renderer::StateNone;
 								if(i == state_.index) state = item_renderer::StateHighlighted;

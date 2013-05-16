@@ -472,7 +472,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 			if((false == textbase_.empty()) || has_focus)
 			{
-				auto scrlines = screen_lines() + static_cast<unsigned>(points_.offset.y);
+				std::size_t scrlines = screen_lines() + static_cast<unsigned>(points_.offset.y);
 				if(scrlines > textbase_.lines())
 					scrlines = textbase_.lines();
 

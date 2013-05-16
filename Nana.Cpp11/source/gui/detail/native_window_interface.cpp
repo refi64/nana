@@ -132,17 +132,22 @@ namespace nana{
 		rectangle native_interface::screen_area_from_point(const point& pos)
 		{
 #if defined(NANA_WINDOWS)
-			POINT native_pos = {pos.x, pos.y};
-			auto monitor = ::MonitorFromPoint(native_pos, MONITOR_DEFAULTTONEAREST);
-
-			MONITORINFO mi;
-			mi.cbSize = sizeof mi;
-			if(::GetMonitorInfo(monitor, &mi))
+			typedef HMONITOR (__stdcall * MonitorFromPointT)(POINT,DWORD);
+			
+			MonitorFromPointT mfp = reinterpret_cast<MonitorFromPointT>(::GetProcAddress(::GetModuleHandleA("User32.DLL"), "MonitorFromPoint"));
+			if(mfp)
 			{
-				return rectangle(mi.rcWork.left, mi.rcWork.top,
-								mi.rcWork.right - mi.rcWork.left, mi.rcWork.bottom - mi.rcWork.top);
-			}
+				POINT native_pos = {pos.x, pos.y};
+				HMONITOR monitor = mfp(native_pos, 2 /*MONITOR_DEFAULTTONEAREST*/);
 
+				MONITORINFO mi;
+				mi.cbSize = sizeof mi;
+				if(::GetMonitorInfo(monitor, &mi))
+				{
+					return rectangle(mi.rcWork.left, mi.rcWork.top,
+									mi.rcWork.right - mi.rcWork.left, mi.rcWork.bottom - mi.rcWork.top);
+				}
+			}
 #elif defined(NANA_X11)
 #endif
 			return screen_size();

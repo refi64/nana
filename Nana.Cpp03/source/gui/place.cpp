@@ -429,6 +429,31 @@ namespace nana{	namespace gui
 				}
 			}
 
+			element_t& operator=(const element_t& rhs)
+			{
+			    if(this != &rhs)
+                {
+                    kind_of_element = rhs.kind_of_element;
+
+                    switch(kind_of_element)
+                    {
+                    case kind::fixed:
+                        u.fixed_ptr = new fixed_t(*rhs.u.fixed_ptr);
+                        break;
+                    case kind::percent:
+                        u.percent_ptr = new percent_t(*rhs.u.percent_ptr);
+                        break;
+                    case kind::room:
+                        u.room_ptr = new room_t(*rhs.u.room_ptr);
+                        break;
+                    default:
+                        u = rhs.u;
+                        break;
+                    }
+                }
+                return *this;
+			}
+
 			~element_t()
 			{
 				switch(kind_of_element)
@@ -470,7 +495,8 @@ namespace nana{	namespace gui
 		typedef std::vector<window>::const_iterator fastened_const_iterator;
 
 		field_impl(place * p)
-			: place_ptr_(p), attached(false)
+			:	attached(false),
+				place_ptr_(p)
 		{}
 	private:
 		//A destroy handler for element

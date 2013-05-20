@@ -648,39 +648,39 @@ namespace detail
 						bedrock.raise_event(event_tag::mouse_wheel, msgwnd, ei, true);
 					}
 				}
-				else if(bedrock.wd_manager.available(mouse_window) && mouse_window->flags.enabled)
+				else
 				{
-					make_eventinfo(ei, mouse_window, message, xevent);
+					make_eventinfo(ei, msgwnd, message, xevent);
 					msgwnd = bedrock.wd_manager.find_window(native_window, xevent.xbutton.x, xevent.xbutton.y);
-					core_window_t* click_window = 0;
-					if(msgwnd == mouse_window)
-					{
-						mouse_window->flags.action = mouse_action::over;
-						click_window = mouse_window;
-						context.event_window = msgwnd;
-						bedrock.fire_event_for_drawer(event_tag::click, msgwnd, ei, &context);
-					}
-					else
-					{
-						mouse_window->flags.action = mouse_action::normal;
-						msgwnd = mouse_window;
-					}
-					context.event_window = msgwnd;
-					bedrock.fire_event_for_drawer(event_tag::mouse_up, msgwnd, ei, &context);
-					bedrock.wd_manager.refresh(msgwnd);
+					if(0 == msgwnd)
+						break;
 
-					if(click_window)
+					msgwnd->flags.action = mouse_action::normal;
+					if(msgwnd->flags.enabled)
 					{
-						context.event_window = click_window;
-						bedrock.fire_event(event_tag::click, click_window, ei);
-						if(click_window != msgwnd)
-							bedrock.wd_manager.do_lazy_refresh(click_window, false);
+						bool hit = is_hit_the_rectangle(msgwnd->rect, xevent.xbutton.x, xevent.xbutton.y);
+						if(bedrock.wd_manager.available(mouse_window) && (msgwnd == mouse_window))
+						{
+							if(msgwnd->flags.enabled && hit)
+							{
+								msgwnd->flags.action = mouse_action::over;
+								bedrock.fire_event_for_drawer(event_tag::click, msgwnd, ei, &context);
+								bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
+								bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+							}
+						}
+					
+						//Do mouse_up, this handle may be closed by click handler.
+						if(bedrock.wd_manager.available(msgwnd) && msgwnd->flags.enabled)
+						{
+							if(hit)
+								msgwnd->flags.action = mouse_action::over;
+
+							bedrock.fire_event_for_drawer(event_tag::mouse_up, msgwnd, ei, &context);
+							bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
+							bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+						}
 					}
-
-					context.event_window = msgwnd;
-					bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
-					bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
-
 					mouse_window = 0;
 				}
 				break;
@@ -733,7 +733,7 @@ namespace detail
 					if(wd)
 						msgwnd = wd;
 				}
-				else
+				else if(msgwnd)
 				{
 					make_eventinfo(ei, msgwnd, message, xevent);
 					bool prev_captured_inside;
@@ -750,7 +750,7 @@ namespace detail
 							eid = event_tag::mouse_enter;
 							msgwnd->flags.action = mouse_action::over;
 						}
-						bedrock.raise_event(eid, msgwnd, ei, false);
+						bedrock.raise_event(eid, msgwnd, ei, true);
 					}
 				}
 

@@ -66,7 +66,8 @@ namespace nana{namespace gui{
 				{
 					bool omitted;
 					bool focused;
-					bool pressed;
+					bool pushed;
+					bool keep_pressed;
 					state::t act_state;
 					bool enable_pushed;
 					bool focus_color;

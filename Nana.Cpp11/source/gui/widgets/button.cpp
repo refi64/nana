@@ -145,7 +145,7 @@ namespace drawerbase
 		trigger::trigger()
 			:widget_(nullptr), graph_(nullptr), bgimage_(nullptr)
 		{
-			attr_.omitted = attr_.focused = attr_.pressed = attr_.enable_pushed = false;
+			attr_.omitted = attr_.focused = attr_.pushed = attr_.enable_pushed = attr_.keep_pressed =  false;
 			attr_.focus_color = true;
 			attr_.icon = nullptr;
 			attr_.act_state = state::normal;
@@ -195,9 +195,9 @@ namespace drawerbase
 
 		bool trigger::pushed(bool pshd)
 		{
-			if(pshd != attr_.pressed)
+			if(pshd != attr_.pushed)
 			{
-				attr_.pressed = pshd;
+				attr_.pushed = pshd;
 				if(false == pshd)
 				{
 					window wd = API::find_window(API::cursor_position());
@@ -216,7 +216,7 @@ namespace drawerbase
 
 		bool trigger::pushed() const
 		{
-			return attr_.pressed;
+			return attr_.pushed;
 		}
 
 		void trigger::omitted(bool om)
@@ -241,14 +241,15 @@ namespace drawerbase
 
 		void trigger::mouse_enter(graph_reference graph, const eventinfo&)
 		{
-			attr_.act_state = (attr_.pressed ?  state::pressed : state::highlight);
+			attr_.act_state = (attr_.pushed || attr_.keep_pressed ?  state::pressed : state::highlight);
+
 			_m_draw(graph);
 			API::lazy_refresh();
 		}
 
 		void trigger::mouse_leave(graph_reference graph, const eventinfo&)
 		{
-			if(attr_.enable_pushed && attr_.pressed)
+			if(attr_.enable_pushed && attr_.pushed)
 				return;
 
 			attr_.act_state = (attr_.focused ? state::focused : state::normal);
@@ -259,15 +260,20 @@ namespace drawerbase
 		void trigger::mouse_down(graph_reference graph, const eventinfo&)
 		{
 			attr_.act_state = state::pressed;
+			attr_.keep_pressed = true;
+
 			_m_draw(graph);
+			API::capture_window(*widget_, true);
 			API::lazy_refresh();
 		}
 
 		void trigger::mouse_up(graph_reference graph, const eventinfo&)
 		{
-			if(attr_.enable_pushed && (false == attr_.pressed))
+			API::capture_window(*widget_, false);
+			attr_.keep_pressed = false;
+			if(attr_.enable_pushed && (false == attr_.pushed))
 			{
-				attr_.pressed = true;
+				attr_.pushed = true;
 			}
 			else
 			{
@@ -276,7 +282,7 @@ namespace drawerbase
 				else
 					attr_.act_state = (attr_.focused ? state::focused : state::normal);
 
-				attr_.pressed = false;
+				attr_.pushed = false;
 				_m_draw(graph);
 				API::lazy_refresh();
 			}

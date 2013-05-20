@@ -162,7 +162,7 @@ namespace nana{	namespace gui
 				}
 				else
 					readbytes = _m_number(sp_, false);
-						
+
 				if(readbytes)
 				{
 					sp_ += readbytes;
@@ -240,7 +240,7 @@ namespace nana{	namespace gui
 
 			if(0 == len)
 				_m_throw_error("the \'" + idstr_ + "\' requires a number(integer or real or percent)");
-						
+
 			sp_ += len + (p - sp_);
 		}
 
@@ -335,7 +335,7 @@ namespace nana{	namespace gui
 		event_handle event_size_handle;
 		division * root_division;
 		std::map<std::string, field_impl*> fields;
-			
+
 		implement()
 			: window_handle(nullptr), event_size_handle(nullptr), root_division(nullptr)
 		{}
@@ -421,6 +421,31 @@ namespace nana{	namespace gui
 				}
 			}
 
+			element_t& operator=(const element_t& rhs)
+			{
+			    if(this != &rhs)
+                {
+                    kind_of_element = rhs.kind_of_element;
+
+                    switch(kind_of_element)
+                    {
+                    case kind::fixed:
+                        u.fixed_ptr = new fixed_t(*rhs.u.fixed_ptr);
+                        break;
+                    case kind::percent:
+                        u.percent_ptr = new percent_t(*rhs.u.percent_ptr);
+                        break;
+                    case kind::room:
+                        u.room_ptr = new room_t(*rhs.u.room_ptr);
+                        break;
+                    default:
+                        u = rhs.u;
+                        break;
+                    }
+                }
+                return *this;
+			}
+
 			element_t(element_t && rv)
 				: kind_of_element(rv.kind_of_element), u(rv.u)
 			{
@@ -437,7 +462,28 @@ namespace nana{	namespace gui
 				default:	break;
 				}
 			}
-				
+
+			element_t& operator=(element_t && rv)
+			{
+                if(this != &rv)
+                {
+                    kind_of_element = rv.kind_of_element;
+                    switch(kind_of_element)
+                    {
+                    case kind::fixed:
+                        rv.u.fixed_ptr = nullptr;
+                        break;
+                    case kind::percent:
+                        rv.u.percent_ptr = nullptr;
+                        break;
+                    case kind::room:
+                        rv.u.room_ptr = nullptr;
+                    default:	break;
+                    }
+                }
+                return *this;
+			}
+
 			~element_t()
 			{
 				switch(kind_of_element)
@@ -476,7 +522,8 @@ namespace nana{	namespace gui
 		typedef std::vector<element_t>::const_iterator const_iterator;
 
 		field_impl(place * p)
-			: place_ptr_(p), attached(false)
+			:	attached(false),
+				place_ptr_(p)
 		{}
 	private:
 		//Listen to destroy of a window
@@ -550,11 +597,11 @@ namespace nana{	namespace gui
 					fastened.erase(i);
 					break;
 				}
-			});	
+			});
 			return *this;
 		}
 	public:
-	
+
 		//returns the number of fixed pixels and the number of adjustable items
 		std::pair<unsigned, std::size_t> fixed_and_adjustable() const
 		{
@@ -633,7 +680,7 @@ namespace nana{	namespace gui
 			std::pair<unsigned, std::size_t> pair;
 			if(field && (kind_of_division == match_kind))
 				pair = field->fixed_and_adjustable();
-				
+
 			for(auto child : children)
 			{
 				if(false == child->is_fixed()) //it is adjustable
@@ -672,7 +719,7 @@ namespace nana{	namespace gui
 			auto pair = fixed_pixels(kind::arrange);
 			if(field)
 				pair.first += field->percent_pixels(area.width);
-				
+
 			unsigned gap_size = static_cast<unsigned>(gap.kind_of() == number_t::kind::integer ? gap.integer() : area.width * gap.real());
 
 			double percent_pixels = 0;
@@ -684,7 +731,7 @@ namespace nana{	namespace gui
 
 			pair.first += static_cast<unsigned>(percent_pixels);
 			double adjustable_pixels = (pair.second && pair.first < area.width ? (double(area.width - pair.first) / pair.second) : 0.0);
-				
+
 			double left = area.x;
 			for(auto child : children)
 			{
@@ -769,7 +816,7 @@ namespace nana{	namespace gui
 				pair.first += field->percent_pixels(area.height);
 
 			unsigned gap_size = static_cast<unsigned>(gap.kind_of() == number_t::kind::integer ? gap.integer() : area.width * gap.real());
-				
+
 			double percent_pixels = 0;
 			for(auto child: children)
 			{
@@ -780,7 +827,7 @@ namespace nana{	namespace gui
 			pair.first += static_cast<unsigned>(percent_pixels);
 			double adjustable_pixels = (pair.second && pair.first < area.height ? (double(area.height - pair.first) / pair.second) : 0.0);
 
-				
+
 			double top = area.y;
 			for(auto child : children)
 			{
@@ -958,7 +1005,7 @@ namespace nana{	namespace gui
 					{
 						if(table[l + lbp])
 							continue;
-							
+
 						i = _m_search(i, end);
 						if(i == end)
 						{
@@ -1037,7 +1084,7 @@ namespace nana{	namespace gui
 		static field_impl::const_iterator _m_search(field_impl::const_iterator i, field_impl::const_iterator end)
 		{
 			if(i == end) return end;
-				
+
 			while(i->kind_of_element == field_impl::element_t::kind::gap)
 			{
 				if(++i == end) return end;
@@ -1085,7 +1132,7 @@ namespace nana{	namespace gui
 			if(div)
 				return div;
 		}
-		return nullptr;	
+		return nullptr;
 	}
 
 	place::implement::division* place::implement::scan_div(tokenizer& tknizer)
@@ -1172,13 +1219,13 @@ namespace nana{	namespace gui
 		case token::grid:
 			{
 				div_grid * p = new div_grid(std::move(name));
-					
+
 				if(array.size())
 				{
 					if(array[0].kind_of() != number_t::kind::percent)
 						p->dimension.first = array[0].integer();
 				}
-					
+
 				if(array.size() > 1)
 				{
 					if(array[1].kind_of() != number_t::kind::percent)
@@ -1197,7 +1244,7 @@ namespace nana{	namespace gui
         default:
             throw std::runtime_error("nana.place: invalid division type.");
 		}
-			
+
 		div->weight = weight;
 		div->gap = gap;
 		div->field = field;		//attach the field to the division
@@ -1235,7 +1282,7 @@ namespace nana{	namespace gui
 					{
 						impl_->root_division->area = API::window_size(ei.window);
 						impl_->root_division->collocate();
-					}					
+					}
 				});
 		}
 

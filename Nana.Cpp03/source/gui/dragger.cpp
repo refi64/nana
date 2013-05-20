@@ -57,6 +57,7 @@ namespace nana{ namespace gui
 				API::umake_event(i->over);
 				API::umake_event(i->release);
 				API::umake_event(i->destroy);
+				API::capture_window(i->wd, false);
 			}
 			triggers_.clear();
 		}
@@ -68,6 +69,7 @@ namespace nana{ namespace gui
 				if(i->wd == ei.window)
 				{
 					triggers_.erase(i);
+					API::capture_window(ei.window, false);
 					return;
 				}
 			}

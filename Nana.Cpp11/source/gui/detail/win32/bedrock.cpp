@@ -869,37 +869,39 @@ namespace detail
 			case WM_LBUTTONUP:
 			case WM_MBUTTONUP:
 			case WM_RBUTTONUP:
-				if(bedrock.wd_manager.available(mouse_window) && mouse_window->flags.enabled)
+				make_eventinfo(ei, mouse_window, message, pmdec);
+				msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);
+				if(nullptr == msgwnd)
+					break;
+
+				msgwnd->flags.action = mouse_action::normal;
+				if(msgwnd->flags.enabled)
 				{
-					make_eventinfo(ei, mouse_window, message, pmdec);
-					msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);
-					decltype(msgwnd) click_window = nullptr;
+					bool hit = is_hit_the_rectangle(rectangle(msgwnd->pos_owner, msgwnd->dimension), pmdec.mouse.x, pmdec.mouse.y);
 
-					if(msgwnd == mouse_window)
+					if(bedrock.wd_manager.available(mouse_window) && (msgwnd == mouse_window))
 					{
-						mouse_window->flags.action = mouse_action::over;
-						click_window = mouse_window;
-						bedrock.fire_event_for_drawer(event_tag::click, msgwnd, ei, &context);
+						if(msgwnd->flags.enabled && hit)
+						{
+							msgwnd->flags.action = mouse_action::over;
+							bedrock.fire_event_for_drawer(event_tag::click, msgwnd, ei, &context);
+							bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
+							bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+						}
 					}
-					else
+				
+					//Do mouse_up, this handle may be closed by click handler.
+					if(bedrock.wd_manager.available(msgwnd) && msgwnd->flags.enabled)
 					{
-						mouse_window->flags.action = mouse_action::normal;
-						msgwnd = mouse_window;
+						if(hit)
+							msgwnd->flags.action = mouse_action::over;
+
+						bedrock.fire_event_for_drawer(event_tag::mouse_up, msgwnd, ei, &context);
+						bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
+						bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
 					}
-
-					bedrock.fire_event_for_drawer(event_tag::mouse_up, msgwnd, ei, &context);
-
-					if(click_window)
-					{
-						bedrock.fire_event(event_tag::click, click_window, ei);
-						if(click_window != msgwnd)
-							bedrock.wd_manager.do_lazy_refresh(click_window, false);
-					}
-
-					bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
-					bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
-					mouse_window = nullptr;
 				}
+				mouse_window = nullptr;
 				break;
 			case WM_MOUSEMOVE:
 				msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);

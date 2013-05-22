@@ -153,7 +153,7 @@ namespace xcheckbox
 					unsigned pixels = graph.width() - (16 + interval);
 
 					nana::paint::text_renderer tr(graph);
-					if(nana::gui::API::window_enabled(widget_->handle()) == false)
+					if(API::window_enabled(widget_->handle()) == false)
 					{
 						tr.render(17 + interval, 2, 0xFFFFFF, title.c_str(), title.length(), pixels);
 						fgcolor = 0x808080;

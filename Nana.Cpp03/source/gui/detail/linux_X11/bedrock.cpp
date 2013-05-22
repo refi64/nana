@@ -650,7 +650,6 @@ namespace detail
 				}
 				else
 				{
-					make_eventinfo(ei, msgwnd, message, xevent);
 					msgwnd = bedrock.wd_manager.find_window(native_window, xevent.xbutton.x, xevent.xbutton.y);
 					if(0 == msgwnd)
 						break;
@@ -658,6 +657,7 @@ namespace detail
 					msgwnd->flags.action = mouse_action::normal;
 					if(msgwnd->flags.enabled)
 					{
+						make_eventinfo(ei, msgwnd, message, xevent);
 						bool hit = is_hit_the_rectangle(msgwnd->rect, xevent.xbutton.x, xevent.xbutton.y);
 						if(bedrock.wd_manager.available(mouse_window) && (msgwnd == mouse_window))
 						{

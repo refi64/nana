@@ -82,8 +82,13 @@ namespace nana{ namespace gui{
 		typedef drawerbase::float_listbox::item_renderer item_renderer;
 		typedef drawerbase::float_listbox::module_def module_type;
 
-		float_listbox();
-		float_listbox(window, const rectangle&);
+		/** @brief Constructor
+		 *	@param window	A handle to a window which is a owner of float_listbox
+		 *	@param rectangle	A position and a size of float_listbox
+		 *	@param is_ignore_first_mouse_up	The flost_listbox will be closed when a mouse_up is emitted, this parameter is specified for ignoring the first mouse_up emitting.
+		 *	@remark	The float_listbox can be popupped in a mouse_down event, the next mouse_up may be ignored, otherwise the float_listbox will be closed when user releases the button.
+		 */
+		float_listbox(window, const rectangle&, bool is_ingore_first_mouse_up);
 
 		void set_module(const module_type&, unsigned image_pixels);
 		void scroll_items(bool upwards);

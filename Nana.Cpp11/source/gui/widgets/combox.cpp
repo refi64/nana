@@ -201,7 +201,7 @@ namespace nana{ namespace gui{
 				{
 					if(nullptr == state_.lister)
 					{
-						state_.lister = &form_loader<nana::gui::float_listbox>()(widget_->handle(), nana::rectangle(0, widget_->size().height, widget_->size().width, 10));
+						state_.lister = &form_loader<nana::gui::float_listbox>()(widget_->handle(), nana::rectangle(0, widget_->size().height, widget_->size().width, 10), true);
 						state_.lister->renderer(item_renderer_);
 						state_.lister->set_module(module_, image_pixels_);
 						state_.item_index_before_selection = module_.index;

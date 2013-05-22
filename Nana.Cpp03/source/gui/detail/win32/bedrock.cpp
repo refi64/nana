@@ -880,7 +880,6 @@ namespace detail
 			case WM_LBUTTONUP:
 			case WM_MBUTTONUP:
 			case WM_RBUTTONUP:
-				make_eventinfo(ei, mouse_window, message, pmdec);
 				msgwnd = bedrock.wd_manager.find_window(native_window, pmdec.mouse.x, pmdec.mouse.y);
 				if(0 == msgwnd)
 					break;
@@ -888,6 +887,7 @@ namespace detail
 				msgwnd->flags.action = mouse_action::normal;
 				if(msgwnd->flags.enabled)
 				{
+					make_eventinfo(ei, msgwnd, message, pmdec);
 					bool hit = is_hit_the_rectangle(msgwnd->rect, pmdec.mouse.x, pmdec.mouse.y);
 					if(bedrock.wd_manager.available(mouse_window) && (msgwnd == mouse_window))
 					{

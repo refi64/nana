@@ -273,6 +273,7 @@ namespace nana{ namespace gui{
 				void set_module(const module_def& md, unsigned pixels)
 				{
 					module_ = &md;
+					md.have_selected = false;
 					if(md.index >= md.items.size())
 						md.index = npos;
 					image_pixels_ = pixels;
@@ -281,7 +282,10 @@ namespace nana{ namespace gui{
 				void set_result()
 				{
 					if(module_)
+					{
 						module_->index = state_.index;
+						module_->have_selected = true;
+					}
 				}
 
 				bool right_area(graph_reference graph, int x, int y) const

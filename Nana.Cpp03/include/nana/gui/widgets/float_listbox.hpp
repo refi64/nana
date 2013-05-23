@@ -34,6 +34,7 @@ namespace nana{ namespace gui{
 				std::vector<item_type> items;
 				std::size_t max_items;	//the number of items display.
 				mutable std::size_t index;		//the result of the selection.
+				mutable bool have_selected;
 
 				module_def();
 			};

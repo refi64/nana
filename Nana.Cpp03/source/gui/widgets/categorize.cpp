@@ -583,7 +583,7 @@ namespace nana{	namespace gui{
 					style_.state = mouse_action::normal;
 
 					bool is_draw = false;
-					if(style_.module.index != npos)
+					if((style_.module.index != npos) && style_.module.have_selected)
 					{
 						switch(style_.list_trigger)
 						{

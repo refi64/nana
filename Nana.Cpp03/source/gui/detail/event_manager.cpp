@@ -244,7 +244,7 @@ namespace detail
 			}
 		}
 
-		bool event_manager::answer(unsigned eventid, window wd, const eventinfo& ei, event_kind::t evtkind)
+		bool event_manager::answer(unsigned eventid, window wd, eventinfo& ei, event_kind::t evtkind)
 		{
 			if(eventid >= event_tag::count)	return false;
 			
@@ -277,6 +277,7 @@ namespace detail
 				}
 			}
 			ei.identifier = eventid;
+			ei.window = wd;
 			queue.invoke(handle_manager_, ei);
 			return (queue.size() != 0);			
 		}

@@ -246,6 +246,7 @@ namespace xcheckbox
 		{
 			uiobj.radio(true);
 			uiobj.check(false);
+			uiobj.react(false);
 
 			element_tag el;
 

@@ -632,6 +632,9 @@ namespace drawerbase
 			void button::_m_shortkey()
 			{
 				eventinfo ei;
+				ei.mouse.x= 0, ei.mouse.y = 0;
+				ei.mouse.left_button = true;
+				ei.mouse.ctrl = ei.mouse.shift = false;
 				API::raise_event<events::click>(handle(), ei);
 			}
 

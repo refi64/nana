@@ -113,14 +113,12 @@ namespace API
 	}
 
 	template<typename Event>
-	void raise_event(window wd, const nana::gui::eventinfo& ei)
+	void raise_event(window wd, eventinfo& ei)
 	{
 		using namespace gui::detail;
 
 		if(nana::traits::is_derived<Event, nana::gui::detail::event_type_tag>::value)
-		{
 			bedrock::raise_event(Event::identifier, reinterpret_cast<bedrock::core_window_t*>(wd), ei, true);
-		}	
 	}
 
 	template<typename Event, typename Function>

@@ -112,13 +112,15 @@ namespace API
 		return 0;
 	}
 
+
 	template<typename Event>
-	void raise_event(window wd, const eventinfo& ei)
+	void raise_event(window wd, eventinfo& ei)
 	{
 		typedef typename std::remove_pointer<typename std::remove_reference<Event>::type>::type event_t;
 		if(std::is_base_of<detail::event_type_tag, event_t>::value)
-			gui::detail::bedrock::raise_event(event_t::identifier, reinterpret_cast<gui::detail::bedrock::core_window_t*>(wd), ei, true);	
+			gui::detail::bedrock::raise_event(event_t::identifier, reinterpret_cast<gui::detail::bedrock::core_window_t*>(wd), ei, true);
 	}
+	
 
 	template<typename Event, typename Function>
 	event_handle bind_event(window trigger, window listener, Function function)

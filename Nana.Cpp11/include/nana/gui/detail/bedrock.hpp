@@ -79,12 +79,12 @@ namespace detail
 		window_manager_t wd_manager;
 		event_manager	evt_manager;
 		runtime_manager<core_window_t*, bedrock>	rt_manager;
-		static bool fire_event_for_drawer(unsigned event_id, core_window_t*, const eventinfo&, thread_context*);
-		static bool fire_event(unsigned event_id, core_window_t*, const eventinfo&);
+		static bool fire_event_for_drawer(unsigned event_id, core_window_t*, eventinfo&, thread_context*);
+		static bool fire_event(unsigned event_id, core_window_t*, eventinfo&);
 
 		//raise_event
 		//@return: Returns true if the window is available, otherwise returns false
-		static bool raise_event(unsigned eventid, core_window_t*, const eventinfo&, bool ask_update);
+		static bool raise_event(unsigned eventid, core_window_t*, eventinfo&, bool ask_update);
 	private:
 		void _m_event_filter(unsigned eventid, core_window_t*, thread_context*);
 	private:

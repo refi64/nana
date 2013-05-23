@@ -115,7 +115,7 @@ namespace detail
 		//delete user event and drawer event handlers of a specified window.
 		//If only_for_drawer is true, it only deletes user events.
 		void umake(window, bool only_for_drawer);
-		bool answer(unsigned eventid, window, const eventinfo&, event_kind);
+		bool answer(unsigned eventid, window, eventinfo&, event_kind);
 		void remove_trash_handle(unsigned tid);
 
 		void write_off_bind(event_handle);

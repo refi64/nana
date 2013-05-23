@@ -111,7 +111,7 @@ namespace detail
 		void umake(event_handle);
 		//delete user event and drawer event handlers of a specified window.
 		void umake(window, bool only_for_drawer);
-		bool answer(unsigned eventid, window, const eventinfo&, event_kind::t);
+		bool answer(unsigned eventid, window, eventinfo&, event_kind::t);
 		void remove_trash_handle(unsigned tid);
 
 		void write_off_bind(event_handle);

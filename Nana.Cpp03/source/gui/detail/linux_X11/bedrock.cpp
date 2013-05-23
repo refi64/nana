@@ -659,14 +659,14 @@ namespace detail
 					{
 						make_eventinfo(ei, msgwnd, message, xevent);
 						bool hit = is_hit_the_rectangle(msgwnd->rect, xevent.xbutton.x, xevent.xbutton.y);
+						bool fire_click = false;
 						if(bedrock.wd_manager.available(mouse_window) && (msgwnd == mouse_window))
 						{
 							if(msgwnd->flags.enabled && hit)
 							{
 								msgwnd->flags.action = mouse_action::over;
 								bedrock.fire_event_for_drawer(event_tag::click, msgwnd, ei, &context);
-								bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
-								bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+								fire_click = true;
 							}
 						}
 					
@@ -677,7 +677,16 @@ namespace detail
 								msgwnd->flags.action = mouse_action::over;
 
 							bedrock.fire_event_for_drawer(event_tag::mouse_up, msgwnd, ei, &context);
+							
+							if(fire_click)
+								bedrock.fire_event(event_tag::click, msgwnd, ei);
+
 							bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
+							bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+						}
+						else if(fire_click)
+						{
+							bedrock.fire_event(event_tag::click, msgwnd, ei);
 							bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
 						}
 					}
@@ -1022,31 +1031,42 @@ namespace detail
 		ei.window = mycast(wnd);
 		ei.mouse.x = lparam.pos.x - wnd->root_x;
 		ei.mouse.y = lparam.pos.y - wnd->root_y;
-		//ei.mouse.button = (msg - WM_LBUTTONDOWN)/3 + 1;
 	}
 
 
-	bool bedrock::fire_event_for_drawer(unsigned event_id, core_window_t* wd, const eventinfo& ei, thread_context* thrd)
+	bool bedrock::fire_event_for_drawer(unsigned event_id, core_window_t* wd, eventinfo& ei, thread_context* thrd)
 	{
-		if(bedrock_object.wd_manager.available(wd) == false) return false;
-		if(thrd) thrd->event_window = wd;
+		if(bedrock_object.wd_manager.available(wd) == false)
+			return false;
+			
+		core_window_t* prev_event_wd;
+		if(thrd)
+		{
+			prev_event_wd = thrd->event_window;
+			thrd->event_window = wd;
+		}
 
 		if(wd->other.upd_state == core_window_t::update_state::none)
 			wd->other.upd_state = core_window_t::update_state::lazy;
-		return bedrock_object.evt_manager.answer(event_id, reinterpret_cast<window>(wd), ei, event_manager::event_kind::trigger);
+		
+		bool ret = bedrock_object.evt_manager.answer(event_id, reinterpret_cast<window>(wd), ei, event_manager::event_kind::trigger);
+
+		if(thrd) thrd->event_window = prev_event_wd;
+		return ret;
 	}
 
-	bool bedrock::fire_event(unsigned event_id, core_window_t* wd, const eventinfo& ei)
+	bool bedrock::fire_event(unsigned event_id, core_window_t* wd, eventinfo& ei)
 	{
-		if(bedrock_object.wd_manager.available(wd) == false) return false;
+		if(bedrock_object.wd_manager.available(wd) == false)
+			return false;
+		
 		return bedrock_object.evt_manager.answer(event_id, reinterpret_cast<window>(wd), ei, event_manager::event_kind::user);
 	}
 
-	bool bedrock::raise_event(unsigned eid, core_window_t* wd, const eventinfo& ei, bool ask_update)
+	bool bedrock::raise_event(unsigned eid, core_window_t* wd, eventinfo& ei, bool ask_update)
 	{
-		if(bedrock_object.wd_manager.available(wd) == false) return false;
-		ei.identifier = eid;
-		ei.window = reinterpret_cast<window>(wd);
+		if(bedrock_object.wd_manager.available(wd) == false)
+			return false;
 
 		thread_context * thrd = bedrock_object.get_thread_context();
 		core_window_t * prev_wd;
@@ -1060,8 +1080,7 @@ namespace detail
 		if(wd->other.upd_state == core_window_t::update_state::none)
 			wd->other.upd_state = core_window_t::update_state::lazy;
 
-		bedrock_object.evt_manager.answer(eid, reinterpret_cast<window>(wd), ei, event_manager::event_kind::trigger);
-		bedrock_object.evt_manager.answer(eid, reinterpret_cast<window>(wd), ei, event_manager::event_kind::user);
+		bedrock_object.evt_manager.answer(eid, reinterpret_cast<window>(wd), ei, event_manager::event_kind::both);
 
 		if(ask_update)
 			bedrock_object.wd_manager.do_lazy_refresh(wd, false);

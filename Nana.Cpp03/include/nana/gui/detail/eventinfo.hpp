@@ -68,8 +68,8 @@ namespace gui
 	//@brief:
 	struct eventinfo
 	{
-		mutable unsigned identifier;	//for identifying what event is
-		mutable gui::window window;		//which window the event triggered on
+		unsigned identifier;	//for identifying what event is
+		gui::window window;		//which window the event triggered on
 
 		union
 		{

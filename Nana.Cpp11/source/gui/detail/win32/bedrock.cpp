@@ -876,18 +876,18 @@ namespace detail
 				msgwnd->flags.action = mouse_action::normal;
 				if(msgwnd->flags.enabled)
 				{
-					bool hit = is_hit_the_rectangle(rectangle(msgwnd->pos_owner, msgwnd->dimension), pmdec.mouse.x, pmdec.mouse.y);
-
 					make_eventinfo(ei, msgwnd, message, pmdec);
 
+					bool hit = is_hit_the_rectangle(msgwnd->dimension, ei.mouse.x, ei.mouse.y);
+
+					bool fire_click = false;
 					if(bedrock.wd_manager.available(mouse_window) && (msgwnd == mouse_window))
 					{
 						if(msgwnd->flags.enabled && hit)
 						{
 							msgwnd->flags.action = mouse_action::over;
 							bedrock.fire_event_for_drawer(event_tag::click, msgwnd, ei, &context);
-							bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
-							bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+							fire_click = true;
 						}
 					}
 				
@@ -898,8 +898,17 @@ namespace detail
 							msgwnd->flags.action = mouse_action::over;
 
 						bedrock.fire_event_for_drawer(event_tag::mouse_up, msgwnd, ei, &context);
+
+						if(fire_click)
+							bedrock.fire_event(event_tag::click, msgwnd, ei);
+
 						bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
 						bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+					}
+					else if(fire_click)
+					{
+						bedrock.fire_event(event_tag::click, msgwnd, ei);
+						bedrock.wd_manager.do_lazy_refresh(msgwnd, false);					
 					}
 				}
 				mouse_window = nullptr;
@@ -1382,9 +1391,11 @@ namespace detail
 		return impl_->keyboard_tracking_state.has_shortkey_occured;
 	}
 
-	bool bedrock::fire_event_for_drawer(unsigned event_id, core_window_t* wd, const eventinfo& ei, thread_context* thrd)
+	bool bedrock::fire_event_for_drawer(unsigned event_id, core_window_t* wd, eventinfo& ei, thread_context* thrd)
 	{
-		if(bedrock_object.wd_manager.available(wd) == false) return false;
+		if(bedrock_object.wd_manager.available(wd) == false)
+			return false;
+
 		core_window_t* prev_event_wd;
 		if(thrd)
 		{
@@ -1394,24 +1405,25 @@ namespace detail
 
 		if(wd->other.upd_state == core_window_t::update_state::none)
 			wd->other.upd_state = core_window_t::update_state::lazy;
+
 		bool ret = bedrock_object.evt_manager.answer(event_id, reinterpret_cast<window>(wd), ei, event_manager::event_kind::trigger);
 
 		if(thrd) thrd->event_window = prev_event_wd;
 		return ret;
 	}
 
-	bool bedrock::fire_event(unsigned event_id, core_window_t* wd, const eventinfo& ei)
-	{
-		if(bedrock_object.wd_manager.available(wd) == false) return false;
-		return bedrock_object.evt_manager.answer(event_id, reinterpret_cast<window>(wd), ei, event_manager::event_kind::user);
-	}
-
-	bool bedrock::raise_event(unsigned eid, core_window_t* wd, const eventinfo& ei, bool ask_update)
+	bool bedrock::fire_event(unsigned event_id, core_window_t* wd, eventinfo& ei)
 	{
 		if(bedrock_object.wd_manager.available(wd) == false)
 			return false;
-		ei.identifier = eid;
-		ei.window = reinterpret_cast<window>(wd);
+
+		return bedrock_object.evt_manager.answer(event_id, reinterpret_cast<window>(wd), ei, event_manager::event_kind::user);
+	}
+
+	bool bedrock::raise_event(unsigned eid, core_window_t* wd, eventinfo& ei, bool ask_update)
+	{
+		if(bedrock_object.wd_manager.available(wd) == false)
+			return false;
 
 		thread_context * thrd = bedrock_object.get_thread_context();
 		core_window_t* prev_event_wd;

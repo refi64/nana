@@ -39,6 +39,7 @@ namespace gui
 		virtual void typeface_changed(graph_reference);
 		virtual void refresh(graph_reference);
 
+		virtual void resizing(graph_reference, const eventinfo&);
 		virtual void resize(graph_reference, const eventinfo&);
 		virtual void move(graph_reference, const eventinfo&);
 		virtual void click(graph_reference, const eventinfo&);
@@ -87,6 +88,7 @@ namespace gui
 			void mouse_up(const eventinfo&);
 			void mouse_wheel(const eventinfo&);
 			void mouse_drop(const eventinfo&);
+			void resizing(const eventinfo&);
 			void resize(const eventinfo&);
 			void move(const eventinfo&);
 			void focus(const eventinfo&);

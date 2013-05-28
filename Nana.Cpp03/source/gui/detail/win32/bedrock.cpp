@@ -639,6 +639,7 @@ namespace detail
 		switch(msg)
 		{
 		case WM_DESTROY:
+		case WM_SIZING:
 		case WM_SIZE:
 		case WM_SETFOCUS:
 		case WM_KILLFOCUS:
@@ -652,7 +653,6 @@ namespace detail
 		case WM_NCRBUTTONDOWN:
 		case WM_NCMBUTTONDOWN:
 		case WM_IME_STARTCOMPOSITION:
-		case WM_SIZING:
 		case WM_DROPFILES:
 		case WM_MOUSELEAVE:
 			return false;
@@ -663,6 +663,60 @@ namespace detail
 
 		ret = ::DefWindowProc(wd, msg, wParam, lParam);
 		return true;
+	}
+
+	void adjust_sizing(bedrock::core_window_t* wd, ::RECT * const r, int edge, unsigned req_width, unsigned req_height)
+	{
+		unsigned width = static_cast<unsigned>(r->right - r->left) - wd->extra_width;
+		unsigned height = static_cast<unsigned>(r->bottom - r->top) - wd->extra_height;
+
+		if(wd->max_track_size.width && (wd->max_track_size.width < req_width))
+			req_width = wd->max_track_size.width;
+		else if(wd->min_track_size.width && (wd->min_track_size.width > req_width))
+			req_width = wd->min_track_size.width;
+
+		if(wd->max_track_size.height && (wd->max_track_size.height < req_height))
+			req_height = wd->max_track_size.height;
+		else if(wd->min_track_size.height && (wd->min_track_size.height > req_height))
+			req_height = wd->min_track_size.height;
+
+		if(req_width != width)
+		{
+			switch(edge)
+			{
+			case WMSZ_LEFT:
+			case WMSZ_BOTTOMLEFT:
+			case WMSZ_TOPLEFT:
+				r->left = r->right - static_cast<int>(req_width) - wd->extra_width;
+				break;
+			case WMSZ_RIGHT:
+			case WMSZ_BOTTOMRIGHT:
+			case WMSZ_TOPRIGHT:
+			case WMSZ_TOP:
+			case WMSZ_BOTTOM:
+				r->right = r->left + static_cast<int>(req_width) + wd->extra_width;
+				break;
+			}
+		}
+
+		if(req_height != height)
+		{
+			switch(edge)
+			{
+			case WMSZ_TOP:
+			case WMSZ_TOPLEFT:
+			case WMSZ_TOPRIGHT:
+				r->top = r->bottom - static_cast<int>(req_height) - wd->extra_height;
+				break;
+			case WMSZ_BOTTOM:
+			case WMSZ_BOTTOMLEFT:
+			case WMSZ_BOTTOMRIGHT:
+			case WMSZ_LEFT:
+			case WMSZ_RIGHT:
+				r->bottom = r->top + static_cast<int>(req_height) + wd->extra_height;
+				break;
+			}
+		}
 	}
 
 	LRESULT CALLBACK Bedrock_WIN32_WindowProc(HWND root_window, UINT message, WPARAM wParam, LPARAM lParam)
@@ -1096,8 +1150,42 @@ namespace detail
 						}
 					}
 
-					if(width + msgwnd->extra_width != static_cast<unsigned>(r->right - r->left) || height + msgwnd->extra_height != static_cast<unsigned>(r->bottom - r->top))
+					nana::size size_before(	static_cast<unsigned>(r->right - r->left - msgwnd->extra_width),
+											static_cast<unsigned>(r->bottom - r->top - msgwnd->extra_height));
+
+					eventinfo ei;
+					ei.identifier = event_tag::sizing;
+					ei.window = reinterpret_cast<window>(msgwnd);
+					ei.sizing.width = size_before.width;
+					ei.sizing.height = size_before.height;
+
+					switch(wParam)
+					{
+					case WMSZ_LEFT:
+						ei.sizing.border = window_border::left;		break;
+					case WMSZ_RIGHT:
+						ei.sizing.border = window_border::right;	break;
+					case WMSZ_BOTTOM:
+						ei.sizing.border = window_border::bottom;	break;
+					case WMSZ_BOTTOMLEFT:
+						ei.sizing.border = window_border::bottom_left;	break;
+					case WMSZ_BOTTOMRIGHT:
+						ei.sizing.border = window_border::bottom_right;	break;
+					case WMSZ_TOP:
+						ei.sizing.border = window_border::top;	break;
+					case WMSZ_TOPLEFT:
+						ei.sizing.border = window_border::top_left;	break;
+					case WMSZ_TOPRIGHT:
+						ei.sizing.border = window_border::top_right;	break;
+					}
+
+					bedrock.raise_event(event_tag::sizing, msgwnd, ei, false);
+
+					if(ei.sizing.width != width || ei.sizing.height != height)
+					{
+						adjust_sizing(msgwnd, r, static_cast<int>(wParam), ei.sizing.width, ei.sizing.height);
 						return TRUE;
+					}
 				}
 				break;
 			case WM_SIZE:

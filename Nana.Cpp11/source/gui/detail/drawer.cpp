@@ -32,7 +32,8 @@ namespace gui
 		void drawer_trigger::detached(){}	//none-const
 		void drawer_trigger::typeface_changed(graph_reference){}
 		void drawer_trigger::refresh(graph_reference){}
-
+		
+		void drawer_trigger::resizing(graph_reference, const eventinfo&){}
 		void drawer_trigger::resize(graph_reference graph, const eventinfo&)
 		{
 			refresh(graph);
@@ -175,6 +176,12 @@ namespace gui
 				realizer_->mouse_drop(graphics, ei);
 				_m_draw_dynamic_drawing_object();
 			}
+		}
+
+		void drawer::resizing(const eventinfo& ei)
+		{
+			if(realizer_)
+				realizer_->resize(graphics, ei);
 		}
 
 		void drawer::resize(const eventinfo& ei)
@@ -417,6 +424,8 @@ namespace gui
 				answer = &drawer::mouse_wheel;	break;
 			case event_tag::mouse_drop:
 				answer = &drawer::mouse_drop;	break;
+			case event_tag::sizing:
+				answer = &drawer::resizing;	break;
 			case event_tag::size:
 				answer = &drawer::resize;	break;
 			case event_tag::move:

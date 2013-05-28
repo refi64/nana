@@ -28,6 +28,13 @@ namespace gui
 		struct event_handle_impl{};
 	}
 
+	enum class window_border
+	{
+		none,
+		left, right, top, bottom,
+		top_left, top_right, bottom_left, bottom_right
+	};
+
 	namespace category
 	{
 		enum class flags

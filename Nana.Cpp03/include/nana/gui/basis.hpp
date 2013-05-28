@@ -28,6 +28,36 @@ namespace gui
 		struct event_handle_impl{};
 	}
 
+	struct window_border
+	{
+		enum t
+		{
+			none,
+			left, right, top, bottom,
+			top_left, top_right, bottom_left, bottom_right			
+		};
+	};
+
+	namespace category
+	{
+		struct flags
+		{
+			enum
+			{
+				super,
+				widget = 0x1,
+				lite_widget_tag = 0x3,
+				root = 0x5,
+				frame = 0x9
+			};
+		};
+
+		struct widget_tag{ enum{value = flags::widget}; };
+		struct lite_widget_tag : widget_tag{ enum{ value = flags::lite_widget_tag};};
+		struct root_tag : widget_tag{ enum { value = flags::root}; };
+		struct frame_tag: widget_tag{ enum { value = flags::frame}; };
+	}// end namespace category
+
 	typedef detail::native_window_handle_impl * native_window_type;
 	typedef detail::window_handle_impl*	window;
 	typedef detail::event_handle_impl*	event_handle;

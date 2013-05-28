@@ -677,67 +677,85 @@ namespace detail
 		//			window_manager will call the function.
 		bool window_manager::size(core_window_t* wd, unsigned width, unsigned height, bool passive, bool ask_update)
 		{
-			if(wd)
+			if(nullptr == wd)
+				return false;
+			
+			//Thread-Safe Required!
+			std::lock_guard<decltype(mutex_)> lock(mutex_);
+			if(handle_manager_.available(wd))
 			{
-				//Thread-Safe Required!
-				std::lock_guard<decltype(mutex_)> lock(mutex_);
-				if(handle_manager_.available(wd))
+				if(wd->dimension.width != width || wd->dimension.height != height)
 				{
-					if(wd->dimension.width != width || wd->dimension.height != height)
+					eventinfo ei;
+					ei.identifier = event_tag::sizing;
+					ei.window = reinterpret_cast<window>(wd);
+					ei.sizing.width = width;
+					ei.sizing.height = height;
+					ei.sizing.border = window_border::none;
+					bedrock::raise_event(event_tag::sizing, wd, ei, false);
+
+					width = ei.sizing.width;
+					height = ei.sizing.height;
+				}
+
+				if(wd->dimension.width != width || wd->dimension.height != height)
+				{
+					if(wd->max_track_size.width && wd->max_track_size.height)
 					{
-						if(wd->max_track_size.width && wd->max_track_size.height)
-						{
-							if(width > wd->max_track_size.width)
-								width = wd->max_track_size.width;
-							if(height > wd->max_track_size.height)
-								height = wd->max_track_size.height;
-						}
-						if(wd->min_track_size.width && wd->min_track_size.height)
-						{
-							if(width < wd->min_track_size.width)
-								width = wd->min_track_size.width;
-							if(height < wd->min_track_size.height)
-								height = wd->min_track_size.height;
-						}
-
-						wd->dimension.width = width;
-						wd->dimension.height = height;
-
-						if(category::lite_widget_tag::value != wd->other.category)
-						{
-							wd->drawer.graphics.make(width, height);
-							if(category::root_tag::value == wd->other.category)
-							{
-								wd->root_graph->make(width, height);
-								if(false == passive)
-									native_interface::window_size(wd->root, width + wd->extra_width, height + wd->extra_height);
-							}
-							else if(category::frame_tag::value == wd->other.category)
-							{
-								native_interface::window_size(wd->other.attribute.frame->container, width, height);
-								for(auto natwd : wd->other.attribute.frame->attach)
-									native_interface::window_size(natwd, width, height);
-							}
-							else
-							{
-								//update the glass buffer of glass window.
-								if(wd->flags.glass && wd->parent)
-								{
-									wd->other.glass_buffer.make(width, height);
-									wndlayout_type::make_glass(wd);
-									wd->other.glass_buffer.paste(wd->drawer.graphics, 0, 0);
-								}
-							}
-						}
-						eventinfo ei;
-						ei.identifier = event_tag::size;
-						ei.window = reinterpret_cast<window>(wd);
-						ei.size.width = width;
-						ei.size.height = height;
-
-						bedrock::raise_event(event_tag::size, wd, ei, ask_update);
-						return true;
+						if(width > wd->max_track_size.width)
+							width = wd->max_track_size.width;
+						if(height > wd->max_track_size.height)
+							height = wd->max_track_size.height;
 					}
+					if(wd->min_track_size.width && wd->min_track_size.height)
+					{
+						if(width < wd->min_track_size.width)
+							width = wd->min_track_size.width;
+						if(height < wd->min_track_size.height)
+							height = wd->min_track_size.height;
+					}
+
+					if(wd->dimension.width == width && wd->dimension.height == height)
+						return false;
+
+					wd->dimension.width = width;
+					wd->dimension.height = height;
+
+					if(category::lite_widget_tag::value != wd->other.category)
+					{
+						wd->drawer.graphics.make(width, height);
+						if(category::root_tag::value == wd->other.category)
+						{
+							wd->root_graph->make(width, height);
+							if(false == passive)
+								native_interface::window_size(wd->root, width + wd->extra_width, height + wd->extra_height);
+						}
+						else if(category::frame_tag::value == wd->other.category)
+						{
+							native_interface::window_size(wd->other.attribute.frame->container, width, height);
+							for(auto natwd : wd->other.attribute.frame->attach)
+								native_interface::window_size(natwd, width, height);
+						}
+						else
+						{
+							//update the glass buffer of glass window.
+							if(wd->flags.glass && wd->parent)
+							{
+								wd->other.glass_buffer.make(width, height);
+								wndlayout_type::make_glass(wd);
+								wd->other.glass_buffer.paste(wd->drawer.graphics, 0, 0);
+							}
+						}
+					}
+
+					eventinfo ei;
+					ei.identifier = event_tag::size;
+					ei.window = reinterpret_cast<window>(wd);
+					ei.size.width = width;
+					ei.size.height = height;
+
+					bedrock::raise_event(event_tag::size, wd, ei, ask_update);
+					return true;
 				}
 			}
 			return false;

@@ -42,12 +42,6 @@ namespace gui
 				unsigned char ctrl;
 			};
 
-			struct tag_size
-			{
-				unsigned width;
-				unsigned height;
-			};
-
 			struct tag_wheel
 			{
 				short x;
@@ -75,7 +69,6 @@ namespace gui
 		{
 			bool exposed;
 			detail::tag_mouse	mouse;
-			detail::tag_size	size;
 			detail::tag_wheel	wheel;
 			detail::tag_keyboard	keyboard;
 			detail::tag_dropinfo	*dropinfo;
@@ -85,6 +78,19 @@ namespace gui
 				int x;
 				int y;
 			}move;
+
+			struct
+			{
+				window_border::t border;
+				mutable unsigned width;
+				mutable unsigned height;
+			}sizing;
+
+			struct
+			{
+				unsigned width;
+				unsigned height;
+			}size;
 
 			struct
 			{
@@ -120,7 +126,7 @@ namespace gui
 				mouse_wheel,
 				mouse_drop,
 				expose,
-				size,
+				sizing, size,
 				move,
 				unload,
 				destroy,
@@ -167,6 +173,7 @@ namespace gui
 		typedef detail::event_template<detail::event_tag::mouse_drop>	mouse_drop;
 
 		typedef detail::event_template<detail::event_tag::expose>		expose;
+		typedef detail::event_template<detail::event_tag::sizing>		sizing;
 		typedef detail::event_template<detail::event_tag::size>			size;
 		typedef detail::event_template<detail::event_tag::move>			move;
 		typedef detail::event_template<detail::event_tag::unload>		unload;

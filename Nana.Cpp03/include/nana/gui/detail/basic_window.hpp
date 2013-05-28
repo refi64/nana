@@ -21,26 +21,6 @@ namespace nana
 {
 namespace gui
 {
-	namespace category
-	{
-		struct flags
-		{
-			enum
-			{
-				super,
-				widget = 0x1,
-				lite_widget_tag = 0x3,
-				root = 0x5,
-				frame = 0x9
-			};
-		};
-
-		struct widget_tag{ enum{value = flags::widget}; };
-		struct lite_widget_tag : widget_tag{ enum{ value = flags::lite_widget_tag};};
-		struct root_tag : widget_tag{ enum { value = flags::root}; };
-		struct frame_tag: widget_tag{ enum { value = flags::frame}; };
-	}// end namespace category
-
 namespace detail
 {
 	template<typename BasicWindow, typename NativeAPI>

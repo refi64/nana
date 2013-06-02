@@ -12,16 +12,29 @@ namespace nana{	namespace gui
 		filebox(window owner, bool is_open_mode);
 		~filebox();
 
-		void title(const nana::string& s);
-		void init_path(const nana::string& s);
+		/**	@brief	specify a title for the dialog
+		 *	@param	string	a text for title
+		 */
+		void title(const nana::string&);
+
+		/**	@brief	specify a suggestion directory
+		 *	@param	string	a path of initial directory
+		 *	@note	the behavior of init_path is different between Win7 and Win2K/XP/Vista, but its behavior under Linux is conformed with Win7.
+		 */
+		void init_path(const nana::string&);
+		void init_file(const nana::string&);
 		void add_filter(const nana::string& description, const nana::string& filetype);
 
+		nana::string path() const;
 		nana::string file() const;
 		
-		//Show the filebox
+		/**	@brief	Display the filebox dialog
+		 */
 		bool show() const;
 		
-		//A function object method alternative to show()
+		/** @brief	Display the filebox dialog
+		 *	@note	A function object method alternative to show()
+		 */
 		bool operator()() const
 		{
 			return show();

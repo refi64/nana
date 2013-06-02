@@ -12,7 +12,7 @@
 	#include <nana/gui/widgets/treebox.hpp>
 	#include <nana/gui/widgets/combox.hpp>
 	#include <nana/filesystem/file_iterator.hpp>
-	#include <nana/gui/layout.hpp>
+	#include <nana/gui/place.hpp>
 	#include <nana/gui/functional.hpp>
 	#include <stdexcept>
 #endif
@@ -248,9 +248,37 @@ namespace nana{	namespace gui
 			def_ext_ = ext;
 		}
 
-		void load_fs(const nana::string& init_path)
+		void load_fs(const nana::string& init_path, const nana::string& init_file)
 		{
-			_m_load_cat_path(init_path.size() ? init_path : nana::filesystem::path_user());
+			//Simulate the behavior like Windows7's lpstrInitialDir(http://msdn.microsoft.com/en-us/library/windows/desktop/ms646839%28v=vs.85%29.aspx)
+
+			//Phase 1
+			nana::string dir;
+
+			std::size_t pos = init_file.find_last_of(STR("\\/"));
+			nana::string file_with_path_removed = (pos != init_file.npos ? init_file.substr(pos + 1) : init_file);
+
+			if(saved_init_path != init_path)
+			{
+				if(saved_init_path.size() == 0)
+					saved_init_path = init_path;
+
+				//Phase 2: Check whether init_file contains a path
+				if(file_with_path_removed == init_file)
+				{
+					//Phase 3: Check whether init_path is empty
+					if(init_path.size())
+						dir = init_path;
+				}
+				else
+					dir = init_file.substr(0, pos);
+			}
+			else
+				dir = saved_selected_path;
+
+			_m_load_cat_path(dir.size() ? dir : nana::filesystem::path_user());
+
+			tb_file_.caption(file_with_path_removed);
 		}
 
 		void add_filter(const nana::string& desc, const nana::string& type)
@@ -286,47 +314,38 @@ namespace nana{	namespace gui
 				cb_types_.anyobj(i, v);
 		}
 
-		bool selected() const
+		bool file(nana::string& fs) const
 		{
-			return (selection_.type != kind::none);
-		}
+			if(selection_.type == kind::none)
+				return false;
 
-		nana::string file() const
-		{
-			if(selection_.type != kind::none)
-				return selection_.target;
-			return nana::string();
+			std::size_t pos = selection_.target.find_last_of(STR("\\/"));
+			if(pos != selection_.target.npos)
+				saved_selected_path = selection_.target.substr(0, pos);
+			else
+				saved_selected_path.clear();
+
+			fs = selection_.target;
+			return true;
 		}
 	private:
 		void _m_layout()
 		{
-			gird_.bind(*this);
-			gird * tmpgd = gird_.push(5, 24);
-			tmpgd->add(path_, 5, 0);
-			tmpgd->add(filter_, 5, 200);
-			tmpgd->add(0, 5);
-			
-			tmpgd = gird_.push(5, 25);
-			tmpgd->add(btn_folder_, 10, 90);
+			place_.bind(*this);
+			place_.div(	"vertical<weight=5>"
+					"<weight=24 path><weight=5>"
+					"<weight=25 new_folder><weight=5>"
+					"<content><weight=8>"
+					"<weight=26<weight=100><vertical weight=60 label><file>><weight=8>"
+					"<weight=26<><buttons weight=208>><weight=14>");
 
-			tmpgd = gird_.push(5, 0);
-			tmpgd->add(tree_, 0, 160);
-			tmpgd->add(ls_file_,0, 0);
-
-			tmpgd = gird_.push(12, 26);
-			tmpgd->add(100, 60)->push(lb_file_, 5, 0);
-			tmpgd->add(tb_file_, 5, 0);
-			tmpgd->add(cb_types_, 10, 190);
-			tmpgd->add(0, 18);
-
-			tmpgd = gird_.push(8, 26);
-			tmpgd->add(0, 0);
-			tmpgd->add(btn_ok_, 0, 88);
-			tmpgd->add(btn_cancel_, 14, 88);
-			tmpgd->add(0, 18);
-
-			gird_.push(0, 14);
-			
+			place_.field("path")<<5<<path_<<5<<place_.fixed(filter_, 200)<<5;
+			place_.field("new_folder")<<10<<place_.fixed(btn_folder_, 100);
+			place_.field("content")<<place_.fixed(tree_, 180)<<5<<ls_file_;
+			place_.field("label")<<5<<lb_file_;
+			place_.field("file")<<5<<tb_file_<<10<<place_.fixed(cb_types_, 190)<<18;
+			place_.field("buttons")<<btn_ok_<<14<<btn_cancel_<<18;
+			place_.collocate();
 		}
 
 		void _m_init_tree()
@@ -770,7 +789,7 @@ namespace nana{	namespace gui
 		bool io_read_;
 		nana::string def_ext_;
 
-		gird	gird_;
+		place	place_;
 		categorize<int> path_;
 		textbox		filter_;
 		button	btn_folder_;
@@ -799,7 +818,12 @@ namespace nana{	namespace gui
 			kind::t type;
 			nana::string target;
 		}selection_;
+		
+		static nana::string saved_init_path;
+		static nana::string saved_selected_path;
 	};//end class filebox_implement
+	nana::string filebox_implement::saved_init_path;
+	nana::string filebox_implement::saved_selected_path;
 
 #endif
 	//class filebox
@@ -825,19 +849,14 @@ namespace nana{	namespace gui
 		{
 			impl_->owner = owner;
 			impl_->open_or_save = open;
-			impl_->file[0] = 0;
 #if defined(NANA_WINDOWS)
-			nana::char_t buf[260];
-			DWORD len = ::GetCurrentDirectory(260, buf);
-			if(len >= 260)
+			DWORD len = ::GetCurrentDirectory(0, 0);
+			if(len)
 			{
-				nana::char_t * p = new nana::char_t[len + 1];
-				::GetCurrentDirectory(len + 1, p);
-				impl_->path = p;
-				delete [] p;
+				impl_->path.resize(len + 1);
+				::GetCurrentDirectory(len, &(impl_->path[0]));
+				impl_->path.resize(len);
 			}
-			else
-				impl_->path = buf;
 #endif
 		}
 
@@ -851,18 +870,28 @@ namespace nana{	namespace gui
 			impl_->title = s;
 		}
 
-		void filebox::init_path(const nana::string& s)
+		void filebox::init_path(const nana::string& ipstr)
 		{
 			nana::filesystem::attribute attr;
-			if(nana::filesystem::file_attrib(s, attr))
+			if(nana::filesystem::file_attrib(ipstr, attr))
 				if(attr.is_directory)
-					impl_->path = s;
+					impl_->path = ipstr;
+		}
+
+		void filebox::init_file(const nana::string& ifstr)
+		{
+			impl_->file = ifstr;
 		}
 
 		void filebox::add_filter(const nana::string& description, const nana::string& filetype)
 		{
 			implement::filter flt = {description, filetype};
 			impl_->filters.push_back(flt);
+		}
+
+		nana::string filebox::path() const
+		{
+			return impl_->path;
 		}
 
 		nana::string filebox::file() const
@@ -873,23 +902,24 @@ namespace nana{	namespace gui
 		bool filebox::show() const
 		{
 #if defined(NANA_WINDOWS)
-			nana::char_t buffer[520];
+			if(impl_->file.size() < 260)
+				impl_->file.resize(260);
+
 			OPENFILENAME ofn;
 			memset(&ofn, 0, sizeof ofn);
 			ofn.lStructSize = sizeof(ofn);
 			ofn.hwndOwner = reinterpret_cast<HWND>(API::root(impl_->owner));
-			ofn.lpstrFile = buffer;
-			ofn.lpstrFile[0] = '\0';
-			ofn.nMaxFile = sizeof(buffer) / sizeof(*buffer) - 1;
+			ofn.lpstrFile = &(impl_->file[0]);
+			ofn.nMaxFile = impl_->file.size() - 1;
 
-			//Filter
-			nana::string filter;
+			const nana::char_t * filter;
+			nana::string filter_holder;
 			if(impl_->filters.size())
 			{
 				for(std::vector<implement::filter>::iterator i = impl_->filters.begin(); i != impl_->filters.end(); ++i)
 				{
-					filter += i->des;
-					filter += static_cast<nana::string::value_type>('\0');
+					filter_holder += i->des;
+					filter_holder += static_cast<nana::string::value_type>('\0');
 					nana::string fs = i->type;
 					std::size_t pos = 0;
 					while(true)
@@ -899,25 +929,24 @@ namespace nana{	namespace gui
 							break;
 						fs.erase(pos);
 					}
-					filter += fs;
-					filter += static_cast<nana::string::value_type>('\0');
+					filter_holder += fs;
+					filter_holder += static_cast<nana::string::value_type>('\0');
 				}
+				filter = filter_holder.data();
 			}
 			else
 				filter = STR("ALl Files\0*.*\0");
 
-			ofn.lpstrFilter = filter.c_str();
+			ofn.lpstrFilter = filter;
 			ofn.lpstrTitle = (impl_->title.size() ? impl_->title.c_str() : 0);
 			ofn.nFilterIndex = 0;
 			ofn.lpstrFileTitle = NULL;
 			ofn.nMaxFileTitle = 0;
 			ofn.lpstrInitialDir = (impl_->path.size() ? impl_->path.c_str() : 0);
-			//ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-			if(FALSE != (impl_->open_or_save ? ::GetOpenFileName(&ofn) : ::GetSaveFileName(&ofn)))
-			{
-				impl_->file = buffer;
-				return true;
-			}
+			if(FALSE == (impl_->open_or_save ? ::GetOpenFileName(&ofn) : ::GetSaveFileName(&ofn)))
+				return false;
+
+			impl_->file.resize(nana::strlen(impl_->file.data()));
 #elif defined(NANA_LINUX)
 			filebox_implement fb(impl_->owner, impl_->open_or_save, impl_->title);
 
@@ -940,18 +969,20 @@ namespace nana{	namespace gui
 			else
 				fb.add_filter(STR("All Files"), STR("*.*"));
 
-			fb.load_fs(impl_->path);
+			fb.load_fs(impl_->path, impl_->file);
 
 			API::modal_window(fb);
-			if(fb.selected())
-			{
-				impl_->file = fb.file();
-				return true;
-			}
+			if(false == fb.file(impl_->file))
+				return false;
 #endif
-			return false;
-		}
-	//end class filebox
+			std::size_t tpos = impl_->file.find_last_of(STR("\\/"));
+			if(tpos != impl_->file.npos)
+				impl_->path = impl_->file.substr(0, tpos);
+			else
+				impl_->path.clear();
+
+			return true;
+		}//end class filebox
 }//end namespace gui
 }//end namespace nana
 

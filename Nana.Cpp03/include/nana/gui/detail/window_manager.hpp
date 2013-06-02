@@ -744,7 +744,7 @@ namespace detail
 					ei.sizing.width = width;
 					ei.sizing.height = height;
 					ei.sizing.border = window_border::none;
-					bedrock::raise_event(event_tag::sizing, wd, ei, false);
+					bedrock_type::raise_event(event_tag::sizing, wd, ei, false);
 
 					width = ei.sizing.width;
 					height = ei.sizing.height;

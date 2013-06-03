@@ -478,7 +478,7 @@ namespace detail
 					ei.window = reinterpret_cast<window>(msgwd);
 
 					bedrock.fire_event(event_tag::mouse_drop, msgwd, ei);
-					bedrock.wd_manager.refresh(msgwd);
+					bedrock.wd_manager.do_lazy_refresh(msgwd, false);
 				}
 				break;
 			default:

@@ -842,13 +842,13 @@ namespace detail
 
 				if(force || (false == belong_to_lazy(wd)))
 				{
-					wndlayout_type::paint(wd, redraw);
+					wndlayout_type::paint(wd, redraw, false);
 					this->map(wd);
 				}
 				else
 				{
 					if(redraw)
-						wndlayout_type::paint(wd, true);
+						wndlayout_type::paint(wd, true, false);
 					if(wd->other.upd_state == core_window_t::update_state::lazy)
 						wd->other.upd_state = core_window_t::update_state::refresh;
 				}
@@ -856,7 +856,7 @@ namespace detail
 			return true;
 		}
 
-		void window_manager::refresh(core_window_t* wd)
+		void window_manager::refresh_tree(core_window_t* wd)
 		{
 			if(wd == nullptr)	return;
 			//Thread-Safe Required!
@@ -882,7 +882,7 @@ namespace detail
 					wd->flags.refreshing = false;
 				}
 				else
-					wndlayout_type::paint(wd, false);
+					wndlayout_type::paint(wd, true, true);
 			}
 		}
 
@@ -918,7 +918,7 @@ namespace detail
 				{
 					if((wd->other.upd_state == core_window_t::update_state::refresh) || force_copy_to_screen)
 					{
-						wndlayout_type::paint(wd, false);
+						wndlayout_type::paint(wd, false, false);
 						this->map(wd);
 					}
 				}

@@ -327,7 +327,8 @@ namespace detail
 		bool belong_to_lazy(core_window_t *) const;
 
 		bool update(core_window_t*, bool redraw, bool force);
-		void refresh(core_window_t*);
+		void refresh_tree(core_window_t*);
+
 		bool do_lazy_refresh(core_window_t*, bool force_copy_to_screen);
 
 		bool get_graphics(core_window_t*, nana::paint::graphics&);

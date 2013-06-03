@@ -622,6 +622,11 @@ namespace API
 		restrict::window_manager.update(reinterpret_cast<restrict::core_window_t*>(wd), true, false);
 	}
 
+	void refresh_window_tree(window wd)
+	{
+		restrict::window_manager.refresh_tree(reinterpret_cast<restrict::core_window_t*>(wd));
+	}
+
 	//update_window
 	//@brief: it displays a window immediately without refreshing.
 	void update_window(window wd)

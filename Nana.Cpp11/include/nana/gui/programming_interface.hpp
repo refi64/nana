@@ -148,14 +148,16 @@ namespace API
 	bool track_window_size(window, const nana::size&, bool true_for_max);
 	void window_enabled(window, bool);
 	bool window_enabled(window);
-	//lazy_refresh:
-	//@brief: A widget drawer draws the widget surface in answering an event. this function will tell the drawer to copy the graphics into window after event answering.
+	
+	/**	@brief	A widget drawer draws the widget surface in answering an event. this function will tell the drawer to copy the graphics into window after event answering.
+	 */
 	void lazy_refresh();
 
-	//refresh_window
-	//@brief:	calls refresh() of a widget's drawer. if currently state is lazy_refresh, Nana.GUI may paste the drawing on the window after an event processing.
-	//			param@window: specify a window to be refreshed.
+	/**	@brief:	calls refresh() of a widget's drawer. if currently state is lazy_refresh, Nana.GUI may paste the drawing on the window after an event processing.
+	 *	@param window: specify a window to be refreshed.
+	 */
 	void refresh_window(window);
+	void refresh_window_tree(window);
 	void update_window(window);
 
 	void window_caption(window, const nana::string& title);

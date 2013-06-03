@@ -36,7 +36,7 @@ namespace detail
 			rectangle r;
 		};
 	public:
-		static void paint(core_window_t* wd, bool is_redraw)
+		static void paint(core_window_t* wd, bool is_redraw, bool is_child_refreshed)
 		{
 			if(false == wd->flags.glass)
 			{
@@ -45,17 +45,16 @@ namespace detail
 					if(wd->flags.refreshing)	return;
 
 					wd->flags.refreshing = true;
-
 					wd->drawer.refresh();
 					wd->flags.refreshing = false;
 				}
-				maproot(wd);
+				maproot(wd, is_child_refreshed);
 			}
 			else
 				_m_paint_glass_window(wd, is_redraw, false);
 		}
 
-		static bool maproot(core_window_t* wd)
+		static bool maproot(core_window_t* wd, bool is_child_refreshed)
 		{
 			nana::rectangle vr;
 			if(read_visual_rectangle(wd, vr))
@@ -66,7 +65,7 @@ namespace detail
 				if(wd->other.category != category::lite_widget_tag::value)
 					root_graph.bitblt(vr, wd->drawer.graphics, nana::point(vr.x - wd->root_x, vr.y - wd->root_y));
 
-				_m_paste_children(wd, vr, root_graph, nana::point());
+				_m_paste_children(wd, is_child_refreshed, vr, root_graph, nana::point());
 
 				if(wd->parent)
 				{
@@ -94,7 +93,7 @@ namespace detail
 								root_graph.bitblt(r, (ov_wd->drawer.graphics), p_src);
 							}
 
-							_m_paste_children(ov_wd, r, root_graph, nana::point());
+							_m_paste_children(ov_wd, is_child_refreshed, r, root_graph, nana::point());
 						}
 					}
 				}
@@ -107,7 +106,7 @@ namespace detail
 		static void paste_children_to_graphics(core_window_t* wd, nana::paint::graphics& graph)
 		{
 			nana::rectangle vis_rect(wd->root_x, wd->root_y, wd->rect.width, wd->rect.height);
-			_m_paste_children(wd, vis_rect, graph, nana::point(wd->root_x, wd->root_y));
+			_m_paste_children(wd, false, vis_rect, graph, nana::point(wd->root_x, wd->root_y));
 		}
 
 		//read_visual_rectangle
@@ -233,26 +232,26 @@ namespace detail
 				for(typename std::vector<core_window_t*>::reverse_iterator i = layers.rbegin(); i != layers_rend; ++i)
 				{
 					core_window_t * pre = *i;
-					if(pre->visible)
-					{
-						core_window_t * term = ((i + 1 != layers_rend) ? *(i + 1) : wd);
-						r.x = wd->root_x - pre->root_x;
-						r.y = wd->root_y - pre->root_y;
-						for(typename std::vector<core_window_t*>::iterator u = pre->children.begin(); u != pre->children.end(); ++u)
-						{
-							core_window_t * x = *u;
-							if(x->index >= term->index)
-								break;
+					if(false == pre->visible)
+						continue;
 
-							nana::rectangle ovlp;
-							if(x->visible && nana::gui::overlap(r, x->rect, ovlp))
-							{
-								if(x->other.category != category::lite_widget_tag::value)
-									glass_buffer.bitblt(nana::rectangle(ovlp.x - pre->rect.x, ovlp.y - pre->rect.y, ovlp.width, ovlp.height), x->drawer.graphics, nana::point(ovlp.x - x->rect.x, ovlp.y - x->rect.y));
-								ovlp.x += pre->root_x;
-								ovlp.y += pre->root_y;
-								_m_paste_children(x, ovlp, glass_buffer, rpos);
-							}
+					core_window_t * term = ((i + 1 != layers_rend) ? *(i + 1) : wd);
+					r.x = wd->root_x - pre->root_x;
+					r.y = wd->root_y - pre->root_y;
+					for(typename std::vector<core_window_t*>::iterator u = pre->children.begin(); u != pre->children.end(); ++u)
+					{
+						core_window_t * x = *u;
+						if(x->index >= term->index)
+							break;
+
+						nana::rectangle ovlp;
+						if(x->visible && nana::gui::overlap(r, x->rect, ovlp))
+						{
+							if(x->other.category != category::lite_widget_tag::value)
+								glass_buffer.bitblt(nana::rectangle(ovlp.x - pre->rect.x, ovlp.y - pre->rect.y, ovlp.width, ovlp.height), x->drawer.graphics, nana::point(ovlp.x - x->rect.x, ovlp.y - x->rect.y));
+							ovlp.x += pre->root_x;
+							ovlp.y += pre->root_y;
+							_m_paste_children(x, false, ovlp, glass_buffer, rpos);
 						}
 					}
 				}
@@ -274,7 +273,7 @@ namespace detail
 
 					ovlp.x += wd->root_x;
 					ovlp.y += wd->root_y;
-					_m_paste_children(x, ovlp, glass_buffer, rpos);
+					_m_paste_children(x, false, ovlp, glass_buffer, rpos);
 				}
 			}
 		}
@@ -282,7 +281,7 @@ namespace detail
 
 		//_m_paste_children
 		//@brief:paste children window to the root graphics directly. just paste the visual rectangle
-		static void _m_paste_children(core_window_t* wd, const nana::rectangle& parent_rect, nana::paint::graphics& graph, const nana::point& graph_rpos)
+		static void _m_paste_children(core_window_t* wd, bool is_child_refreshed, const nana::rectangle& parent_rect, nana::paint::graphics& graph, const nana::point& graph_rpos)
 		{
 			nana::rectangle rect;
 			nana::rectangle child_rect;
@@ -306,12 +305,19 @@ namespace detail
 					{
 						if(child->other.category != category::lite_widget_tag::value)
 						{
+							if(is_child_refreshed && (false == child->flags.refreshing))
+							{
+								child->flags.refreshing = true;
+								child->drawer.refresh();
+								child->flags.refreshing = false;
+							}
+
 							graph.bitblt(nana::rectangle(rect.x - graph_rpos.x, rect.y - graph_rpos.y, rect.width, rect.height),
 										child->drawer.graphics,
 										nana::point(rect.x - child->root_x, rect.y - child->root_y));
 						}
 
-						_m_paste_children(child, rect, graph, graph_rpos);
+						_m_paste_children(child, is_child_refreshed, rect, graph, graph_rpos);
 					}
 				}
 				else
@@ -340,7 +346,7 @@ namespace detail
 
 				//Map Root
 				root_graph.bitblt(vr, wd->drawer.graphics, nana::point(vr.x - wd->root_x, vr.y - wd->root_y));
-				_m_paste_children(wd, vr, root_graph, nana::point());
+				_m_paste_children(wd, false, vr, root_graph, nana::point());
 
 				if(wd->parent)
 				{

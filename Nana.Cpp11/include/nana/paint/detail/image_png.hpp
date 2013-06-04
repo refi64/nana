@@ -145,7 +145,7 @@ namespace nana
 
 			void paste(const nana::rectangle& src_r, graph_reference graph, int x, int y) const
 			{
-				graph.bitblt(x, y, src_r.width, src_r.height, graph_, src_r.x, src_r.y);
+				graph.bitblt(nana::rectangle(x, y, src_r.width, src_r.height), graph_, nana::point(src_r.x, src_r.y));
 			}
 
 			void stretch(const nana::rectangle& src_r, graph_reference dst, const nana::rectangle& r) const

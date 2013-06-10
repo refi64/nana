@@ -6,7 +6,7 @@
  *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://www.boost.org/LICENSE_1_0.txt)
  *
- *	@file: nana/gui/widgets/textbox.hpp
+ *	@file: nana/gui/widgets/textbox.cpp
  */
 
 #include <nana/gui/widgets/textbox.hpp>
@@ -52,7 +52,9 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		void drawer::attached(graph_reference graph)
 		{
 			window wd = widget_->handle();
+
 			editor_ = new text_editor(wd, graph);
+			editor_->textbase().bind_ext_evtbase(extra_evtbase);
 			editor_->border_renderer(nana::make_fun(*this, &drawer::_m_draw_border));
 
 			_m_text_area(graph.width(), graph.height());
@@ -231,6 +233,11 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			create(wd, r, visible);
 		}
 
+		textbox::ext_event_type& textbox::ext_event() const
+		{
+			return get_drawer_trigger().extra_evtbase;
+		}
+
 		void textbox::load(const nana::char_t* file)
 		{
 			internal_scope_guard isg;
@@ -244,7 +251,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			internal_scope_guard isg;
 			const drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
 			if(editor)
-				editor->store(static_cast<std::string>(nana::charset(file)).c_str());
+				editor->textbase().store(static_cast<std::string>(nana::charset(file)).c_str());
 		}
 
 		void textbox::store(const nana::char_t* file, nana::unicode::t encoding) const
@@ -252,7 +259,31 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			internal_scope_guard isg;
 			const drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
 			if(editor)
-				editor->store(static_cast<std::string>(nana::charset(file)).c_str(), encoding);
+				editor->textbase().store(static_cast<std::string>(nana::charset(file)).c_str(), encoding);
+		}
+
+		std::string textbox::filename() const
+		{
+			internal_scope_guard isg;
+			const drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
+			if(editor)
+				return editor->textbase().filename();
+
+			return std::string();
+		}
+
+		bool textbox::edited() const
+		{
+			internal_scope_guard isg;
+			const drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
+			return (editor ? editor->textbase().edited() : false);
+		}
+
+		bool textbox::saved() const
+		{
+			internal_scope_guard isg;
+			const drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
+			return (editor ? editor->textbase().saved() : false);
 		}
 
 		bool textbox::getline(std::size_t n, nana::string& text) const

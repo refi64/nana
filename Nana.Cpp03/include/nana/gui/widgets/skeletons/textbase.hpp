@@ -18,6 +18,8 @@
 #include <fstream>
 #include <nana/charset.hpp>
 
+#include "textbase_extra_evtbase.hpp"
+
 namespace nana
 {
 namespace gui
@@ -28,6 +30,7 @@ namespace skeletons
 {
 	template<typename CharT>
 	class textbase
+		: public noncopyable
 	{
 	public:
 		typedef CharT						char_type;
@@ -35,8 +38,15 @@ namespace skeletons
 		typedef typename string_type::size_type	size_type;
 
 		textbase()
+			: evtbase_(0), changed_(false)
 		{
+			//Insert an empty string for the first line of empty text.
 			text_cont_.push_back(string_type());
+		}
+
+		void bind_ext_evtbase(textbase_extra_evtbase<char_type>& extevt)
+		{
+			evtbase_ = &extevt;
 		}
 
 		bool empty() const
@@ -47,9 +57,6 @@ namespace skeletons
 
 		void load(const char* tfs)
 		{
-			text_cont_.clear();
-			attr_max_.reset();
-
 			std::ifstream ifs(tfs);
 			ifs.seekg(0, std::ios::end);
 			std::size_t bytes = static_cast<std::size_t>(ifs.tellg());
@@ -117,6 +124,9 @@ namespace skeletons
 			ifs.clear();
 			ifs.seekg(0, std::ios::beg);
 
+			text_cont_.clear();		//Clear only if the file can be opened.
+			attr_max_.reset();
+
 			std::string str;
 			std::size_t lines = 0;
 			while(ifs.good())
@@ -162,15 +172,15 @@ namespace skeletons
 
 		void load(const char * tfs, nana::unicode::t encoding)
 		{
-			text_cont_.clear();
-			attr_max_.reset();
-
 			std::ifstream ifs(tfs);
 			std::string str;
 			bool big_endian = true;
 			
 			if(ifs.good())
 			{
+				text_cont_.clear();		//Clear only if the file can be opened.
+				attr_max_.reset();
+
 				std::getline(ifs, str);
 
 				std::size_t len_of_BOM = 0;
@@ -242,6 +252,7 @@ namespace skeletons
 				}
 				std::string mbs = nana::charset(text_cont_.back());
 				ofs.write(mbs.c_str(), static_cast<std::streamsize>(mbs.size()));
+				_m_saved(tfs);
 			}
 		}
 
@@ -277,6 +288,7 @@ namespace skeletons
 				}
 				std::string mbs = nana::charset(text_cont_.back()).to_bytes(encoding);
 				ofs.write(mbs.c_str(), static_cast<std::streamsize>(mbs.size()));
+				_m_saved(tfs);
 			}		
 		}
 
@@ -299,7 +311,7 @@ namespace skeletons
 			return std::make_pair(attr_max_.line, attr_max_.size);
 		}
 	public:
-		void cover(size_type pos, const char_type* text)
+		void replace(size_type pos, const char_type* text)
 		{
 			if(text_cont_.size() <= pos)
 			{
@@ -310,6 +322,7 @@ namespace skeletons
 				text_cont_[pos] = text;
 
 			_m_make_max(pos);
+			_m_edited();
 		}
 
 		void insert(size_type line, size_type pos, const char_type* str)
@@ -329,7 +342,8 @@ namespace skeletons
 				line = text_cont_.size() - 1;
 			}
 
-			this->_m_make_max(line);
+			_m_make_max(line);
+			_m_edited();
 		}
 
 		void insert(size_type line, size_type pos, char_type ch)
@@ -350,6 +364,7 @@ namespace skeletons
 			}
 
 			_m_make_max(line);
+			_m_edited();
 		}
 
 		void insertln(size_type pos, const string_type& str)
@@ -360,6 +375,7 @@ namespace skeletons
 				text_cont_.push_back(str);
 
 			_m_make_max(pos);
+			_m_edited();
 		}
 
 		void erase(size_type line, size_type pos, size_type count)
@@ -373,8 +389,10 @@ namespace skeletons
 					lnstr.erase(pos, count);
 
 				if(attr_max_.line == line)
-					this->_m_scan_for_max();
-			}	
+					_m_scan_for_max();
+
+				_m_edited();
+			}
 		}
 		
 		void erase(size_type pos)
@@ -386,12 +404,15 @@ namespace skeletons
 				_m_scan_for_max();
 			else if(pos < attr_max_.line)
 				attr_max_.line--;
+
+			_m_edited();
 		}
 		
 		void erase_all()
 		{
 			std::deque<string_type>().swap(text_cont_);
 			attr_max_.reset();
+			_m_edited();
 		}
 		
 		void merge(size_type pos)
@@ -403,7 +424,29 @@ namespace skeletons
 				_m_make_max(pos);
 				if(pos < attr_max_.line)
 					attr_max_.line--;
+
+				_m_edited();
 			}
+		}
+
+		const std::string& filename() const
+		{
+			return filename_;
+		}
+
+		bool edited() const
+		{
+			return changed_;
+		}
+
+		bool saved() const
+		{
+			return ! not_saved();
+		}
+
+		bool not_saved() const
+		{
+			return edited() || filename_.empty();
 		}
 	private:
 		void _m_make_max(std::size_t pos)
@@ -430,10 +473,46 @@ namespace skeletons
 				}
 			}
 		}
-		
+
+		void _m_first_change() const
+		{
+			if(evtbase_)
+				evtbase_->first_change();
+		}
+
+        void _m_saved(std::string filename) const
+        {
+            if(filename_ != filename)
+            {
+				filename_.swap(filename);
+                changed_ = false;
+                _m_first_change();
+            } 
+            else if(changed_)
+            {
+                changed_ = false;
+                _m_first_change();
+            }
+            changed_ = false;
+        }
+
+        void _m_edited()
+        {
+            if(!changed_)
+            {
+                changed_ = true;
+                _m_first_change();
+            }
+            changed_ = true;
+        }
 	private:
 		std::deque<string_type>	text_cont_;
+		textbase_extra_evtbase<char_type>*	evtbase_;
+
+		mutable bool		changed_;
+		mutable std::string	filename_;	//A string for saved filename
 		mutable nana::refer<string_type> nullstr_;
+
 		struct attr_max
 		{
 			attr_max()

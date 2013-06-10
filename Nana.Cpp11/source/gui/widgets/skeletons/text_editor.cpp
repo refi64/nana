@@ -6,7 +6,6 @@ namespace nana{	namespace gui{	namespace widgets
 {
 	namespace skeletons
 	{
-
 		//class text_editor
 		text_editor::text_editor(window wd, graph_reference graph)
 			:window_(wd), graph_(graph), mask_char_(0)
@@ -221,6 +220,11 @@ namespace nana{	namespace gui{	namespace widgets
 			return do_draw;
 		}
 
+		textbase<nana::char_t> & text_editor::textbase()
+		{
+			return textbase_;
+		}
+
 		const textbase<nana::char_t> & text_editor::textbase() const
 		{
 			return textbase_;
@@ -239,7 +243,7 @@ namespace nana{	namespace gui{	namespace widgets
 		void text_editor::setline(std::size_t n, const nana::string& text)
 		{
 			bool mkdraw = false;
-			textbase_.cover(n, text.c_str());
+			textbase_.replace(n, text.c_str());
 
 			if((points_.caret.y == n) && (text.size() < points_.caret.x))
 			{
@@ -973,7 +977,7 @@ namespace nana{	namespace gui{	namespace widgets
 					if(orig_str.size() == orig_x)
 						textbase_.insert(caret.y, caret.x, text.substr(beg, end - beg).c_str());
 					else
-						textbase_.cover(caret.y, (orig_str.substr(0, orig_x) + text.substr(beg, end - beg)).c_str());
+						textbase_.replace(caret.y, (orig_str.substr(0, orig_x) + text.substr(beg, end - beg)).c_str());
 
 					std::size_t n = 2;
 					++caret.y;

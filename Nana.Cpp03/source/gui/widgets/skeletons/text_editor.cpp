@@ -43,16 +43,6 @@ namespace nana{	namespace gui{	namespace widgets
 			_m_scrollbar();
 		}
 
-		void text_editor::store(const char* tfs) const
-		{
-			textbase_.store(tfs);
-		}
-
-		void text_editor::store(const char* tfs, nana::unicode::t encoding) const
-		{
-			textbase_.store(tfs, encoding);
-		}
-
 		bool text_editor::text_area(const nana::rectangle& r)
 		{
 			if(text_area_.area == r)
@@ -233,6 +223,16 @@ namespace nana{	namespace gui{	namespace widgets
 			return do_draw;
 		}
 
+		skeletons::textbase<nana::char_t>& text_editor::textbase()
+		{
+			return textbase_;
+		}
+
+		const skeletons::textbase<nana::char_t>& text_editor::textbase() const
+		{
+			return textbase_;
+		}
+
 		std::size_t text_editor::text_lines() const
 		{
 			return textbase_.lines();
@@ -251,7 +251,7 @@ namespace nana{	namespace gui{	namespace widgets
 		void text_editor::setline(std::size_t n, const nana::string& text)
 		{
 			bool mkdraw = false;
-			textbase_.cover(n, text.c_str());
+			textbase_.replace(n, text.c_str());
 
 			if((points_.caret.y == n) && (text.size() < points_.caret.x))
 			{
@@ -984,7 +984,7 @@ namespace nana{	namespace gui{	namespace widgets
 					if(orig_str.size() == orig_x)
 						textbase_.insert(caret.y, caret.x, text.substr(beg, end - beg).c_str());
 					else
-						textbase_.cover(caret.y, (orig_str.substr(0, orig_x) + text.substr(beg, end - beg)).c_str());
+						textbase_.replace(caret.y, (orig_str.substr(0, orig_x) + text.substr(beg, end - beg)).c_str());
 
 					std::size_t n = 2;
 					++caret.y;

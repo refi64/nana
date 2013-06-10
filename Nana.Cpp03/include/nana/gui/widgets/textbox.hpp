@@ -1,6 +1,19 @@
+/*
+ *	A Textbox Implementation
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *
+ *	Distributed under the Boost Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
+ *	http://www.boost.org/LICENSE_1_0.txt)
+ *
+ *	@file: nana/gui/widgets/textbox.hpp
+ */
+
 #ifndef NANA_GUI_WIDGET_TEXTBOX_HPP
 #define NANA_GUI_WIDGET_TEXTBOX_HPP
+
 #include <nana/gui/widgets/widget.hpp>
+#include "skeletons/textbase_extra_evtbase.hpp"
 
 namespace nana{ namespace gui{
 	namespace widgets
@@ -21,6 +34,12 @@ namespace nana{ namespace gui{
 			{
 			public:
 				typedef nana::gui::widgets::skeletons::text_editor text_editor;
+
+				struct extra_evtbase_t
+					: widgets::skeletons::textbase_extra_evtbase<nana::char_t>
+				{};
+
+				mutable extra_evtbase_t	extra_evtbase;
 
 				drawer();
 				bool border(bool);
@@ -60,14 +79,29 @@ namespace nana{ namespace gui{
 	class textbox
 		:public widget_object<category::widget_tag, drawerbase::textbox::drawer>
 	{
+		typedef drawer_trigger_t::extra_evtbase_t ext_event_type;
 	public:
 		textbox();
 		textbox(window, bool visible);
 		textbox(window, const rectangle& = rectangle(), bool visible = true);
 
+		ext_event_type & ext_event() const;
+
 		void load(const nana::char_t* file);
 		void store(const nana::char_t* file) const;
 		void store(const nana::char_t* file, nana::unicode::t encoding) const;
+
+		///@brief	The file of last store operation.
+		///@return	The filename
+		std::string filename() const;
+
+		///@brief	Test the change of text.
+		///@return	Returns true if it is changed.
+		bool edited() const;
+
+		///@brief	Test the text whether it is saved to a file.
+		///@return	Returns true if the textbox saved the change of text.
+		bool saved() const;
 
 		bool getline(std::size_t n, nana::string&) const;
 		textbox& append(const nana::string&, bool at_caret);

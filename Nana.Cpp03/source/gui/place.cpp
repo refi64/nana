@@ -711,6 +711,7 @@ namespace nana{	namespace gui
 		field_impl * field;
 	};
 
+	/// Horizontal
 	class place::implement::div_arrange
 		: public division
 	{
@@ -721,49 +722,48 @@ namespace nana{	namespace gui
 
 		virtual void collocate()
 		{
-			std::pair<unsigned, std::size_t> pair = fixed_pixels(kind::arrange);
-			if(field)
-				pair.first += field->percent_pixels(area.width);
+			std::pair<unsigned, std::size_t> pair = fixed_pixels(kind::arrange);	/// Calcule in first the summe of all fixed fields in this div and in all child div. In second count unproseced fields
+			if(field)																/// Have this div fields? (A pointer to fields in this div)
+				pair.first += field->percent_pixels(area.width);					/// Yes: Calcule summe of width ocupated by each percent-field in this div
 
 			unsigned gap_size = static_cast<unsigned>(gap.kind_of() == number_t::kind::integer ? gap.integer() : area.width * gap.real());
 
 			double percent_pixels = 0;
-
+			/// For each child div: summe of width of each percent-div 
 			for(iterator i = children.begin(), end = children.end(); i != end; ++i)
 			{
 				if((*i)->is_percent())
 					percent_pixels += area.width * (*i)->weight.real();
 			}
 
-			pair.first += static_cast<unsigned>(percent_pixels);
+			pair.first += static_cast<unsigned>(percent_pixels);		/// Calcule width ocupate by all percent fields and div in this div.
 			double adjustable_pixels = (pair.second && pair.first < area.width ? (double(area.width - pair.first) / pair.second) : 0.0);
 
+			/// First collocate child div's !!!
 			double left = area.x;
 			for(iterator i = children.begin(), end = children.end(); i != end; ++i)
 			{
 				division * child = *i;
 
-				child->area.x = static_cast<int>(left);
+				child->area.x = static_cast<int>(left);	/// begening from the left, assing left x
 				child->area.y = area.y;
 				child->area.height = area.height;
 
-				double adj_px;
-				if(false == child->is_fixed()) //the child is adjustable
-				{
-					if(false == child->is_percent())
-					{
-						adj_px = child->fixed_pixels(kind::arrange).first;
-						if(adj_px <= adjustable_pixels)
-							adj_px = adjustable_pixels;
-					}
-					else
-						adj_px = static_cast<unsigned>(area.width * child->weight.real());
-				}
-				else
+				double adj_px;						/// and calcule width of this div.
+				if(child->is_fixed())				/// with is fixed for fixed div 
 					adj_px = child->weight.integer();
+				else if(child->is_percent())		/// and calculated for others: if the child div is percent - simple take it full
+					adj_px = static_cast<unsigned>(area.width * child->weight.real());
+				else
+				{
+					adj_px = child->fixed_pixels(kind::arrange).first;	/// if child div is floating (no fixed and no percent)
+					if(adj_px <= adjustable_pixels)						/// take it width only if it fit into the free place of this div.
+						adj_px = adjustable_pixels;
+				}
+
 				left += adj_px;
 				child->area.width = static_cast<unsigned>(adj_px) - (static_cast<unsigned>(adj_px) > gap_size ? gap_size : 0);
-				child->collocate();
+				child->collocate();	/// The child div have full position. Now we can collocate  inside it the child fields and child-div. 
 			}
 
 			if(field)
@@ -821,11 +821,11 @@ namespace nana{	namespace gui
 
 		virtual void collocate()
 		{
-			std::pair<unsigned, std::size_t> pair = fixed_pixels(kind::vertical_arrange);
-			if(field)
-				pair.first += field->percent_pixels(area.height);
+			std::pair<unsigned, std::size_t> pair = fixed_pixels(kind::vertical_arrange);	/// Calcule in first the summe of all fixed fields in this div and in all child div. In second count unproseced fields
+			if(field)														/// Have this div fields? (A pointer to fields in this div) 
+				pair.first += field->percent_pixels(area.height);			/// Yes: Calcule summe of height ocupated by each percent-field in this div
 
-			unsigned gap_size = static_cast<unsigned>(gap.kind_of() == number_t::kind::integer ? gap.integer() : area.width * gap.real());
+			unsigned gap_size = static_cast<unsigned>(gap.kind_of() == number_t::kind::integer ? gap.integer() : area.height * gap.real());
 
 			double percent_pixels = 0;
 			for(iterator i = children.begin(), end = children.end(); i != end; ++i)

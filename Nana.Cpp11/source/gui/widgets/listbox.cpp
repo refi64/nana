@@ -267,6 +267,13 @@ namespace nana{ namespace gui{
 							flags(r.flags), anyobj(r.anyobj ? new nana::any(*r.anyobj) : nullptr)
 					{}
 
+					item_t(item_t&& r)
+						:	texts(std::move(r.texts)), bkcolor(r.bkcolor), fgcolor(r.fgcolor), img(r.img),
+							flags(r.flags),	anyobj(r.anyobj)
+					{
+						r.anyobj = nullptr;
+					}
+
 					~item_t()
 					{
 						delete anyobj;
@@ -425,22 +432,32 @@ namespace nana{ namespace gui{
 					item_t item;
 					item.texts.push_back(text);
 					auto & catobj = *_m_at(cat);
-					catobj.items.push_back(item);
-					catobj.sorted.push_back(catobj.items.size() - 1);
+
+					auto n = catobj.items.size();
+					catobj.items.emplace_back(std::move(item));
+					catobj.sorted.push_back(n);		//Why not catobj.sorted.push_back(catobj.items.size() - 1) ?
+													//I think it is a compiler bug(VC2012) that catobj.sorted.push_back(catobj.items.size() - 1)
+													//generates a size_t-to-unsigned conversion.
 				}
 
 				bool insert(size_type cat, size_type index, const nana::string& text)
 				{
 					auto & catobj = *_m_at(cat);
+
+					auto n = catobj.items.size();
+					if(index > n)
+						return false;
+
+					catobj.sorted.push_back(n);
+
 					item_t item;
 					item.texts.push_back(text);
-					if(index < catobj.items.size())
+
+					if(index < n)
 						catobj.items.insert(catobj.items.begin() + index, item);
-					else if(index == catobj.items.size())
-						catobj.items.push_back(item);
 					else
-						return false;
-					catobj.sorted.push_back(catobj.items.size() - 1);
+						catobj.items.emplace_back(std::move(item));
+
 					return true;
 				}
 

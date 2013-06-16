@@ -455,22 +455,28 @@ namespace nana{ namespace gui{
 					item_t item;
 					item.texts.push_back(text);
 					container::iterator i = _m_at(cat);
+
+					i->sorted.push_back(i->items.size());
 					i->items.push_back(item);
-					i->sorted.push_back(i->items.size() - 1);
 				}
 
 				bool insert(size_type cat, size_type index, const nana::string& text)
 				{
 					container::iterator i = _m_at(cat);
+
+					std::size_t n = i->items.size();
+					if(index > n)
+						return false;
+
+					i->sorted.push_back(n);
+
 					item_t item;
 					item.texts.push_back(text);
-					if(index < i->items.size())
+					if(index < n)
 						i->items.insert(i->items.begin() + index, item);
-					else if(index == i->items.size())
-						i->items.push_back(item);
 					else
-						return false;
-					i->sorted.push_back(i->items.size() - 1);
+						i->items.push_back(item);
+
 					return true;
 				}
 

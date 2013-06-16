@@ -902,15 +902,15 @@ namespace nana{	namespace gui
 		bool filebox::show() const
 		{
 #if defined(NANA_WINDOWS)
-			if(impl_->file.size() < 260)
-				impl_->file.resize(260);
+			if(impl_->file.size() < 520)
+				impl_->file.resize(520);
 
 			OPENFILENAME ofn;
 			memset(&ofn, 0, sizeof ofn);
 			ofn.lStructSize = sizeof(ofn);
 			ofn.hwndOwner = reinterpret_cast<HWND>(API::root(impl_->owner));
 			ofn.lpstrFile = &(impl_->file[0]);
-			ofn.nMaxFile = impl_->file.size() - 1;
+			ofn.nMaxFile = static_cast<DWORD>(impl_->file.size() - 1);
 
 			const nana::char_t * filter;
 			nana::string filter_holder;

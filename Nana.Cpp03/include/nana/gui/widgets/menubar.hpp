@@ -17,10 +17,11 @@ namespace gui
 				enum state_t{state_normal, state_highlight, state_selected};
 				typedef nana::paint::graphics& graph_reference;
 
-				item_renderer(graph_reference graph);
+				item_renderer(window, graph_reference);
 				virtual void background(const nana::point& pos, const nana::size& size, state_t);
 				virtual void caption(int x, int y, const nana::string& text);
 			private:
+				window	handle_;
 				graph_reference graph_;
 			};
 

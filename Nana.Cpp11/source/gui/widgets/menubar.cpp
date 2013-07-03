@@ -75,25 +75,26 @@ namespace gui
 			};
 
 			//class item_renderer
-				item_renderer::item_renderer(graph_reference graph)
-					:graph_(graph)
+				item_renderer::item_renderer(window wd, graph_reference graph)
+					:handle_(wd), graph_(graph)
 				{}
 
 				void item_renderer::background(const nana::point& pos, const nana::size& size, state_t state)
 				{
+					nana::color_t bground = API::background(handle_);
 					nana::color_t border, body, corner;
 
 					switch(state)
 					{
 					case item_renderer::state_highlight:
 						border = nana::gui::color::highlight;
-						corner = 0xC0DDFC;
 						body = 0xC0DDFC;
+						corner = paint::graphics::mix(body, bground, 0.5);
 						break;
 					case item_renderer::state_selected:
 						border = nana::gui::color::dark_border;
-						corner = nana::gui::color::button_face;
 						body = 0xFFFFFF;
+						corner = paint::graphics::mix(border, bground, 0.5);
 						break;
 					default:	//Don't process other states.
 						return;
@@ -508,9 +509,10 @@ namespace gui
 
 				void trigger::_m_draw()
 				{
-					graph_->rectangle(color::button_face, true);
+					nana::color_t bground_color = API::background(*widget_);
+					graph_->rectangle(bground_color, true);
 
-					item_renderer ird(*graph_);
+					item_renderer ird(*widget_, *graph_);
 
 					nana::point item_pos(2, 2);
 					nana::size item_s(0, 23);
@@ -537,8 +539,8 @@ namespace gui
 						{
 							int x = item_pos.x + item_s.width;
 							int y1 = item_pos.y + 2, y2 = item_pos.y + item_s.height - 1;
-							graph_->line(x, y1, x, y2, color::gray_border);
-							graph_->line(x + 1, y1, x + 1, y2, color::button_face_shadow_end);
+							graph_->line(x, y1, x, y2, paint::graphics::mix(color::gray_border, bground_color, 0.6));
+							graph_->line(x + 1, y1, x + 1, y2, paint::graphics::mix(color::button_face_shadow_end, bground_color, 0.5));
 						}
 
 						//Draw text, the text is transformed from orignal for hotkey character

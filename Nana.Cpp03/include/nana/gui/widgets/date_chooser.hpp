@@ -34,7 +34,7 @@ namespace nana{ namespace gui{
 
 				struct where
 				{
-					enum t{none, left_button, right_utton, topbar, textarea};
+					enum t{none, left_button, right_button, topbar, textarea};
 				};
 
 				struct page

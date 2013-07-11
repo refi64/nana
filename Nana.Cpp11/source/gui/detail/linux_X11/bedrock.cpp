@@ -1109,7 +1109,8 @@ namespace detail
 						wd = wd_manager.find_window(wd->root, wd->pos_root.x, wd->pos_root.y);
 				}
 
-				wd_manager.update(wd, true, true);
+				wd_manager.refresh_tree(wd);
+				wd_manager.map(wd);
 			}
 		}
 	}

@@ -477,8 +477,8 @@ namespace detail
 		case WM_LBUTTONUP: case WM_RBUTTONUP: case WM_MBUTTONUP:
 		case WM_LBUTTONDBLCLK: case WM_MBUTTONDBLCLK: case WM_RBUTTONDBLCLK:
 		case WM_MOUSEMOVE:
-			ei.mouse.x = pmdec.mouse.x - wnd->root_x;
-			ei.mouse.y = pmdec.mouse.y - wnd->root_y;
+			ei.mouse.x = pmdec.mouse.x - wnd->pos_root.x;
+			ei.mouse.y = pmdec.mouse.y - wnd->pos_root.y;
 			ei.mouse.shift = pmdec.mouse.button.shift;
 			ei.mouse.ctrl = pmdec.mouse.button.ctrl;
 
@@ -942,7 +942,7 @@ namespace detail
 				if(msgwnd->flags.enabled)
 				{
 					make_eventinfo(ei, msgwnd, message, pmdec);
-					bool hit = is_hit_the_rectangle(nana::size(msgwnd->rect.width, msgwnd->rect.height), ei.mouse.x, ei.mouse.y);
+					bool hit = is_hit_the_rectangle(msgwnd->dimension, ei.mouse.x, ei.mouse.y);
 
 					bool fire_click = false;
 					if(bedrock.wd_manager.available(mouse_window) && (msgwnd == mouse_window))
@@ -1050,8 +1050,8 @@ namespace detail
 					::ScreenToClient(reinterpret_cast<HWND>(msgwnd->root), &point);
 
 					ei.wheel.upwards = (pmdec.mouse.button.wheel_delta >= 0);
-					ei.wheel.x = static_cast<short>(point.x - msgwnd->root_x);
-					ei.wheel.y = static_cast<short>(point.y - msgwnd->root_y);
+					ei.wheel.x = static_cast<short>(point.x - msgwnd->pos_root.x);
+					ei.wheel.y = static_cast<short>(point.y - msgwnd->pos_root.y);
 
 					bedrock.raise_event(event_tag::mouse_wheel, msgwnd, ei, true);
 				}
@@ -1545,29 +1545,29 @@ namespace detail
 
 	void bedrock::event_expose(core_window_t * wd, bool exposed)
 	{
-		if(wd)
+		if(0 == wd) return;
+
+		eventinfo ei;
+		ei.exposed = exposed;
+		wd->visible = exposed;
+		if(raise_event(event_tag::expose, wd, ei, false))
 		{
-			eventinfo ei;
-			ei.exposed = exposed;
-			wd->visible = exposed;
-			if(raise_event(event_tag::expose, wd, ei, false))
+			if(exposed == false)
 			{
-				if(exposed == false)
+				if(wd->other.category != category::root_tag::value)
 				{
-					if(wd->other.category != category::root_tag::value)
-					{
-						//If the wd->parent is a lite_widget then find a parent until it is not a lite_widget
+					//If the wd->parent is a lite_widget then find a parent until it is not a lite_widget
+					wd = wd->parent;
+
+					while(wd->other.category == category::lite_widget_tag::value)
 						wd = wd->parent;
-
-						while(wd->other.category == category::lite_widget_tag::value)
-							wd = wd->parent;
-					}
-					else if(wd->other.category == category::frame_tag::value)
-						wd = wd_manager.find_window(wd->root, wd->root_x, wd->root_y);
 				}
-
-				wd_manager.update(wd, true, true);
+				else if(wd->other.category == category::frame_tag::value)
+					wd = wd_manager.find_window(wd->root, wd->pos_root.x, wd->pos_root.y);
 			}
+
+			wd_manager.refresh_tree(wd);
+			wd_manager.map(wd);
 		}
 	}
 

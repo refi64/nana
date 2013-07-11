@@ -61,6 +61,8 @@ namespace gui
 
 	namespace detail
 	{
+		struct basic_window;
+
 		namespace dynamic_drawing
 		{
 			//declaration
@@ -77,6 +79,8 @@ namespace gui
 
 			drawer();
 			~drawer();
+
+			void attached(basic_window*);
 
 			void typeface_changed();
 			void click(const eventinfo&);
@@ -115,12 +119,15 @@ namespace gui
 			void stretch(const nana::rectangle& r_dst, const nana::paint::image& img, const nana::rectangle& r_src);
 			event_handle make_event(int evtid, window wd);
 		private:
+			void _m_bground_pre();
+			void _m_bground_end();
 			void _m_draw_dynamic_drawing_object();
 		public:
 			nana::paint::graphics graphics;
 		private:
+			basic_window*	core_window_;
+			drawer_trigger*	realizer_;
 			std::vector<nana::gui::detail::dynamic_drawing::object*>	dynamic_drawing_objects_;
-			drawer_trigger* realizer_;
 			bool refreshing_;
 		};
 	}//end namespace detail

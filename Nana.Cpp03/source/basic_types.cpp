@@ -41,6 +41,13 @@ namespace nana
 		{
 			return ((y > rhs.y) || (y == rhs.y && x >= rhs.x));
 		}
+
+		point& point::operator=(const nana::rectangle& r)
+		{
+			x = r.x;
+			y = r.y;
+			return *this;
+		}
 	//end struct point
 
 	//struct upoint
@@ -88,6 +95,13 @@ namespace nana
 		bool size::operator!=(const size& rhs) const
 		{
 			return (width != rhs.width) || (height != rhs.height);
+		}
+
+		size& size::operator=(const nana::rectangle& r)
+		{
+			width = r.width;
+			height = r.height;
+			return *this;
 		}
 	//end struct size
 

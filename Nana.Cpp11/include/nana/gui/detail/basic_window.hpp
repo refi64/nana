@@ -98,6 +98,7 @@ namespace detail
 		basic_window(basic_window* parent, const rectangle& r, Category**)
 			: other(Category::value)
 		{
+			drawer.attached(this);
 			if(parent)
 			{
 				_m_init_pos_and_size(parent, r);
@@ -171,6 +172,8 @@ namespace detail
 		struct
 		{
 			effects::edge_nimbus	edge_nimbus;
+			effects::bground_interface * bground;
+			double	bground_fade_rate;
 		}effect;
 		
 		struct other_tag

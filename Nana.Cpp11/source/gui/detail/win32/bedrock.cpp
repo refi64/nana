@@ -1538,29 +1538,29 @@ namespace detail
 
 	void bedrock::event_expose(core_window_t * wd, bool exposed)
 	{
-		if(wd)
+		if(nullptr == wd) return;
+
+		eventinfo ei;
+		ei.exposed = exposed;
+		wd->visible = exposed;
+		if(raise_event(event_tag::expose, wd, ei, false))
 		{
-			eventinfo ei;
-			ei.exposed = exposed;
-			wd->visible = exposed;
-			if(raise_event(event_tag::expose, wd, ei, false))
+			if(exposed == false)
 			{
-				if(exposed == false)
+				if(wd->other.category != category::root_tag::value)
 				{
-					if(wd->other.category != category::root_tag::value)
-					{
-						//If the wd->parent is a lite_widget then find a parent until it is not a lite_widget
+					//If the wd->parent is a lite_widget then find a parent until it is not a lite_widget
+					wd = wd->parent;
+
+					while(wd->other.category == category::lite_widget_tag::value)
 						wd = wd->parent;
-
-						while(wd->other.category == category::lite_widget_tag::value)
-							wd = wd->parent;
-					}
-					else if(wd->other.category == category::frame_tag::value)
-						wd = wd_manager.find_window(wd->root, wd->pos_root.x, wd->pos_root.y);
 				}
-
-				wd_manager.update(wd, true, true);
+				else if(wd->other.category == category::frame_tag::value)
+					wd = wd_manager.find_window(wd->root, wd->pos_root.x, wd->pos_root.y);
 			}
+
+			wd_manager.refresh_tree(wd);
+			wd_manager.map(wd);
 		}
 	}
 

@@ -49,6 +49,7 @@
 		<Unit filename="../../source/filesystem/fs_utility.cpp" />
 		<Unit filename="../../source/gui/animation.cpp" />
 		<Unit filename="../../source/gui/basis.cpp" />
+		<Unit filename="../../source/gui/detail/basic_window.cpp" />
 		<Unit filename="../../source/gui/detail/bedrock_selector.cpp" />
 		<Unit filename="../../source/gui/detail/drawer.cpp" />
 		<Unit filename="../../source/gui/detail/event_manager.cpp" />
@@ -57,6 +58,7 @@
 		<Unit filename="../../source/gui/detail/window_manager.cpp" />
 		<Unit filename="../../source/gui/dragger.cpp" />
 		<Unit filename="../../source/gui/drawing.cpp" />
+		<Unit filename="../../source/gui/effects.cpp" />
 		<Unit filename="../../source/gui/functional.cpp" />
 		<Unit filename="../../source/gui/layout.cpp" />
 		<Unit filename="../../source/gui/layout_utility.cpp" />

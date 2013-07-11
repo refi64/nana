@@ -209,7 +209,7 @@ namespace detail
 	template<typename NativeHWND, typename Bedrock>
 	struct root_window_runtime
 	{
-		typedef basic_window<NativeHWND, Bedrock> core_window_t;
+		typedef basic_window core_window_t;
 
 		core_window_t*			window;
 		nana::paint::graphics	root_graph_object;
@@ -260,7 +260,7 @@ namespace detail
 	public:
 		typedef NativeHWND	native_window;
 		typedef Bedrock		bedrock_type;
-		typedef basic_window<native_window, bedrock_type> core_window_t;
+		typedef basic_window core_window_t;
 		typedef std::vector<core_window_t*> cont_type;
 		typedef NativeAPI	interface_type;
 		typedef window_layout<core_window_t>	wndlayout_type;
@@ -268,7 +268,7 @@ namespace detail
 
 		static bool is_queue(core_window_t* wd)
 		{
-			return (wd && wd->other.category == category::root_tag::value);
+			return (wd && (wd->other.category == static_cast<gui::category::flags::t>(category::root_tag::value)));
 		}
 
 		std::size_t number_of_core_window() const
@@ -365,10 +365,10 @@ namespace detail
 
 				if(handle_manager_.available(owner))
 				{
-					ownerWnd = (owner->other.category == category::frame_tag::value ?
+					ownerWnd = (owner->other.category == static_cast<gui::category::flags::t>(category::frame_tag::value) ?
 										owner->other.attribute.frame->container : owner->root_widget->root);
-					r.x += owner->root_x;
-					r.y += owner->root_y;
+					r.x += owner->pos_root.x;
+					r.y += owner->pos_root.y;
 				}
 				else
 					owner = 0;
@@ -397,7 +397,7 @@ namespace detail
 
 				handle_manager_.insert(wd, wd->thread_id);
 
-				if(owner && owner->other.category == category::frame_tag::value)
+				if(owner && (owner->other.category == static_cast<category::flags::t>(category::frame_tag::value)))
 					insert_frame(owner, wd);
 
 				bedrock_type::inc_window(wd->thread_id);
@@ -416,7 +416,7 @@ namespace detail
 			if(handle_manager_.available(parent) == false)	return 0;
 
 			core_window_t * wd = new core_window_t(parent, r, (nana::gui::category::frame_tag**)0);
-			wd->frame_window(interface_type::create_child_window(parent->root, rectangle(wd->root_x, wd->root_y, r.width, r.height)));
+			wd->frame_window(interface_type::create_child_window(parent->root, rectangle(wd->pos_root.x, wd->pos_root.y, r.width, r.height)));
 			handle_manager_.insert(wd, wd->thread_id);
 
 			//Insert the frame_widget into its root frames container.
@@ -430,7 +430,7 @@ namespace detail
 			{
 				//Thread-Safe Required!
 				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
-				if(frame->other.category == category::frame_tag::value)
+				if(frame->other.category == static_cast<category::flags::t>(category::frame_tag::value))
 					frame->other.attribute.frame->attach.push_back(wd);
 				return true;
 			}
@@ -443,9 +443,9 @@ namespace detail
 			{
 				//Thread-Safe Required!
 				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
-				if(frame->other.category == category::frame_tag::value)
+				if(frame->other.category == static_cast<category::flags::t>(category::frame_tag::value))
 				{
-					if(handle_manager_.available(wd) && wd->other.category == category::root_tag::value && wd->root != frame->root)
+					if(handle_manager_.available(wd) && (wd->other.category == static_cast<category::flags::t>(category::root_tag::value)) && (wd->root != frame->root))
 					{
 						frame->other.attribute.frame->attach.push_back(wd->root);
 						return true;
@@ -478,7 +478,7 @@ namespace detail
 			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wd) == false)	return;
 
-			if(wd->other.category == category::root_tag::value)
+			if(wd->other.category == static_cast<category::flags::t>(category::root_tag::value))
 			{
 				eventinfo ei;
 				ei.unload.cancel = false;
@@ -521,7 +521,7 @@ namespace detail
 				if(wd == attr_.capture.window)
 					capture_window(wd, false);
 
-				if(wd->other.category == category::root_tag::value)
+				if(wd->other.category == static_cast<category::flags::t>(category::root_tag::value))
 				{
 					typename root_table_type::value_type* object = root_runtime(wd->root);
 					object->shortkeys.clear();
@@ -555,7 +555,7 @@ namespace detail
 			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wd) == false)	return;
 
-			if(wd->other.category == category::root_tag::value || wd->other.category != category::frame_tag::value)
+			if((wd->other.category == static_cast<category::flags::t>(category::root_tag::value)) || (wd->other.category != static_cast<category::flags::t>(category::frame_tag::value)))
 			{
 				root_table_.erase(wd->root);
 				handle_manager_.remove(wd);
@@ -569,7 +569,7 @@ namespace detail
 				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
-					if(wd->other.category == category::root_tag::value)
+					if(wd->other.category == static_cast<category::flags::t>(category::root_tag::value))
 						interface_type::window_icon(wd->root, img);
 				}
 			}
@@ -596,7 +596,7 @@ namespace detail
 
 					//Don't set the visible attr of a window if it is a root.
 					//The visible attr of a root will be set in the expose event.
-					if(category::root_tag::value != wd->other.category)
+					if(static_cast<category::flags::t>(category::root_tag::value) != wd->other.category)
 						bedrock_type::instance().event_expose(wd, visible);
 
 					if(nv)
@@ -629,14 +629,14 @@ namespace detail
 				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
-					if(wd->other.category != category::root_tag::value)
+					if(wd->other.category != static_cast<category::flags::t>(category::root_tag::value))
 					{
 						//Move child widgets
-						inner_move_helper mv_helper(this, x - wd->rect.x, y - wd->rect.y);
+						inner_move_helper mv_helper(this, x - wd->pos_owner.x, y - wd->pos_owner.y);
 						if(mv_helper.delta_x_ || mv_helper.delta_y_)
 						{
-							wd->rect.x += mv_helper.delta_x_;
-							wd->rect.y += mv_helper.delta_y_;
+							wd->pos_owner.x += mv_helper.delta_x_;
+							wd->pos_owner.y += mv_helper.delta_y_;
 							this->_m_move_core(wd, mv_helper);
 
 							if(wd->together.caret && wd->together.caret->visible())
@@ -667,15 +667,15 @@ namespace detail
 				if(handle_manager_.available(wd))
 				{
 					bool moved = false;
-					const bool size_changed = (width != wd->rect.width || height != wd->rect.height);
-					if(wd->other.category != category::root_tag::value)
+					const bool size_changed = (width != wd->dimension.width || height != wd->dimension.height);
+					if(wd->other.category != static_cast<category::flags::t>(category::root_tag::value))
 					{
 						//Move child widgets
-						inner_move_helper mv_helper(this, x - wd->rect.x, y - wd->rect.y);
+						inner_move_helper mv_helper(this, x - wd->pos_owner.x, y - wd->pos_owner.y);
 						if(mv_helper.delta_x_ || mv_helper.delta_y_)
 						{
-							wd->rect.x += mv_helper.delta_x_;
-							wd->rect.y += mv_helper.delta_y_;
+							wd->pos_owner.x += mv_helper.delta_x_;
+							wd->pos_owner.y += mv_helper.delta_y_;
 							this->_m_move_core(wd, mv_helper);
 							moved = true;
 
@@ -697,8 +697,8 @@ namespace detail
 					{
 						if(size_changed)
 						{
-							wd->rect.width = width;
-							wd->rect.height = height;
+							wd->dimension.width = width;
+							wd->dimension.height = height;
 							wd->drawer.graphics.make(width, height);
 							wd->root_graph->make(width, height);
 							interface_type::move_window(wd->root, x, y, width, height);
@@ -736,7 +736,7 @@ namespace detail
 			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wd))
 			{
-				if(wd->rect.width != width || wd->rect.height != height)
+				if(wd->dimension.width != width || wd->dimension.height != height)
 				{
 					eventinfo ei;
 					ei.identifier = event_tag::sizing;
@@ -750,7 +750,7 @@ namespace detail
 					height = ei.sizing.height;
 				}
 
-				if(wd->rect.width != width || wd->rect.height != height)
+				if(wd->dimension.width != width || wd->dimension.height != height)
 				{
 					if(wd->max_track_size.width && wd->max_track_size.height)
 					{
@@ -767,22 +767,22 @@ namespace detail
 							height = wd->min_track_size.height;
 					}
 
-					if(wd->rect.width == width && wd->rect.height == height)
+					if(wd->dimension.width == width && wd->dimension.height == height)
 						return false;
 
-					wd->rect.width = width;
-					wd->rect.height = height;
+					wd->dimension.width = width;
+					wd->dimension.height = height;
 
-					if(category::lite_widget_tag::value != wd->other.category)
+					if(static_cast<category::flags::t>(category::lite_widget_tag::value) != wd->other.category)
 					{
 						wd->drawer.graphics.make(width, height);
-						if(category::root_tag::value == wd->other.category)
+						if(static_cast<category::flags::t>(category::root_tag::value) == wd->other.category)
 						{
 							wd->root_graph->make(width, height);
 							if(false == passive)
 								interface_type::window_size(wd->root, width + wd->extra_width, height + wd->extra_height);
 						}
-						else if(category::frame_tag::value == wd->other.category)
+						else if(static_cast<category::flags::t>(category::frame_tag::value) == wd->other.category)
 						{
 							interface_type::window_size(wd->other.attribute.frame->container, width, height);
 							std::vector<native_window_type>& cont = wd->other.attribute.frame->attach;
@@ -795,8 +795,7 @@ namespace detail
 							if(wd->flags.glass && wd->parent)
 							{
 								wd->other.glass_buffer.make(width, height);
-								wndlayout_type::make_glass(wd);
-								wd->other.glass_buffer.paste(wd->drawer.graphics, 0, 0);
+								wndlayout_type::make_bground(wd);
 							}
 						}
 					}
@@ -880,19 +879,10 @@ namespace detail
 			if(wd->visible)
 			{
 				for(core_window_t* pnt = wd->parent ; pnt; pnt = pnt->parent)
+				{
 					if(pnt->visible == false)
-					{
-						if(redraw)
-						{
-							if(wd->flags.glass)
-							{
-								wndlayout_type::make_glass(wd);
-								wd->other.glass_buffer.paste(wd->drawer.graphics, 0, 0);
-							}
-							wd->drawer.refresh();
-						}
 						return true;
-					}
+				}
 
 				if(force || (false == belong_to_lazy(wd)))
 				{
@@ -930,13 +920,7 @@ namespace detail
 					parent = parent->parent;
 				}
 
-				if(parent)	//only refreshing if it has an invisible parent
-				{
-					wd->flags.refreshing = true;
-					wd->drawer.refresh();
-					wd->flags.refreshing = false;
-				}
-				else
+				if(0 == parent)	//only refreshing if it has an invisible parent
 					wndlayout_type::paint(wd, true, true);
 			}
 		}
@@ -965,9 +949,7 @@ namespace detail
 
 				if(parent)	//only refreshing if it has an invisible parent
 				{
-					wd->flags.refreshing = true;
-					wd->drawer.refresh();
-					wd->flags.refreshing = false;
+					wndlayout_type::paint(wd, true, false);
 				}
 				else
 				{
@@ -1291,14 +1273,14 @@ namespace detail
 			handle_manager_.delete_trash(tid);
 		}
 
-		bool glass_window(core_window_t* wd, bool isglass)
+		bool enable_effects_bground(core_window_t* wd, bool enabled)
 		{
 			if(wd)
 			{
 				//Thread-Safe Required!
 				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
-					return wndlayout_type::glass_window(wd, isglass);
+					return wndlayout_type::enable_effects_bground(wd, enabled);
 			}
 			return false;
 		}
@@ -1313,8 +1295,8 @@ namespace detail
 				{
 					if(interface_type::calc_window_point(wd->root, pos))
 					{
-						pos.x -= wd->root_x;
-						pos.y -= wd->root_y;
+						pos.x -= wd->pos_root.x;
+						pos.y -= wd->pos_root.y;
 						return true;
 					}
 				}
@@ -1430,8 +1412,7 @@ namespace detail
 			if(root_wd->other.attribute.root->menubar == wd)
 				root_wd->other.attribute.root->menubar = 0;
 
-			if(wd->flags.glass)
-				wndlayout_type::glass_window(wd, false);
+			wndlayout_type::enable_effects_bground(wd, false);
 
 			//test if wd is a TABSTOP window
 			if(wd->flags.tab & nana::gui::detail::tab_type::tabstop)
@@ -1474,7 +1455,7 @@ namespace detail
 				}
 			}
 
-			if(wd->other.category == category::frame_tag::value)
+			if(wd->other.category == static_cast<category::flags::t>(category::frame_tag::value))
 			{
 				//remove the frame handle from the WM frames manager.
 				{
@@ -1493,19 +1474,19 @@ namespace detail
 				interface_type::close_window(wd->other.attribute.frame->container);
 			}
 
-			if(wd->other.category != category::root_tag::value)	//Not a root window
+			if(wd->other.category != static_cast<category::flags::t>(category::root_tag::value))	//Not a root window
 				handle_manager_.remove(wd);
 		}
 
 		void _m_move_core(core_window_t* wd, inner_move_helper& mv_helper)
 		{
-			if(wd->other.category != category::root_tag::value)	//A root widget always starts at (0, 0) and its childs are not to be changed
+			if(wd->other.category != static_cast<category::flags::t>(category::root_tag::value))	//A root widget always starts at (0, 0) and its childs are not to be changed
 			{
-				wd->root_x += mv_helper.delta_x_;
-				wd->root_y += mv_helper.delta_y_;
+				wd->pos_root.x += mv_helper.delta_x_;
+				wd->pos_root.y += mv_helper.delta_y_;
 
-				if(wd->other.category == category::frame_tag::value)
-					interface_type::move_window(wd->other.attribute.frame->container, wd->root_x, wd->root_y);
+				if(wd->other.category == static_cast<category::flags::t>(category::frame_tag::value))
+					interface_type::move_window(wd->other.attribute.frame->container, wd->pos_root.x, wd->pos_root.y);
 
 				std::for_each(wd->children.begin(), wd->children.end(), mv_helper);
 			}
@@ -1521,7 +1502,7 @@ namespace detail
 			for(typename cont_type::reverse_iterator i = wd->children.rbegin(); i != wd->children.rend(); ++i)
 			{
 				core_window_t* result = *i;
-				if((result->other.category != category::root_tag::value) && _m_effective(result, x, y))
+				if((result->other.category != static_cast<category::flags::t>(category::root_tag::value)) && _m_effective(result, x, y))
 				{
 					result = _m_find(result, x, y);
 					if(result)
@@ -1535,7 +1516,7 @@ namespace detail
 		static bool _m_effective(core_window_t* wd, int root_x, int root_y)
 		{
 			if(wd == 0 || wd->visible == 0)	return false;
-			return nana::gui::is_hit_the_rectangle(nana::rectangle(wd->root_x, wd->root_y, wd->rect.width, wd->rect.height), root_x, root_y);
+			return nana::gui::is_hit_the_rectangle(nana::rectangle(wd->pos_root, wd->dimension), root_x, root_y);
 		}
 
 	private:

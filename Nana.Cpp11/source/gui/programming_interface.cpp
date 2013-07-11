@@ -25,6 +25,17 @@ namespace nana{	namespace gui{
 		gui::detail::bedrock::window_manager_t& window_manager = bedrock.wd_manager;
 	}
 
+	namespace effects
+	{
+		class effects_accessor
+		{
+		public:
+			static bground_interface * create(const bground_factory_interface& factory)
+			{
+				return factory.create();
+			}
+		};
+	}
 namespace API
 {
 	void effects_edge_nimbus(window wd, effects::edge_nimbus en)
@@ -72,6 +83,42 @@ namespace API
 				return iwd->effect.edge_nimbus;
 		}
 		return effects::edge_nimbus::none;
+	}
+
+	void effects_background(window wd, const effects::bground_factory_interface& factory, double fade_rate)
+	{
+		if(wd)
+		{
+			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+			internal_scope_guard isg;
+			if(restrict::window_manager.available(iwd))
+			{
+				delete iwd->effect.bground;
+				iwd->effect.bground = effects::effects_accessor::create(factory);
+				if(nullptr == iwd->effect.bground)
+					return;
+
+				iwd->effect.bground_fade_rate = fade_rate;
+				restrict::window_manager.enable_effects_bground(iwd, true);
+				API::refresh_window(wd);
+			}
+		}
+	}
+
+	void effects_background_remove(window wd)
+	{
+		if(nullptr == wd) return;
+
+		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+		internal_scope_guard isg;
+		if(restrict::window_manager.available(iwd))
+		{
+			delete iwd->effect.bground;
+			iwd->effect.bground = nullptr;
+			iwd->effect.bground_fade_rate = 0;
+			restrict::window_manager.enable_effects_bground(iwd, false);
+			API::refresh_window(wd);
+		}
 	}
 
 	namespace dev
@@ -548,7 +595,7 @@ namespace API
 
 	bool track_window_size(window wd, const nana::size& sz, bool true_for_max)
 	{
-		if(wd == 0) return false;
+		if(nullptr == wd) return false;
 
 		restrict::core_window_t* iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 		internal_scope_guard isg;
@@ -1035,7 +1082,11 @@ namespace API
 
 	bool glass_window(window wd, bool isglass)
 	{
-		return restrict::window_manager.glass_window(reinterpret_cast<restrict::core_window_t*>(wd), isglass);
+		if(isglass)
+			effects_background(wd, effects::bground_transparent(0), 0);
+		else
+			effects_background_remove(wd);
+		return true;
 	}
 
 	void take_active(window wd, bool active, window take_if_active_false)

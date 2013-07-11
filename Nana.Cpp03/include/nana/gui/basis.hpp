@@ -42,7 +42,7 @@ namespace gui
 	{
 		struct flags
 		{
-			enum
+			enum t
 			{
 				super,
 				widget = 0x1,

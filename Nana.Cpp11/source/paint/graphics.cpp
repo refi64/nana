@@ -844,12 +844,22 @@ namespace paint
 			}
 		}
 
-		void graphics::blend(int x, int y, unsigned width, unsigned height, nana::color_t color, double fade_rate)
+		void graphics::blend(const nana::rectangle& r, nana::color_t color, double fade_rate)
 		{
 			if(handle_)
 			{
-				nana::paint::detail::blend(handle_, x, y, width, height, color, fade_rate);
+				nana::paint::detail::blend(handle_, r, color, fade_rate);
 				if(changed_ == false) changed_ = true;
+			}
+		}
+
+		void graphics::blur(const nana::rectangle& r, std::size_t radius)
+		{
+			if(handle_)
+			{
+				pixel_buffer pixbuf(handle_, 0, 0);
+				pixbuf.blur(r, radius);
+				pixbuf.paste(handle_, 0, 0);
 			}
 		}
 

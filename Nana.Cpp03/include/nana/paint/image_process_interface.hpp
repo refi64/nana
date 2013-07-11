@@ -44,6 +44,13 @@ namespace nana
 				//@brief: interface of algorithm, pos_beg is a left point, pos_end is a right point.
 				virtual void process(paint::pixel_buffer & pixbuf, const nana::point& pos_beg, const nana::point& pos_end, nana::color_t color, double fade_rate) const = 0;
 			};
+
+			class blur_interface
+			{
+			public:
+				virtual ~blur_interface() = 0;
+				virtual void process(paint::pixel_buffer&, const nana::rectangle& r, std::size_t radius) const = 0;
+			};
 		}
 	}//end namespace paint
 }//end namespace nana

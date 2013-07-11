@@ -63,6 +63,22 @@ namespace nana
 					table_t	table;
 					interface_t * employee;
 				}line_;
+
+				struct blur_tag
+				{
+					typedef paint::image_process::blur_interface	interface_t;
+					typedef pat::cloneable_interface<interface_t>	cloneable_t;
+					typedef std::map<std::string, cloneable_t*>		table_t;
+
+					template<typename ImageProcessor>
+					struct generator
+					{
+						typedef pat::cloneable<ImageProcessor, interface_t>	type;
+					};
+
+					table_t	table;
+					interface_t * employee;				
+				}blur_;
 			public:
 
 				~image_process_provider();
@@ -79,6 +95,10 @@ namespace nana
 				line_tag & ref_line_tag();
 				paint::image_process::line_interface * const * line() const;
 				paint::image_process::line_interface * ref_line(const std::string& name) const;
+
+				blur_tag & ref_blur_tag();
+				paint::image_process::blur_interface * const * blur() const;
+				paint::image_process::blur_interface * ref_blur(const std::string& name) const;
 			public:
 				template<typename Tag>
 				void set(Tag & tag, const std::string& name)

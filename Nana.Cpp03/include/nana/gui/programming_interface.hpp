@@ -23,6 +23,9 @@ namespace API
 	void effects_edge_nimbus(window, effects::edge_nimbus::t);
 	effects::edge_nimbus::t effects_edge_nimbus(window);
 
+	void effects_background(window, const effects::bground_factory_interface&, double fade_rate);
+	void effects_background_remove(window);
+
 	//namespace dev
 	//@brief: The interfaces defined in namespace dev are used for developing the nana.gui
 	namespace dev

@@ -153,6 +153,9 @@
 						RelativePath="..\..\source\gui\drawing.cpp">
 					</File>
 					<File
+						RelativePath="..\..\source\gui\effects.cpp">
+					</File>
+					<File
 						RelativePath="..\..\source\gui\functional.cpp">
 					</File>
 					<File
@@ -182,6 +185,9 @@
 					<Filter
 						Name="detail"
 						Filter="">
+						<File
+							RelativePath="..\..\source\gui\detail\basic_window.cpp">
+						</File>
 						<File
 							RelativePath="..\..\source\gui\detail\drawer.cpp">
 						</File>

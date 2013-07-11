@@ -33,11 +33,21 @@ namespace nana
 
 				//line
 				void line(const std::string& name);
+
 				template<typename ImageProcessor>
 				void add_line(const std::string& name)
 				{
 					detail::image_process_provider & p = detail::image_process_provider::instance();
 					p.add<ImageProcessor>(p.ref_line_tag(), name);
+				}
+				
+				//blur
+				void blur(const std::string& name);
+				template<typename ImageProcessor>
+				void add_blur(const std::string& name)
+				{
+					detail::image_process_provider & p = detail::image_process_provider::instance();
+					p.add<ImageProcessor>(p.ref_blur_tag(), name);
 				}
 			};
 		}

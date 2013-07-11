@@ -179,9 +179,7 @@ namespace nana{ namespace gui{
 							gh.paste(graph, pos.x, pos.y);
 						}
 						else if(state == state_t::normal)
-						{
-							graph.blend(pos.x, pos.y, size.width, size.height, graph.mix(color, 0xC0DDFC, 0.5), 0.25);
-						}
+							graph.blend(nana::rectangle(pos, size), graph.mix(color, 0xC0DDFC, 0.5), 0.25);
 
 						x += scale;
 						width -= scale;

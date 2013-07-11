@@ -69,6 +69,8 @@ namespace nana
 		}u;
 	};
 
+	struct rectangle;
+
 	struct point
 	{
 		point();
@@ -79,6 +81,7 @@ namespace nana
 		bool operator<=(const point&) const;
 		bool operator>(const point&) const;
 		bool operator>=(const point&) const;
+		point& operator=(const rectangle&);
 
 		int x;
 		int y;
@@ -109,6 +112,9 @@ namespace nana
 		bool is_zero() const;
 		bool operator==(const size& rhs) const;
 		bool operator!=(const size& rhs) const;
+
+		size& operator=(const rectangle&);
+
 
 		unsigned width;
 		unsigned height;

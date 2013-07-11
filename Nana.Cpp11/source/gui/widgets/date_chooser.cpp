@@ -630,7 +630,7 @@ namespace nana{ namespace gui{
 							nana::paint::graphics gbuf(r.width, r.height);
 							gbuf.bitblt(r, graph, refpos);
 
-							this->_m_perf_transform(tfid, graph, dirtybuf, gbuf, refpos);
+							_m_perf_transform(tfid, graph, dirtybuf, gbuf, refpos);
 						}
 						else
 							_m_draw(graph);
@@ -651,7 +651,7 @@ namespace nana{ namespace gui{
 			create(wd, rectangle(), visible);
 		}
 
-		date_chooser::date_chooser(window wd, const nana::rectangle& r, bool visible)
+		date_chooser::date_chooser(window wd, const rectangle& r, bool visible)
 		{
 			create(wd, r, visible);
 		}

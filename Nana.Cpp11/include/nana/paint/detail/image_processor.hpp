@@ -364,6 +364,144 @@ namespace detail
 				detail::free_fade_table(fade_table);
 			}
 		};
+
+		class superfast_blur
+			: public image_process::blur_interface
+		{
+			void process(pixel_buffer& pixbuf, const nana::rectangle& area, std::size_t u_radius) const
+			{
+				int radius = static_cast<int>(u_radius);
+				int w = area.width;
+				int h = area.height;
+				int wm = w - 1;
+				int hm = h - 1;
+				int wh = w * h;
+				int div = (radius << 1) + 1;
+
+				int large_edge = (w > h ? w : h);
+				const int div_256 = div * 256;
+
+				std::unique_ptr<int[]> all_table(new int[(wh << 1) + wh + (large_edge << 1) + div_256]);
+
+
+				int * r = all_table.get();
+				int * g = r + wh;
+				int * b = g + wh;
+
+				int * vmin = b + wh;
+				int * vmax = vmin + large_edge;
+
+				int * dv = vmax + large_edge;
+				int end_div = div - 1;
+				for(int i = 0, *dv_block = dv; i < 256; ++i)
+				{
+					for(int u = 0; u < end_div; u += 2)
+					{
+						dv_block[u] = i;
+						dv_block[u + 1] = i;
+					}
+					dv_block[div - 1] = i;
+					dv_block += div;
+				}
+
+				const auto linepix = pixbuf.raw_ptr(area.y) + area.x;
+				const std::size_t line_pixels = pixbuf.size().width;
+
+				int yi = 0, yw = 0;
+				for(int y = 0; y < h; ++y)
+				{
+					int sum_r = 0, sum_g = 0, sum_b = 0;
+					if(radius <= wm)
+					{
+						for(int i = - radius; i <= radius; ++i)
+						{
+							nana::pixel_rgb_t px = linepix[yw + (i > 0 ? i : 0)];
+							sum_r += px.u.element.red;
+							sum_g += px.u.element.green;
+							sum_b += px.u.element.blue;
+						}					
+					}
+					else
+					{
+						for(int i = - radius; i <= radius; ++i)
+						{
+							nana::pixel_rgb_t px = linepix[yw + std::min(wm, (i > 0 ? i : 0))];
+							sum_r += px.u.element.red;
+							sum_g += px.u.element.green;
+							sum_b += px.u.element.blue;
+						}
+					}
+
+					for(int x = 0; x < w; ++x)
+					{
+						r[yi] = dv[sum_r];
+						g[yi] = dv[sum_g];
+						b[yi] = dv[sum_b];
+
+						if(0 == y)
+						{
+							vmin[x] = std::min(x + radius + 1, wm);
+							vmax[x] = std::max(x - radius, 0);
+						}
+
+						nana::pixel_rgb_t p1 = linepix[yw + vmin[x]];
+						nana::pixel_rgb_t p2 = linepix[yw + vmax[x]];
+
+						sum_r += p1.u.element.red - p2.u.element.red;
+						sum_g += p1.u.element.green - p2.u.element.green;
+						sum_b += p1.u.element.blue - p2.u.element.blue;
+						++yi;
+					}
+					yw += static_cast<int>(line_pixels);
+				}
+
+				const int yp_init = -radius * w;
+
+				for(int x = 0; x < w; ++x)
+				{
+					int sum_r = 0, sum_g = 0, sum_b = 0;
+
+					int yp = yp_init;
+					for(int i = -radius; i <= radius; ++i)
+					{
+						if(yp < 1)
+						{
+							sum_r += r[x];
+							sum_g += g[x];
+							sum_b += b[x];
+						}
+						else
+						{
+							int yi = yp + x;
+							sum_r += r[yi];
+							sum_g += g[yi];
+							sum_b += b[yi];
+						}
+						yp += w;
+					}
+
+					int tar_x = x;
+					for(int y = 0; y < h; ++y)
+					{
+						linepix[tar_x].u.color = 0xFF000000 | (dv[sum_r] << 16) | (dv[sum_g] << 8) | dv[sum_b];
+						if(x == 0)
+						{
+							vmin[y] = std::min(y + radius + 1, hm) * w;
+							vmax[y] = std::max(y - radius, 0) * w;
+						}
+
+						int pt1 = x + vmin[y];
+						int pt2 = x + vmax[y];
+
+						sum_r += r[pt1] - r[pt2];
+						sum_g += g[pt1] - g[pt2];
+						sum_b += b[pt1] - b[pt2];
+
+						tar_x += static_cast<int>(line_pixels);
+					}
+				}
+			}
+		};//end class superfast_blur
 	}
 }
 }

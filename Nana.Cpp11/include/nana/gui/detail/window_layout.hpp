@@ -38,7 +38,7 @@ namespace detail
 	public:
 		static void paint(core_window_t* wd, bool is_redraw, bool is_child_refreshed)
 		{
-			if(false == wd->flags.glass)
+			if(nullptr == wd->effect.bground)
 			{
 				if(is_redraw)
 				{
@@ -51,7 +51,7 @@ namespace detail
 				maproot(wd, is_child_refreshed);
 			}
 			else
-				_m_paint_glass_window(wd, is_redraw, false);
+				_m_paint_glass_window(wd, is_redraw, is_child_refreshed, false);
 		}
 
 		static bool maproot(core_window_t* wd, bool is_child_refreshed)
@@ -163,34 +163,34 @@ namespace detail
 			return (blocks.size() != 0);
 		}
 
-		static bool glass_window(core_window_t * wd, bool isglass)
+		static bool enable_effects_bground(core_window_t * wd, bool enabled)
 		{
-			if((wd->other.category == category::widget_tag::value) && (wd->flags.glass != isglass))
-			{
-				wd->flags.glass = isglass;
-				auto i = std::find(data_sect.glass_window_cont.begin(), data_sect.glass_window_cont.end(), wd);
-				if(i != data_sect.glass_window_cont.end())
-				{
-					if(false == isglass)
-					{
-						data_sect.glass_window_cont.erase(i);
-						wd->other.glass_buffer.release();
-						return true;
-					}
-				}
-				else if(isglass)
-					data_sect.glass_window_cont.push_back(wd);
+			if((wd->other.category != category::widget_tag::value) || (wd->flags.glass == enabled))
+				return false;
 
-				if(isglass)
-					wd->other.glass_buffer.make(wd->dimension.width, wd->dimension.height);
-				return true;
+			wd->flags.glass = enabled;
+			//Find the window whether it is registered for the bground effects
+			auto i = std::find(data_sect.effects_bground_windows.begin(), data_sect.effects_bground_windows.end(), wd);
+			if(i != data_sect.effects_bground_windows.end())
+			{
+				if(false == enabled)
+				{
+					data_sect.effects_bground_windows.erase(i);
+					wd->other.glass_buffer.release();
+					return true;
+				}
 			}
-			return false;
+			else if(enabled)
+				data_sect.effects_bground_windows.push_back(wd);
+
+			if(enabled)
+				wd->other.glass_buffer.make(wd->dimension.width, wd->dimension.height);
+			return true;
 		}
 
-		//make_glass
+		//make_bground
 		//		update the glass buffer of a glass window.
-		static void make_glass(core_window_t* const wd)
+		static void make_bground(core_window_t* const wd)
 		{
 			nana::point rpos(wd->pos_root);
 			auto & glass_buffer = wd->other.glass_buffer;
@@ -254,6 +254,9 @@ namespace detail
 					_m_paste_children(child, false, ovlp, glass_buffer, rpos);
 				}
 			}
+
+			if(wd->effect.bground)
+				wd->effect.bground->take_effect(reinterpret_cast<window>(wd), glass_buffer);
 		}
 	private:
 
@@ -268,31 +271,27 @@ namespace detail
 				if((false == child->visible) || (child->drawer.graphics.empty() && (child->other.category != category::lite_widget_tag::value)))
 					continue;
 
-				if(false == child->flags.glass)
+				if(nullptr == child->effect.bground)
 				{
 					if(overlap(nana::rectangle(child->pos_root, child->dimension), parent_rect, rect))
 					{
 						if(child->other.category != category::lite_widget_tag::value)
 						{
 							if(is_child_refreshed && (false == child->flags.refreshing))
-							{
-								child->flags.refreshing = true;
-								child->drawer.refresh();
-								child->flags.refreshing = false;
-							}
+								paint(child, true, true);
+
 							graph.bitblt(nana::rectangle(rect.x - graph_rpos.x, rect.y - graph_rpos.y, rect.width, rect.height),
 										child->drawer.graphics, nana::point(rect.x - child->pos_root.x, rect.y - child->pos_root.y));
 						}
-
 						_m_paste_children(child, is_child_refreshed, rect, graph, graph_rpos);
 					}
 				}
 				else
-					_m_paint_glass_window(child, false, false);
+					_m_paint_glass_window(child, false, is_child_refreshed, false);
 			}
 		}
 
-		static void _m_paint_glass_window(core_window_t* wd, bool is_redraw, bool called_by_notify)
+		static void _m_paint_glass_window(core_window_t* wd, bool is_redraw, bool is_child_refreshed, bool called_by_notify)
 		{
 			if(wd->flags.refreshing && is_redraw)	return;
 
@@ -302,10 +301,9 @@ namespace detail
 				if(is_redraw || called_by_notify)
 				{
 					if(called_by_notify)
-						make_glass(wd);
+						make_bground(wd);
 
 					wd->flags.refreshing = true;
-					wd->other.glass_buffer.paste(wd->drawer.graphics, 0, 0);
 					wd->drawer.refresh();
 					wd->flags.refreshing = false;
 				}
@@ -313,7 +311,7 @@ namespace detail
 				auto & root_graph = *(wd->root_graph);
 				//Map root
 				root_graph.bitblt(vr, wd->drawer.graphics, nana::point(vr.x - wd->pos_root.x, vr.y - wd->pos_root.y));
-				_m_paste_children(wd, false, vr, root_graph, nana::point());
+				_m_paste_children(wd, is_child_refreshed, vr, root_graph, nana::point());
 
 				if(wd->parent)
 				{
@@ -334,7 +332,7 @@ namespace detail
 		static void _m_notify_glasses(core_window_t* const sigwd, const nana::rectangle& r_visual)
 		{
 			nana::rectangle r_of_sigwd(sigwd->pos_root, sigwd->dimension);
-			for(auto wd : data_sect.glass_window_cont)
+			for(auto wd : data_sect.effects_bground_windows)
 			{
 				if(wd == sigwd || !wd->visible ||
 					(false == overlap(nana::rectangle(wd->pos_root, wd->dimension), r_of_sigwd)))
@@ -348,11 +346,11 @@ namespace detail
 				if(sigwd->parent == wd->parent)
 				{
 					if(sigwd->index < wd->index)
-						_m_paint_glass_window(wd, true, true);
+						_m_paint_glass_window(wd, true, false, true);
 				}
 				else if(sigwd == wd->parent)
 				{
-					_m_paint_glass_window(wd, true, true);
+					_m_paint_glass_window(wd, true, false, true);
 				}
 				else
 				{
@@ -362,14 +360,14 @@ namespace detail
 						signode = signode->parent;
 
 					if(signode->parent && (signode->index < wd->index))
-						_m_paint_glass_window(wd, true, true);
+						_m_paint_glass_window(wd, true, false, true);
 				}
 			}
 		}
 	private:
 		struct data_section
 		{
-			std::vector<core_window_t*> 	glass_window_cont;
+			std::vector<core_window_t*> 	effects_bground_windows;
 		};
 		static data_section	data_sect;
 	};//end class window_layout

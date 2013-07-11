@@ -259,7 +259,7 @@ namespace xcheckbox
 			element_tag el;
 
 			el.uiobj = &uiobj;
-			el.eh_checked = uiobj.make_event<events::mouse_up>(*this, &radio_group::_m_checked);
+			el.eh_checked = uiobj.make_event<events::click>(*this, &radio_group::_m_checked);
 			el.eh_destroy = uiobj.make_event<events::destroy>(*this, &radio_group::_m_destroy);
 
 			ui_container_.push_back(el);

@@ -27,6 +27,7 @@ namespace nana{	namespace paint
 
 		~pixel_buffer();
 
+		bool open(drawable_type);
 		bool open(drawable_type, const nana::rectangle& want_rectangle);
 		bool open(std::size_t width, std::size_t height);
 
@@ -59,6 +60,8 @@ namespace nana{	namespace paint
 		void stretch(const nana::rectangle& src_r, drawable_type, const nana::rectangle& r) const;
 		void blend(const std::string& name);
 		void blend(const nana::point& s_pos, drawable_type dw_dst, const nana::rectangle& d_r, double fade_rate) const;
+
+		void blur(const nana::rectangle& r, std::size_t radius);
 
 	private:
 		nana::refer<pixel_buffer_storage*> storage_ref_;

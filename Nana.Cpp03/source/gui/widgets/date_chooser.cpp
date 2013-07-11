@@ -78,7 +78,7 @@ namespace nana{ namespace gui{
 							if(x < border_size + 16)
 								return where::left_button;
 							else if(xend - border_size - 16 < x)
-								return where::right_utton;
+								return where::right_button;
 							return where::topbar;
 						}
 					}
@@ -131,7 +131,7 @@ namespace nana{ namespace gui{
 					const nana::color_t color = color_.normal;
 
 					nana::paint::gadget::arrow_16_pixels(graph, border_size, ypos, (pos_ == where::left_button ? color_.highlight : color), 1, nana::paint::gadget::directions::to_west);
-					nana::paint::gadget::arrow_16_pixels(graph, graph.width() - (border_size + 16 + 1), ypos, (pos_ == where::right_utton ? color_.highlight : color), 1, nana::paint::gadget::directions::to_east);
+					nana::paint::gadget::arrow_16_pixels(graph, graph.width() - (border_size + 16 + 1), ypos, (pos_ == where::right_button ? color_.highlight : color), 1, nana::paint::gadget::directions::to_east);
 
 					if(graph.width() > 32 + border_size * 2)
 					{
@@ -187,11 +187,11 @@ namespace nana{ namespace gui{
 					tpos.x -= dbasis.refpos.x;
 					tpos.y -= dbasis.refpos.y;
 
-					if(pos_ == where::textarea
-						&& r.x <= tpos.x
-						&& tpos.x < r.x + static_cast<int>(r.width)
-						&& r.y <= tpos.y
-						&& tpos.y < r.y + static_cast<int>(r.height))
+					if((pos_ == where::textarea)
+						&& (r.x <= tpos.x)
+						&& (tpos.x < r.x + static_cast<int>(r.width))
+						&& (r.y <= tpos.y)
+						&& (tpos.y < r.y + static_cast<int>(r.height)))
 					{
 						if((page_ != page::date) || y)
 						{
@@ -207,17 +207,11 @@ namespace nana{ namespace gui{
 						graph.rectangle(r, color_.selected, false);
 					}
 
-					x = r.x + r.width / 2;
-					y = r.y + r.height / 2;
-
-					nana::size txt_s = graph.text_extent_size(str);
-					x -= txt_s.width / 2;
-					y -= txt_s.height / 2;
-
 					if(primary == false)
 						color = 0xB0B0B0;
 
-					graph.string(x, y, color, str);
+					nana::size txt_s = graph.text_extent_size(str);
+					graph.string(r.x + static_cast<int>(r.width - txt_s.width) / 2, r.y + static_cast<int>(r.height - txt_s.height) / 2, color, str);
 				}
 
 				void trigger::_m_draw_pos(drawing_basis & dbasis, graph_reference graph, int x, int y, int number, bool primary, bool sel)
@@ -290,7 +284,7 @@ namespace nana{ namespace gui{
 					int y = (x ? 1 : 2);
 
 					//draw the days that before the first day of this month
-					this->_m_draw_ex_days(dbasis, graph, 0, 0, true);
+					_m_draw_ex_days(dbasis, graph, 0, 0, true);
 					//
 					int days = static_cast<int>(nana::date::month_days(chmonth_.year, chmonth_.month));
 
@@ -314,7 +308,7 @@ namespace nana{ namespace gui{
 						++y;
 					}
 
-					this->_m_draw_ex_days(dbasis, graph, x, y, false);
+					_m_draw_ex_days(dbasis, graph, x, y, false);
 				}
 
 				void trigger::_m_draw_months(const nana::point& refpos, graph_reference graph)
@@ -396,7 +390,7 @@ namespace nana{ namespace gui{
 							nana::system::sleep(sleep_time);
 						}
 					}
-					else if(tfid == transform_action::to_leave)
+					else if(tfid == transform_action::to_left)
 					{
 						double delta = dirtybuf.width() / double(count);
 
@@ -585,7 +579,7 @@ namespace nana{ namespace gui{
 							redraw = false;
 						}
 					}
-					else if(pos == where::left_button || pos == where::right_utton)
+					else if(pos == where::left_button || pos == where::right_button)
 					{
 						int end_m;
 						int beg_m;
@@ -682,7 +676,7 @@ namespace nana{ namespace gui{
 		void date_chooser::monthstr(unsigned index, const nana::string& str)
 		{
 			get_drawer_trigger().month_name(index, str);
-			nana::gui::API::refresh_window(*this);
+			API::refresh_window(*this);
 		}
 
 

@@ -80,7 +80,7 @@ namespace gui
 
 		//class drawer
 		drawer::drawer()
-			:	realizer_(0), refreshing_(false)
+			:	core_window_(0), realizer_(0), refreshing_(false)
 		{
 		}
 
@@ -93,6 +93,11 @@ namespace gui
 			}
 		}
 
+		void drawer::attached(basic_window* cw)
+		{
+			core_window_ = cw;
+		}
+
 		void drawer::typeface_changed()
 		{
 			if(realizer_)
@@ -103,8 +108,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->click(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -112,8 +119,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->dbl_click(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -121,8 +130,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->mouse_enter(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -130,8 +141,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->mouse_move(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -139,8 +152,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->mouse_leave(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -148,8 +163,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->mouse_down(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -157,8 +174,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->mouse_up(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -166,8 +185,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->mouse_wheel(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -175,23 +196,32 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->mouse_drop(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
 		void drawer::resizing(const eventinfo& ei)
 		{
 			if(realizer_)
+			{
+				_m_bground_pre();
 				realizer_->resizing(graphics, ei);
+				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
+			}
 		}
 
 		void drawer::resize(const eventinfo& ei)
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->resize(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -199,8 +229,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->move(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -208,8 +240,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->focus(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -217,8 +251,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->key_down(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -226,8 +262,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->key_char(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -235,8 +273,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->key_up(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -244,8 +284,10 @@ namespace gui
 		{
 			if(realizer_)
 			{
+				_m_bground_pre();
 				realizer_->shortkey(graphics, ei);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 			}
 		}
 
@@ -293,8 +335,10 @@ namespace gui
 			if(realizer_ && (refreshing_ == false))
 			{
 				refreshing_ = true;
+				_m_bground_pre();
 				realizer_->refresh(graphics);
 				_m_draw_dynamic_drawing_object();
+				_m_bground_end();
 				graphics.flush();
 				refreshing_ = false;
 			}
@@ -449,6 +493,18 @@ namespace gui
 				return bedrock.evt_manager.make_for_drawer(evtid, wd, bedrock.category(reinterpret_cast<bedrock::core_window_t*>(wd)), drawer_binder(*this, answer));
 
 			return 0;
+		}
+
+		void drawer::_m_bground_pre()
+		{
+			if(core_window_->effect.bground && core_window_->effect.bground_fade_rate < 0.01)
+				core_window_->other.glass_buffer.paste(graphics, 0, 0);
+		}
+
+		void drawer::_m_bground_end()
+		{
+			if(core_window_->effect.bground && core_window_->effect.bground_fade_rate >= 0.01)
+				core_window_->other.glass_buffer.blend(graphics, 0, 0, core_window_->effect.bground_fade_rate);
 		}
 
 		void drawer::_m_draw_dynamic_drawing_object()

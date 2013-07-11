@@ -165,6 +165,7 @@
     <ClCompile Include="..\..\source\filesystem\fs_utility.cpp" />
     <ClCompile Include="..\..\source\gui\animation.cpp" />
     <ClCompile Include="..\..\source\gui\basis.cpp" />
+    <ClCompile Include="..\..\source\gui\detail\basic_window.cpp" />
     <ClCompile Include="..\..\source\gui\detail\drawer.cpp" />
     <ClCompile Include="..\..\source\gui\detail\event_manager.cpp" />
     <ClCompile Include="..\..\source\gui\detail\native_window_interface.cpp" />
@@ -173,6 +174,7 @@
     <ClCompile Include="..\..\source\gui\detail\window_manager.cpp" />
     <ClCompile Include="..\..\source\gui\dragger.cpp" />
     <ClCompile Include="..\..\source\gui\drawing.cpp" />
+    <ClCompile Include="..\..\source\gui\effects.cpp" />
     <ClCompile Include="..\..\source\gui\functional.cpp" />
     <ClCompile Include="..\..\source\gui\layout.cpp" />
     <ClCompile Include="..\..\source\gui\layout_utility.cpp" />

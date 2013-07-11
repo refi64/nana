@@ -116,7 +116,9 @@ namespace nana
 
 			void blend(graphics& dst, int x, int y, double fade_rate) const;
 			void blend(const nana::point& s_pos, graphics& dst, const nana::rectangle& r, double fade_rate) const;
-			void blend(int x, int y, unsigned width, unsigned height, nana::color_t, double fade_rate);
+			void blend(const nana::rectangle& r, nana::color_t, double fade_rate);
+
+			void blur(const nana::rectangle& r, std::size_t radius);
 
 			void paste(const graphics& dst, int x, int y) const;
 			void paste(native_window_type dst, const nana::rectangle&, int sx, int sy) const;

@@ -69,10 +69,10 @@ namespace nana{	namespace gui{
 						if(el == wd)
 							rendered = true;
 
-						r.x = el->root_x - static_cast<int>(pixels);
-						r.y = el->root_y - static_cast<int>(pixels);
-						r.width = static_cast<unsigned>(el->rect.width + (pixels << 1));
-						r.height = static_cast<unsigned>(el->rect.height + (pixels << 1));
+						r.x = el->pos_root.x - static_cast<int>(pixels);
+						r.y = el->pos_root.y - static_cast<int>(pixels);
+						r.width = static_cast<unsigned>(el->dimension.width + (pixels << 1));
+						r.height = static_cast<unsigned>(el->dimension.height + (pixels << 1));
 						graph->paste(native, r, r.x, r.y);
 					}
 
@@ -103,7 +103,7 @@ namespace nana{	namespace gui{
 				nana::rectangle good_r;
 				if(nana::gui::overlap(r, nana::rectangle(wd->root_graph->size()), good_r))
 				{
-					if(	(good_r.x < wd->root_x) || (good_r.y < wd->root_y) ||
+					if(	(good_r.x < wd->pos_root.x) || (good_r.y < wd->pos_root.y) ||
 						(good_r.x + good_r.width > visual.x + visual.width) || (good_r.y + good_r.height > visual.y + visual.height))
 					{
 						nana::paint::graphics * graph = wd->root_graph;

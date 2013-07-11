@@ -33,14 +33,20 @@ namespace nana{	namespace paint
 			paint::image_process::blend_interface * const * blend;
 			paint::image_process::line_interface * line_receptacle;
 			paint::image_process::line_interface * const * line;
+			paint::image_process::blur_interface * blur_receptacle;
+			paint::image_process::blur_interface * const * blur;
 
 			image_processor_tag()
-				: stretch_receptacle(nullptr), blend_receptacle(nullptr), line_receptacle(nullptr)
+				:	stretch_receptacle(nullptr),
+					blend_receptacle(nullptr),
+					line_receptacle(nullptr),
+					blur_receptacle(nullptr)
 			{
 				detail::image_process_provider & provider = detail::image_process_provider::instance();
 				stretch = provider.stretch();
 				blend = provider.blend();
 				line = provider.line();
+				blur = provider.blur();
 			}
 		}img_pro;
 
@@ -835,13 +841,23 @@ namespace nana{	namespace paint
 	void pixel_buffer::blend(const nana::point& s_pos, drawable_type dw_dst, const nana::rectangle& r_dst, double fade_rate) const
 	{
 		pixel_buffer_storage * sp = storage_.get();
-		if(sp == 0) return;
+		if(nullptr == sp) return;
 
 		nana::rectangle s_r(s_pos.x, s_pos.y, r_dst.width, r_dst.height);
 
 		nana::rectangle s_good_r, d_good_r;
 		if(gui::overlap(s_r, sp->pixel_size, r_dst, paint::detail::drawable_size(dw_dst), s_good_r, d_good_r))
 			(*(sp->img_pro.blend))->process(dw_dst, d_good_r, *this, nana::point(s_good_r.x, s_good_r.y), fade_rate);
+	}
+
+	void pixel_buffer::blur(const nana::rectangle& r, std::size_t radius)
+	{
+		auto sp = storage_.get();
+		if(nullptr == sp || radius < 1)	return;
+
+		nana::rectangle good_r;
+		if(gui::overlap(r, this->size(), good_r))
+			(*(sp->img_pro.blur))->process(*this, good_r, radius);
 	}
 }//end namespace paint
 }//end namespace nana

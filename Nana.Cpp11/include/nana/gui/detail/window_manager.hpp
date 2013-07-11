@@ -352,7 +352,7 @@ namespace detail
 
 		void remove_trash_handle(unsigned tid);
 
-		bool glass_window(core_window_t*, bool isglass);
+		bool enable_effects_bground(core_window_t*, bool);
 
 		bool calc_window_point(core_window_t*, nana::point& pos);
 

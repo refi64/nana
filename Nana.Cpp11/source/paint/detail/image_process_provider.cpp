@@ -12,6 +12,7 @@ namespace paint
 		stretch_interface::~stretch_interface(){}
 		blend_interface::~blend_interface(){}
 		line_interface::~line_interface(){}
+		blur_interface::~blur_interface(){}
 	}
 
 	namespace detail
@@ -25,10 +26,11 @@ namespace paint
 
 		image_process_provider::image_process_provider()
 		{
-			this->add<paint::detail::algorithms::bilinear_interoplation>(stretch_, "bilinear interoplation");
-			this->add<paint::detail::algorithms::proximal_interoplation>(stretch_, "proximal interoplation");
-			this->add<paint::detail::algorithms::blend>(blend_, "blend");
-			this->add<paint::detail::algorithms::bresenham_line>(line_, "bresenham_line");
+			add<paint::detail::algorithms::bilinear_interoplation>(stretch_, "bilinear interoplation");
+			add<paint::detail::algorithms::proximal_interoplation>(stretch_, "proximal interoplation");
+			add<paint::detail::algorithms::blend>(blend_, "blend");
+			add<paint::detail::algorithms::bresenham_line>(line_, "bresenham_line");
+			add<paint::detail::algorithms::superfast_blur>(blur_, "superfast_blur");
 		}
 
 		image_process_provider::~image_process_provider()
@@ -80,6 +82,22 @@ namespace paint
 		paint::image_process::line_interface * image_process_provider::ref_line(const std::string& name) const
 		{
 			return _m_read(line_, name);
+		}
+
+		//Blur
+		image_process_provider::blur_tag & image_process_provider::ref_blur_tag()
+		{
+			return blur_;
+		}
+
+		paint::image_process::blur_interface * const * image_process_provider::blur() const
+		{
+			return &blur_.employee;
+		}
+
+		paint::image_process::blur_interface * image_process_provider::ref_blur(const std::string& name) const
+		{
+			return _m_read(blur_, name);
 		}
 	//end class image_process_provider
 	}

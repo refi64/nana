@@ -33,14 +33,20 @@ namespace nana{	namespace paint
 			paint::image_process::blend_interface * const * blend;
 			paint::image_process::line_interface * line_receptacle;
 			paint::image_process::line_interface * const * line;
+			paint::image_process::blur_interface * blur_receptacle;
+			paint::image_process::blur_interface * const * blur;
 
 			image_processor_tag()
-				: stretch_receptacle(0), blend_receptacle(0), line_receptacle(0)
+				:	stretch_receptacle(0),
+					blend_receptacle(0),
+					line_receptacle(0),
+					blur_receptacle(0)
 			{
 				detail::image_process_provider & provider = detail::image_process_provider::instance();
 				stretch = provider.stretch();
 				blend = provider.blend();
 				line = provider.line();
+				blur = provider.blur();
 			}
 		}img_pro;
 
@@ -76,6 +82,59 @@ namespace nana{	namespace paint
 	pixel_buffer::~pixel_buffer()
 	{
 		close();
+	}
+
+	bool pixel_buffer::open(drawable_type drawable)
+	{
+		nana::size sz = nana::paint::detail::drawable_size(drawable);
+		if(sz.is_zero()) return false;
+
+		pixel_buffer_storage * sp = (storage_ref_.empty() ? 0 : storage_ref_.handle());
+		if((0 == sp) || (sp->pixel_size != sz))
+		{
+			storage_ref_ = new pixel_buffer_storage(sz.width, sz.height);
+			sp = storage_ref_.handle();
+		}
+
+#if defined(NANA_WINDOWS)
+		BITMAPINFO bmpinfo;
+		bmpinfo.bmiHeader.biSize = sizeof(bmpinfo.bmiHeader);
+		bmpinfo.bmiHeader.biWidth = sz.width;
+		bmpinfo.bmiHeader.biHeight = -static_cast<int>(sz.height);
+		bmpinfo.bmiHeader.biPlanes = 1;
+		bmpinfo.bmiHeader.biBitCount = 32;
+		bmpinfo.bmiHeader.biCompression = BI_RGB;
+		bmpinfo.bmiHeader.biSizeImage = static_cast<DWORD>(sz.width * sz.height * sizeof(pixel_rgb_t));
+		bmpinfo.bmiHeader.biClrUsed = 0;
+		bmpinfo.bmiHeader.biClrImportant = 0;
+
+		std::size_t read_lines = ::GetDIBits(drawable->context, drawable->pixmap, 0, static_cast<UINT>(sz.height), sp->raw_pixel_buffer, &bmpinfo, DIB_RGB_COLORS);
+
+		return (sz.height == read_lines);
+#elif defined(NANA_X11)
+		nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
+		Window root;
+		int x, y;
+		unsigned width, height;
+		unsigned border, depth;
+		nana::detail::platform_scope_guard psg;
+		::XGetGeometry(spec.open_display(), drawable->pixmap, &root, &x, &y, &width, &height, &border, &depth);
+
+		XImage * image = ::XGetImage(spec.open_display(), drawable->pixmap, 0, 0, sz.width, sz.height, AllPlanes, ZPixmap);
+		pixel_rgb_t * pixbuf = sp->raw_pixel_buffer;
+		if(image->depth == 32 || (image->depth == 24 && image->bitmap_pad == 32))
+		{
+			memcpy(pixbuf, image->data, image->bytes_per_line * image->height);
+		}
+		else
+		{
+			XDestroyImage(image);
+			return false;
+		}
+
+		XDestroyImage(image);
+		return true;
+#endif
 	}
 
 	bool pixel_buffer::open(drawable_type drawable, const nana::rectangle & want_rectangle)
@@ -795,6 +854,16 @@ namespace nana{	namespace paint
 		nana::rectangle s_good_r, d_good_r;
 		if(nana::gui::overlap(s_r, sp->pixel_size, r_dst, paint::detail::drawable_size(dw_dst), s_good_r, d_good_r))
 			(*(sp->img_pro.blend))->process(dw_dst, d_good_r, *this, nana::point(s_good_r.x, s_good_r.y), fade_rate);
+	}
+
+	void pixel_buffer::blur(const nana::rectangle& r, std::size_t radius)
+	{
+		pixel_buffer_storage* sp = storage_ref_.handle();
+		if(0 == sp || radius < 1)	return;
+
+		nana::rectangle good_r;
+		if(gui::overlap(r, this->size(), good_r))
+			(*(sp->img_pro.blur))->process(*this, good_r, radius);
 	}
 }//end namespace paint
 }//end namespace nana

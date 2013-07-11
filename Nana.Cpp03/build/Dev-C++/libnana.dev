@@ -1,7 +1,7 @@
 [Project]
 FileName=libnana.dev
 Name=libnana
-UnitCount=74
+UnitCount=76
 Type=2
 Ver=1
 ObjFiles=
@@ -779,6 +779,26 @@ BuildCmd=
 
 [Unit74]
 FileName=..\..\source\gui\animation.cpp
+CompileCpp=1
+Folder=nana/gui
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit75]
+FileName=..\..\source\gui\detail\basic_window.cpp
+CompileCpp=1
+Folder=nana/gui/detail
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit76]
+FileName=..\..\source\gui\effects.cpp
 CompileCpp=1
 Folder=nana/gui
 Compile=1

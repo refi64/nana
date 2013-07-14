@@ -997,10 +997,10 @@ namespace gui
 
 				void trigger::refresh(graph_reference graph)
 				{
-					if(0 == impl_->wd) return;
+					if(nullptr == impl_->wd) return;
 
 					window wd = impl_->wd->handle();
-					if(false == API::glass_window(wd))
+					if(bground_mode::basic != API::effects_bground_mode(wd))
 						graph.rectangle(API::background(wd), true);
 
 					impl_->renderer->render(*impl_->wd, graph, impl_->text_align);
@@ -1027,14 +1027,15 @@ namespace gui
 
 		void label::transparent(bool value)
 		{
-			internal_scope_guard isg;
-			if(API::glass_window(this->handle(), value))
-				API::refresh_window(this->handle());
+			if(value)
+				API::effects_bground(handle(), effects::bground_transparent(0), 0.0);
+			else
+				API::effects_bground_remove(handle());
 		}
 
 		bool label::transparent() const
 		{
-			return API::glass_window(this->handle());
+			return (bground_mode::basic == API::effects_bground_mode(handle()));
 		}
 
 		void label::format(bool f)

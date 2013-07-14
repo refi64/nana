@@ -85,27 +85,40 @@ namespace API
 		return effects::edge_nimbus::none;
 	}
 
-	void effects_background(window wd, const effects::bground_factory_interface& factory, double fade_rate)
+	void effects_bground(window wd, const effects::bground_factory_interface& factory, double fade_rate)
 	{
-		if(wd)
+		if(nullptr == wd)
+			return;
+		
+		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+		internal_scope_guard isg;
+		if(restrict::window_manager.available(iwd))
 		{
-			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-			internal_scope_guard isg;
-			if(restrict::window_manager.available(iwd))
-			{
-				delete iwd->effect.bground;
-				iwd->effect.bground = effects::effects_accessor::create(factory);
-				if(nullptr == iwd->effect.bground)
-					return;
+			auto new_effect_ptr = effects::effects_accessor::create(factory);
+			if(nullptr == new_effect_ptr)
+				return;
 
-				iwd->effect.bground_fade_rate = fade_rate;
-				restrict::window_manager.enable_effects_bground(iwd, true);
-				API::refresh_window(wd);
-			}
+			delete iwd->effect.bground;
+			iwd->effect.bground = new_effect_ptr;
+			iwd->effect.bground_fade_rate = fade_rate;
+			restrict::window_manager.enable_effects_bground(iwd, true);
+			API::refresh_window(wd);
 		}
 	}
 
-	void effects_background_remove(window wd)
+	bground_mode effects_bground_mode(window wd)
+	{
+		if(nullptr == wd) return bground_mode::none;
+
+		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+		internal_scope_guard isg;
+		if(restrict::window_manager.available(iwd) && iwd->effect.bground)
+			return (iwd->effect.bground_fade_rate <= 0.009 ? bground_mode::basic : bground_mode::blend);
+
+		return bground_mode::none;
+	}
+
+	void effects_bground_remove(window wd)
 	{
 		if(nullptr == wd) return;
 
@@ -113,11 +126,8 @@ namespace API
 		internal_scope_guard isg;
 		if(restrict::window_manager.available(iwd))
 		{
-			delete iwd->effect.bground;
-			iwd->effect.bground = nullptr;
-			iwd->effect.bground_fade_rate = 0;
-			restrict::window_manager.enable_effects_bground(iwd, false);
-			API::refresh_window(wd);
+			if(restrict::window_manager.enable_effects_bground(iwd, false))
+				API::refresh_window(wd);
 		}
 	}
 
@@ -1067,25 +1077,19 @@ namespace API
 		return reinterpret_cast<window>(ts_wd);
 	}
 
-	//glass_window
+	//glass_window deprecated
 	//@brief: Test a window whether it is a glass attribute.
 	bool glass_window(window wd)
 	{
-		if(wd)
-		{
-			internal_scope_guard isg;
-			if(restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)))
-				return reinterpret_cast<restrict::core_window_t*>(wd)->flags.glass;
-		}
-		return false;
+		return (bground_mode::basic == effects_bground_mode(wd));
 	}
 
-	bool glass_window(window wd, bool isglass)
+	bool glass_window(window wd, bool isglass)	//deprecated
 	{
 		if(isglass)
-			effects_background(wd, effects::bground_transparent(0), 0);
+			effects_bground(wd, effects::bground_transparent(0), 0);
 		else
-			effects_background_remove(wd);
+			effects_bground_remove(wd);
 		return true;
 	}
 

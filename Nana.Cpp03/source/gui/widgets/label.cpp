@@ -1000,7 +1000,7 @@ namespace gui
 					if(0 == impl_->wd) return;
 
 					nana::gui::window wd = impl_->wd->handle();
-					if(false == API::glass_window(wd))
+					if(bground_mode::basic != API::effects_bground_mode(wd))
 						graph.rectangle(0, 0, graph.width(), graph.height(), API::background(wd), true);
 
 					impl_->renderer->render(*impl_->wd, graph, impl_->text_align);
@@ -1025,16 +1025,17 @@ namespace gui
 			create(wd, r, visible);
 		}
 
-		void label::transparent(bool value)
+		void label::transparent(bool enabled)
 		{
-			nana::gui::internal_scope_guard isg;
-			if(API::glass_window(this->handle(), value))
-				API::refresh_window(this->handle());
+			if(enabled)
+				API::effects_bground(*this, effects::bground_transparent(0), 0.0);
+			else
+				API::effects_bground_remove(*this);
 		}
 
 		bool label::transparent() const
 		{
-			return API::glass_window(this->handle());
+			return (bground_mode::basic == API::effects_bground_mode(*this));
 		}
 
 		void label::format(bool f)

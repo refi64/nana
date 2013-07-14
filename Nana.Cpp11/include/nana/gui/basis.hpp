@@ -35,6 +35,13 @@ namespace gui
 		top_left, top_right, bottom_left, bottom_right
 	};
 
+	enum class bground_mode
+	{
+		none,
+		basic,
+		blend
+	};
+
 	namespace category
 	{
 		enum class flags

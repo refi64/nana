@@ -148,7 +148,7 @@ namespace detail
 					for(++i; i < end; ++i)
 					{
 						core_window_t* cover = *i;
-						if(cover->visible && (cover->flags.glass == false))
+						if(cover->visible && (nullptr == cover->effect.bground))
 						{
 							if(overlap(vis_rect, rectangle(cover->pos_root, cover->dimension), block.r))
 							{
@@ -165,26 +165,36 @@ namespace detail
 
 		static bool enable_effects_bground(core_window_t * wd, bool enabled)
 		{
-			if((wd->other.category != category::widget_tag::value) || (wd->flags.glass == enabled))
+			if(wd->other.category != category::widget_tag::value)
 				return false;
 
-			wd->flags.glass = enabled;
+			if(false == enabled)
+			{
+				delete wd->effect.bground;
+				wd->effect.bground = nullptr;
+				wd->effect.bground_fade_rate = 0;
+			}
+
 			//Find the window whether it is registered for the bground effects
 			auto i = std::find(data_sect.effects_bground_windows.begin(), data_sect.effects_bground_windows.end(), wd);
 			if(i != data_sect.effects_bground_windows.end())
 			{
-				if(false == enabled)
-				{
-					data_sect.effects_bground_windows.erase(i);
-					wd->other.glass_buffer.release();
-					return true;
-				}
-			}
-			else if(enabled)
-				data_sect.effects_bground_windows.push_back(wd);
+				//If it has already registered, do nothing.
+				if(enabled)
+					return false;
 
-			if(enabled)
-				wd->other.glass_buffer.make(wd->dimension.width, wd->dimension.height);
+				//Disable the effect.
+				data_sect.effects_bground_windows.erase(i);
+				wd->other.glass_buffer.release();
+				return true;
+			}
+			//No such effect has registered.
+			if(false == enabled)
+				return false;
+
+			//Enable the effect.
+			data_sect.effects_bground_windows.push_back(wd);
+			wd->other.glass_buffer.make(wd->dimension.width, wd->dimension.height);
 			return true;
 		}
 

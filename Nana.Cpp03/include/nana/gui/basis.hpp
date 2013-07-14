@@ -38,6 +38,16 @@ namespace gui
 		};
 	};
 
+	struct bground_mode
+	{
+		enum t
+		{
+			none,
+			basic,
+			blend
+		};
+	};
+
 	namespace category
 	{
 		struct flags

@@ -180,7 +180,7 @@ namespace nana{	namespace gui{
 
 						paint_size_ = size;
 					}
-
+				
 					native_interface::caret_pos(wd_->root, wd_->pos_root.x + pos.x, wd_->pos_root.y + pos.y);
 				}
 			}
@@ -249,7 +249,7 @@ namespace nana{	namespace gui{
 			//@brief: bind a native window and baisc_window
 			void basic_window::bind_native_window(native_window_type wd, unsigned width, unsigned height, unsigned extra_width, unsigned extra_height, nana::paint::graphics& graphics)
 			{
-				if(static_cast<category::flags::t>(category::root_tag::value) == this->other.category)
+				if(category::root_tag::value == this->other.category)
 				{
 					this->root = wd;
 					dimension.width = width;
@@ -263,7 +263,7 @@ namespace nana{	namespace gui{
 
 			void basic_window::frame_window(native_window_type wd)
 			{
-				if(static_cast<category::flags::t>(category::frame_tag::value) == this->other.category)
+				if(category::frame_tag::value == this->other.category)
 					other.attribute.frame->container = wd;
 			}
 
@@ -281,14 +281,14 @@ namespace nana{	namespace gui{
 
 			void basic_window::_m_initialize(basic_window* agrparent)
 			{
-				if(other.category == static_cast<category::flags::t>(category::root_tag::value))
+				if(other.category == category::root_tag::value)
 				{
 					if(agrparent && (nana::system::this_thread_id() != agrparent->thread_id))
 						agrparent = 0;
 
-					while(agrparent && (agrparent->other.category != static_cast<category::flags::t>(category::root_tag::value)))
+					while(agrparent && (agrparent->other.category != category::root_tag::value))
 						agrparent = agrparent->parent;
-
+				
 					owner = agrparent;
 					parent = 0;
 					index = 0;
@@ -309,7 +309,6 @@ namespace nana{	namespace gui{
 				flags.dbl_click = true;
 				flags.enabled = true;
 				flags.modal = false;
-				flags.glass = false;
 				flags.take_active = true;
 				flags.dropable = false;
 				flags.fullscreen = false;

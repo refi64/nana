@@ -248,7 +248,7 @@ namespace gui
 
 			void picture_drawer::_m_draw_background()
 			{
-				if(graph_ && (false == API::glass_window(*widget_)))
+				if(graph_ && (bground_mode::basic != API::effects_bground_mode(*widget_)))
 				{
 					if(runtime_.background_shadow_end == runtime_.background_shadow_start)
 						graph_->rectangle((runtime_.background_shadow_end ? runtime_.background_shadow_end : widget_->background()), true);
@@ -289,15 +289,17 @@ namespace gui
 			get_drawer_trigger().set_shadow_background(begin_color, end_color, horizontal);
 		}
 
-		void picture::transparent(bool v)
+		void picture::transparent(bool enabled)
 		{
-			if(API::glass_window(*this, v))
-				API::refresh_window(*this);
+			if(enabled)
+				API::effects_bground(*this, effects::bground_transparent(0), 0.0);
+			else
+				API::effects_bground_remove(*this);
 		}
 
 		bool picture::transparent() const
 		{
-			return API::glass_window(*this);
+			return (bground_mode::basic == API::effects_bground_mode(*this));
 		}
 	//end class picture
 }//end namespace gui

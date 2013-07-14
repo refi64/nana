@@ -182,7 +182,8 @@ namespace nana{ namespace gui{
 				{
 					if(other_.graph && !other_.graph->size().is_zero())
 					{
-						proto_.renderer->refer().background(other_.wd, *other_.graph, API::glass_window(other_.wd));
+						bool is_transparent = (bground_mode::basic == API::effects_bground_mode(other_.wd));
+						proto_.renderer->refer().background(other_.wd, *other_.graph, is_transparent);
 						_m_draw_objects();
 					}
 				}
@@ -833,14 +834,17 @@ namespace nana{ namespace gui{
 			get_drawer_trigger().ctrl()->ext_provider(pi);
 		}
 
-		void slider::transparent(bool tr)
+		void slider::transparent(bool enabled)
 		{
-			API::glass_window(handle(), tr);
+			if(enabled)
+				API::effects_bground(*this, effects::bground_transparent(0), 0.0);
+			else
+				API::effects_bground_remove(*this);
 		}
 
 		bool slider::transparent() const
 		{
-			return API::glass_window(handle());
+			return (bground_mode::basic == API::effects_bground_mode(*this));
 		}
 	//end class slider
 }//end namespace gui

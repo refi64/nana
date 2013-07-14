@@ -35,7 +35,7 @@ namespace nana{	namespace gui{
 				return factory.create();
 			}
 		};
-
+	
 	}
 namespace API
 {
@@ -69,7 +69,7 @@ namespace API
 								cont.erase(i);
 								break;
 							}
-						}
+						}						
 					}
 					iwd->effect.edge_nimbus = effects::edge_nimbus::none;
 				}
@@ -89,27 +89,40 @@ namespace API
 		return effects::edge_nimbus::none;
 	}
 
-	void effects_background(window wd, const effects::bground_factory_interface& factory, double fade_rate)
+	void effects_bground(window wd, const effects::bground_factory_interface& factory, double fade_rate)
 	{
-		if(wd)
+		if(0 == wd)
+			return;
+		
+		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+		internal_scope_guard isg;
+		if(restrict::window_manager.available(iwd))
 		{
-			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-			internal_scope_guard isg;
-			if(restrict::window_manager.available(iwd))
-			{
-				delete iwd->effect.bground;
-				iwd->effect.bground = effects::effects_accessor::create(factory);
-				if(0 == iwd->effect.bground)
-					return;
+			effects::bground_interface* new_effect_ptr = effects::effects_accessor::create(factory);
+			if(0 == new_effect_ptr)
+				return;
 
-				iwd->effect.bground_fade_rate = fade_rate;
-				restrict::window_manager.enable_effects_bground(iwd, true);
-				API::refresh_window(wd);
-			}
+			delete iwd->effect.bground;
+			iwd->effect.bground = new_effect_ptr;
+			iwd->effect.bground_fade_rate = fade_rate;
+			restrict::window_manager.enable_effects_bground(iwd, true);
+			API::refresh_window(wd);
 		}
 	}
 
-	void effects_background_remove(window wd)
+	bground_mode::t effects_bground_mode(window wd)
+	{
+		if(0 == wd) return bground_mode::none;
+
+		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+		internal_scope_guard isg;
+		if(restrict::window_manager.available(iwd) && iwd->effect.bground)
+			return (iwd->effect.bground_fade_rate <= 0.009 ? bground_mode::basic : bground_mode::blend);
+
+		return bground_mode::none;
+	}
+
+	void effects_bground_remove(window wd)
 	{
 		if(0 == wd) return;
 
@@ -221,7 +234,7 @@ namespace API
 				if(restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)))
 					return &reinterpret_cast<restrict::core_window_t*>(wd)->drawer.graphics;
 			}
-			return 0;
+			return 0;		
 		}
 	}//end namespace dev
 
@@ -449,7 +462,7 @@ namespace API
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 			{
-				if(iwd->other.category == static_cast<category::flags::t>(category::root_tag::value))
+				if(iwd->other.category == category::root_tag::value)
 					restrict::interface_type::restore_window(iwd->root);
 			}
 		}
@@ -584,12 +597,12 @@ namespace API
 	bool window_rectangle(window wd, rectangle& r)
 	{
 		if(0 == wd)	return false;
-
+		
 		restrict::core_window_t * const iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 		internal_scope_guard isg;
 		if(false == restrict::window_manager.available(iwd))
 			return false;
-
+		
 		r = iwd->pos_owner;
 		r = iwd->dimension;
 		return true;
@@ -903,7 +916,7 @@ namespace API
 			if(restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)))
 				return reinterpret_cast<restrict::core_window_t*>(wd)->color.active;
 		}
-		return 0;
+		return 0;	
 	}
 
 	color_t active(window wd, color_t col)
@@ -1073,21 +1086,15 @@ namespace API
 	//@brief: Test a window whether it is a glass attribute.
 	bool glass_window(window wd)
 	{
-		if(wd)
-		{
-			internal_scope_guard isg;
-			if(restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)))
-				return reinterpret_cast<restrict::core_window_t*>(wd)->flags.glass;
-		}
-		return false;
+		return (bground_mode::basic == effects_bground_mode(wd));
 	}
 
 	bool glass_window(window wd, bool isglass)
 	{
 		if(isglass)
-			effects_background(wd, effects::bground_transparent(0), 0);
+			effects_bground(wd, effects::bground_transparent(0), 0);
 		else
-			effects_background_remove(wd);
+			effects_bground_remove(wd);
 		return true;
 	}
 

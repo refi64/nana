@@ -309,7 +309,6 @@ namespace nana{	namespace gui{
 				flags.dbl_click = true;
 				flags.enabled = true;
 				flags.modal = false;
-				flags.glass = false;
 				flags.take_active = true;
 				flags.dropable = false;
 				flags.fullscreen = false;

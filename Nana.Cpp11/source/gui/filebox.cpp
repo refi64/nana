@@ -157,25 +157,59 @@ namespace nana{	namespace gui
 			ls_file_.append_header(STR("Size"), 70);
 			ls_file_.make_event<events::dbl_click>(*this, &filebox_implement::_m_sel_file);
 			ls_file_.make_event<events::mouse_down>(*this, &filebox_implement::_m_sel_file);
-			ls_file_.set_sort_compare(0, [](const nana::string& a, nana::any*, const nana::string& b, nana::any*, bool reverse) -> bool
+			ls_file_.set_sort_compare(0, [](const nana::string& a, nana::any* fs_a, const nana::string& b, nana::any* fs_b, bool reverse) -> bool
 				{
-					auto pos_a = a.find_first_not_of(STR("+-0123456789."));
-					auto pos_b = b.find_first_not_of(STR("+-0123456789."));
-					if(pos_a && pos_b)
+					int dira = fs_a->get<item_fs>()->directory ? 1 : 0;
+					int dirb = fs_b->get<item_fs>()->directory ? 1 : 0;
+					if(dira != dirb)
+						return (reverse ? dira < dirb : dira > dirb);
+
+					std::size_t seek_a = 0;
+					std::size_t seek_b = 0;
+
+					while(true)
 					{
-						if(a.at(pos_a - 1) == '.')
-							--pos_a;
-						if(b.at(pos_b - 1) == '.')
-							--pos_b;
-						
-						if(pos_a && pos_b)
+						std::size_t pos_a = a.find_first_of(STR("0123456789"), seek_a);
+						std::size_t pos_b = b.find_first_of(STR("0123456789"), seek_b);
+
+						if((pos_a != a.npos) && (pos_a == pos_b))
 						{
-							double va = std::stod(a.substr(0, pos_a));
-							double vb = std::stod(b.substr(0, pos_b));
-							return (reverse ? va > vb : va < vb);
+							nana::cistring text_a = a.substr(seek_a, pos_a - seek_a).data();
+							nana::cistring text_b = b.substr(seek_b, pos_b - seek_b).data();
+
+							if(text_a != text_b)
+								return (reverse ? text_a > text_b : text_a < text_b);
+
+							std::size_t end_a = a.find_first_not_of(STR("0123456789"), pos_a + 1);
+							std::size_t end_b = b.find_first_not_of(STR("0123456789"), pos_b + 1);
+			
+							nana::string num_a = a.substr(pos_a, end_a != a.npos ? end_a - pos_a : a.npos);
+							nana::string num_b = b.substr(pos_b, end_b != b.npos ? end_b - pos_b : b.npos);
+			
+							if(num_a != num_b)
+							{
+								double ai = std::stod(num_a, 0);
+								double bi = std::stod(num_b, 0);
+								if(ai != bi)
+									return (reverse ? ai > bi : ai < bi);
+							}
+
+							seek_a = end_a;
+							seek_b = end_b;
 						}
+						else
+							break;
 					}
-					return (reverse ? a > b : a < b);
+					if(seek_a == a.npos)
+						seek_a = 0;
+					if(seek_b == b.npos)
+						seek_b = 0;
+
+					nana::cistring cia = a.data();
+					nana::cistring cib = b.data();
+					if(seek_a == seek_b && seek_a == 0)
+						return (reverse ? cia > cib : cia < cib);
+					return (reverse ? cia.substr(seek_a) > cib.substr(seek_b) : cia.substr(seek_a) < cib.substr(seek_b));
 				});
 			ls_file_.set_sort_compare(2, [](const nana::string& a, nana::any* anyptr_a, const nana::string& b, nana::any* anyptr_b, bool reverse) -> bool
 				{

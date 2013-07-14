@@ -54,12 +54,15 @@ namespace nana{	namespace gui
 
 		bool transparent() const
 		{
-			return API::glass_window(*this);
+			return (bground_mode::basic == API::effects_bground_mode(*this));
 		}
 
 		void transparent(bool tr)
 		{
-			API::glass_window(*this, tr);
+			if(tr)
+				API::effects_bground(*this, effects::bground_transparent(0), 0);
+			else
+				API::effects_bground_remove(*this);
 		}
 	};
 

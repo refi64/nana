@@ -146,13 +146,12 @@ namespace detail
 			bool dbl_click	:1;
 			bool capture	:1;	//if mouse button is down, it always receive mouse move even the mouse is out of its rectangle
 			bool modal		:1;
-			bool glass		:1;
 			bool take_active:1;	//If take_active is false, other.active_window still keeps the focus.
 			bool refreshing	:1;
 			bool destroying	:1;
 			bool dropable	:1; //Whether the window has make mouse_drop event.
 			bool fullscreen	:1;	//When the window is maximizing whether it fit for fullscreen.
-			unsigned Reserved: 22;
+			unsigned Reserved: 23;
 			unsigned char tab;		//indicate a window that can receive the keyboard TAB
 			mouse_action::t	action;
 		}flags;
@@ -198,7 +197,7 @@ namespace detail
 			gui::category::flags::t category;
 			basic_window *active_window;	//if flags.take_active is false, the active_window still keeps the focus,
 											//if the active_window is null, the parent of this window keeps focus.
-			paint::graphics glass_buffer;	//if flags.glass is true. Refer to window_layout::make_glass_background.
+			paint::graphics glass_buffer;	//if effect.bground is available. Refer to window_layout::make_glass_background.
 			update_state::t	upd_state;
 
 			union

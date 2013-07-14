@@ -540,6 +540,9 @@ namespace detail
 						break;
 					}
 
+					if(visible && wd->effect.bground)
+						wndlayout_type::make_bground(wd);
+
 					//Don't set the visible attr of a window if it is a root.
 					//The visible attr of a root will be set in the expose event.
 					if(category::root_tag::value != wd->other.category)
@@ -738,8 +741,8 @@ namespace detail
 						}
 						else
 						{
-							//update the glass buffer of glass window.
-							if(wd->flags.glass && wd->parent)
+							//update the bground buffer of glass window.
+							if(wd->effect.bground && wd->parent)
 							{
 								wd->other.glass_buffer.make(width, height);
 								wndlayout_type::make_bground(wd);

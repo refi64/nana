@@ -23,8 +23,9 @@ namespace API
 	void effects_edge_nimbus(window, effects::edge_nimbus);
 	effects::edge_nimbus effects_edge_nimbus(window);
 
-	void effects_background(window, const effects::bground_factory_interface&, double fade_rate);
-	void effects_background_remove(window);
+	void effects_bground(window, const effects::bground_factory_interface&, double fade_rate);
+	bground_mode effects_bground_mode(window);
+	void effects_bground_remove(window);
 
 	//namespace dev
 	//@brief: The interfaces defined in namespace dev are used for developing the nana.gui
@@ -206,8 +207,8 @@ namespace API
 	void eat_tabstop(window, bool);
 	window move_tabstop(window, bool next);
 	
-	bool glass_window(window);
-	bool glass_window(window, bool);
+	bool glass_window(window);			//deprecated
+	bool glass_window(window, bool);	//deprecated
 
 	void take_active(window, bool has_active, window take_if_has_active_false);
 

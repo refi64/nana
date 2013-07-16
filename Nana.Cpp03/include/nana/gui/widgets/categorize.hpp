@@ -176,6 +176,18 @@ namespace nana{	namespace gui
 			this->create(wd, rectangle(), visible);
 		}
 
+		categorize(window wd, const nana::string& text, bool visible = true)
+		{
+				create(wd, rectangle(), visible);
+				caption(text);
+		}
+
+		categorize(window wd, const nana::char_t* text, bool visible = true)
+		{
+				create(wd, rectangle(), visible);
+				caption(text);
+		}
+
 		categorize(window wd, const rectangle& r = rectangle(), bool visible = true)
 		{
 			this->create(wd, r, visible);

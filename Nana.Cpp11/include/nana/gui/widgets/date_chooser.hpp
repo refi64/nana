@@ -109,6 +109,8 @@ namespace nana{ namespace gui{
 	public:
 		date_chooser();
 		date_chooser(window, bool visible);
+		date_chooser(window, const nana::string& text, bool visible = true);
+		date_chooser(window, const nana::char_t* text, bool visible = true);
 		date_chooser(window, const nana::rectangle& r = rectangle(), bool visible = true);
 
 		bool chose() const;

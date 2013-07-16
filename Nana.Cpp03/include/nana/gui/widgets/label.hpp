@@ -58,6 +58,8 @@ namespace nana{ namespace gui{
 		typedef drawerbase::label::command command;
 		label();
 		label(window, bool visible);
+		label(window, const nana::string& text, bool visible = true);
+		label(window, const nana::char_t* text, bool visible = true);
 		label(window, const rectangle& = rectangle(), bool visible = true);
 		void transparent(bool);
 		bool transparent() const;

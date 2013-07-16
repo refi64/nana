@@ -91,6 +91,8 @@ namespace nana{namespace gui{
 
 			button();
 			button(window, bool visible);
+			button(window, const nana::string& caption, bool visible = true);
+			button(window, const nana::char_t* caption, bool visible = true);
 			button(window, const rectangle& = rectangle(), bool visible = true);
 
 			void icon(const nana::paint::image&);

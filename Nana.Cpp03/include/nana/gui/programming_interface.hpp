@@ -141,9 +141,15 @@ namespace API
 
 	void umake_event(window);
 	void umake_event(event_handle);
+
 	nana::point window_position(window);
 	void move_window(window, int x, int y);
 	void move_window(window, int x, int y, unsigned width, unsigned height);
+	inline void move_window(window wd, const rectangle& r)
+	{
+		move_window(wd, r.x, r.y, r.width, r.height);
+	}
+
 	bool set_window_z_order(window wd, window wd_after, z_order_action::t action_if_no_wd_after);
 
 	nana::size window_size(window);

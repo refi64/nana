@@ -705,6 +705,18 @@ namespace nana{ namespace gui{
 			create(wd, rectangle(), visible);
 		}
 
+		combox::combox(window wd, const nana::string& text, bool visible)
+		{
+			create(wd, rectangle(), visible);
+			caption(text);
+		}
+
+		combox::combox(window wd, const nana::char_t* text, bool visible)
+		{
+			create(wd, rectangle(), visible);
+			caption(text);		
+		}
+
 		combox::combox(window wd, const nana::rectangle& r, bool visible)
 		{
 			create(wd, r, visible);

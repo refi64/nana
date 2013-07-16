@@ -651,6 +651,18 @@ namespace nana{ namespace gui{
 			create(wd, rectangle(), visible);
 		}
 
+		date_chooser::date_chooser(window wd, const nana::string& text, bool visible)
+		{
+			create(wd, rectangle(), visible);
+			caption(text);
+		}
+
+		date_chooser::date_chooser(window wd, const nana::char_t* text, bool visible)
+		{
+			create(wd, rectangle(), visible);
+			caption(text);		
+		}
+
 		date_chooser::date_chooser(window wd, const rectangle& r, bool visible)
 		{
 			create(wd, r, visible);

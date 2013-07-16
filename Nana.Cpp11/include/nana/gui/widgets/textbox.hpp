@@ -71,6 +71,8 @@ namespace nana{ namespace gui{
 	public:
 		textbox();
 		textbox(window, bool visible);
+		textbox(window, const nana::string& text, bool visible = true);
+		textbox(window, const nana::char_t* text, bool visible = true);
 		textbox(window, const rectangle& = rectangle(), bool visible = true);
 
 		ext_event_type & ext_event() const;

@@ -70,6 +70,8 @@ namespace nana{ namespace gui
 
 		combox();
 		combox(window, bool visible);
+		combox(window, const nana::string& text, bool visible = true);
+		combox(window, const nana::char_t* text, bool visible = true);
 		combox(window, const rectangle& = rectangle(), bool visible = true);
 		
 		void clear();

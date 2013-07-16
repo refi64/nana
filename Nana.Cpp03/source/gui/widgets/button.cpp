@@ -540,6 +540,18 @@ namespace drawerbase
 				create(wd, rectangle(), visible);
 			}
 
+			button::button(window wd, const nana::string& text, bool visible)
+			{
+				create(wd, rectangle(), visible);
+				caption(text);
+			}
+
+			button::button(window wd, const nana::char_t* text, bool visible)
+			{
+				create(wd, rectangle(), visible);
+				caption(text);
+			}
+
 			button::button(window wd, const rectangle& r, bool visible)
 			{
 				create(wd, r, visible);

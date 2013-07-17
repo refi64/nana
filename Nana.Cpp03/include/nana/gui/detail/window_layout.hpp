@@ -143,22 +143,25 @@ namespace detail
 			wd_rectangle block;
 			while(wd->parent)
 			{
-				typename core_window_t::container::value_type *end = &(wd->parent->children[0]) + wd->parent->children.size();
-				typename core_window_t::container::value_type *i = std::find(&(wd->parent->children[0]), end, wd);
-
-				if(i != end)
+				//It should be checked that whether the window is still a chlid of its parent.
+				if(wd->parent->children.size())
 				{
-					//move to the widget that next to wd
-					for(++i; i != end; ++i)
-					{
-						core_window_t* cover = *i;
+					typename core_window_t::container::value_type *end = &(wd->parent->children[0]) + wd->parent->children.size();
+					typename core_window_t::container::value_type *i = std::find(&(wd->parent->children[0]), end, wd);
 
-						if(cover->visible && (0 == cover->effect.bground))
+					if(i != end)
+					{
+						//move to the widget that next to wd
+						for(++i; i != end; ++i)
 						{
-							if(overlap(vis_rect, rectangle(cover->pos_root, cover->dimension), block.r))
+							core_window_t* cover = *i;
+							if(cover->visible && (0 == cover->effect.bground))
 							{
-								block.window = cover;
-								blocks.push_back(block);
+								if(overlap(vis_rect, rectangle(cover->pos_root, cover->dimension), block.r))
+								{
+									block.window = cover;
+									blocks.push_back(block);
+								}
 							}
 						}
 					}

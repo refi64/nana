@@ -96,7 +96,12 @@ namespace filesystem
 		{
 		#if defined(NANA_WINDOWS)
 			path_ = file_path;
-			::HANDLE handle = ::FindFirstFile((file_path + STR("\\*")).c_str(), &wfd_);
+			auto pat = file_path;
+			DWORD attr = ::GetFileAttributes(pat.data());
+			if((attr != INVALID_FILE_ATTRIBUTES) && (attr & FILE_ATTRIBUTE_DIRECTORY))
+				pat += STR("\\*");
+
+			::HANDLE handle = ::FindFirstFile(pat.data(), &wfd_);
 
 			if(handle == INVALID_HANDLE_VALUE)
 			{

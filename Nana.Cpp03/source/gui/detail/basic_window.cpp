@@ -249,7 +249,7 @@ namespace nana{	namespace gui{
 			//@brief: bind a native window and baisc_window
 			void basic_window::bind_native_window(native_window_type wd, unsigned width, unsigned height, unsigned extra_width, unsigned extra_height, nana::paint::graphics& graphics)
 			{
-				if(category::root_tag::value == this->other.category)
+				if(static_cast<category::flags::t>(category::root_tag::value) == this->other.category)
 				{
 					this->root = wd;
 					dimension.width = width;
@@ -263,7 +263,7 @@ namespace nana{	namespace gui{
 
 			void basic_window::frame_window(native_window_type wd)
 			{
-				if(category::frame_tag::value == this->other.category)
+				if(static_cast<category::flags::t>(category::frame_tag::value) == this->other.category)
 					other.attribute.frame->container = wd;
 			}
 
@@ -281,12 +281,12 @@ namespace nana{	namespace gui{
 
 			void basic_window::_m_initialize(basic_window* agrparent)
 			{
-				if(other.category == category::root_tag::value)
+				if(other.category == static_cast<category::flags::t>(category::root_tag::value))
 				{
 					if(agrparent && (nana::system::this_thread_id() != agrparent->thread_id))
 						agrparent = 0;
 
-					while(agrparent && (agrparent->other.category != category::root_tag::value))
+					while(agrparent && (agrparent->other.category != static_cast<category::flags::t>(category::root_tag::value)))
 						agrparent = agrparent->parent;
 				
 					owner = agrparent;

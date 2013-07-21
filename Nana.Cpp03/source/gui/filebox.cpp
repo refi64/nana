@@ -159,8 +159,8 @@ namespace nana{	namespace gui
 		
 						if(num_a != num_b)
 						{
-							double ai = std::stod(num_a, 0);
-							double bi = std::stod(num_b, 0);
+							double ai = nana::strtod(num_a.data(), 0);
+							double bi = nana::strtod(num_b.data(), 0);
 							if(ai != bi)
 								return (reverse ? ai > bi : ai < bi);
 						}

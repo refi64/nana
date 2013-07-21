@@ -1236,8 +1236,8 @@ namespace detail
 					{
 						accepted = true;
 						self.xdnd_.timestamp = evt.xclient.data.l[3];
-						self.xdnd_.pos.x -= wd->root_x;
-						self.xdnd_.pos.y -= wd->root_y;
+						self.xdnd_.pos.x -= wd->pos_root.x;
+						self.xdnd_.pos.y -= wd->pos_root.y;
 					}
 				}
 

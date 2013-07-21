@@ -62,7 +62,7 @@ namespace detail
 				//get the root graphics
 				nana::paint::graphics& root_graph = *(wd->root_graph);
 
-				if(wd->other.category != category::lite_widget_tag::value)
+				if(wd->other.category != static_cast<category::flags::t>(category::lite_widget_tag::value))
 					root_graph.bitblt(vr, wd->drawer.graphics, nana::point(vr.x - wd->pos_root.x, vr.y - wd->pos_root.y));
 
 				_m_paste_children(wd, is_child_refreshed, vr, root_graph, nana::point());
@@ -80,7 +80,7 @@ namespace detail
 							core_window_t* ov_wd = i->window;
 							const nana::rectangle& r = i->r;
 
-							if(ov_wd->other.category == category::frame_tag::value)
+							if(ov_wd->other.category == static_cast<category::flags::t>(category::frame_tag::value))
 							{
 								native_window_type container = ov_wd->other.attribute.frame->container;
 								native_interface::refresh_window(container);
@@ -174,7 +174,7 @@ namespace detail
 
 		static bool enable_effects_bground(core_window_t * wd, bool enabled)
 		{
-			if(wd->other.category != category::widget_tag::value)
+			if(wd->other.category != static_cast<category::flags::t>(category::widget_tag::value))
 				return false;
 
 			if(false == enabled)
@@ -218,11 +218,11 @@ namespace detail
 			nana::point rpos(wd->pos_root);
 			nana::paint::graphics & glass_buffer = wd->other.glass_buffer;
 
-			if(wd->parent->other.category == category::lite_widget_tag::value)
+			if(wd->parent->other.category == static_cast<category::flags::t>(category::lite_widget_tag::value))
 			{
 				std::vector<core_window_t*> layers;
 				core_window_t * beg = wd->parent;
-				while(beg && (beg->other.category == category::lite_widget_tag::value))
+				while(beg && (beg->other.category == static_cast<category::flags::t>(category::lite_widget_tag::value)))
 				{
 					layers.push_back(beg);
 					beg = beg->parent;
@@ -251,7 +251,7 @@ namespace detail
 						nana::rectangle ovlp;
 						if(child->visible && nana::gui::overlap(r, rectangle(child->pos_owner, child->dimension), ovlp))
 						{
-							if(child->other.category != category::lite_widget_tag::value)
+							if(child->other.category != static_cast<category::flags::t>(category::lite_widget_tag::value))
 								glass_buffer.bitblt(nana::rectangle(ovlp.x - pre->pos_owner.x, ovlp.y - pre->pos_owner.y, ovlp.width, ovlp.height), child->drawer.graphics, nana::point(ovlp.x - child->pos_owner.x, ovlp.y - child->pos_owner.y));
 							ovlp.x += pre->pos_root.x;
 							ovlp.y += pre->pos_root.y;
@@ -273,7 +273,7 @@ namespace detail
 				nana::rectangle ovlp;
 				if(child->visible && overlap(r_of_wd, rectangle(child->pos_owner, child->dimension), ovlp))
 				{
-					if(child->other.category != category::lite_widget_tag::value)
+					if(child->other.category != static_cast<category::flags::t>(category::lite_widget_tag::value))
 						glass_buffer.bitblt(nana::rectangle(ovlp.x - wd->pos_owner.x, ovlp.y - wd->pos_owner.y, ovlp.width, ovlp.height), child->drawer.graphics, nana::point(ovlp.x - child->pos_owner.x, ovlp.y - child->pos_owner.y));
 
 					ovlp.x += wd->pos_root.x;
@@ -299,7 +299,7 @@ namespace detail
 				core_window_t * child = *i;
 
 				//it will not past children if no drawer and visible is false.
-				if((false == child->visible) || (child->drawer.graphics.empty() && (child->other.category != category::lite_widget_tag::value)))
+				if((false == child->visible) || (child->drawer.graphics.empty() && (child->other.category != static_cast<category::flags::t>(category::lite_widget_tag::value))))
 					continue;
 
 				if(0 == child->effect.bground)
@@ -309,7 +309,7 @@ namespace detail
 
 					if(nana::gui::overlap(child_rect, parent_rect, rect))
 					{
-						if(child->other.category != category::lite_widget_tag::value)
+						if(child->other.category != static_cast<category::flags::t>(category::lite_widget_tag::value))
 						{
 							if(is_child_refreshed && (false == child->flags.refreshing))
 								paint(child, true, true);

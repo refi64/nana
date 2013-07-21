@@ -181,7 +181,7 @@ namespace API
 
 				if(restrict::window_manager.available(iwd))
 				{
-					if(iwd->other.category == category::root_tag::value)
+					if(iwd->other.category == static_cast<category::flags::t>(category::root_tag::value))
 						return restrict::interface_type::window_caption(iwd->root);
 					return iwd->title;
 				}
@@ -199,7 +199,7 @@ namespace API
 				if(restrict::window_manager.available(iwd))
 				{
 					iwd->title = title;
-					if(iwd->other.category == category::root_tag::value)
+					if(iwd->other.category == static_cast<category::flags::t>(category::root_tag::value))
 						restrict::interface_type::window_caption(iwd->root, title);
 				}
 				restrict::window_manager.update(iwd, true, false);
@@ -408,7 +408,7 @@ namespace API
 		if(frame)
 		{
 			internal_scope_guard isg;
-			if(reinterpret_cast<restrict::core_window_t*>(frame)->other.category == category::frame_tag::value)
+			if(reinterpret_cast<restrict::core_window_t*>(frame)->other.category == static_cast<category::flags::t>(category::frame_tag::value))
 				return reinterpret_cast<restrict::core_window_t*>(frame)->other.attribute.frame->container;
 		}
 		return 0;
@@ -419,7 +419,7 @@ namespace API
 		if(frame)
 		{
 			internal_scope_guard isg;
-			if(reinterpret_cast<restrict::core_window_t*>(frame)->other.category == category::frame_tag::value)
+			if(reinterpret_cast<restrict::core_window_t*>(frame)->other.category == static_cast<category::flags::t>(category::frame_tag::value))
 			{
 				if(index < reinterpret_cast<restrict::core_window_t*>(frame)->other.attribute.frame->attach.size())
 					return reinterpret_cast<restrict::core_window_t*>(frame)->other.attribute.frame->attach.at(index);
@@ -446,7 +446,7 @@ namespace API
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 			{
-				if(iwd->other.category == category::root_tag::value)
+				if(iwd->other.category == static_cast<category::flags::t>(category::root_tag::value))
 					return restrict::interface_type::is_window_visible(iwd->root);
 				return iwd->visible;
 			}
@@ -462,7 +462,7 @@ namespace API
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 			{
-				if(iwd->other.category == category::root_tag::value)
+				if(iwd->other.category == static_cast<category::flags::t>(category::root_tag::value))
 					restrict::interface_type::restore_window(iwd->root);
 			}
 		}
@@ -475,7 +475,7 @@ namespace API
 			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
-				return reinterpret_cast<window>(iwd->other.category == category::root_tag::value ? iwd->owner : iwd->parent);
+				return reinterpret_cast<window>(iwd->other.category == static_cast<category::flags::t>(category::root_tag::value) ? iwd->owner : iwd->parent);
 		}
 		return 0;
 	}
@@ -486,7 +486,7 @@ namespace API
 		{
 			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 			internal_scope_guard isg;
-			if(restrict::window_manager.available(iwd) && (iwd->other.category == category::root_tag::value))
+			if(restrict::window_manager.available(iwd) && (iwd->other.category == static_cast<category::flags::t>(category::root_tag::value)))
 			{
 				native_window_type owner = restrict::interface_type::get_owner_window(iwd->root);
 				if(owner)
@@ -514,7 +514,7 @@ namespace API
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 			{
-				return ( (iwd->other.category == category::root_tag::value) ?
+				return ( (iwd->other.category == static_cast<category::flags::t>(category::root_tag::value)) ?
 					restrict::interface_type::window_position(iwd->root) : iwd->pos_owner);
 			}
 		}
@@ -527,7 +527,7 @@ namespace API
 		internal_scope_guard isg;
 		if(restrict::window_manager.move(iwd, x, y, false))
 		{
-			if(category::root_tag::value != iwd->other.category)
+			if(static_cast<category::flags::t>(category::root_tag::value) != iwd->other.category)
 				iwd = reinterpret_cast<restrict::core_window_t*>(API::get_parent_window(wd));
 			restrict::window_manager.update(iwd, false, false);
 		}
@@ -539,7 +539,7 @@ namespace API
 		internal_scope_guard isg;
 		if(restrict::window_manager.move(iwd, x, y, width, height))
 		{
-			if(category::root_tag::value != iwd->other.category)
+			if(static_cast<category::flags::t>(category::root_tag::value) != iwd->other.category)
 				iwd = reinterpret_cast<restrict::core_window_t*>(API::get_parent_window(wd));
 			restrict::window_manager.update(iwd, false, false);
 		}
@@ -553,12 +553,12 @@ namespace API
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 			{
-				if(category::root_tag::value == iwd->other.category)
+				if(static_cast<category::flags::t>(category::root_tag::value) == iwd->other.category)
 				{
 					if(wd_after)
 					{
 						restrict::core_window_t * const iwd_after = reinterpret_cast<restrict::core_window_t*>(wd_after);
-						if(restrict::window_manager.available(iwd_after) && (iwd_after->other.category == category::root_tag::value))
+						if(restrict::window_manager.available(iwd_after) && (iwd_after->other.category == static_cast<category::flags::t>(category::root_tag::value)))
 						{
 							restrict::interface_type::set_window_z_order(iwd->root, iwd_after->root, z_order_action::none);
 							return true;
@@ -588,7 +588,7 @@ namespace API
 		internal_scope_guard isg;
 		if(restrict::window_manager.size(iwd, width, height, false, false))
 		{
-			if(category::root_tag::value != iwd->other.category)
+			if(static_cast<category::flags::t>(category::root_tag::value) != iwd->other.category)
 				iwd = reinterpret_cast<restrict::core_window_t*>(API::get_parent_window(wd));
 			restrict::window_manager.update(iwd, false, false);
 		}
@@ -652,7 +652,7 @@ namespace API
 			{
 				iwd->flags.enabled = enabled;
 				restrict::window_manager.update(iwd, true, false);
-				if(category::root_tag::value == iwd->other.category)
+				if(static_cast<category::flags::t>(category::root_tag::value) == iwd->other.category)
 					restrict::interface_type::enable_window(iwd->root, enabled);
 			}
 		}
@@ -826,7 +826,7 @@ namespace API
 			wd = 0;
 			if(restrict::window_manager.available(iwd))
 			{
-				if((iwd->other.category == category::root_tag::value) && (iwd->flags.modal == false))
+				if((iwd->other.category == static_cast<category::flags::t>(category::root_tag::value)) && (iwd->flags.modal == false))
 				{
 					iwd->flags.modal = true;
 #if defined(NANA_X11)

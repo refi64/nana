@@ -144,6 +144,8 @@ namespace nana{	namespace gui{
 							}
 						}
 					}
+					else
+						wd->root_graph->paste(wd->root, visual, visual.x, visual.y);
 				}
 			}
 		};

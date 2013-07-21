@@ -140,6 +140,8 @@ namespace nana{	namespace gui{
 								graph->paste(wd->root, wdr.r, wdr.r.x, wdr.r.y);
 						}
 					}
+					else
+						wd->root_graph->paste(wd->root, visual, visual.x, visual.y);
 				}
 			}
 		};

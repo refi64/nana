@@ -13,7 +13,7 @@
 #include PLATFORM_SPEC_HPP
 #include <nana/gui/detail/native_window_interface.hpp>
 #if defined(NANA_WINDOWS)
-	#if defined(NANA_MINGW)
+	#if defined(NANA_MINGW) && defined(STD_THREAD_NOT_SUPPORTED)
         #include <nana/std_mutex.hpp>
     #else
         #include <mutex>

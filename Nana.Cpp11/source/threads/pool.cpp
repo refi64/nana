@@ -16,7 +16,7 @@
 #include <deque>
 #include <vector>
 
-#if defined(NANA_MINGW)
+#if defined(NANA_MINGW) && defined(STD_THREAD_NOT_SUPPORTED)
     #include <nana/std_condition_variable.hpp>
 #else
     #include <condition_variable>

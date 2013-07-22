@@ -17,7 +17,7 @@
 #include <vector>
 #include <list>
 
-#ifdef NANA_MINGW
+#if defined(NANA_MINGW) && defined(STD_THREAD_NOT_SUPPORTED)
     #include <nana/std_thread.hpp>
     #include <nana/std_mutex.hpp>
     #include <nana/std_condition_variable.hpp>

@@ -19,7 +19,7 @@
 
 #include <nana/traits.hpp>
 #include <nana/config.hpp>
-#if defined(NANA_MINGW)
+#if defined(NANA_MINGW) && defined(STD_THREAD_NOT_SUPPORTED)
     #include <nana/std_mutex.hpp>
 #else
     #include <mutex>

@@ -504,7 +504,7 @@ namespace gui
 		void drawer::_m_bground_end()
 		{
 			if(core_window_->effect.bground && core_window_->effect.bground_fade_rate >= 0.01)
-				core_window_->other.glass_buffer.blend(graphics, 0, 0, core_window_->effect.bground_fade_rate);
+				core_window_->other.glass_buffer.blend(core_window_->other.glass_buffer.size(), graphics, nana::point(), core_window_->effect.bground_fade_rate);
 		}
 
 		void drawer::_m_draw_dynamic_drawing_object()

@@ -117,6 +117,8 @@ namespace nana
 	{
 		point();
 		point(int x, int y);
+		point(const rectangle&);
+
 		bool operator==(const point&) const;
 		bool operator!=(const point&) const;
 		bool operator<(const point&) const;
@@ -150,6 +152,7 @@ namespace nana
 	{
 		size();
 		size(unsigned width, unsigned height);
+		size(const rectangle&);
 
 		bool is_zero() const;
 		bool operator==(const size& rhs) const;

@@ -429,7 +429,7 @@ namespace nana{ namespace gui{
 							r.y = static_cast<int>(newbuf.height() - r.height) / 2;
 							newbuf.stretch(nzbuf, r);
 
-							nzbuf.blend(dzbuf, 0, 0, fade * (count - i));
+							nzbuf.blend(nzbuf.size(), dzbuf, nana::point(), fade * (count - i));
 							graph.bitblt(refpos.x, refpos.y, dzbuf);
 
 							API::update_window(*widget_);
@@ -457,7 +457,7 @@ namespace nana{ namespace gui{
 							nzbuf.rectangle(0xFFFFFF, true);
 							newbuf.stretch(nzbuf, r);
 
-							nzbuf.blend(dzbuf, 0, 0, fade * (count - i));
+							nzbuf.blend(nzbuf.size(), dzbuf, nana::point(), fade * (count - i));
 							graph.bitblt(refpos.x, refpos.y, dzbuf);
 
 							API::update_window(*widget_);

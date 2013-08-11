@@ -117,8 +117,7 @@ namespace nana
 			void bitblt(const nana::rectangle& r_dst, const graphics& src);
 			void bitblt(const nana::rectangle& r_dst, const graphics& src, const nana::point& p_src);
 
-			void blend(graphics& dst, int x, int y, double fade_rate) const;
-			void blend(const nana::point& s_pos, graphics& dst, const nana::rectangle& r, double fade_rate) const;
+			void blend(const nana::rectangle& s_r, graphics& dst, const nana::point& d_pos, double fade_rate) const;
 			void blend(const nana::rectangle& r, nana::color_t, double fade_rate);
 
 			void blur(const nana::rectangle& r, std::size_t radius);

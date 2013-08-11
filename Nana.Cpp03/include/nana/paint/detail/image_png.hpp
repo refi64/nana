@@ -21,9 +21,8 @@ namespace nana
 			: public image::image_impl_interface
 		{
 		public:
-			image_png(){}
-
-			image_png(const image_png&)
+			image_png()
+				:alpha_colored_(false)
 			{}
 
 			bool open(const nana::char_t* png_file)
@@ -57,8 +56,8 @@ namespace nana
 								::png_set_sig_bytes(png_ptr, 8);
 								::png_read_info(png_ptr, info_ptr);
 
-								int png_width = ::png_get_image_width(png_ptr, info_ptr);
-								int png_height = ::png_get_image_height(png_ptr, info_ptr);
+								const int png_width = ::png_get_image_width(png_ptr, info_ptr);
+								const int png_height = ::png_get_image_height(png_ptr, info_ptr);
 								png_byte color_type = ::png_get_color_type(png_ptr, info_ptr);
 
 								//unused
@@ -71,55 +70,61 @@ namespace nana
 								png_bytep * row_ptrs = new png_bytep[png_height];
 								const std::size_t png_rowbytes = ::png_get_rowbytes(png_ptr, info_ptr);
 
-								png_byte * png_pixbuf = new png_byte[png_height * png_rowbytes];
+								pixbuf_.open(png_width, png_height);
+								alpha_colored_ = (PNG_COLOR_MASK_ALPHA & color_type);
 
-								for(int i = 0; i < png_height; ++i)
-									row_ptrs[i] = reinterpret_cast<png_bytep>(png_pixbuf + png_rowbytes * i);
-
-								::png_read_image(png_ptr, row_ptrs);
-								::png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-
-								paint::pixel_buffer pixbuf(png_width, png_height);
-
-								std::size_t png_pixel_bytes = png_rowbytes / png_width;
-
-								pixel_rgb_t * rgb_row_ptr = pixbuf.raw_ptr();
-								for(int y = 0; y < png_height; ++y)
+								if(alpha_colored_ && (png_rowbytes == png_width * sizeof(pixel_rgb_t)))
 								{
-									png_bytep png_ptr = row_ptrs[y];
+									for(int i = 0; i < png_height; ++i)
+										row_ptrs[i] = reinterpret_cast<png_bytep>(pixbuf_.raw_ptr(i));
 
-									pixel_rgb_t * rgb_end = rgb_row_ptr + png_width;
-
-									if(color_type & PNG_COLOR_MASK_ALPHA)
-									{
-										for(pixel_rgb_t * i = rgb_row_ptr; i < rgb_end; ++i)
-										{
-											i->u.element.red = png_ptr[0];
-											i->u.element.green = png_ptr[1];
-											i->u.element.blue = png_ptr[2];
-											i->u.element.alpha_channel = png_ptr[3];
-											png_ptr += png_pixel_bytes;
-										}
-									}
-									else
-									{
-										for(pixel_rgb_t * i = rgb_row_ptr; i < rgb_end; ++i)
-										{
-											i->u.element.red = png_ptr[0];
-											i->u.element.green = png_ptr[1];
-											i->u.element.blue = png_ptr[2];
-											i->u.element.alpha_channel = 255;
-											png_ptr += png_pixel_bytes;
-										}
-									}
-									rgb_row_ptr = rgb_end;
+									::png_read_image(png_ptr, row_ptrs);
+									::png_destroy_read_struct(&png_ptr, &info_ptr, 0);
 								}
+								else
+								{
+									png_byte * png_pixbuf = new png_byte[png_height * png_rowbytes];
 
-								graph_.make(static_cast<unsigned>(png_width), static_cast<unsigned>(png_height));
-								pixbuf.paste(graph_.handle(), 0, 0);
+									for(int i = 0; i < png_height; ++i)
+										row_ptrs[i] = reinterpret_cast<png_bytep>(png_pixbuf + png_rowbytes * i);
+
+									::png_read_image(png_ptr, row_ptrs);
+									::png_destroy_read_struct(&png_ptr, &info_ptr, 0);
+
+									std::size_t png_pixel_bytes = png_rowbytes / png_width;
+
+									pixel_rgb_t * rgb_row_ptr = pixbuf.raw_ptr(0);
+									for(int y = 0; y < png_height; ++y)
+									{
+										png_bytep png_ptr = row_ptrs[y];
+										pixel_rgb_t * rgb_end = rgb_row_ptr + png_width;
+										if(alpha_colored_)
+										{
+											for(pixel_rgb_t * i = rgb_row_ptr; i < rgb_end; ++i)
+											{
+												i->u.element.red = png_ptr[0];
+												i->u.element.green = png_ptr[1];
+												i->u.element.blue = png_ptr[2];
+												i->u.element.alpha_channel = png_ptr[3];
+												png_ptr += png_pixel_bytes;
+											}
+										}
+										else
+										{
+											for(pixel_rgb_t * i = rgb_row_ptr; i < rgb_end; ++i)
+											{
+												i->u.element.red = png_ptr[0];
+												i->u.element.green = png_ptr[1];
+												i->u.element.blue = png_ptr[2];
+												i->u.element.alpha_channel = 255;
+												png_ptr += png_pixel_bytes;
+											}
+										}
+										rgb_row_ptr = rgb_end;
+									}
+									delete [] png_pixbuf;
+								}
 								delete [] row_ptrs;
-								delete [] png_pixbuf;
-
 								is_opened = true;
 							}
 						}
@@ -130,33 +135,38 @@ namespace nana
 				return is_opened;
 			}
 
+			bool alpha_channel() const
+			{
+				return alpha_colored_;
+			}
+
 			virtual bool empty() const
 			{
-				return graph_.empty();
+				return pixbuf_.empty();
 			}
 
 			virtual void close()
 			{
-				graph_.release();
+				pixbuf_.close();
 			}
 
 			virtual nana::size size() const
 			{
-				return graph_.size();
+				return pixbuf_.size();
 			}
 
 			void paste(const nana::rectangle& src_r, graph_reference graph, int x, int y) const
 			{
-				graph.bitblt(nana::rectangle(x, y, src_r.width, src_r.height), graph_, nana::point(src_r.x, src_r.y));
+				pixbuf_.paste(src_r, graph.handle(), x, y);
 			}
 
 			void stretch(const nana::rectangle& src_r, graph_reference dst, const nana::rectangle& r) const
 			{
-				graph_.stretch(src_r, dst, r);
+				pixbuf_.stretch(src_r, dst.handle(), r);
 			}
 		private:
-			nana::paint::graphics graph_;
-
+			bool alpha_colored_;
+			pixel_buffer pixbuf_;
 		};
 	}//end namespace detail
 	}//end namespace paint

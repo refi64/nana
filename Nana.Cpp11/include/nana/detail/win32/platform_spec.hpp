@@ -89,6 +89,8 @@ namespace detail
 
 		HDC		context;
 		HBITMAP	pixmap;
+		pixel_rgb_t*	pixbuf_ptr;
+		std::size_t		bytes_per_line;
 		font_ptr_t font;
 
 		struct pen_spec

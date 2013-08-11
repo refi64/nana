@@ -97,6 +97,7 @@ namespace nana{	namespace paint
 								bytes_per_line = info->bmiHeader.biSizeImage / height_pixels;
 
 							pixbuf_.open(info->bmiHeader.biWidth, height_pixels);
+							pixel_rgb_t * d = pixbuf_.raw_ptr(0);
 
 							if(16 <= info->bmiHeader.biBitCount)
 							{
@@ -104,7 +105,6 @@ namespace nana{	namespace paint
 							}
 							else if(8 == info->bmiHeader.biBitCount)
 							{
-								pixel_rgb_t * d = pixbuf_.raw_ptr();
 								const pixel_rgb_t * const lend = d + info->bmiHeader.biWidth * height_pixels;
 
 								if(info->bmiHeader.biHeight < 0)
@@ -152,7 +152,6 @@ namespace nana{	namespace paint
 							}
 							else if(4 == info->bmiHeader.biBitCount)
 							{
-								pixel_rgb_t * d = pixbuf_.raw_ptr();
 								const pixel_rgb_t * const lend = d + info->bmiHeader.biWidth * height_pixels;
 								if(info->bmiHeader.biHeight < 0)
 								{
@@ -204,7 +203,6 @@ namespace nana{	namespace paint
 							}
 							else if(2 == info->bmiHeader.biBitCount)
 							{
-								pixel_rgb_t * d = pixbuf_.raw_ptr();
 								const pixel_rgb_t * const lend = d + info->bmiHeader.biWidth * height_pixels;
 								if(info->bmiHeader.biHeight < 0)
 								{
@@ -258,7 +256,6 @@ namespace nana{	namespace paint
 							}
 							else if(1 == info->bmiHeader.biBitCount)
 							{
-								pixel_rgb_t * d = pixbuf_.raw_ptr();
 								const pixel_rgb_t * const lend = d + info->bmiHeader.biWidth * height_pixels;
 								if(info->bmiHeader.biHeight < 0)
 								{
@@ -314,6 +311,11 @@ namespace nana{	namespace paint
 					}
 				}
 				return (false == pixbuf_.empty());
+			}
+
+			bool alpha_channel() const
+			{
+				return false;
 			}
 
 			bool empty() const

@@ -27,32 +27,39 @@ namespace detail
 {
 	namespace algorithms
 	{
+		///@brief	Seek a pixel address by using offset bytes
+		///@return	the specified pixel address
+		inline pixel_rgb_t * pixel_at(pixel_rgb_t* ptr, std::size_t bytes)
+		{
+			return reinterpret_cast<pixel_rgb_t*>(reinterpret_cast<char*>(ptr) + bytes);
+		}
+
+		inline const pixel_rgb_t * pixel_at(const pixel_rgb_t* ptr, std::size_t bytes)
+		{
+			return reinterpret_cast<const pixel_rgb_t*>(reinterpret_cast<const char*>(ptr) + bytes);
+		}
+
+
 		class proximal_interoplation
 			: public image_process::stretch_interface
 		{
-			void process(const paint::pixel_buffer& s_pixbuf, const nana::rectangle& r_src, drawable_type dw_dst, const nana::rectangle& r_dst) const
+			void process(const paint::pixel_buffer& s_pixbuf, const nana::rectangle& r_src, paint::pixel_buffer& pixbuf, const nana::rectangle& r_dst) const
 			{
-				const std::size_t s_pixbuf_width = s_pixbuf.size().width;
+				const std::size_t bytes_per_line = s_pixbuf.bytes_per_line();
 
-				pixel_buffer pixbuf(r_dst.width, r_dst.height);
 				double rate_x = double(r_src.width) / r_dst.width;
 				double rate_y = double(r_src.height) / r_dst.height;
 
-				pixel_rgb_t * s_raw_pixbuf = s_pixbuf.raw_ptr();
-				pixel_rgb_t * d_line = pixbuf.raw_ptr();
+				pixel_rgb_t * s_raw_pixbuf = s_pixbuf.raw_ptr(0);
 
 				for(std::size_t row = 0; row < r_dst.height; ++row)
 				{
-					const pixel_rgb_t * s_line = s_raw_pixbuf + (static_cast<int>(row * rate_y) + r_src.y) * s_pixbuf_width;
-
-					pixel_rgb_t * i = d_line;
-					d_line += r_dst.width;
+					const pixel_rgb_t * s_line = pixel_at(s_raw_pixbuf, (static_cast<int>(row * rate_y) + r_src.y) * bytes_per_line);
+					pixel_rgb_t * i = pixbuf.raw_ptr(r_dst.y + row);
 
 					for(std::size_t x = 0; x < r_dst.width; ++x, ++i)
 						*i = s_line[static_cast<int>(x * rate_x) + r_src.x];
 				}
-
-				pixbuf.paste(dw_dst, r_dst.x, r_dst.y);
 			}
 		};
 
@@ -66,29 +73,24 @@ namespace detail
 				int iu_minus_coef;
 			};
 
-			void process(const paint::pixel_buffer & s_pixbuf, const nana::rectangle& r_src, drawable_type dw_dst, const nana::rectangle& r_dst) const
+			void process(const paint::pixel_buffer & s_pixbuf, const nana::rectangle& r_src, paint::pixel_buffer& pixbuf, const nana::rectangle& r_dst) const
 			{
-				const std::size_t s_pixbuf_width = s_pixbuf.size().width;
+				const std::size_t s_bytes_per_line = s_pixbuf.bytes_per_line();
 
 				const int shift_size = 8;
 				const std::size_t coef = 1 << shift_size;
 				const int double_shift_size = shift_size << 1;
 
-				nana::paint::pixel_buffer pixbuf(r_dst.width, r_dst.height);
-
 				double rate_x = double(r_src.width) / r_dst.width;
 				double rate_y = double(r_src.height) / r_dst.height;
 				
-
 				const int right_bound = static_cast<int>(r_src.width) - 1;
 
-				const nana::pixel_rgb_t * s_raw_pixel_buffer = s_pixbuf.raw_ptr();
+				const nana::pixel_rgb_t * s_raw_pixel_buffer = s_pixbuf.raw_ptr(0);
 
 				const int bottom = r_src.y + static_cast<int>(r_src.height - 1);
 
 				x_u_table_tag * x_u_table = new x_u_table_tag[r_dst.width];
-
-				nana::pixel_rgb_t * i = pixbuf.raw_ptr();
 
 				for(std::size_t x = 0; x < r_dst.width; ++x)
 				{
@@ -109,6 +111,8 @@ namespace detail
 					el.iu_minus_coef = coef - el.iu;
 					x_u_table[x] = el;
 				}
+
+				const bool is_alpha_channel = s_pixbuf.alpha_channel();
 				
 				for(std::size_t row = 0; row < r_dst.height; ++row)
 				{
@@ -128,44 +132,79 @@ namespace detail
 					std::size_t iv = static_cast<size_t>(v * coef);
 					const std::size_t iv_minus_coef = coef - iv;
 
-					const nana::pixel_rgb_t * s_line = s_raw_pixel_buffer + sy * s_pixbuf_width;
-					const nana::pixel_rgb_t * next_s_line = s_line + ((sy < bottom) ? s_pixbuf_width : 0);
+					const nana::pixel_rgb_t * s_line = pixel_at(s_raw_pixel_buffer,  sy * s_bytes_per_line);
+					const nana::pixel_rgb_t * next_s_line = pixel_at(s_line, (sy < bottom ? s_bytes_per_line : 0));
 
 					nana::pixel_rgb_t col0;
 					nana::pixel_rgb_t col1;
 					nana::pixel_rgb_t col2;
 					nana::pixel_rgb_t col3;
 
-					for(std::size_t x = 0; x < r_dst.width; ++x, ++i)
+					pixel_rgb_t * i = pixbuf.raw_ptr(row + r_dst.y) + r_dst.x;
+
+					if(is_alpha_channel)
 					{
-						x_u_table_tag el = x_u_table[x];
-						
-						col0 = s_line[el.x];
-						col1 = next_s_line[el.x];
-
-						if(el.x < right_bound)
+						for(std::size_t x = 0; x < r_dst.width; ++x, ++i)
 						{
-							col2 = s_line[el.x + 1];
-							col3 = next_s_line[el.x + 1];
-						}
-						else
-						{
-							col2 = col0;
-							col3 = col1;
-						}
+							x_u_table_tag el = x_u_table[x];
 						
-						std::size_t coef0 = el.iu_minus_coef * iv_minus_coef;
-						std::size_t coef1 = el.iu_minus_coef * iv;
-						std::size_t coef2 = el.iu * iv_minus_coef;
-						std::size_t coef3 = el.iu * iv;			
+							col0 = s_line[el.x];
+							col1 = next_s_line[el.x];
 
-						i->u.element.red = static_cast<unsigned>((coef0 * col0.u.element.red + coef1 * col1.u.element.red + (coef2 * col2.u.element.red + coef3 * col3.u.element.red)) >> double_shift_size);
-						i->u.element.green = static_cast<unsigned>((coef0 * col0.u.element.green + coef1 * col1.u.element.green + (coef2 * col2.u.element.green + coef3 * col3.u.element.green)) >> double_shift_size);
-						i->u.element.blue = static_cast<unsigned>((coef0 * col0.u.element.blue + coef1 * col1.u.element.blue + (coef2 * col2.u.element.blue + coef3 * col3.u.element.blue)) >> double_shift_size);
+							if(el.x < right_bound)
+							{
+								col2 = s_line[el.x + 1];
+								col3 = next_s_line[el.x + 1];
+							}
+							else
+							{
+								col2 = col0;
+								col3 = col1;
+							}
+						
+							std::size_t coef0 = el.iu_minus_coef * iv_minus_coef;
+							std::size_t coef1 = el.iu_minus_coef * iv;
+							std::size_t coef2 = el.iu * iv_minus_coef;
+							std::size_t coef3 = el.iu * iv;			
+
+							i->u.element.red	= static_cast<unsigned>((coef0 * col0.u.element.red + coef1 * col1.u.element.red + (coef2 * col2.u.element.red + coef3 * col3.u.element.red)) >> double_shift_size);
+							i->u.element.green	= static_cast<unsigned>((coef0 * col0.u.element.green + coef1 * col1.u.element.green + (coef2 * col2.u.element.green + coef3 * col3.u.element.green)) >> double_shift_size);
+							i->u.element.blue	= static_cast<unsigned>((coef0 * col0.u.element.blue + coef1 * col1.u.element.blue + (coef2 * col2.u.element.blue + coef3 * col3.u.element.blue)) >> double_shift_size);
+							i->u.element.alpha_channel =static_cast<unsigned>((coef0 * col0.u.element.alpha_channel + coef1 * col1.u.element.alpha_channel + (coef2 * col2.u.element.alpha_channel + coef3 * col3.u.element.alpha_channel)) >> double_shift_size);
+						}						
+					}
+					else
+					{
+						for(std::size_t x = 0; x < r_dst.width; ++x, ++i)
+						{
+							x_u_table_tag el = x_u_table[x];
+							
+							col0 = s_line[el.x];
+							col1 = next_s_line[el.x];
+
+							if(el.x < right_bound)
+							{
+								col2 = s_line[el.x + 1];
+								col3 = next_s_line[el.x + 1];
+							}
+							else
+							{
+								col2 = col0;
+								col3 = col1;
+							}
+							
+							std::size_t coef0 = el.iu_minus_coef * iv_minus_coef;
+							std::size_t coef1 = el.iu_minus_coef * iv;
+							std::size_t coef2 = el.iu * iv_minus_coef;
+							std::size_t coef3 = el.iu * iv;			
+
+							i->u.element.red = static_cast<unsigned>((coef0 * col0.u.element.red + coef1 * col1.u.element.red + (coef2 * col2.u.element.red + coef3 * col3.u.element.red)) >> double_shift_size);
+							i->u.element.green = static_cast<unsigned>((coef0 * col0.u.element.green + coef1 * col1.u.element.green + (coef2 * col2.u.element.green + coef3 * col3.u.element.green)) >> double_shift_size);
+							i->u.element.blue = static_cast<unsigned>((coef0 * col0.u.element.blue + coef1 * col1.u.element.blue + (coef2 * col2.u.element.blue + coef3 * col3.u.element.blue)) >> double_shift_size);
+						}
 					}
 				}
 				delete [] x_u_table;
-				pixbuf.paste(dw_dst, r_dst.x, r_dst.y);
 			}
 		};
 
@@ -174,12 +213,10 @@ namespace detail
 			: public image_process::blend_interface
 		{
 			//process
-			virtual void process(drawable_type dw_dst, const nana::rectangle& r_dst, const paint::pixel_buffer& s_pixbuf, const nana::point& s_pos, double fade_rate) const
+			virtual void process(const paint::pixel_buffer& s_pixbuf, const nana::rectangle& s_r, paint::pixel_buffer& d_pixbuf, const nana::point& d_pos, double fade_rate) const
 			{
-				paint::pixel_buffer d_pixbuf(dw_dst, r_dst.y, r_dst.height);
-
-				nana::pixel_rgb_t * d_rgb = d_pixbuf.raw_ptr() + r_dst.x;
-				nana::pixel_rgb_t * s_rgb = s_pixbuf.raw_ptr(s_pos.y) + s_pos.x;
+				nana::pixel_rgb_t * d_rgb = d_pixbuf.raw_ptr(d_pos.y) + d_pos.x;
+				nana::pixel_rgb_t * s_rgb = s_pixbuf.raw_ptr(s_r.y) + s_r.x;
 
 				if(d_rgb && s_rgb)
 				{
@@ -187,12 +224,12 @@ namespace detail
 					unsigned char* d_table = tablebuf;
 					unsigned char* s_table = d_table + 0x100;
 
-					const unsigned rest = r_dst.width & 0x3;
-					const unsigned length_align4 = r_dst.width - rest;
+					const unsigned rest = s_r.width & 0x3;
+					const unsigned length_align4 = s_r.width - rest;
 
-					unsigned d_step_width = d_pixbuf.size().width - r_dst.width + rest;
-					unsigned s_step_width = s_pixbuf.size().width - r_dst.width + rest;
-					for(unsigned line = 0; line < r_dst.height; ++line)
+					unsigned d_step_bytes = d_pixbuf.bytes_per_line() - (s_r.width - rest) * sizeof(pixel_rgb_t);
+					unsigned s_step_bytes = s_pixbuf.bytes_per_line() - (s_r.width - rest) * sizeof(pixel_rgb_t);
+					for(unsigned line = 0; line < s_r.height; ++line)
 					{
 						pixel_rgb_t* end = d_rgb + length_align4;
 						for(; d_rgb < end; d_rgb += 4, s_rgb += 4)
@@ -224,13 +261,9 @@ namespace detail
 							d_rgb[i].u.element.green = unsigned(d_table[d_rgb[i].u.element.green] + s_table[s_rgb[i].u.element.green]);
 							d_rgb[i].u.element.blue = unsigned(d_table[d_rgb[i].u.element.blue] + s_table[s_rgb[i].u.element.blue]);
 						}
-						d_rgb += d_step_width;
-						s_rgb += s_step_width;
+						d_rgb = pixel_at(d_rgb, d_step_bytes);
+						s_rgb = pixel_at(s_rgb, s_step_bytes);
 					}
-
-					nana::rectangle r = r_dst;
-					r.y = 0;
-					d_pixbuf.paste(r, dw_dst, r_dst.x, r_dst.y);
 					detail::free_fade_table(tablebuf);
 				}
 			}
@@ -242,6 +275,7 @@ namespace detail
 		{
 			virtual void process(paint::pixel_buffer & pixbuf, const nana::point& pos_beg, const nana::point& pos_end, nana::color_t color, double fade_rate) const
 			{
+				const std::size_t bytes_pl = pixbuf.bytes_per_line();
 				unsigned char * fade_table = 0;
 				nana::pixel_rgb_t rgb_imd;
 				if(fade_rate != 0.0)
@@ -252,23 +286,23 @@ namespace detail
 				}
 
 				nana::size px_size = pixbuf.size();
-				nana::pixel_rgb_t * i = pixbuf.raw_ptr() + pos_beg.y * px_size.width + pos_beg.x;
+				nana::pixel_rgb_t * i = pixel_at(pixbuf.raw_ptr(0), pos_beg.y * bytes_pl) + pos_beg.x;
 
 				int dx = pos_end.x - pos_beg.x;
 				int dy = pos_end.y - pos_beg.y;
 				
-				int step_line;
+				int step_bytes;
 				if(dy < 0)
 				{
 					dy = -dy;
-					step_line = -static_cast<int>(px_size.width);
+					step_bytes = -static_cast<int>(bytes_pl);
 				}
 				else
-					step_line = static_cast<int>(px_size.width);
+					step_bytes = static_cast<int>(bytes_pl);
 
 				if(dx == dy)
 				{
-					++step_line;
+					step_bytes += sizeof(pixel_rgb_t);
 					++dx;
 
 					if(fade_table)
@@ -276,7 +310,7 @@ namespace detail
 						for(int x = 0; x < dx; ++x)
 						{
 							*i = detail::fade_color_by_intermedia(*i, rgb_imd, fade_table);
-							i += step_line;
+							i = pixel_at(i, step_bytes);
 						}
 					}
 					else
@@ -284,7 +318,7 @@ namespace detail
 						for(int x = 0; x < dx; ++x)
 						{
 							i->u.color = color;
-							i += step_line;
+							i = pixel_at(i, step_bytes);
 						}			
 					}
 				}
@@ -305,7 +339,7 @@ namespace detail
 								if(error >= 0)
 								{
 									error -= dx_2;
-									i += step_line;
+									i = pixel_at(i, step_bytes);
 								}
 								error += dy_2;
 								++i;
@@ -319,7 +353,7 @@ namespace detail
 								if(error >= 0)
 								{
 									error -= dx_2;
-									i += step_line;
+									i = pixel_at(i, step_bytes);
 								}
 								error += dy_2;
 								++i;
@@ -342,7 +376,7 @@ namespace detail
 									++i;
 								}
 								error += dx_2;
-								i += step_line;
+								i = pixel_at(i, step_bytes);
 							}					
 						}
 						else
@@ -356,7 +390,7 @@ namespace detail
 									++i;
 								}
 								error += dx_2;
-								i += step_line;
+								i = pixel_at(i, step_bytes);
 							}
 						}
 					}
@@ -383,8 +417,6 @@ namespace detail
 				const int div_256 = div * 256;
 
 				nana::auto_buf<int> all_table((wh << 1) + wh + (large_edge << 1) + div_256);
-				//std::unique_ptr<int[]> all_table(new int[(wh << 1) + wh + (large_edge << 1) + div_256]);
-
 
 				int * r = all_table.get();
 				int * g = r + wh;
@@ -406,10 +438,10 @@ namespace detail
 					dv_block += div;
 				}
 
-				nana::pixel_rgb_t* const linepix = pixbuf.raw_ptr(area.y) + area.x;
+				nana::pixel_rgb_t* linepix = pixbuf.raw_ptr(area.y) + area.x;
 				const std::size_t line_pixels = pixbuf.size().width;
 
-				int yi = 0, yw = 0;
+				int yi = 0;
 				for(int y = 0; y < h; ++y)
 				{
 					int sum_r = 0, sum_g = 0, sum_b = 0;
@@ -417,7 +449,7 @@ namespace detail
 					{
 						for(int i = - radius; i <= radius; ++i)
 						{
-							nana::pixel_rgb_t px = linepix[yw + (i > 0 ? i : 0)];
+							nana::pixel_rgb_t px = linepix[(i > 0 ? i : 0)];
 							sum_r += px.u.element.red;
 							sum_g += px.u.element.green;
 							sum_b += px.u.element.blue;
@@ -427,7 +459,7 @@ namespace detail
 					{
 						for(int i = - radius; i <= radius; ++i)
 						{
-							nana::pixel_rgb_t px = linepix[yw + std::min(wm, (i > 0 ? i : 0))];
+							nana::pixel_rgb_t px = linepix[std::min(wm, (i > 0 ? i : 0))];
 							sum_r += px.u.element.red;
 							sum_g += px.u.element.green;
 							sum_b += px.u.element.blue;
@@ -446,19 +478,19 @@ namespace detail
 							vmax[x] = std::max(x - radius, 0);
 						}
 
-						nana::pixel_rgb_t p1 = linepix[yw + vmin[x]];
-						nana::pixel_rgb_t p2 = linepix[yw + vmax[x]];
+						nana::pixel_rgb_t p1 = linepix[vmin[x]];
+						nana::pixel_rgb_t p2 = linepix[vmax[x]];
 
 						sum_r += p1.u.element.red - p2.u.element.red;
 						sum_g += p1.u.element.green - p2.u.element.green;
 						sum_b += p1.u.element.blue - p2.u.element.blue;
 						++yi;
 					}
-					yw += static_cast<int>(line_pixels);
+					linepix = pixbuf.raw_ptr(area.y + y) + area.x;
 				}
 
 				const int yp_init = -radius * w;
-
+				const std::size_t bytes_pl = pixbuf.bytes_per_line();
 				for(int x = 0; x < w; ++x)
 				{
 					int sum_r = 0, sum_g = 0, sum_b = 0;
@@ -482,10 +514,10 @@ namespace detail
 						yp += w;
 					}
 
-					int tar_x = x;
+					linepix = pixbuf.raw_ptr(area.y) + x;
 					for(int y = 0; y < h; ++y)
 					{
-						linepix[tar_x].u.color = 0xFF000000 | (dv[sum_r] << 16) | (dv[sum_g] << 8) | dv[sum_b];
+						linepix->u.color = 0xFF000000 | (dv[sum_r] << 16) | (dv[sum_g] << 8) | dv[sum_b];
 						if(x == 0)
 						{
 							vmin[y] = std::min(y + radius + 1, hm) * w;
@@ -499,7 +531,7 @@ namespace detail
 						sum_g += g[pt1] - g[pt2];
 						sum_b += b[pt1] - b[pt2];
 
-						tar_x += static_cast<int>(line_pixels);
+						linepix = pixel_at(linepix, bytes_pl);
 					}
 				}
 			}

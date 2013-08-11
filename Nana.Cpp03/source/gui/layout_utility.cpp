@@ -182,6 +182,9 @@ namespace gui
 				else
 					return false;
 			}
+
+			if(good_pos_beg.x < pos_beg.x)
+				return false;
 		}
 		else
 			good_pos_beg = pos_beg;
@@ -219,6 +222,8 @@ namespace gui
 				else
 					return false;
 			}
+			if(good_pos_end.x > pos_end.x)
+				return false;
 		}
 		else
 			good_pos_end = pos_end;

@@ -66,6 +66,11 @@ namespace paint
 				return false;
 			}
 
+			bool image_ico::alpha_channel() const
+			{
+				return false;
+			}
+
 			bool image_ico::empty() const
 			{
 				return refer_.empty();

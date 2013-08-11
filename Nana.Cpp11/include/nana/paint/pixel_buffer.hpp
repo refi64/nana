@@ -17,6 +17,18 @@
 
 namespace nana{	namespace paint
 {
+	///@brief	Seek a pixel address by using offset bytes
+	///@return	the specified pixel address
+	inline pixel_rgb_t * pixel_at(pixel_rgb_t * p, std::size_t bytes)
+	{
+		return reinterpret_cast<pixel_rgb_t*>(reinterpret_cast<char*>(p) + bytes);
+	}
+
+	inline const pixel_rgb_t * pixel_at(const pixel_rgb_t * p, std::size_t bytes)
+	{
+		return reinterpret_cast<const pixel_rgb_t*>(reinterpret_cast<const char*>(p) + bytes);
+	}
+
 	class pixel_buffer
 	{
 		struct pixel_buffer_storage;
@@ -28,9 +40,14 @@ namespace nana{	namespace paint
 
 		~pixel_buffer();
 
+		void attach(drawable_type, const nana::rectangle& want_rectangle);
+
 		bool open(drawable_type);
 		bool open(drawable_type, const nana::rectangle& want_rectangle);
 		bool open(std::size_t width, std::size_t height);
+
+		void alpha_channel(bool enabled);
+		bool alpha_channel() const;
 
 		void close();
 
@@ -39,10 +56,12 @@ namespace nana{	namespace paint
 		operator const void*() const;
 
 		std::size_t bytes() const;
+		std::size_t bytes_per_line() const;
 		nana::size size() const;
-		
-		pixel_rgb_t * raw_ptr() const;
+
 		pixel_rgb_t * raw_ptr(std::size_t row) const;
+		pixel_rgb_t * operator[](std::size_t row) const;
+
 		void put(const unsigned char* rawbits, std::size_t width, std::size_t height, std::size_t bits_per_pixel, std::size_t bytes_per_line, bool is_negative);
 		
 		void line(const std::string& name);
@@ -55,13 +74,12 @@ namespace nana{	namespace paint
 		void pixel(int x, int y, pixel_rgb_t);
 
 		void paste(drawable_type, int x, int y) const;
-		void paste(const nana::rectangle& src_r, drawable_type, int x, int y) const;
+		void paste(const nana::rectangle& s_r, drawable_type, int x, int y) const;
 		void paste(gui::native_window_type, int x, int y) const;
 		void stretch(const std::string& name);
-		void stretch(const nana::rectangle& src_r, drawable_type, const nana::rectangle& r) const;
+		void stretch(const nana::rectangle& s_r, drawable_type, const nana::rectangle& r) const;
 		void blend(const std::string& name);
-		void blend(const nana::point& s_pos, drawable_type dw_dst, const nana::rectangle& d_r, double fade_rate) const;
-
+		void blend(const nana::rectangle& s_r, drawable_type dw_dst, const nana::point& d_pos, double fade_rate) const;
 		void blur(const nana::rectangle& r, std::size_t radius);
 
 	private:

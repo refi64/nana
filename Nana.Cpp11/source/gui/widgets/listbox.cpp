@@ -1734,7 +1734,7 @@ namespace nana{ namespace gui{
 					_m_draw_item(ext_graph, 0, 0, essence_->header_size, txtop, 0xFFFFFF, item, essence_t::state_t::floated);
 
 					int xpos = essence_->header.xpos(item.index) + pos.x - ref_xpos_;
-					ext_graph.blend(*(essence_->graph), xpos - essence_->scroll.offset_x + rect.x, rect.y, 0.5);
+					ext_graph.blend(ext_graph.size(), *(essence_->graph), nana::point(xpos - essence_->scroll.offset_x + rect.x, rect.y), 0.5);
 				}
 
 			private:

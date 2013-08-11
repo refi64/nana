@@ -25,14 +25,14 @@ namespace nana
 			{
 			public:
 				virtual ~stretch_interface() = 0;
-				virtual void process(const paint::pixel_buffer & s_pixbuf, const nana::rectangle& r_src, drawable_type dw_dst, const nana::rectangle& r_dst) const = 0;
+				virtual void process(const paint::pixel_buffer & s_pixbuf, const nana::rectangle& s_r, paint::pixel_buffer & d_pixbuf, const nana::rectangle& d_r) const = 0;
 			};
 
 			class blend_interface
 			{
 			public:
 				virtual ~blend_interface() = 0;
-				virtual void process(drawable_type dw_dst, const nana::rectangle& r_dst, const paint::pixel_buffer& s_pixbuf, const nana::point& s_pos, double fade_rate) const = 0;
+				virtual void process(const paint::pixel_buffer& s_pixbuf, const nana::rectangle& s_r, paint::pixel_buffer& d_pixbuf, const nana::point& d_pos, double fade_rate) const = 0;
 			};
 
 			class line_interface

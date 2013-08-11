@@ -22,18 +22,18 @@ namespace nana
 namespace detail
 {
 	drawable_impl_type::drawable_impl_type()
-		: fgcolor_(0xFFFFFFFF)
+		: fgcolor_(0xFFFFFFFF), pixbuf_ptr(nullptr), bytes_per_line(0)
 	{
-		pen.handle = 0;
+		pen.handle = nullptr;
 		pen.color = nana::null_color;
 		pen.style = -1;
 		pen.width = -1;
 
-		brush.handle = 0;
+		brush.handle = nullptr;
 		brush.style = brush_spec::Solid;
 		brush.color = nana::null_color;
 
-		round_region.handle = 0;
+		round_region.handle = nullptr;
 		round_region.radius_x = round_region.radius_y = 0;
 
 		string.tab_length = 4;

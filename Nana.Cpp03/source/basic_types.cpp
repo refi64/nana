@@ -16,6 +16,9 @@ namespace nana
 	//struct point
 		point::point():x(0), y(0){}
 		point::point(int x, int y):x(x), y(y){}
+		point::point(const rectangle& r)
+			: x(r.x), y(r.y)
+		{}
 
 		bool point::operator==(const point& rhs) const
 		{
@@ -82,6 +85,9 @@ namespace nana
 	//struct size
 		size::size():width(0), height(0){}
 		size::size(unsigned width, unsigned height):width(width), height(height){}
+		size::size(const rectangle& r)
+			: width(r.width), height(r.height)
+		{}
 
 		bool size::is_zero() const
 		{

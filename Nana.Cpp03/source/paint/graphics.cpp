@@ -269,7 +269,17 @@ namespace paint
 				HDC hdc = ::GetDC(0);
 				HDC cdc = ::CreateCompatibleDC(hdc);
 
-				HBITMAP bmp = ::CreateCompatibleBitmap(hdc, width, height);
+				BITMAPINFO bmi;
+				bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+				bmi.bmiHeader.biWidth = width;
+				bmi.bmiHeader.biHeight = -static_cast<int>(height);
+				bmi.bmiHeader.biPlanes = 1;
+				bmi.bmiHeader.biBitCount = 32;         // four 8-bit components 
+				bmi.bmiHeader.biCompression = BI_RGB;
+				bmi.bmiHeader.biSizeImage = (width * height) << 2;
+
+				HBITMAP bmp = ::CreateDIBSection(cdc, &bmi, DIB_RGB_COLORS, reinterpret_cast<void**>(&(dw->pixbuf_ptr)), 0, 0);
+
 				if(bmp)
 				{
 					::DeleteObject((HBITMAP)::SelectObject(cdc, bmp));
@@ -302,6 +312,9 @@ namespace paint
 				if(dw)
 				{
 					dw->fgcolor(0);
+#if defined(NANA_WINDOWS)
+					dw->bytes_per_line = width * sizeof(pixel_rgb_t);
+#endif
 					ref_ = dw;
 					handle_ = dw;
 					size_.width = width;
@@ -853,28 +866,14 @@ namespace paint
 			}
 		}
 
-		void graphics::blend(graphics& dst, int x, int y, double fade_rate) const
+		void graphics::blend(const nana::rectangle& s_r, graphics& dst, const nana::point& d_pos, double fade_rate) const
 		{
 			if(dst.handle_ && handle_ && (dst.handle_ != handle_))
 			{
-				pixel_buffer pixbuf(handle_, 0, size_.height);
-				pixbuf.blend(nana::point(), dst.handle_, nana::rectangle(x, y, size_.width, size_.height), fade_rate);
+				pixel_buffer s_pixbuf;
+				s_pixbuf.attach(handle_, size());
 
-				if(dst.changed_ == false) dst.changed_ = true;
-			}
-		}
-
-		void graphics::blend(const nana::point& s_pos, graphics& dst, const nana::rectangle& r, double fade_rate) const
-		{
-			if(dst.handle_ && handle_ && (dst.handle_ != handle_))
-			{
-				nana::rectangle s_r(s_pos.x, s_pos.y, r.width, r.height);
-				nana::rectangle s_good_r, d_good_r;
-				if(nana::gui::overlap(s_r, size_, r, dst.size_, s_good_r, d_good_r) == false)
-					return;
-
-				pixel_buffer pixbuf(handle_, s_good_r.y, s_good_r.height);
-				pixbuf.blend(nana::point(s_good_r.x, 0), dst.handle_, d_good_r, fade_rate);
+				s_pixbuf.blend(s_r, dst.handle_, d_pos, fade_rate);
 
 				if(dst.changed_ == false) dst.changed_ = true;
 			}
@@ -918,7 +917,7 @@ namespace paint
 
 				pixel_buffer pixbuf(handle_, 0, 0);
 
-				nana::pixel_rgb_t * pixels = pixbuf.raw_ptr();
+				nana::pixel_rgb_t * pixels = pixbuf.raw_ptr(0);
 
 				const nana::size sz = paint::detail::drawable_size(handle_);
 				const int rest = sz.width % 4;

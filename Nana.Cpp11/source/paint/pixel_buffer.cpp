@@ -16,14 +16,35 @@
 #include <nana/paint/detail/native_paint_interface.hpp>
 #include <nana/paint/detail/image_process_provider.hpp>
 
+#include <stdexcept>
+
 namespace nana{	namespace paint
 {
+
+	nana::rectangle valid_rectangle(const nana::size& s, const nana::rectangle& r)
+	{
+		nana::rectangle good_r;
+		nana::gui::overlap(s, r, good_r);
+		return good_r;
+	}
+
 	struct pixel_buffer::pixel_buffer_storage
 		: private nana::noncopyable
 	{
 	public:
-		pixel_rgb_t * const raw_pixel_buffer;
+		const drawable_type drawable; //Attached handle
+		const nana::rectangle valid_r;
 		const nana::size pixel_size;
+		pixel_rgb_t * raw_pixel_buffer;
+		const std::size_t bytes_per_line;
+		bool	alpha_channel;
+#if defined(NANA_X11)
+		struct x11_members
+		{
+			bool attached;
+			XImage * image;
+		}x11;
+#endif
 
 		struct image_processor_tag
 		{
@@ -51,15 +72,97 @@ namespace nana{	namespace paint
 		}img_pro;
 
 		pixel_buffer_storage(std::size_t width, std::size_t height)
-			:	raw_pixel_buffer(new pixel_rgb_t[width * height]),
-				pixel_size(static_cast<unsigned>(width), static_cast<unsigned>(height))
-		{}
+			:	drawable(nullptr),
+				valid_r(0, 0, static_cast<unsigned>(width), static_cast<unsigned>(height)),
+				pixel_size(static_cast<unsigned>(width), static_cast<unsigned>(height)),
+				raw_pixel_buffer(new pixel_rgb_t[width * height]),
+				bytes_per_line(width * sizeof(pixel_rgb_t)),
+				alpha_channel(false)
+		{
+#if defined(NANA_X11)
+			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
+			x11.image = ::XCreateImage(spec.open_display(), spec.screen_visual(), spec.screen_depth(), ZPixmap, 0, reinterpret_cast<char*>(raw_pixel_buffer), width, height, 32, 0);
+			x11.attached = false;
+			if(nullptr == x11.image)
+			{
+				delete [] raw_pixel_buffer;
+				throw std::runtime_error("Nana.pixel_buffer: XCreateImage failed");
+			}
+			
+			if(static_cast<int>(bytes_per_line) != x11.image->bytes_per_line)
+			{
+				x11.image->data = nullptr;
+				XDestroyImage(x11.image);
+				delete [] raw_pixel_buffer;
+				throw std::runtime_error("Nana.pixel_buffer: Invalid pixel buffer context.");
+			}
+#endif
+		}
 
+		pixel_buffer_storage(drawable_type drawable, const nana::rectangle& want_r)
+			:	drawable(drawable),
+				valid_r(valid_rectangle(paint::detail::drawable_size(drawable), want_r)),
+				pixel_size(valid_r),
+#if defined(NANA_WINDOWS)
+				raw_pixel_buffer(reinterpret_cast<pixel_rgb_t*>(reinterpret_cast<char*>(drawable->pixbuf_ptr + valid_r.x) + drawable->bytes_per_line * valid_r.y)),
+				bytes_per_line(drawable->bytes_per_line)
+#else
+				bytes_per_line(sizeof(pixel_rgb_t) * valid_r.width)
+#endif
+		{
+#if defined(NANA_X11)
+			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
+			x11.image = ::XGetImage(spec.open_display(), drawable->pixmap, valid_r.x, valid_r.y, valid_r.width, valid_r.height, AllPlanes, ZPixmap);
+			x11.attached = true;
+			if(nullptr == x11.image)
+				throw std::runtime_error("Nana.pixel_buffer: XGetImage failed");
+
+			if(x11.image->depth == 32 || (x11.image->depth == 24 && x11.image->bitmap_pad == 32))
+			{
+				raw_pixel_buffer = reinterpret_cast<pixel_rgb_t*>(x11.image->data);
+			}
+			else
+			{
+				XDestroyImage(x11.image);
+				throw std::runtime_error("Nana.pixel_buffer: The color depth is not supported");
+			}
+
+			if(static_cast<int>(bytes_per_line) != x11.image->bytes_per_line)
+			{
+				XDestroyImage(x11.image);
+				throw std::runtime_error("Nana.pixel_buffer: Invalid pixel buffer context.");
+			}
+#endif
+		}
 
 		~pixel_buffer_storage()
 		{
-			delete [] raw_pixel_buffer;
+#if defined(NANA_X11)
+			auto & spec = nana::detail::platform_spec::instance();
+			
+			if(nullptr == drawable) //not attached
+			{
+				x11.image->data = nullptr;	//the image data is allocated by pixel_buffer when it is not attached with a drawable
+				delete [] raw_pixel_buffer;
+			}
+			else if(x11.attached)	//the image should be uploaded when it is attached.
+				::XPutImage(spec.open_display(), drawable->pixmap, drawable->context, x11.image, 0, 0, valid_r.x, valid_r.y, valid_r.width, valid_r.height);
+			
+			XDestroyImage(x11.image);
+#else
+			if(nullptr == drawable)	//not attached
+				delete [] raw_pixel_buffer;
+#endif
 		}
+
+#if defined(NANA_X11)
+		//The implementation of attach in X11 is same with non-attach's, because the image buffer of drawable can't be refered indirectly
+		//so the pixel_buffer::open() method may call the attached version of pixel_buffer_storage construction.
+		void detach()
+		{
+			x11.attached = false;
+		}
+#endif
 	};
 
 	pixel_buffer::pixel_buffer()
@@ -85,19 +188,30 @@ namespace nana{	namespace paint
 		close();
 	}
 
+	void pixel_buffer::attach(drawable_type drawable, const nana::rectangle& want_r)
+	{
+		storage_.reset();
+		if(drawable)
+		{
+			nana::rectangle r;
+			if(nana::gui::overlap(nana::paint::detail::drawable_size(drawable), want_r, r))
+				storage_ = std::make_shared<pixel_buffer_storage>(drawable, r);
+		}
+	}
+
 	bool pixel_buffer::open(drawable_type drawable)
 	{
 		nana::size sz = nana::paint::detail::drawable_size(drawable);
 		if(sz.is_zero()) return false;
 
+#if defined(NANA_WINDOWS)
 		auto * sp = storage_.get();
-		if(nullptr == sp || storage_->pixel_size != sz)
+		if((nullptr == sp) || (sp->pixel_size != sz) || sp->drawable/*attached*/)
 		{
 			storage_ = std::make_shared<pixel_buffer_storage>(sz.width, sz.height);
 			sp = storage_.get();
 		}
 
-#if defined(NANA_WINDOWS)
 		BITMAPINFO bmpinfo;
 		bmpinfo.bmiHeader.biSize = sizeof(bmpinfo.bmiHeader);
 		bmpinfo.bmiHeader.biWidth = sz.width;
@@ -113,29 +227,16 @@ namespace nana{	namespace paint
 
 		return (sz.height == read_lines);
 #elif defined(NANA_X11)
-		nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
-		Window root;
-		int x, y;
-		unsigned width, height;
-		unsigned border, depth;
-		nana::detail::platform_scope_guard psg;
-		::XGetGeometry(spec.open_display(), drawable->pixmap, &root, &x, &y, &width, &height, &border, &depth);
-
-		XImage * image = ::XGetImage(spec.open_display(), drawable->pixmap, 0, 0, sz.width, sz.height, AllPlanes, ZPixmap);
-		pixel_rgb_t * pixbuf = sp->raw_pixel_buffer;
-		if(image->depth == 32 || (image->depth == 24 && image->bitmap_pad == 32))
+		try
 		{
-			memcpy(pixbuf, image->data, image->bytes_per_line * image->height);
+			storage_ = std::make_shared<pixel_buffer_storage>(drawable, sz);
+			storage_->detach();
+			return true;
 		}
-		else
-		{
-			XDestroyImage(image);
-			return false;
-		}
-
-		XDestroyImage(image);
-		return true;
+		catch(...)
+		{}
 #endif
+		return false;
 	}
 
 	bool pixel_buffer::open(drawable_type drawable, const nana::rectangle & want_rectangle)
@@ -237,6 +338,17 @@ namespace nana{	namespace paint
 		return false;
 	}
 
+	void pixel_buffer::alpha_channel(bool enabled)
+	{
+		if(storage_)
+			storage_->alpha_channel = enabled;
+	}
+
+	bool pixel_buffer::alpha_channel() const
+	{
+		return (storage_ ? storage_->alpha_channel : false);
+	}
+
 	void pixel_buffer::close()
 	{
 		storage_ = nullptr;
@@ -262,22 +374,28 @@ namespace nana{	namespace paint
 		return 0;
 	}
 
+	std::size_t pixel_buffer::bytes_per_line() const
+	{
+		return (storage_ ? storage_->bytes_per_line : 0);
+	}
+
 	nana::size pixel_buffer::size() const
 	{
 		return (storage_ ? storage_->pixel_size : nana::size());
-	}
-
-	pixel_rgb_t * pixel_buffer::raw_ptr() const
-	{
-		return (storage_ ? storage_->raw_pixel_buffer : nullptr);
 	}
 
 	pixel_rgb_t * pixel_buffer::raw_ptr(std::size_t row) const
 	{
 		pixel_buffer_storage * sp = storage_.get();
 		if(sp && (row < sp->pixel_size.height))
-			return sp->raw_pixel_buffer + sp->pixel_size.width * row;
+			return reinterpret_cast<pixel_rgb_t*>(reinterpret_cast<char*>(sp->raw_pixel_buffer) + sp->bytes_per_line * row);
 		return nullptr;
+	}
+
+	pixel_rgb_t * pixel_buffer::operator[](std::size_t row) const
+	{
+		pixel_buffer_storage * sp = storage_.get();
+		return reinterpret_cast<pixel_rgb_t*>(reinterpret_cast<char*>(sp->raw_pixel_buffer) + sp->bytes_per_line * row);
 	}
 
 	void pixel_buffer::put(const unsigned char* rawbits, std::size_t width, std::size_t height, std::size_t bits_per_pixel, std::size_t bytes_per_line, bool is_negative)
@@ -438,22 +556,17 @@ namespace nana{	namespace paint
 	pixel_rgb_t pixel_buffer::pixel(int x, int y) const
 	{
 		pixel_buffer_storage * sp = storage_.get();
-		if(sp)
-		{
-			if(0 <= x && x < static_cast<int>(sp->pixel_size.width) && 0 <= y && y < static_cast<int>(sp->pixel_size.height))
-				return *(sp->raw_pixel_buffer + y * sp->pixel_size.width + x);
-		}
+		if(sp && 0 <= x && x < static_cast<int>(sp->pixel_size.width) && 0 <= y && y < static_cast<int>(sp->pixel_size.height))
+			return *reinterpret_cast<const pixel_rgb_t*>(reinterpret_cast<const char*>(sp->raw_pixel_buffer + x) + y * sp->bytes_per_line);
+
 		return pixel_rgb_t();
 	}
 
 	void pixel_buffer::pixel(int x, int y, pixel_rgb_t px)
 	{
 		pixel_buffer_storage * sp = storage_.get();
-		if(sp)
-		{
-			if(0 <= x && x < static_cast<int>(sp->pixel_size.width) && 0 <= y && y < static_cast<int>(sp->pixel_size.height))
-				*(sp->raw_pixel_buffer + y * sp->pixel_size.width + x) = px;
-		}
+		if(sp && 0 <= x && x < static_cast<int>(sp->pixel_size.width) && 0 <= y && y < static_cast<int>(sp->pixel_size.height))
+			*reinterpret_cast<pixel_rgb_t*>(reinterpret_cast<char*>(sp->raw_pixel_buffer + x) + y * sp->bytes_per_line) = px;
 	}
 
 	void pixel_buffer::paste(drawable_type drawable, int x, int y) const
@@ -820,7 +933,11 @@ namespace nana{	namespace paint
 
 		nana::rectangle good_src_r, good_dst_r;
 		if(gui::overlap(src_r, sp->pixel_size, r, paint::detail::drawable_size(drawable), good_src_r, good_dst_r))
-			(*(sp->img_pro.stretch))->process(*this, good_src_r, drawable, good_dst_r);
+		{
+			pixel_buffer dst;
+			dst.attach(drawable, good_dst_r);
+			(*(sp->img_pro.stretch))->process(*this, good_src_r, dst, nana::rectangle(0, 0, good_dst_r.width, good_dst_r.height));
+		}
 	}
 
 	//blend
@@ -838,16 +955,18 @@ namespace nana{	namespace paint
 		}
 	}
 
-	void pixel_buffer::blend(const nana::point& s_pos, drawable_type dw_dst, const nana::rectangle& r_dst, double fade_rate) const
+	void pixel_buffer::blend(const nana::rectangle& s_r, drawable_type dw_dst, const nana::point& d_pos, double fade_rate) const
 	{
 		pixel_buffer_storage * sp = storage_.get();
 		if(nullptr == sp) return;
 
-		nana::rectangle s_r(s_pos.x, s_pos.y, r_dst.width, r_dst.height);
-
 		nana::rectangle s_good_r, d_good_r;
-		if(gui::overlap(s_r, sp->pixel_size, r_dst, paint::detail::drawable_size(dw_dst), s_good_r, d_good_r))
-			(*(sp->img_pro.blend))->process(dw_dst, d_good_r, *this, nana::point(s_good_r.x, s_good_r.y), fade_rate);
+		if(gui::overlap(s_r, sp->pixel_size, nana::rectangle(d_pos.x, d_pos.y, s_r.width, s_r.height), paint::detail::drawable_size(dw_dst), s_good_r, d_good_r))
+		{
+			pixel_buffer d_pixbuf;
+			d_pixbuf.attach(dw_dst, d_good_r);
+			(*(sp->img_pro.blend))->process(*this, s_good_r, d_pixbuf, nana::point(), fade_rate);
+		}
 	}
 
 	void pixel_buffer::blur(const nana::rectangle& r, std::size_t radius)

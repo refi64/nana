@@ -49,7 +49,7 @@ namespace detail
 	}
 
 
-	unsigned char * fade_table(double fade_rate)
+	unsigned char * alloc_fade_table(double fade_rate)
 	{
 		unsigned char* tablebuf = new unsigned char[0x100 * 2];
 		unsigned char* d_table = tablebuf;

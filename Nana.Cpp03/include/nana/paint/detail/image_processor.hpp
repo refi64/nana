@@ -52,13 +52,44 @@ namespace detail
 
 				pixel_rgb_t * s_raw_pixbuf = s_pixbuf.raw_ptr(0);
 
-				for(std::size_t row = 0; row < r_dst.height; ++row)
+				if(s_pixbuf.alpha_channel())
 				{
-					const pixel_rgb_t * s_line = pixel_at(s_raw_pixbuf, (static_cast<int>(row * rate_y) + r_src.y) * bytes_per_line);
-					pixel_rgb_t * i = pixbuf.raw_ptr(r_dst.y + row);
+					for(std::size_t row = 0; row < r_dst.height; ++row)
+					{
+						const pixel_rgb_t * s_line = pixel_at(s_raw_pixbuf, (static_cast<int>(row * rate_y) + r_src.y) * bytes_per_line);
+						pixel_rgb_t * i = pixbuf.raw_ptr(r_dst.y + row);
 
-					for(std::size_t x = 0; x < r_dst.width; ++x, ++i)
-						*i = s_line[static_cast<int>(x * rate_x) + r_src.x];
+						for(std::size_t x = 0; x < r_dst.width; ++x, ++i)
+						{
+							const pixel_rgb_t * s = s_line + static_cast<int>(x * rate_x) + r_src.x;
+							if(0 == s->u.element.alpha_channel)
+								continue;
+							
+							if(s->u.element.alpha_channel != 255)
+							{
+								i->u.element.red = unsigned(i->u.element.red * (255 - s->u.element.alpha_channel) + s->u.element.red * s->u.element.alpha_channel) / 255;
+								i->u.element.green = unsigned(i->u.element.green * (255 - s->u.element.alpha_channel) + s->u.element.green * s->u.element.alpha_channel) / 255;
+								i->u.element.blue = unsigned(i->u.element.blue * (255 - s->u.element.alpha_channel) + s->u.element.blue * s->u.element.alpha_channel) / 255;
+							}
+							else
+							{
+								unsigned alpha_chn = i->u.element.alpha_channel;
+								*i = *s;
+								i->u.element.alpha_channel = alpha_chn;
+							}
+						}
+					}				
+				}
+				else
+				{
+					for(std::size_t row = 0; row < r_dst.height; ++row)
+					{
+						const pixel_rgb_t * s_line = pixel_at(s_raw_pixbuf, (static_cast<int>(row * rate_y) + r_src.y) * bytes_per_line);
+						pixel_rgb_t * i = pixbuf.raw_ptr(r_dst.y + row);
+
+						for(std::size_t x = 0; x < r_dst.width; ++x, ++i)
+							*i = s_line[static_cast<int>(x * rate_x) + r_src.x];
+					}
 				}
 			}
 		};
@@ -167,10 +198,26 @@ namespace detail
 							std::size_t coef2 = el.iu * iv_minus_coef;
 							std::size_t coef3 = el.iu * iv;			
 
-							i->u.element.red	= static_cast<unsigned>((coef0 * col0.u.element.red + coef1 * col1.u.element.red + (coef2 * col2.u.element.red + coef3 * col3.u.element.red)) >> double_shift_size);
-							i->u.element.green	= static_cast<unsigned>((coef0 * col0.u.element.green + coef1 * col1.u.element.green + (coef2 * col2.u.element.green + coef3 * col3.u.element.green)) >> double_shift_size);
-							i->u.element.blue	= static_cast<unsigned>((coef0 * col0.u.element.blue + coef1 * col1.u.element.blue + (coef2 * col2.u.element.blue + coef3 * col3.u.element.blue)) >> double_shift_size);
-							i->u.element.alpha_channel =static_cast<unsigned>((coef0 * col0.u.element.alpha_channel + coef1 * col1.u.element.alpha_channel + (coef2 * col2.u.element.alpha_channel + coef3 * col3.u.element.alpha_channel)) >> double_shift_size);
+							unsigned alpha_chn = static_cast<unsigned>((coef0 * col0.u.element.alpha_channel + coef1 * col1.u.element.alpha_channel + (coef2 * col2.u.element.alpha_channel + coef3 * col3.u.element.alpha_channel)) >> double_shift_size);
+							unsigned s_red = static_cast<unsigned>((coef0 * col0.u.element.red + coef1 * col1.u.element.red + (coef2 * col2.u.element.red + coef3 * col3.u.element.red)) >> double_shift_size);
+							unsigned s_green = static_cast<unsigned>((coef0 * col0.u.element.green + coef1 * col1.u.element.green + (coef2 * col2.u.element.green + coef3 * col3.u.element.green)) >> double_shift_size);
+							unsigned s_blue = static_cast<unsigned>((coef0 * col0.u.element.blue + coef1 * col1.u.element.blue + (coef2 * col2.u.element.blue + coef3 * col3.u.element.blue)) >> double_shift_size);
+
+							if(alpha_chn)
+							{
+								if(alpha_chn != 255)
+								{
+									i->u.element.red	= unsigned(i->u.element.red * (255 - alpha_chn) + s_red * alpha_chn) / 255;
+									i->u.element.green	= unsigned(i->u.element.green * (255 - alpha_chn) + s_green * alpha_chn) / 255;
+									i->u.element.blue	= unsigned(i->u.element.blue * (255 - alpha_chn) + s_blue * alpha_chn) / 255;
+								}
+								else
+								{
+									i->u.element.red = s_red;
+									i->u.element.green = s_green;
+									i->u.element.blue = s_blue;
+								}
+							}
 						}						
 					}
 					else
@@ -208,6 +255,103 @@ namespace detail
 			}
 		};
 
+		//alpha_blend
+		class alpha_blend
+			: public image_process::alpha_blend_interface
+		{
+			//process
+			virtual void process(const paint::pixel_buffer& s_pixbuf, const nana::rectangle& s_r, paint::pixel_buffer& d_pixbuf, const nana::point& d_pos) const
+			{
+				nana::pixel_rgb_t * d_rgb = d_pixbuf.raw_ptr(d_pos.y) + d_pos.x;
+				nana::pixel_rgb_t * s_rgb = s_pixbuf.raw_ptr(s_r.y) + s_r.x;
+				if(d_rgb && s_rgb)
+				{
+					const unsigned rest = s_r.width & 0x3;
+					const unsigned length_align4 = s_r.width - rest;
+
+					std::size_t d_step_bytes = d_pixbuf.bytes_per_line() - (s_r.width - rest) * sizeof(pixel_rgb_t);
+					std::size_t s_step_bytes = s_pixbuf.bytes_per_line() - (s_r.width - rest) * sizeof(pixel_rgb_t);
+					for(unsigned line = 0; line < s_r.height; ++line)
+					{
+						pixel_rgb_t* end = d_rgb + length_align4;
+						for(; d_rgb < end; d_rgb += 4, s_rgb += 4)
+						{
+							//0
+							if(s_rgb->u.element.alpha_channel)
+							{
+								if(s_rgb->u.element.alpha_channel != 255)
+								{
+									d_rgb->u.element.red = unsigned(d_rgb->u.element.red * (255 - s_rgb[0].u.element.alpha_channel) + s_rgb[0].u.element.red * s_rgb[0].u.element.alpha_channel) / 255;
+									d_rgb->u.element.green = unsigned(d_rgb->u.element.green * (255 - s_rgb[0].u.element.alpha_channel) + s_rgb[0].u.element.green * s_rgb[0].u.element.alpha_channel) / 255;
+									d_rgb->u.element.blue = unsigned(d_rgb->u.element.blue * (255 - s_rgb[0].u.element.alpha_channel) + s_rgb[0].u.element.blue * s_rgb[0].u.element.alpha_channel) / 255;
+								}
+								else
+									*d_rgb = *s_rgb;
+							}
+
+							//1
+							if(s_rgb[1].u.element.alpha_channel)
+							{
+								if(s_rgb[1].u.element.alpha_channel != 255)
+								{
+									d_rgb[1].u.element.red = unsigned(d_rgb[1].u.element.red * (255 - s_rgb[1].u.element.alpha_channel) + s_rgb[1].u.element.red * s_rgb[1].u.element.alpha_channel) / 255;
+									d_rgb[1].u.element.green = unsigned(d_rgb[1].u.element.green * (255 - s_rgb[1].u.element.alpha_channel) + s_rgb[1].u.element.green * s_rgb[1].u.element.alpha_channel) / 255;
+									d_rgb[1].u.element.blue = unsigned(d_rgb[1].u.element.blue * (255 - s_rgb[1].u.element.alpha_channel) + s_rgb[1].u.element.blue * s_rgb[1].u.element.alpha_channel) / 255;
+								}
+								else
+									d_rgb[1] = s_rgb[1];
+							}
+
+							//2
+							if(s_rgb[2].u.element.alpha_channel)
+							{
+								if(s_rgb[2].u.element.alpha_channel != 255)
+								{
+									d_rgb[2].u.element.red = unsigned(d_rgb[2].u.element.red * (255 - s_rgb[2].u.element.alpha_channel) + s_rgb[2].u.element.red * s_rgb[2].u.element.alpha_channel) / 255;
+									d_rgb[2].u.element.green = unsigned(d_rgb[2].u.element.green * (255 - s_rgb[2].u.element.alpha_channel) + s_rgb[2].u.element.green * s_rgb[2].u.element.alpha_channel) / 255;
+									d_rgb[2].u.element.blue = unsigned(d_rgb[2].u.element.blue * (255 - s_rgb[2].u.element.alpha_channel) + s_rgb[2].u.element.blue * s_rgb[2].u.element.alpha_channel) / 255;
+								}
+								else
+									d_rgb[2] = s_rgb[2];
+							}
+
+							//3
+							if(s_rgb[3].u.element.alpha_channel)
+							{
+								if(s_rgb[3].u.element.alpha_channel != 255)
+								{
+									d_rgb[3].u.element.red = unsigned(d_rgb[3].u.element.red * (255 - s_rgb[3].u.element.alpha_channel) + s_rgb[3].u.element.red * s_rgb[3].u.element.alpha_channel) / 255;
+									d_rgb[3].u.element.green = unsigned(d_rgb[3].u.element.green * (255 - s_rgb[3].u.element.alpha_channel) + s_rgb[3].u.element.green * s_rgb[3].u.element.alpha_channel) / 255;
+									d_rgb[3].u.element.blue = unsigned(d_rgb[3].u.element.blue * (255 - s_rgb[3].u.element.alpha_channel) + s_rgb[3].u.element.blue * s_rgb[3].u.element.alpha_channel) / 255;
+								}
+								else
+									d_rgb[3] = s_rgb[3];
+							}
+						}
+
+						const pixel_rgb_t * s_end = s_rgb + rest;
+						for(pixel_rgb_t* i = s_rgb; i != s_end; ++i)
+						{
+							if(i->u.element.alpha_channel)
+							{
+								if(i->u.element.alpha_channel != 255)
+								{
+									d_rgb[3].u.element.red = unsigned(d_rgb[3].u.element.red * (255 - i->u.element.alpha_channel) + i->u.element.red * i->u.element.alpha_channel) / 255;
+									d_rgb[3].u.element.green = unsigned(d_rgb[3].u.element.green * (255 - i->u.element.alpha_channel) + i->u.element.green * i->u.element.alpha_channel) / 255;
+									d_rgb[3].u.element.blue = unsigned(d_rgb[3].u.element.blue * (255 - i->u.element.alpha_channel) + i->u.element.blue * i->u.element.alpha_channel) / 255;
+								}
+								else
+									d_rgb[3] = *i;
+							}
+						}
+						d_rgb = pixel_at(d_rgb, d_step_bytes);
+						s_rgb = pixel_at(s_rgb, s_step_bytes);
+					}
+				}
+			}
+		
+		};
+
 		//blend
 		class blend
 			: public image_process::blend_interface
@@ -220,15 +364,15 @@ namespace detail
 
 				if(d_rgb && s_rgb)
 				{
-					unsigned char* tablebuf = detail::fade_table(fade_rate);//new unsigned char[0x100 * 2];
+					unsigned char* tablebuf = detail::alloc_fade_table(fade_rate);//new unsigned char[0x100 * 2];
 					unsigned char* d_table = tablebuf;
 					unsigned char* s_table = d_table + 0x100;
 
 					const unsigned rest = s_r.width & 0x3;
 					const unsigned length_align4 = s_r.width - rest;
 
-					unsigned d_step_bytes = d_pixbuf.bytes_per_line() - (s_r.width - rest) * sizeof(pixel_rgb_t);
-					unsigned s_step_bytes = s_pixbuf.bytes_per_line() - (s_r.width - rest) * sizeof(pixel_rgb_t);
+					std::size_t d_step_bytes = d_pixbuf.bytes_per_line() - (s_r.width - rest) * sizeof(pixel_rgb_t);
+					std::size_t s_step_bytes = s_pixbuf.bytes_per_line() - (s_r.width - rest) * sizeof(pixel_rgb_t);
 					for(unsigned line = 0; line < s_r.height; ++line)
 					{
 						pixel_rgb_t* end = d_rgb + length_align4;
@@ -280,7 +424,7 @@ namespace detail
 				nana::pixel_rgb_t rgb_imd;
 				if(fade_rate != 0.0)
 				{
-					fade_table = detail::fade_table(1 - fade_rate);
+					fade_table = detail::alloc_fade_table(1 - fade_rate);
 					rgb_imd.u.color = color;
 					rgb_imd = detail::fade_color_intermedia(rgb_imd, fade_table);
 				}

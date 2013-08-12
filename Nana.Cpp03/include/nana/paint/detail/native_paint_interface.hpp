@@ -21,7 +21,7 @@ namespace detail
 {
 	nana::size drawable_size(drawable_type);
 
-	unsigned char * fade_table(double fade_rate);
+	unsigned char * alloc_fade_table(double fade_rate);
 	void free_fade_table(const unsigned char*);
 
 	//color = bgcolor * fade_rate + fgcolor * (1 - fade_rate);

@@ -47,6 +47,8 @@ namespace nana{	namespace paint
 		{
 			paint::image_process::stretch_interface * stretch_receptacle;
 			paint::image_process::stretch_interface * const * stretch;
+			paint::image_process::alpha_blend_interface * alpha_blend_receptacle;
+			paint::image_process::alpha_blend_interface * const * alpha_blend;
 			paint::image_process::blend_interface * blend_receptacle;
 			paint::image_process::blend_interface * const * blend;
 			paint::image_process::line_interface * line_receptacle;
@@ -56,12 +58,14 @@ namespace nana{	namespace paint
 
 			image_processor_tag()
 				:	stretch_receptacle(0),
+					alpha_blend_receptacle(0),
 					blend_receptacle(0),
 					line_receptacle(0),
 					blur_receptacle(0)
 			{
 				detail::image_process_provider & provider = detail::image_process_provider::instance();
 				stretch = provider.stretch();
+				alpha_blend = provider.alpha_blend();
 				blend = provider.blend();
 				line = provider.line();
 				blur = provider.blur();
@@ -589,9 +593,21 @@ namespace nana{	namespace paint
 
 	void pixel_buffer::paste(const nana::rectangle& src_r, drawable_type drawable, int x, int y) const
 	{
-		pixel_buffer_storage * sp = storage_.handle();
-		if(drawable && sp)
+		if(drawable && !storage_.empty())
 		{
+			pixel_buffer_storage * sp = storage_.handle();
+			if(sp->alpha_channel)
+			{
+				nana::rectangle s_good_r, d_good_r;
+				if(gui::overlap(src_r, sp->pixel_size, nana::rectangle(x, y, src_r.width, src_r.height), paint::detail::drawable_size(drawable), s_good_r, d_good_r))
+				{
+					pixel_buffer d_pixbuf;
+					d_pixbuf.attach(drawable, d_good_r);
+					(*(sp->img_pro.alpha_blend))->process(*this, s_good_r, d_pixbuf, nana::point(d_good_r.x, d_good_r.y));
+				}
+				return;
+			}
+
 #if defined(NANA_WINDOWS)
 			BITMAPINFO bi;
 			bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
@@ -622,8 +638,9 @@ namespace nana{	namespace paint
 
 	void pixel_buffer::paste(nana::gui::native_window_type wd, int x, int y) const
 	{
+		if(wd && storage_.empty())	return;
+
 		pixel_buffer_storage * sp = storage_.handle();
-		if(wd && (0 == sp))	return;
 #if defined(NANA_WINDOWS)
 		HDC	handle = ::GetDC(reinterpret_cast<HWND>(wd));
 		if(handle)
@@ -697,7 +714,7 @@ namespace nana{	namespace paint
 		nana::pixel_rgb_t rgb_imd;
 		if(fade)
 		{
-			fade_table = detail::fade_table(1 - fade_rate);
+			fade_table = detail::alloc_fade_table(1 - fade_rate);
 			rgb_imd.u.color = col;
 			rgb_imd = detail::fade_color_intermedia(rgb_imd, fade_table);
 		}

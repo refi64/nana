@@ -22,7 +22,6 @@ namespace nana
 		{
 		public:
 			image_png()
-				:alpha_colored_(false)
 			{}
 
 			bool open(const nana::char_t* png_file)
@@ -71,9 +70,9 @@ namespace nana
 								const std::size_t png_rowbytes = ::png_get_rowbytes(png_ptr, info_ptr);
 
 								pixbuf_.open(png_width, png_height);
-								alpha_colored_ = (PNG_COLOR_MASK_ALPHA & color_type);
-
-								if(alpha_colored_ && (png_rowbytes == png_width * sizeof(pixel_rgb_t)))
+								const bool is_alpha_enabled = ((PNG_COLOR_MASK_ALPHA & color_type) != 0);
+								pixbuf_.alpha_channel(is_alpha_enabled);
+								if(is_alpha_enabled && (png_rowbytes == png_width * sizeof(pixel_rgb_t)))
 								{
 									for(int i = 0; i < png_height; ++i)
 										row_ptrs[i] = reinterpret_cast<png_bytep>(pixbuf_.raw_ptr(i));
@@ -93,12 +92,12 @@ namespace nana
 
 									std::size_t png_pixel_bytes = png_rowbytes / png_width;
 
-									pixel_rgb_t * rgb_row_ptr = pixbuf.raw_ptr(0);
+									pixel_rgb_t * rgb_row_ptr = pixbuf_.raw_ptr(0);
 									for(int y = 0; y < png_height; ++y)
 									{
 										png_bytep png_ptr = row_ptrs[y];
 										pixel_rgb_t * rgb_end = rgb_row_ptr + png_width;
-										if(alpha_colored_)
+										if(is_alpha_enabled)
 										{
 											for(pixel_rgb_t * i = rgb_row_ptr; i < rgb_end; ++i)
 											{
@@ -137,7 +136,7 @@ namespace nana
 
 			bool alpha_channel() const
 			{
-				return alpha_colored_;
+				return pixbuf_.alpha_channel();
 			}
 
 			virtual bool empty() const
@@ -165,7 +164,6 @@ namespace nana
 				pixbuf_.stretch(src_r, dst.handle(), r);
 			}
 		private:
-			bool alpha_colored_;
 			pixel_buffer pixbuf_;
 		};
 	}//end namespace detail

@@ -10,6 +10,7 @@ namespace paint
 	{
 		//There are definitions of pure virtual destructor of image processor interfaces
 		stretch_interface::~stretch_interface(){}
+		alpha_blend_interface::~alpha_blend_interface(){}
 		blend_interface::~blend_interface(){}
 		line_interface::~line_interface(){}
 		blur_interface::~blur_interface(){}
@@ -28,6 +29,7 @@ namespace paint
 		{
 			add<paint::detail::algorithms::bilinear_interoplation>(stretch_, "bilinear interoplation");
 			add<paint::detail::algorithms::proximal_interoplation>(stretch_, "proximal interoplation");
+			add<paint::detail::algorithms::alpha_blend>(alpha_blend_, "alpha_blend");
 			add<paint::detail::algorithms::blend>(blend_, "blend");
 			add<paint::detail::algorithms::bresenham_line>(line_, "bresenham_line");
 			add<paint::detail::algorithms::superfast_blur>(blur_, "superfast_blur");
@@ -52,6 +54,22 @@ namespace paint
 		{
 			return _m_read(stretch_, name);
 		}
+
+		//alpha_blend
+		image_process_provider::alpha_blend_tag& image_process_provider::ref_alpha_blend_tag()
+		{
+			return alpha_blend_;
+		}
+
+		paint::image_process::alpha_blend_interface * const * image_process_provider::alpha_blend() const
+		{
+			return &alpha_blend_.employee;
+		}
+
+		paint::image_process::alpha_blend_interface * image_process_provider::ref_alpha_blend(const std::string& name) const
+		{
+			return _m_read(alpha_blend_, name);
+		}
 		
 		//blend
 		image_process_provider::blend_tag& image_process_provider::ref_blend_tag()
@@ -69,6 +87,7 @@ namespace paint
 			return _m_read(blend_, name);
 		}
 
+		//line
 		image_process_provider::line_tag & image_process_provider::ref_line_tag()
 		{
 			return line_;

@@ -28,6 +28,13 @@ namespace nana
 				virtual void process(const paint::pixel_buffer & s_pixbuf, const nana::rectangle& s_r, paint::pixel_buffer & d_pixbuf, const nana::rectangle& d_r) const = 0;
 			};
 
+			class alpha_blend_interface
+			{
+			public:
+				virtual ~alpha_blend_interface() = 0;
+				virtual void process(const paint::pixel_buffer& s_pixbuf, const nana::rectangle& s_r, paint::pixel_buffer& d_pixbuf, const point& d_pos) const = 0;
+			};
+
 			class blend_interface
 			{
 			public:

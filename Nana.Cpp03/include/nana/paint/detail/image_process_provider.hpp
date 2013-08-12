@@ -32,6 +32,22 @@ namespace nana
 					interface_t* employee;
 				}stretch_;
 
+				struct alpha_blend_tag
+				{
+					typedef paint::image_process::alpha_blend_interface	interface_t;
+					typedef pat::cloneable_interface<interface_t>	cloneable_t;
+					typedef std::map<std::string, cloneable_t*>		table_t;
+
+					template<typename ImageProcessor>
+					struct generator
+					{
+						typedef pat::cloneable<ImageProcessor, interface_t> type;
+					};
+
+					table_t	table;
+					interface_t	* employee;				
+				}alpha_blend_;
+
 				struct blend_tag
 				{
 					typedef paint::image_process::blend_interface	interface_t;
@@ -87,6 +103,10 @@ namespace nana
 				stretch_tag & ref_stretch_tag();
 				paint::image_process::stretch_interface * const * stretch() const;
 				paint::image_process::stretch_interface * ref_stretch(const std::string& name) const;
+
+				alpha_blend_tag & ref_alpha_blend_tag();
+				paint::image_process::alpha_blend_interface * const * alpha_blend() const;
+				paint::image_process::alpha_blend_interface * ref_alpha_blend(const std::string& name) const;
 
 				blend_tag & ref_blend_tag();
 				paint::image_process::blend_interface * const * blend() const;

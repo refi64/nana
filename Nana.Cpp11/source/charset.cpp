@@ -46,6 +46,11 @@ namespace nana
 
 		bool wc2mb(std::string& mbstr, const wchar_t * s)
 		{
+			if(nullptr == s || *s == 0)
+			{
+				mbstr.clear();
+				return true;
+			}
 #if defined(NANA_MINGW)
 			int bytes = ::WideCharToMultiByte(CP_ACP, 0, s, -1, 0, 0, 0, 0);
 			if(bytes > 1)
@@ -60,14 +65,25 @@ namespace nana
 			std::size_t len = std::wcsrtombs(nullptr, &s, 0, &mbstate);
 			if(len == static_cast<std::size_t>(-1))
 				return false;
-			mbstr.resize(len);
-			std::wcsrtombs(&(mbstr[0]), &s, len, &mbstate);
+
+			if(len)
+			{
+				mbstr.resize(len);
+				std::wcsrtombs(&(mbstr[0]), &s, len, &mbstate);
+			}
+			else
+				mbstr.clear();
 #endif
 			return true;
 		}
 		
 		bool mb2wc(std::wstring& wcstr, const char* s)
 		{
+			if(nullptr == s || *s == 0)
+			{
+				wcstr.clear();
+				return true;
+			}
 #if defined(NANA_MINGW) 
 			int chars = ::MultiByteToWideChar(CP_ACP, 0, s, -1, 0, 0);
 			if(chars > 1)
@@ -82,14 +98,24 @@ namespace nana
 			if(len == static_cast<std::size_t>(-1))
 				return false;
 			
-			wcstr.resize(len);
-			std::mbsrtowcs(&wcstr[0], &s, len, &mbstate);
+			if(len)
+			{
+				wcstr.resize(len);
+				std::mbsrtowcs(&wcstr[0], &s, len, &mbstate);
+			}
+			else
+				wcstr.clear();
 #endif
 			return true;
 		}
 
 		bool mb2wc(std::string& wcstr, const char* s)
 		{
+			if(nullptr == s || *s == 0)
+			{
+				wcstr.clear();
+				return true;
+			}
 #if defined(NANA_MINGW) 
 			int chars = ::MultiByteToWideChar(CP_ACP, 0, s, -1, 0, 0);
 			if(chars > 1)
@@ -104,8 +130,13 @@ namespace nana
 			if(len == static_cast<std::size_t>(-1))
 				return false;
 			
-			wcstr.resize(sizeof(wchar_t) * len);
-			std::mbsrtowcs(reinterpret_cast<wchar_t*>(&wcstr[0]), &s, len, &mbstate);
+			if(len)
+			{
+				wcstr.resize(sizeof(wchar_t) * len);
+				std::mbsrtowcs(reinterpret_cast<wchar_t*>(&wcstr[0]), &s, len, &mbstate);
+			}
+			else
+				wcstr.clear();
 #endif
 			return true;
 		}

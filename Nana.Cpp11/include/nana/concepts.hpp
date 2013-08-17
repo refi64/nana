@@ -26,13 +26,20 @@ namespace nana
 			template<typename Target>
 			void anyobj(const Target& t)
 			{
-				*_m_anyobj(true) = t;
+				nana::any * p = _m_anyobj(true);
+				if(nullptr == p)
+					throw std::runtime_error("Nana.any_objective: Object does not exist");
+				*p = t;
 			}
 
 			template<typename Target>
 			void anyobj(Target&& t)
 			{
-				*_m_anyobj(true) = std::move(t);
+				nana::any * p = _m_anyobj(true);
+				if(nullptr == 0)
+					throw std::runtime_error("Nana.any_objective: Object does not exist");
+
+				*p = std::move(t);
 			}
 
 			template<typename Target>
@@ -56,13 +63,19 @@ namespace nana
 			template<typename Target>
 			void anyobj(anyobj_index_t i, const Target& t)
 			{
-				*_m_anyobj(i, true) = t;
+				nana::any * p = _m_anyobj(i, true);
+				if(nullptr == p)
+					throw std::runtime_error("Nana.any_objective: Object does not exist.");
+				*p = t;
 			}
 
 			template<typename Target>
 			void anyobj(anyobj_index_t i, Target&& t)
 			{
-				*_m_anyobj(i, true) = std::move(t);
+				nana::any * p = _m_anyobj(i, true);
+				if(nullptr == p)
+					throw std::runtime_error("Nana.any_objective: Object does not exist");
+				*p = std::move(t);
 			}
 
 			template<typename Target>
@@ -86,13 +99,20 @@ namespace nana
 			template<typename Target>
 			void anyobj(anyobj_index_t i0, anyobj_index_t i1, const Target& t)
 			{
-				*_m_anyobj(i0, i1, true) = t;
+				nana::any * p = _m_anyobj(i0, i1, true);
+				if(nullptr == p)
+					throw std::runtime_error("Nana.any_objective: Object does not exist");
+
+				*p = t;
 			}
 
 			template<typename Target>
 			void anyobj(anyobj_index_t i0, anyobj_index_t i1, Target&& t)
 			{
-				*_m_anyobj(i0, i1, true) = std::move(t);
+				nana::any * p = _m_anyobj(i0, i1, true);
+				if(nullptr == p)
+					throw std::runtime_error("Nana.any_objective: Object does not exist");
+				*p = std::move(t);
 			}
 
 			template<typename Target>

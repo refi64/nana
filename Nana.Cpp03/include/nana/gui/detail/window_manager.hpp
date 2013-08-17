@@ -780,7 +780,16 @@ namespace detail
 
 					if(static_cast<category::flags::t>(category::lite_widget_tag::value) != wd->other.category)
 					{
+						bool graph_state = wd->drawer.graphics.empty();
+						
 						wd->drawer.graphics.make(width, height);
+					
+						//It shall make a typeface_changed() call when the graphics state is changing.
+						//Because when a widget is created with zero-size, it may get some wrong result in typeface_changed() call
+						//due to the invaliable graphics object.
+						if(graph_state != wd->drawer.graphics.empty())
+							wd->drawer.typeface_changed();
+
 						if(static_cast<category::flags::t>(category::root_tag::value) == wd->other.category)
 						{
 							wd->root_graph->make(width, height);

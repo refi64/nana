@@ -12,6 +12,7 @@
 #define NANA_CONCEPTS_HPP
 
 #include <nana/any.hpp>
+#include <stdexcept>
 
 namespace nana
 {
@@ -26,7 +27,10 @@ namespace nana
 			template<typename Target>
 			void anyobj(const Target& t)
 			{
-				*_m_anyobj(true) = t;
+				nana::any * p = _m_anyobj(true);
+				if(0 == p)
+					throw std::runtime_error("Nana.any_objective: Object does not exist");
+				*p = t;
 			}
 
 			template<typename Target>
@@ -50,7 +54,10 @@ namespace nana
 			template<typename Target>
 			void anyobj(anyobj_index_t i, const Target& t)
 			{
-				*_m_anyobj(i, true) = t;
+				nana::any * p = _m_anyobj(i, true);
+				if(0 == p)
+					throw std::runtime_error("Nana.any_objective: Object does not exist");
+				*p = t;
 			}
 
 			template<typename Target>
@@ -74,7 +81,10 @@ namespace nana
 			template<typename Target>
 			void anyobj(anyobj_index_t i0, anyobj_index_t i1, const Target& t)
 			{
-				*_m_anyobj(i0, i1, true) = t;
+				nana::any * p = _m_anyobj(i0, i1, true);
+				if(0 == p)
+					throw std::runtime_error("Nana.any_objective: Object does not exist");
+				*p = t;
 			}
 
 			template<typename Target>

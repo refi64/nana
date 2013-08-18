@@ -25,7 +25,7 @@ namespace nana
 				void alpha_blend(const std::string& name);
 				
 				template<typename ImageProcessor>
-				void alpha_blend(const std::string& name)
+				void add_alpha_blend(const std::string& name)
 				{
 					detail::image_process_provider& p = detail::image_process_provider::instance();
 					p.add<ImageProcessor>(p.ref_alpha_blend_tag(), name);

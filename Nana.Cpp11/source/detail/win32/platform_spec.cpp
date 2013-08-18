@@ -22,7 +22,8 @@ namespace nana
 namespace detail
 {
 	drawable_impl_type::drawable_impl_type()
-		: fgcolor_(0xFFFFFFFF), pixbuf_ptr(nullptr), bytes_per_line(0)
+		:	pixbuf_ptr(nullptr), bytes_per_line(0),
+			fgcolor_(0xFFFFFFFF)
 	{
 		pen.handle = nullptr;
 		pen.color = nana::null_color;

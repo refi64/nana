@@ -429,7 +429,6 @@ namespace detail
 					rgb_imd = detail::fade_color_intermedia(rgb_imd, fade_table);
 				}
 
-				nana::size px_size = pixbuf.size();
 				nana::pixel_rgb_t * i = pixel_at(pixbuf.raw_ptr(0), pos_beg.y * bytes_pl) + pos_beg.x;
 
 				int dx = pos_end.x - pos_beg.x;
@@ -583,7 +582,6 @@ namespace detail
 				}
 
 				nana::pixel_rgb_t* linepix = pixbuf.raw_ptr(area.y) + area.x;
-				const std::size_t line_pixels = pixbuf.size().width;
 
 				int yi = 0;
 				for(int y = 0; y < h; ++y)

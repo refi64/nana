@@ -1103,14 +1103,14 @@ namespace detail
 		{
 			if(false == exposed)
 			{
-				if(wd->other.category != category::root_tag::value)
+				if(wd->other.category != static_cast<category::flags::t>(category::root_tag::value))
 				{
 					wd = wd->parent;
 
-					while(wd->other.category == category::lite_widget_tag::value)
+					while(wd->other.category == static_cast<category::flags::t>(category::lite_widget_tag::value))
 						wd = wd->parent;
 				}
-				else if(wd->other.category == category::frame_tag::value)
+				else if(wd->other.category == static_cast<category::flags::t>(category::frame_tag::value))
 					wd = wd_manager.find_window(wd->root, wd->pos_root.x, wd->pos_root.y);
 			}
 			wd_manager.refresh_tree(wd);

@@ -84,6 +84,16 @@ namespace nana
 		{
 			begin, normal = begin, over, pressed, end
 		};
+
+		enum class element_state
+		{
+			normal,
+			hovered,
+			focus_normal,
+			focus_hovered,
+			pressed,
+			disabled
+		};
 	}
 
 	typedef unsigned scalar_t;

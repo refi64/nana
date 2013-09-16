@@ -238,6 +238,7 @@ namespace API
 	bool is_window_zoomed(window, bool ask_for_max);
 
 	nana::gui::mouse_action mouse_action(window);
+	nana::gui::element_state element_state(window);
 }//end namespace API
 }//end namespace gui
 }//end namespace nana

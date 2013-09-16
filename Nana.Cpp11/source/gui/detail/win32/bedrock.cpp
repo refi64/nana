@@ -1432,7 +1432,7 @@ namespace detail
 			(owner && (impl_->menu.owner == owner))
 			)
 		{
-			return (is_keyboard_condition ? (impl_->menu.has_keyboard ? impl_->menu.window : nullptr) : impl_->menu.window);
+			return ((!is_keyboard_condition) || impl_->menu.has_keyboard ? impl_->menu.window : nullptr);
 		}
 		return nullptr;
 	}
@@ -1645,40 +1645,40 @@ namespace detail
 		if(wd_manager.available(wd))
 		{
 			auto * thrd = get_thread_context(wd->thread_id);
-			if(thrd)
+			if(nullptr == thrd)
+				return;
+			
+			if((wd->predef_cursor == cursor::arrow) && (thrd->cursor.window == wd))
 			{
-				if((wd->predef_cursor == cursor::arrow) && (thrd->cursor.window == wd))
+				if(thrd->cursor.predef_cursor != cursor::arrow)
 				{
-					if(thrd->cursor.predef_cursor != cursor::arrow)
-					{
-						SetCursor(wd, cursor::arrow);
-						thrd->cursor.window = nullptr;
-						thrd->cursor.predef_cursor = cursor::arrow;
-					}
-					return;
+					SetCursor(wd, cursor::arrow);
+					thrd->cursor.window = nullptr;
+					thrd->cursor.predef_cursor = cursor::arrow;
 				}
+				return;
+			}
 
-				nana::point pos = native_interface::cursor_position();
-				native_window_type native_handle = native_interface::find_window(pos.x, pos.y);
-				if(nullptr == native_handle)
-					return;
+			nana::point pos = native_interface::cursor_position();
+			native_window_type native_handle = native_interface::find_window(pos.x, pos.y);
+			if(nullptr == native_handle)
+				return;
 
-				native_interface::calc_window_point(native_handle, pos);
-				if(wd != wd_manager.find_window(native_handle, pos.x, pos.y))
-					return;
+			native_interface::calc_window_point(native_handle, pos);
+			if(wd != wd_manager.find_window(native_handle, pos.x, pos.y))
+				return;
 
-				if(wd->predef_cursor != thrd->cursor.predef_cursor)
+			if(wd->predef_cursor != thrd->cursor.predef_cursor)
+			{
+				if(thrd->cursor.predef_cursor != cursor::arrow)
+					thrd->cursor.window = nullptr;
+
+				if(wd->predef_cursor != cursor::arrow)
 				{
-					if(thrd->cursor.predef_cursor != cursor::arrow)
-						thrd->cursor.window = nullptr;
-
-					if(wd->predef_cursor != cursor::arrow)
-					{
-						thrd->cursor.window = wd;
-						SetCursor(wd, wd->predef_cursor);
-					}
-					thrd->cursor.predef_cursor = wd->predef_cursor;
+					thrd->cursor.window = wd;
+					SetCursor(wd, wd->predef_cursor);
 				}
+				thrd->cursor.predef_cursor = wd->predef_cursor;
 			}
 		}
 	}

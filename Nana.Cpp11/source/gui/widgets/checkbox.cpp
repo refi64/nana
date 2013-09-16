@@ -12,6 +12,7 @@
 #include <nana/gui/widgets/checkbox.hpp>
 #include <nana/paint/gadget.hpp>
 #include <nana/paint/text_renderer.hpp>
+#include <nana/gui/element.hpp>
 
 namespace nana
 {
@@ -19,12 +20,21 @@ namespace gui
 {
 namespace xcheckbox
 {
-		//class drawer
-			drawer::drawer():widget_(nullptr)
+	//class drawer
+	typedef facade<element::crook>::state crook_state;
+
+	struct drawer::implement
+	{
+		bool react;
+		facade<element::crook> crook;
+	};
+
+			drawer::drawer()
+				: widget_(nullptr),
+					imptr_(new drawer::implement),
+					impl_(imptr_.get())
 			{
-				checker_.react = true;
-				checker_.checked = checker_.radio = false;
-				checker_.type = paint::gadget::check_renderer::clasp;
+				impl_->react = true;
 			}
 
 			void drawer::bind_window(widget_reference w)
@@ -59,8 +69,10 @@ namespace xcheckbox
 
 			void drawer::mouse_up(graph_reference graph, const eventinfo&)
 			{
-				if(checker_.react)
-					checker_.checked = ! checker_.checked;
+				if(impl_->react)
+				{
+					impl_->crook.reverse();
+				}
 
 				_m_draw(graph);
 			}
@@ -75,52 +87,25 @@ namespace xcheckbox
 				_m_draw(graph);
 			}
 
-			paint::gadget::check_renderer& drawer::check_renderer()
-			{
-				return checker_.renderer;
-			}
-
 			void drawer::react(bool is_react)
 			{
-				checker_.react = is_react;
+				impl_->react = is_react;
 			}
 
 			void drawer::checked(bool chk)
 			{
-				checker_.checked = chk;
+				impl_->crook.check(chk ? crook_state::checked : crook_state::unchecked);
 				API::refresh_window(*widget_);
 			}
 
 			bool drawer::checked() const
 			{
-				return checker_.checked;
+				return (impl_->crook.checked() != crook_state::unchecked);
 			}
 
 			void drawer::radio(bool is_radio)
 			{
-				checker_.radio = is_radio;
-			}
-
-			void drawer::style(check_renderer_t::checker_t chk)
-			{
-				if(false == checker_.radio)
-				{
-					switch(chk)
-					{
-					case checkbox::blocker:
-						checker_.type = paint::gadget::check_renderer::blocker;
-						break;
-					case checkbox::clasp:
-					default:
-						checker_.type = paint::gadget::check_renderer::clasp;
-						break;
-					}
-				}
-			}
-
-			drawer::check_renderer_t::checker_t drawer::style() const
-			{
-				return checker_.type;
+				impl_->crook.switch_to(is_radio ? "radio" : "");
 			}
 
 			void drawer::_m_draw(graph_reference graph)
@@ -139,7 +124,7 @@ namespace xcheckbox
 
 			void drawer::_m_draw_checkbox(graph_reference graph, unsigned first_line_height)
 			{
-				checker_.renderer.render(graph, 0, (first_line_height > 16 ? (first_line_height - 16) / 2 : 0), 16, 16, API::mouse_action(*widget_), (checker_.radio ? paint::gadget::check_renderer::radio : checker_.type), checker_.checked);
+				impl_->crook.draw(graph, widget_->background(), widget_->foreground(), rectangle(0, first_line_height > 16 ? (first_line_height - 16) / 2 : 0, 16, 16), API::element_state(*widget_));
 			}
 
 			void drawer::_m_draw_title(graph_reference graph)
@@ -210,17 +195,6 @@ namespace xcheckbox
 			get_drawer_trigger().radio(is_radio);
 		}
 
-		void checkbox::style(checker_t chk)
-		{
-			get_drawer_trigger().style(static_cast<drawer_trigger_t::check_renderer_t::checker_t>(chk));
-			API::refresh_window(*this);
-		}
-
-		auto checkbox::style() const -> checker_t
-		{
-			return static_cast<checker_t>(get_drawer_trigger().style());
-		}
-
 		void checkbox::transparent(bool enabled)
 		{
 			if(enabled)
@@ -232,17 +206,6 @@ namespace xcheckbox
 		bool checkbox::transparent() const
 		{
 			return (bground_mode::basic == API::effects_bground_mode(*this));
-		}
-
-		void checkbox::open_check_image(const nana::paint::image& img)
-		{
-			get_drawer_trigger().check_renderer().open_background_image(img);
-		}
-
-		void checkbox::set_check_image(mouse_action act, checkbox::checker_t chk, bool checked, const nana::rectangle& r)
-		{
-			typedef nana::paint::gadget::check_renderer checks;
-			get_drawer_trigger().check_renderer().set_image_state(act, (checkbox::blocker == chk ? checks::blocker : checks::clasp), checked, r);
 		}
 	//end class checkbox
 

@@ -28,13 +28,11 @@ namespace gui
 
 namespace detail
 {
-	//class bedrock
-	//@brief:	bedrock is a fundamental core component, it provides a abstract to the OS platform
-	//			and some basic functions.
+	///class bedrock
+	///@brief:	bedrock is a fundamental core component, it provides a abstract to the OS platform
+	///			and some basic functions.
 	class bedrock
 	{
-		//typedef bedrock self_type;
-
 		bedrock();
 	public:
 		typedef window_manager window_manager_t;
@@ -69,6 +67,8 @@ namespace detail
 		void get_key_state(nana::gui::detail::tag_keyboard&);
 		bool set_keyboard_shortkey(bool yes);
 		bool whether_keyboard_shortkey() const;
+
+
 	public:
 		void event_expose(core_window_t *, bool exposed);
 		void event_move(core_window_t*, int x, int y);

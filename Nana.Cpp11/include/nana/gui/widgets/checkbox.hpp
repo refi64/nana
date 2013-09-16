@@ -12,8 +12,8 @@
 #ifndef NANA_GUI_WIDGET_CHECKBOX_HPP
 #define NANA_GUI_WIDGET_CHECKBOX_HPP
 #include "widget.hpp"
-#include <nana/paint/gadget.hpp>
 #include <vector>
+#include <memory>
 
 namespace nana
 {
@@ -26,8 +26,6 @@ namespace gui
 			: public drawer_trigger
 		{
 		public:
-			typedef paint::gadget::check_renderer check_renderer_t;
-
 			drawer();
 			void bind_window(widget_reference);
 			void attached(graph_reference);
@@ -38,14 +36,10 @@ namespace gui
 			void mouse_down(graph_reference, const eventinfo&);
 			void mouse_up(graph_reference, const eventinfo&);
 		public:
-			paint::gadget::check_renderer& check_renderer();
-
 			void react(bool);
 			void checked(bool);
 			bool checked() const;
 			void radio(bool);
-			void style(check_renderer_t::checker_t);
-			check_renderer_t::checker_t style() const;
 			
 		private:
 			void _m_draw(graph_reference);
@@ -57,14 +51,9 @@ namespace gui
 			widget* widget_;
 			unsigned state_;
 
-			struct checker_tag
-			{
-				bool react;
-				bool checked;
-				bool radio;
-				paint::gadget::check_renderer::checker_t type;
-				paint::gadget::check_renderer renderer;
-			}checker_;
+			struct implement;
+			std::shared_ptr<implement> imptr_;
+			implement * impl_;
 		};
 	}//end namespace xcheckbox
 
@@ -72,8 +61,6 @@ namespace gui
 		: public widget_object<category::widget_tag, xcheckbox::drawer>
 	{
 	public:
-		enum checker_t{clasp, blocker};
-
 		checkbox();
 		checkbox(window, bool visible);
 		checkbox(window, const nana::string& text, bool visible = true);
@@ -84,12 +71,8 @@ namespace gui
 		bool checked() const;
 		void check(bool chk);
 		void radio(bool);
-		void style(checker_t chk);
-		checker_t style() const;
 		void transparent(bool value);
 		bool transparent() const;
-		void open_check_image(const nana::paint::image&);
-		void set_check_image(mouse_action, checker_t, bool checked, const nana::rectangle& r);
 	};//end class checkbox
 
 	class radio_group

@@ -18,8 +18,92 @@ namespace gui
 {
 	namespace drawerbase
 	{
+		//Here defines some function objects
 		namespace treebox
 		{
+			
+			class trigger::item_locator
+			{
+			public:
+				typedef tree_cont_type::node_type node_type;
+
+				item_locator(trigger& drawer, int item_pos, int x, int y)
+					:drawer_(drawer), item_pos_(item_pos), item_ypos_(1), pos_(x, y), what_(element::none), node_(nullptr)
+				{}
+
+				int operator()(node_type &node, int affect)
+				{
+					switch(affect)
+					{
+					case 0: break;
+					case 1: item_pos_ += drawer_.node_desc_.indent_size; break;
+					default:
+						if(affect >= 2)
+							item_pos_ -= drawer_.node_desc_.indent_size * (affect - 1);
+					}
+
+					if((pos_.y - item_ypos_) < static_cast<int>(drawer_._m_node_height()))
+					{
+						if((item_pos_ < pos_.x) && (pos_.x < item_pos_ + drawer_.node_desc_.item_offset))
+							what_ = (node.child ? element::arrow : element::none);
+						else if((item_pos_ + drawer_.node_desc_.item_offset <= pos_.x) && (pos_.x < item_pos_ + drawer_.node_desc_.item_offset + static_cast<int>(drawer_.node_width(&node))))
+							what_ = element::item;
+						else
+							what_ = element::none;
+
+						node_ = &node;
+						return 0;
+					}
+
+					item_ypos_ += drawer_._m_node_height();
+
+					if(node.value.second.expanded && node.child)
+						return 1;
+
+					return 2;
+				}
+
+				node_type * node() const
+				{
+					return node_;
+				}
+
+				element what() const
+				{
+					return what_;
+				}
+
+				nana::point pos() const
+				{
+					return nana::point(item_pos_ + drawer_.node_desc_.item_offset, item_ypos_);
+				}
+
+				nana::size size() const
+				{
+					return nana::size(static_cast<int>(drawer_.node_width(node_)), drawer_._m_node_height());
+				}
+			private:
+				trigger& drawer_;
+				int item_pos_;
+				int item_ypos_;
+				nana::point pos_;
+				element		what_;
+				node_type * node_;
+			};
+
+			struct pred_allow_child
+			{
+				bool operator()(const trigger::tree_cont_type::node_type& node)
+				{
+					return node.value.second.expanded;
+				}
+			};
+		}
+
+		//Treebox Implementation
+		namespace treebox
+		{
+
 			class tlwnd_drawer
 				: public drawer_trigger
 			{
@@ -34,21 +118,10 @@ namespace gui
 
 				void draw(const nana::paint::image* img)
 				{
-					nana::size sz = graph_->size();
+					nana::rectangle r(graph_->size());
 
-					int left = 0;
-					int right = left + sz.width - 1;
-					int top = 0;
-					int bottom = top + sz.height - 1;
-
-					graph_->rectangle((selected_ ? 0xC4E8FA : 0xE8F5FD), true);
-
-					const unsigned colorx = (selected_ ? 0xB6E6FB : 0xD8F0FA);
-					graph_->line(left + 1, top, right - 1, top, colorx);
-					graph_->line(left + 1, bottom, right - 1, bottom, colorx);
-
-					graph_->line(left, top + 1, left, bottom - 1, colorx);
-					graph_->line(right, top + 1, right, bottom - 1, colorx);
+					graph_->rectangle(r, (selected_ ? 0xB6E6FB : 0xD8F0FA), false);
+					graph_->rectangle(r.pare_off(1), (selected_ ? 0xC4E8FA : 0xE8F5FD), true);
 
 					graph_->string(text_off_, 3, 0x0, text_);
 
@@ -133,9 +206,14 @@ namespace gui
 					}
 				}
 
-				bool trigger::check(const node_type* node) const
+				auto trigger::tree() -> tree_cont_type &
 				{
-					return attr_.tree_cont.check(node);
+					return attr_.tree_cont;
+				}
+
+				auto trigger::tree() const -> tree_cont_type const &
+				{
+					return attr_.tree_cont;
 				}
 
 				nana::any & trigger::value(node_type* node) const
@@ -144,21 +222,6 @@ namespace gui
 						throw std::invalid_argument("Nana.GUI.treebox.value() invalid node");
 
 					return node->value.second.value;
-				}
-
-				trigger::node_type* trigger::find(const nana::string& key_path)
-				{
-					return attr_.tree_cont.find(key_path);
-				}
-
-				trigger::node_type* trigger::get_owner(const node_type* node) const
-				{
-					return attr_.tree_cont.get_owner(node);
-				}
-
-				trigger::node_type* trigger::get_root() const
-				{
-					return attr_.tree_cont.get_root();
 				}
 
 				trigger::node_type* trigger::insert(node_type* node, const nana::string& key, const nana::string& title, const nana::any& v)
@@ -187,7 +250,7 @@ namespace gui
 
 				bool trigger::check(node_type* parent, node_type* child) const
 				{
-					if(nullptr == parent || nullptr == child) return false;
+					if(false == (parent && child)) return false;
 
 					while(child && (child != parent))
 						child = child->owner;
@@ -266,7 +329,7 @@ namespace gui
 
 				void trigger::node_image(node_type* node, const nana::string& id)
 				{
-					if(check(node))
+					if(tree().check(node))
 					{
 						node->value.second.img_idstr = id;
 						auto i = shape_.image_table.find(id);
@@ -282,7 +345,7 @@ namespace gui
 
 				bool trigger::rename(node_type *node, const nana::char_t* key, const nana::char_t* name)
 				{
-					if((key || name ) && this->check(node))
+					if((key || name ) && tree().check(node))
 					{
 						if(key && (key != node->value.first))
 						{
@@ -347,7 +410,7 @@ namespace gui
 					item_locator nl(*this, xpos, ei.mouse.x, ei.mouse.y);
 					attr_.tree_cont.for_each<item_locator&>(node_desc_.first, nl);
 
-					if(nl.node() && (nl.what() == item_locator::object::item))
+					if(nl.node() && (nl.what() == element::item))
 					{
 						node_state_.event_node = nl.node();
 						_m_set_expanded(node_state_.event_node, !node_state_.event_node->value.second.expanded);
@@ -364,22 +427,22 @@ namespace gui
 
 					bool has_redraw = false;
 
-					node_state_.event_node = 0;
+					node_state_.event_node = nullptr;
 
 					if(nl.node())
 					{
 						node_state_.event_node = nl.node();
-						if(nl.what() != item_locator::object::none)
+						if(nl.what() != element::none)
 						{
 							switch(nl.what())
 							{
-							case item_locator::object::arrow:
+							case element::arrow:
 								if(_m_set_expanded(node_state_.event_node, !node_state_.event_node->value.second.expanded))
 									_m_adjust(node_state_.event_node, 0);
 
 								has_redraw = true;
 								break;
-							case item_locator::object::item:
+							case element::item:
 								if(node_state_.selected != node_state_.event_node)
 								{
 									_m_set_selected(node_state_.event_node);
@@ -408,7 +471,7 @@ namespace gui
 					item_locator nl(*this, xpos, ei.mouse.x, ei.mouse.y);
 					attr_.tree_cont.for_each<item_locator&>(node_desc_.first, nl);
 
-					if(nl.node() && (node_state_.selected != nl.node()) && (nl.what() == item_locator::object::item))
+					if(nl.node() && (node_state_.selected != nl.node()) && (nl.what() == element::item))
 					{
 						_m_set_selected(nl.node());
 						if(_m_adjust(node_state_.selected, 1))
@@ -673,21 +736,18 @@ namespace gui
 							{
 								node = node->child;
 							}
-							else
+							else if(nullptr == node->next)
 							{
-								if(nullptr == node->next)
+								if(nullptr == node->owner->next)
 								{
-									if(nullptr == node->owner->next)
-									{
-										end = begin;
-										node = attr_.tree_cont.get_root()->child;
-									}
-									else
-										node = node->owner->next;
+									end = begin;
+									node = attr_.tree_cont.get_root()->child;
 								}
 								else
-									node = node->next;
+									node = node->owner->next;
 							}
+							else
+								node = node->next;
 						}
 
 						while(node)
@@ -728,7 +788,7 @@ namespace gui
 							return nullptr;
 
 						unsigned long state = 0xFFFFFFFF;
-						if(node_state_.highlight == node && node_state_.highlight_object == item_locator::object::item)
+						if(node_state_.highlight == node && node_state_.highlight_object == element::item)
 							state = (node_state_.highlight != node_state_.selected ? 0: 1);
 						else if(node_state_.selected == node)
 							state = 2;
@@ -754,26 +814,26 @@ namespace gui
 					bool redraw = false;
 					node_state_.event_node = nl.node();
 
-					if(nl.node() && (nl.what() != item_locator::object::none))
+					if(nl.node() && (nl.what() != element::none))
 					{
 						if((nl.what() != node_state_.highlight_object || nl.node() != node_state_.highlight))
 						{
 							node_state_.highlight_object = nl.what();
 							node_state_.highlight = nl.node();
-							redraw = (node_state_.highlight_object != item_locator::object::none);
+							redraw = (node_state_.highlight_object != element::none);
 						}
 					}
 					else if(node_state_.highlight)
 					{
 						redraw = true;
-						node_state_.highlight_object = 0;
+						node_state_.highlight_object = element::none;
 						node_state_.highlight = nullptr;
 						_m_close_tooltip_window();
 					}
 
 					if(redraw)
 					{
-						if(node_state_.highlight_object == item_locator::object::item)
+						if(node_state_.highlight_object == element::item)
 						{
 							_m_adjust(node_state_.highlight, 2);
 							adjust_.scroll_timestamp = 1;
@@ -1125,7 +1185,9 @@ namespace gui
 
 						_m_background(node, (node.child != 0), node.value.second.expanded);
 
-						drawer_.graph_->string(	pos_.x + drawer_.node_desc_.item_offset + drawer_.node_desc_.image_width + drawer_.node_desc_.text_offset,
+						int left_pos = pos_.x + drawer_.node_desc_.item_offset + drawer_.node_desc_.image_width + drawer_.node_desc_.text_offset + 16;
+
+						drawer_.graph_->string(	left_pos,
 												pos_.y + 3, 0x0, node.value.second.text);
 
 						pos_.y += drawer_._m_node_height();
@@ -1144,7 +1206,7 @@ namespace gui
 					void trigger::item_renderer::_m_draw_arrow(const node_type& node, unsigned item_height, bool expand)
 					{
 						using namespace nana::paint;
-						const unsigned color = (&node == drawer_.node_state_.highlight && drawer_.node_state_.highlight_object == item_locator::object::arrow ? 0x1CC4F7 : 0x0);
+						const unsigned color = (&node == drawer_.node_state_.highlight && drawer_.node_state_.highlight_object == element::arrow ? 0x1CC4F7 : 0x0);
 
 						uint32_t style = 1;
 						gadget::directions::t dir = gadget::directions::to_southeast;
@@ -1158,6 +1220,13 @@ namespace gui
 													color, style, dir);
 					}
 
+					void trigger::item_renderer::_m_draw_checkbox(const node_type& node, unsigned item_height)
+					{
+						using namespace nana::paint;
+						gadget::check_16_pixels(*drawer_.graph_, pos_.x + 16, pos_.y + (item_height - 16) / 2, 0, 0, true);
+					}
+
+
 					void trigger::item_renderer::_m_background(const node_type& node, bool has_child, bool expand)
 					{
 						using namespace nana::paint;
@@ -1167,9 +1236,13 @@ namespace gui
 						if(has_child)
 							_m_draw_arrow(node, height, expand);
 
+						_m_draw_checkbox(node, height);
+
+						const int left_pos = pos_.x + drawer_.node_desc_.item_offset + 16;
+
 						unsigned state = 0xFFFFFFFF;
 
-						if(drawer_.node_state_.highlight == &node && drawer_.node_state_.highlight_object == item_locator::object::item)
+						if(drawer_.node_state_.highlight == &node && drawer_.node_state_.highlight_object == element::item)
 							state = (drawer_.node_state_.highlight != drawer_.node_state_.selected ? 0: 1);
 						else if(drawer_.node_state_.selected == &node)
 							state = 2;
@@ -1182,93 +1255,17 @@ namespace gui
 														};
 
 							graphics &graph = *drawer_.graph_;
-							unsigned width = this->width(node);
 
-							int left = pos_.x + drawer_.node_desc_.item_offset;
-							int right = left + width - 1;
-							int top = pos_.y;
-							int bottom = top + height - 1;
-
-							graph.rectangle(left, top, width, height, color[state][0], true);
-
-							const unsigned colorx = color[state][1];
-							graph.line(left + 1, top, right - 1, top, colorx);
-							graph.line(left + 1, bottom, right - 1, bottom, colorx);
-
-							graph.line(left, top + 1, left, bottom - 1, colorx);
-							graph.line(right, top + 1, right, bottom - 1, colorx);
+							nana::rectangle r(left_pos, pos_.y, this->width(node), height);
+							graph.rectangle(r, color[state][1], false);
+							graph.rectangle(r.pare_off(1), color[state][0], true);
 						}
 
 						nana::paint::image * img = drawer_._m_image(&node);
 						if(img)
-							img->paste(*drawer_.graph_, pos_.x + drawer_.node_desc_.item_offset + 2, pos_.y + 2);
+							img->paste(*drawer_.graph_, left_pos + 2, pos_.y + 2);
 					}
 				//end class item_renderer
-
-				//class item_locator
-					trigger::item_locator::item_locator(trigger& drawer, int item_pos, int x, int y)
-						:drawer_(drawer), item_pos_(item_pos), item_ypos_(1), pos_(x, y), object_(object::none), node_(nullptr)
-					{}
-
-					int trigger::item_locator::operator()(tree_cont_type::node_type &node, int affect)
-					{
-						switch(affect)
-						{
-						case 0: break;
-						case 1: item_pos_ += drawer_.node_desc_.indent_size; break;
-						default:
-							if(affect >= 2)
-								item_pos_ -= drawer_.node_desc_.indent_size * (affect - 1);
-						}
-
-						if((pos_.y - item_ypos_) < static_cast<int>(drawer_._m_node_height()))
-						{
-							if(item_pos_ < pos_.x && pos_.x < item_pos_ + drawer_.node_desc_.item_offset)
-								object_ = (node.child ? object::arrow : object::none);
-							else if(item_pos_ + drawer_.node_desc_.item_offset <= pos_.x && pos_.x < item_pos_ + drawer_.node_desc_.item_offset + static_cast<int>(drawer_.node_width(&node)))
-								object_ = object::item;
-							else
-								object_ = object::none;
-
-							node_ = &node;
-							return 0;
-						}
-
-						item_ypos_ += drawer_._m_node_height();
-
-						if(node.value.second.expanded && node.child)
-							return 1;
-
-						return 2;
-					}
-
-					trigger::tree_cont_type::node_type * trigger::item_locator::node() const
-					{
-						return node_;
-					}
-
-					unsigned trigger::item_locator::what() const
-					{
-						return object_;
-					}
-
-					nana::point trigger::item_locator::pos() const
-					{
-						return nana::point(item_pos_ + drawer_.node_desc_.item_offset, item_ypos_);
-					}
-
-					nana::size trigger::item_locator::size() const
-					{
-						return nana::size(static_cast<int>(drawer_.node_width(node_)), drawer_._m_node_height());
-					}
-				//end class item_locator
-
-				//struct pred_allow_child
-					bool trigger::pred_allow_child::operator()(const tree_cont_type::node_type& node)
-					{
-						return node.value.second.expanded;
-					}
-				//end struct pred_all_child
 
 				//struct drawing_flags
 					trigger::drawing_flags::drawing_flags()
@@ -1299,7 +1296,7 @@ namespace gui
 
 				//struct node_state
 					trigger::node_state::node_state()
-						:tooltip(nullptr), highlight(nullptr), highlight_object(0), selected(nullptr), event_node(nullptr)
+						:tooltip(nullptr), highlight(nullptr), highlight_object(element::none), selected(nullptr), event_node(nullptr)
 					{}
 				//end struct node_state
 

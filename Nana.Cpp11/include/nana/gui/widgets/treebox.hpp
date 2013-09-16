@@ -30,6 +30,11 @@ namespace gui
 	{
 		namespace treebox
 		{
+			enum class element
+			{
+				none, item, arrow
+			};
+
 			class tooltip_window;
 
 			template<typename NodeType>
@@ -73,11 +78,11 @@ namespace gui
 
 				trigger();
 				void auto_draw(bool);
-				bool check(const node_type*) const;
+
+				const tree_cont_type & tree() const;
+				tree_cont_type & tree();
+
 				nana::any & value(node_type*) const;
-				node_type* find(const nana::string& key_path);
-				node_type* get_owner(const node_type*) const;
-				node_type* get_root() const;
 				node_type* insert(node_type* node, const nana::string& key, const nana::string& title, const nana::any& v);
 				node_type* insert(const nana::string& path, const nana::string& title, const nana::any& v);
 
@@ -99,18 +104,19 @@ namespace gui
 				bool rename(node_type *node, const nana::char_t* key, const nana::char_t* name);
 				ext_event_type& ext_event() const;
 			private:
-				void bind_window(widget_reference);
-				void attached(graph_reference);
-				void detached();
-				void refresh(graph_reference);
-				void dbl_click(graph_reference, const eventinfo&);
-				void mouse_down(graph_reference, const eventinfo&);
-				void mouse_up(graph_reference, const eventinfo&);
-				void mouse_move(graph_reference, const eventinfo&);
-				void mouse_wheel(graph_reference, const eventinfo&);
-				void resize(graph_reference, const eventinfo&);
-				void key_down(graph_reference, const eventinfo&);
-				void key_char(graph_reference, const eventinfo&);
+				//Overrides drawer_trigger methods
+				void bind_window(widget_reference)	override;
+				void attached(graph_reference)		override;
+				void detached()	override;
+				void refresh(graph_reference)	override;
+				void dbl_click(graph_reference, const eventinfo&)	override;
+				void mouse_down(graph_reference, const eventinfo&)	override;
+				void mouse_up(graph_reference, const eventinfo&)	override;
+				void mouse_move(graph_reference, const eventinfo&)	override;
+				void mouse_wheel(graph_reference, const eventinfo&)	override;
+				void resize(graph_reference, const eventinfo&)		override;
+				void key_down(graph_reference, const eventinfo&)	override;
+				void key_char(graph_reference, const eventinfo&)	override;
 			private:
 				void _m_find_first(unsigned long offset);
 				unsigned _m_node_height() const;
@@ -149,37 +155,14 @@ namespace gui
 					unsigned width(const node_type &node) const;
 				private:
 					void _m_draw_arrow(const node_type& node, unsigned item_height, bool expand);
+					void _m_draw_checkbox(const node_type& node, unsigned item_height);
 					void _m_background(const node_type& node, bool has_child, bool expand);
 				private:
 					trigger& drawer_;
 					nana::point pos_;
 				};
 
-				class item_locator
-				{
-				public:
-					struct object
-					{ enum{none, item, arrow};};
-
-					item_locator(trigger& drawer, int item_pos, int x, int y);
-					int operator()(tree_cont_type::node_type &node, int affect);
-					tree_cont_type::node_type * node() const;
-					unsigned what() const;
-					nana::point pos() const;
-					nana::size size() const;
-				private:
-					trigger& drawer_;
-					int item_pos_;
-					int item_ypos_;
-					nana::point pos_;
-					unsigned object_;
-					tree_cont_type::node_type * node_;
-				};
-
-				struct pred_allow_child
-				{
-					bool operator()(const tree_cont_type::node_type& node);
-				};
+				class item_locator;
 			private:
 				nana::paint::graphics	*graph_;
 				widget		*widget_;
@@ -233,7 +216,7 @@ namespace gui
 					tooltip_window	*tooltip;
 
 					tree_cont_type::node_type * highlight;
-					unsigned highlight_object;
+					element highlight_object;
 
 					tree_cont_type::node_type * selected;
 					tree_cont_type::node_type * event_node;
@@ -447,10 +430,11 @@ namespace gui
 
 		nana::string make_key_path(node_type node, const nana::string& splitter) const
 		{
-			const typename drawer_trigger_t::node_type *pnode = reinterpret_cast<drawer_trigger_t::node_type*>(node);
-			if(get_drawer_trigger().check(pnode))
+			auto & tree = get_drawer_trigger().tree();
+			auto pnode = reinterpret_cast<drawer_trigger_t::node_type*>(node);
+			if(tree.check(pnode))
 			{
-				const typename drawer_trigger_t::node_type* root = get_drawer_trigger().get_root();
+				auto root = tree.get_root();
 				nana::string path;
 				nana::string temp;
 				while(pnode->owner != root)

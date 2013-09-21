@@ -14,18 +14,16 @@
 #include <nana/paint/text_renderer.hpp>
 #include <nana/gui/element.hpp>
 
-namespace nana
+namespace nana{ namespace gui{ namespace drawerbase
 {
-namespace gui
+namespace checkbox
 {
-namespace xcheckbox
-{
-	//class drawer
-	typedef facade<element::crook>::state crook_state;
+	typedef element::crook_interface::state crook_state;
 
 	struct drawer::implement
 	{
 		bool react;
+		bool radio;
 		facade<element::crook> crook;
 	};
 
@@ -35,6 +33,7 @@ namespace xcheckbox
 					impl_(imptr_.get())
 			{
 				impl_->react = true;
+				impl_->radio = false;
 			}
 
 			void drawer::bind_window(widget_reference w)
@@ -87,25 +86,9 @@ namespace xcheckbox
 				_m_draw(graph);
 			}
 
-			void drawer::react(bool is_react)
+			drawer::implement * drawer::impl() const
 			{
-				impl_->react = is_react;
-			}
-
-			void drawer::checked(bool chk)
-			{
-				impl_->crook.check(chk ? crook_state::checked : crook_state::unchecked);
-				API::refresh_window(*widget_);
-			}
-
-			bool drawer::checked() const
-			{
-				return (impl_->crook.checked() != crook_state::unchecked);
-			}
-
-			void drawer::radio(bool is_radio)
-			{
-				impl_->crook.switch_to(is_radio ? "radio" : "");
+				return impl_;
 			}
 
 			void drawer::_m_draw(graph_reference graph)
@@ -147,7 +130,8 @@ namespace xcheckbox
 				}
 			}
 		//end class drawer
-}//end namespace xcheckbox
+	} //end namespace checkbox
+}//end namespace drawerbase
 
 	//class checkbox
 
@@ -175,24 +159,31 @@ namespace xcheckbox
 			create(wd, r, visible);
 		}
 
+		void checkbox::element_set(const char* name)
+		{
+			get_drawer_trigger().impl()->crook.switch_to(name);
+		}
+
 		void checkbox::react(bool want)
 		{
-			get_drawer_trigger().react(want);
+			get_drawer_trigger().impl()->react = want;
 		}
 
 		bool checkbox::checked() const
 		{
-			return get_drawer_trigger().checked();
+			return (get_drawer_trigger().impl()->crook.checked() != drawerbase::checkbox::crook_state::unchecked);
 		}
 
 		void checkbox::check(bool chk)
 		{
-			get_drawer_trigger().checked(chk);
+			typedef drawerbase::checkbox::crook_state crook_state;
+			get_drawer_trigger().impl()->crook.check(chk ? crook_state::checked : crook_state::unchecked);
+			API::refresh_window(handle());
 		}
 
 		void checkbox::radio(bool is_radio)
 		{
-			get_drawer_trigger().radio(is_radio);
+			get_drawer_trigger().impl()->crook.radio(is_radio);
 		}
 
 		void checkbox::transparent(bool enabled)

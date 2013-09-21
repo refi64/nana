@@ -15,16 +15,16 @@
 #include <vector>
 #include <memory>
 
-namespace nana
+namespace nana { namespace gui
 {
-namespace gui
+namespace drawerbase
 {
-	namespace xcheckbox
+	namespace checkbox
 	{
-
 		class drawer
 			: public drawer_trigger
 		{
+			struct implement;
 		public:
 			drawer();
 			void bind_window(widget_reference);
@@ -36,11 +36,7 @@ namespace gui
 			void mouse_down(graph_reference, const eventinfo&);
 			void mouse_up(graph_reference, const eventinfo&);
 		public:
-			void react(bool);
-			void checked(bool);
-			bool checked() const;
-			void radio(bool);
-			
+			implement * impl() const;
 		private:
 			void _m_draw(graph_reference);
 			void _m_draw_background(graph_reference);
@@ -50,15 +46,14 @@ namespace gui
 			static const int interval = 4;
 			widget* widget_;
 			unsigned state_;
-
-			struct implement;
 			std::shared_ptr<implement> imptr_;
 			implement * impl_;
 		};
-	}//end namespace xcheckbox
+	}//end namespace checkbox
+}//end namespace drawerbase
 
 	class checkbox
-		: public widget_object<category::widget_tag, xcheckbox::drawer>
+		: public widget_object<category::widget_tag, drawerbase::checkbox::drawer>
 	{
 	public:
 		checkbox();
@@ -67,6 +62,7 @@ namespace gui
 		checkbox(window, const nana::char_t* text, bool visible = true);
 		checkbox(window, const rectangle& = rectangle(), bool visible = true);
 
+		void element_set(const char* name);
 		void react(bool want);
 		bool checked() const;
 		void check(bool chk);

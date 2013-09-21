@@ -13,7 +13,7 @@
 
 #include <nana/gui/widgets/listbox.hpp>
 #include <nana/gui/widgets/scroll.hpp>
-#include <nana/paint/gadget.hpp>
+#include <nana/gui/element.hpp>
 #include <list>
 #include <deque>
 #include <stdexcept>
@@ -1969,7 +1969,10 @@ namespace nana{ namespace gui{
 									}
 								}
 
-								chk_renderer_.render(*graph, chkarea.x, chkarea.y, chkarea.width, chkarea.height, act, chk_renderer_.clasp, item.flags.checked);
+								typedef object<decltype(crook_renderer_)>::type::state state;
+
+								crook_renderer_.check(item.flags.checked ?  state::checked : state::unchecked);
+								crook_renderer_.draw(*graph, bkcolor, txtcolor, chkarea, element_state::normal);
 							}
 							nana::size ts = graph->text_extent_size(item.texts[index]);
 
@@ -2013,7 +2016,7 @@ namespace nana{ namespace gui{
 				}
 			private:
 				essence_t * essence_;
-				mutable nana::paint::gadget::check_renderer chk_renderer_;
+				mutable facade<element::crook> crook_renderer_;
 			};
 
 			//class trigger: public drawer_trigger

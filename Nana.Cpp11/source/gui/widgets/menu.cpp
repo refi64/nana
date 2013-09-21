@@ -2,6 +2,7 @@
 #include <nana/gui/widgets/menu.hpp>
 #include <nana/system/platform.hpp>
 #include <nana/paint/gadget.hpp>
+#include <nana/gui/element.hpp>
 #include <nana/gui/wvl.hpp>
 #include <nana/paint/text_renderer.hpp>
 
@@ -54,6 +55,14 @@ namespace nana{ namespace gui{
 			class internal_renderer
 				: public renderer_interface
 			{
+			public:
+				internal_renderer()
+					: crook_("menu_crook")
+				{
+					crook_.check(facade<element::crook>::state::checked);
+				}
+			private:
+				//Impelement renderer_interface
 				void background(graph_reference graph, window)
 				{
 					nana::size sz = graph.size();
@@ -86,7 +95,11 @@ namespace nana{ namespace gui{
 					{
 						graph.rectangle(r, 0xCDD3E6, false);
 						graph.rectangle(nana::rectangle(r).pare_off(1), 0xE6EFF4, true);
-						nana::paint::gadget::checker(graph, r.x, r.y, r.height, (at.check_style == gui::menu::check_option ? nana::paint::gadget::checkers::radio : nana::paint::gadget::checkers::clasp), 0x0);
+
+						nana::rectangle crook_r = r;
+						crook_r.width = 16;
+						crook_.radio(at.check_style == gui::menu::check_option);
+						crook_.draw(graph, 0xE6EFF4, 0x0, crook_r, element_state::normal);  
 					}
 				}
 
@@ -105,6 +118,9 @@ namespace nana{ namespace gui{
 				{
 					nana::paint::gadget::arrow_16_pixels(graph, pos.x, pos.y + static_cast<int>(pixels - 16) / 2, 0x0, 0, nana::paint::gadget::directions::to_east);
 				}
+
+			private:
+				facade<element::crook> crook_;
 			};
 
 			//class renderer_interface

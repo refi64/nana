@@ -33,11 +33,17 @@ namespace nana{	namespace gui
 			{
 				unchecked, checked, partial
 			};
+
+			struct data
+			{
+				state	check_state;
+				bool	radio;
+			};
 				
 			virtual ~crook_interface()
 			{}
 
-			virtual bool draw(graph_reference, nana::color_t bgcolor, nana::color_t fgcolor, const nana::rectangle&, element_state, state) = 0;
+			virtual bool draw(graph_reference, nana::color_t bgcolor, nana::color_t fgcolor, const nana::rectangle&, element_state, const data&) = 0;
 		};
 
 		class provider
@@ -83,6 +89,11 @@ namespace nana{	namespace gui
 		class crook;
 	}//end namespace element
 
+	template<typename Object>
+	struct object
+	{
+		typedef Object type;
+	};
 
 	template<typename Element> class facade;
 
@@ -100,12 +111,15 @@ namespace nana{	namespace gui
 		facade & reverse();
 		facade & check(state);
 		state checked() const;
+
+		facade& radio(bool);
+		bool radio() const;
 	public:
 		//Implement draw_interface
 		void switch_to(const char*) override;
 		bool draw(graph_reference, nana::color_t bgcolor, nana::color_t fgcolor, const nana::rectangle& r, element_state) override;
 	private:
-		element::crook_interface::state state_;
+		element::crook_interface::data data_;
 		element::crook_interface* const * keeper_;
 	};
 }//end namespace gui

@@ -22,6 +22,588 @@ namespace gui
 		//Here defines some function objects
 		namespace treebox
 		{
+			typedef trigger::node_type node_type;
+
+				bool no_sensitive_compare(const nana::string& text, const nana::char_t *pattern, std::size_t len)
+				{
+					if(len <= text.length())
+					{
+						const nana::char_t * s = text.c_str();
+						for(std::size_t i = 0; i < len; ++i)
+						{
+							if('a' <= s[i] && s[i] <= 'z')
+							{
+								if(pattern[i] != s[i] - ('a' - 'A'))
+									return false;
+							}
+							else
+								if(pattern[i] != s[i]) return false;
+						}
+						return true;
+					}
+					return false;
+				}
+
+				const node_type* find_track_child_node(const node_type* node, const node_type * end, const nana::char_t* pattern, std::size_t len, bool &finish)
+				{
+					if(node->value.second.expanded)
+					{
+						node = node->child;
+
+						while(node)
+						{
+							if(no_sensitive_compare(node->value.second.text, pattern, len)) return node;
+
+							if(node == end) break;
+
+							if(node->value.second.expanded)
+							{
+								auto t = find_track_child_node(node, end, pattern, len, finish);
+								if(t || finish)
+									return t;
+							}
+							node = node->next;
+						}
+					}
+
+					finish = (node && (node == end));
+					return nullptr;
+				}
+
+			//struct implement
+			//@brief:	some data for treebox trigger
+			template<typename Renderer>
+			struct trigger::basic_implement
+			{
+				typedef trigger::node_type node_type;
+
+				struct essence_tag
+				{
+					nana::paint::graphics * graph;
+					widget * widget_ptr;
+					nana::pat::cloneable_interface<renderer_interface> * renderer;
+					bool stop_drawing;
+				}data;
+
+				struct shape_tag
+				{
+					nana::upoint border;
+					gui::scroll<true> scroll;
+					std::size_t	prev_first_value;
+
+					mutable std::map<nana::string, node_image_tag> image_table;
+
+					tree_cont_type::node_type * first;
+					int indent_pixels;
+					int offset_x;
+					int item_offset;	//the offset of a item that is a distance from start pos
+					int text_offset;	//the offset of text that is a distance from the item
+
+					std::size_t crook_pixels;
+					std::size_t image_pixels;
+				}shape;
+
+				struct attribute_tag
+				{
+					bool auto_draw;
+					mutable ext_event_type ext_event;
+					//mutable std::size_t visual_item_size;
+					std::size_t button_pixels;
+					tree_cont_type tree_cont;
+				}attr;
+
+				struct node_state_tag
+				{
+					tooltip_window * tooltip;
+					component	comp_pointed;
+					tree_cont_type::node_type * pointed;
+					tree_cont_type::node_type * selected;
+					tree_cont_type::node_type * event_node;
+				}node_state;
+
+				struct track_node_tag
+				{
+					nana::string key_buf;
+					std::size_t key_time;
+				}track_node;
+
+				struct adjust_tag
+				{
+					int offset_x_adjust;	//It is a new value of offset_x, and offset_x will be djusted to the new value
+					tree_cont_type::node_type * node;
+					std::size_t scroll_timestamp;
+					gui::timer timer;
+				}adjust;
+			public:
+				basic_implement()
+				{
+					data.graph = nullptr;
+					data.widget_ptr = nullptr;
+					data.renderer = nullptr;
+					data.stop_drawing = false;
+
+					shape.prev_first_value = 0;
+					shape.first = nullptr;
+					shape.indent_pixels = 10;
+					shape.offset_x = 0;
+					shape.item_offset = 16;
+					shape.text_offset = 3;
+					shape.crook_pixels = 0;
+					shape.image_pixels = 0;
+
+					attr.auto_draw = true;
+					//attr.visual_item_size = 0;
+					attr.button_pixels = 16;
+
+					node_state.tooltip = nullptr;
+					node_state.comp_pointed = component::end;
+					node_state.pointed = nullptr;
+					node_state.selected = nullptr;
+					node_state.event_node = nullptr;
+
+					track_node.key_time = 0;
+
+					adjust.offset_x_adjust = 0;
+					adjust.node = nullptr;
+					adjust.scroll_timestamp = 0;
+				}
+
+				bool draw(bool scrollbar_react)
+				{
+					if(data.graph && (false == data.stop_drawing))
+					{
+						if(scrollbar_react)
+							show_scrollbar();
+
+						//Draw background
+						data.graph->rectangle(data.widget_ptr->background(), true);
+
+						//Draw tree
+						attr.tree_cont.for_each(shape.first, Renderer(this, nana::point(static_cast<int>(attr.tree_cont.indent_size(shape.first) * shape.indent_pixels) - shape.offset_x, 1)));
+						return true;
+					}
+					return false;
+				}
+
+				const trigger::node_type* find_track_node(nana::char_t key)
+				{
+					nana::string pattern;
+
+					if('a' <= key && key <= 'z') key -= 'a' - 'A';
+
+					unsigned long now = nana::system::timestamp();
+
+					if(now - track_node.key_time > 1000)
+						track_node.key_buf.clear();
+
+					if(track_node.key_buf.length())
+					{
+						if(track_node.key_buf[track_node.key_buf.length() - 1] != key)
+							pattern = track_node.key_buf;
+					}
+
+					track_node.key_time = now;
+					pattern += key;
+					track_node.key_buf += key;
+
+					const node_type *begin = node_state.selected ? node_state.selected : attr.tree_cont.get_root()->child;
+
+					if(begin)
+					{
+						const node_type *node = begin;
+						const node_type *end = nullptr;
+						if(pattern.length() == 1)
+						{
+							if(node->value.second.expanded && node->child)
+							{
+								node = node->child;
+							}
+							else if(nullptr == node->next)
+							{
+								if(nullptr == node->owner->next)
+								{
+									end = begin;
+									node = attr.tree_cont.get_root()->child;
+								}
+								else
+									node = node->owner->next;
+							}
+							else
+								node = node->next;
+						}
+
+						while(node)
+						{
+							if(no_sensitive_compare(node->value.second.text, pattern.c_str(), pattern.length())) return node;
+
+							bool finish;
+							const node_type *child = find_track_child_node(node, end, pattern.c_str(), pattern.length(), finish);
+							if(child)
+								return child;
+
+							if(finish || (node == end))
+								return nullptr;
+
+							if(nullptr == node->next)
+							{
+								node = (node->owner ? node->owner->next : nullptr);
+								if(nullptr == node)
+								{
+									node = attr.tree_cont.get_root()->child;
+									end = begin;
+								}
+							}
+							else
+								node = node->next;
+						}
+					}
+					return nullptr;
+				}
+
+				static bool check_kinship(const node_type* parent, const node_type * child)
+				{
+					if(nullptr == parent || nullptr == child)
+						return false;
+
+					while(child && (child != parent))
+						child = child->owner;
+
+					return (nullptr != child);
+				}
+
+				bool make_adjust(node_type * node, int reason)
+				{
+					if(nullptr == node) return false;
+
+					auto & tree_container = attr.tree_cont;
+
+					switch(reason)
+					{
+					case 0:
+						//adjust if the node expanded and the number of its children are over the max number allowed
+						if(shape.first != node)
+						{
+							unsigned child_size = tree_container.child_size_if(*node, pred_allow_child());
+							const std::size_t max_allow = max_allowed();
+
+							if(child_size < max_allow)
+							{
+								unsigned off1 = tree_container.distance_if(shape.first, pred_allow_child());
+								unsigned off2 = tree_container.distance_if(node, pred_allow_child());
+								const unsigned size = off2 - off1 + child_size + 1;
+								if(size > max_allow)
+									shape.first = tree_container.advance_if(shape.first, size - max_allow, pred_allow_child());
+							}
+							else
+								shape.first = node;
+						}
+						break;
+					case 1:
+					case 2:
+					case 3:
+						//param is the begin pos of an item in absolute.
+						{
+							int beg = static_cast<int>(tree_container.indent_size(node) * shape.indent_pixels) - shape.offset_x;
+							int end = beg + static_cast<int>(node_w_pixels(node)) + shape.item_offset;
+
+							bool take_adjust = false;
+							if(reason == 1)
+								take_adjust = (beg < 0 || (beg > 0 && end > static_cast<int>(visible_w_pixels())));
+							else if(reason == 2)
+								take_adjust = (beg < 0);
+							else if(reason == 3)
+								return (beg > 0 && end > static_cast<int>(visible_w_pixels()));
+
+							if(take_adjust)
+							{
+								adjust.offset_x_adjust = shape.offset_x + beg;
+								adjust.node = node;
+								adjust.timer.enable(true);
+								return true;
+							}
+						}
+						break;
+					case 4:
+						if(shape.first != node)
+						{
+							unsigned off_first = tree_container.distance_if(shape.first, pred_allow_child());
+							unsigned off_node = tree_container.distance_if(node, pred_allow_child());
+							if(off_node < off_first)
+							{
+								shape.first = node;
+								return true;
+							}
+							else if(off_node - off_first > max_allowed())
+							{
+								shape.first = tree_container.advance_if(0, off_node - max_allowed() + 1, pred_allow_child());
+								return true;
+							}
+						}
+						break;
+					}
+					return false;
+				}
+
+				bool set_selected(node_type * node)
+				{
+					if(node_state.selected != node)
+					{
+						data.stop_drawing = true;
+						if(node_state.selected)
+							attr.ext_event.selected(data.widget_ptr->handle(), reinterpret_cast<ext_event_type::node_type>(node_state.selected), false);
+
+						node_state.selected = node;
+						if(node)
+							attr.ext_event.selected(data.widget_ptr->handle(), reinterpret_cast<ext_event_type::node_type>(node), true);
+						data.stop_drawing = false;
+						return true;
+					}
+					return false;
+				}
+
+				bool set_expanded(node_type* node, bool value)
+				{
+					if(node && node->value.second.expanded != value)
+					{
+						if(value == false)
+						{
+							//if contracting a parent of the selected node, select the contracted node.
+							if(check_kinship(node, node_state.selected))
+								set_selected(node);
+						}
+
+						node->value.second.expanded = value;
+						if(node->child)
+						{
+							data.stop_drawing = true;
+							attr.ext_event.expand(data.widget_ptr->handle(), reinterpret_cast<ext_event_type::node_type>(node), value);
+							data.stop_drawing = false;
+						}
+						return true;
+					}
+					return false;
+				}
+
+				void show_scrollbar()
+				{
+					paint::graphics * graph = data.graph;
+
+					if(nullptr == graph) return;
+
+					unsigned max_allow = max_allowed();
+					unsigned visual_items = visual_item_size();
+
+					auto & scroll = shape.scroll;
+					if(visual_items <= max_allow)
+					{
+						if(false == scroll.empty())
+						{
+							scroll.close();
+							shape.first = nullptr;
+						}
+					}
+					else
+					{
+						if(scroll.empty())
+						{
+							shape.prev_first_value = 0;
+							scroll.create(*data.widget_ptr, nana::rectangle(graph->width() - 16, 0, 16, graph->height()));
+							auto scroll_fn = nana::make_fun(*this, &basic_implement::event_scrollbar);
+							scroll.make_event<events::mouse_down>(scroll_fn);
+							scroll.make_event<events::mouse_move>(scroll_fn);
+							scroll.make_event<events::mouse_wheel>(scroll_fn);
+						}
+
+						scroll.amount(visual_items);
+						scroll.range(max_allow);
+					}
+
+					scroll.value(attr.tree_cont.distance_if(shape.first, pred_allow_child()));
+				}
+
+				void event_scrollbar(const eventinfo& ei)
+				{
+					if(ei.identifier == events::mouse_wheel::identifier || ei.mouse.left_button)
+					{
+						if(shape.prev_first_value != shape.scroll.value())
+						{
+							shape.prev_first_value = static_cast<unsigned long>(shape.scroll.value());
+							adjust.scroll_timestamp = nana::system::timestamp();
+							adjust.timer.enable(true);
+
+							shape.first = attr.tree_cont.advance_if(nullptr, shape.prev_first_value, pred_allow_child());
+
+							if(ei.window == shape.scroll.handle())
+							{
+								draw(false);
+								API::update_window(data.widget_ptr->handle());
+							}
+						}
+					}
+				}
+
+				std::size_t visual_item_size() const
+				{
+					return attr.tree_cont.child_size_if(STR(""), pred_allow_child());
+				}
+
+				unsigned visible_w_pixels() const
+				{
+					if(nullptr == data.graph)
+						return 0;
+
+					return data.graph->width() - (shape.scroll.empty() ? 0 : shape.scroll.size().width);
+				}
+
+				unsigned node_w_pixels(const node_type *node) const
+				{
+					return (static_cast<int>(data.graph->text_extent_size(node->value.second.text).width) + shape.text_offset * 2 + static_cast<unsigned>(shape.crook_pixels + shape.image_pixels));
+				}
+
+				unsigned node_h_pixels() const
+				{
+					return data.graph->text_extent_size(STR("jh{")).height + 8;
+				}
+
+				std::size_t max_allowed() const
+				{
+					return (data.graph->height() / node_h_pixels());
+				}
+
+				nana::paint::image* image(const node_type* node)
+				{
+					const nana::string& idstr = node->value.second.img_idstr;
+					if(idstr.size())
+					{
+						auto i = shape.image_table.find(idstr);
+						if(i == shape.image_table.end())
+							return nullptr;
+
+						unsigned long state = 0xFFFFFFFF;
+						if(node_state.pointed == node && (node_state.comp_pointed == component::text || node_state.comp_pointed == component::crook || node_state.comp_pointed == component::icon))
+							state = (node_state.pointed != node_state.selected ? 0: 1);
+						else if(node_state.selected == node)
+							state = 2;
+
+						node_image_tag & nodeimg = i->second;
+						if(node->value.second.expanded || (state == 1 || state == 2))
+							if(nodeimg.expanded.empty() == false)	return &nodeimg.expanded;
+
+						if(node->value.second.expanded == false && state == 0)
+							if(nodeimg.highlighted.empty() == false)	return &nodeimg.highlighted;
+
+						return &nodeimg.normal;
+					}
+					return nullptr;
+				}
+
+				bool track_mouse(int x, int y)
+				{
+					int xpos = attr.tree_cont.indent_size(shape.first) * shape.indent_pixels - shape.offset_x;
+					item_locator nl(this, xpos, x, y);
+					attr.tree_cont.for_each<item_locator&>(shape.first, nl);
+
+					bool redraw = false;
+					node_state.event_node = nl.node();
+
+					if(nl.node() && (nl.what() != component::end))
+					{
+						if((nl.what() != node_state.comp_pointed || nl.node() != node_state.pointed))
+						{
+							node_state.comp_pointed = nl.what();
+							node_state.pointed = nl.node();
+							redraw = (node_state.comp_pointed != component::end);
+						}
+					}
+					else if(node_state.pointed)
+					{
+						redraw = true;
+						node_state.comp_pointed = component::end;
+						node_state.pointed = nullptr;
+						close_tooltip_window();
+					}
+
+					if(redraw)
+					{
+						if(node_state.comp_pointed == component::text)
+						{
+							make_adjust(node_state.pointed, 2);
+							adjust.scroll_timestamp = 1;
+
+							show_tooltip_window(node_state.pointed, nl.pos(), nl.size());
+						}
+					}
+
+					return redraw;
+				}
+
+				void show_tooltip_window(node_type* node, const nana::point& pos, const nana::size& size)
+				{
+					close_tooltip_window();
+
+					if((nullptr == node_state.tooltip) && (pos.x + size.width > visible_w_pixels()))
+					{
+						node_state.tooltip = new tooltip_window(data.widget_ptr->handle(), pos, size);
+						node_state.tooltip->show_text(node->value.second.text, shape.text_offset + static_cast<int>(shape.image_pixels + shape.crook_pixels), (node == node_state.selected), this->image(node));
+
+						node_state.tooltip->make_event<events::mouse_leave>(*this, &basic_implement::close_tooltip_window);
+						node_state.tooltip->make_event<events::mouse_move>(*this, &basic_implement::mouse_move_tooltip_window);
+
+						auto click_fn = nana::make_fun(*this, &basic_implement::click_tooltip_window);
+						node_state.tooltip->make_event<events::mouse_down>(click_fn);
+						node_state.tooltip->make_event<events::mouse_up>(click_fn);
+						node_state.tooltip->make_event<events::dbl_click>(click_fn);
+					}
+				}
+
+				void close_tooltip_window()
+				{
+					if(node_state.tooltip)
+					{
+						tooltip_window * x = node_state.tooltip;
+						node_state.tooltip = nullptr;
+						delete x;
+					}
+				}
+
+				void mouse_move_tooltip_window()
+				{
+					nana::point pos = API::cursor_position();
+					API::calc_window_point(data.widget_ptr->handle(), pos);
+
+					if(pos.x >= static_cast<int>(visible_w_pixels()))
+						close_tooltip_window();
+				}
+
+				void click_tooltip_window(const eventinfo& ei)
+				{
+					bool redraw = false;
+					switch(ei.identifier)
+					{
+					case events::mouse_down::identifier:
+						if(make_adjust(node_state.pointed, 1))
+							adjust.scroll_timestamp = 1;
+						break;
+					case events::mouse_up::identifier:
+						if(node_state.selected != node_state.pointed)
+						{
+							set_selected(node_state.pointed);
+							redraw = true;
+						}
+						break;
+					default:
+						set_expanded(node_state.selected, !node_state.selected->value.second.expanded);
+						redraw = true;
+					}
+
+					if(redraw)
+					{
+						draw(false);
+						API::update_window(data.widget_ptr->handle());
+					}
+				}
+			}; //end struct trigger::implement;
+
 			class internal_renderer
 				: public renderer_interface
 			{
@@ -92,24 +674,24 @@ namespace gui
 			public:
 				typedef tree_cont_type::node_type node_type;
 
-				item_locator(trigger& drawer, int item_pos, int x, int y)
-					:drawer_(drawer), item_pos_(item_pos), item_ypos_(1), pos_(x, y), what_(component::end), node_(nullptr)
+				item_locator(implement * impl, int item_pos, int x, int y)
+					:impl_(impl), item_pos_(item_pos), item_ypos_(1), pos_(x, y), what_(component::end), node_(nullptr)
 				{}
 
 				int operator()(node_type &node, int affect)
 				{
-					auto & node_desc = drawer_.node_desc_;
+					auto & node_desc = impl_->shape;
 
 					switch(affect)
 					{
 					case 0: break;
-					case 1: item_pos_ += node_desc.indent_size; break;
+					case 1: item_pos_ += static_cast<int>(node_desc.indent_pixels); break;
 					default:
 						if(affect >= 2)
-							item_pos_ -= node_desc.indent_size * (affect - 1);
+							item_pos_ -= static_cast<int>(node_desc.indent_pixels) * (affect - 1);
 					}
 
-					if((pos_.y - item_ypos_) < static_cast<int>(drawer_._m_node_height()))
+					if((pos_.y - item_ypos_) < static_cast<int>(impl_->node_h_pixels()))
 					{
 						node_ = &node;
 
@@ -121,16 +703,16 @@ namespace gui
 
 						int comp_pos = item_pos_ + node_desc.item_offset;
 
-						if(node_desc.crook_pixels && (comp_pos <= pos_.x) && (pos_.x < comp_pos + node_desc.crook_pixels))
+						if(node_desc.crook_pixels && (comp_pos <= pos_.x) && (pos_.x < comp_pos + static_cast<int>(node_desc.crook_pixels)))
 						{
 							what_ = component::crook;
 							return 0;
 						}
 
-						comp_pos += node_desc.crook_pixels;
-						if(node_desc.image_pixels && (comp_pos <= pos_.x) && (pos_.x < comp_pos + node_desc.image_pixels))
+						comp_pos += static_cast<int>(node_desc.crook_pixels);
+						if(node_desc.image_pixels && (comp_pos <= pos_.x) && (pos_.x < comp_pos + static_cast<int>(node_desc.image_pixels)))
 							what_ = component::icon;
-						else if((item_pos_ + drawer_.node_desc_.item_offset <= pos_.x) && (pos_.x < item_pos_ + drawer_.node_desc_.item_offset + static_cast<int>(drawer_.node_width(&node))))
+						else if((item_pos_ + node_desc.item_offset <= pos_.x) && (pos_.x < item_pos_ + node_desc.item_offset + static_cast<int>(impl_->node_w_pixels(&node))))
 							what_ = component::text;
 						else
 							what_ = component::end;
@@ -138,7 +720,7 @@ namespace gui
 						return 0;
 					}
 
-					item_ypos_ += drawer_._m_node_height();
+					item_ypos_ += impl_->node_h_pixels();
 
 					if(node.value.second.expanded && node.child)
 						return 1;
@@ -163,15 +745,15 @@ namespace gui
 
 				nana::point pos() const
 				{
-					return nana::point(item_pos_ + drawer_.node_desc_.item_offset, item_ypos_);
+					return nana::point(item_pos_ + impl_->shape.item_offset, item_ypos_);
 				}
 
 				nana::size size() const
 				{
-					return nana::size(static_cast<int>(drawer_.node_width(node_)), drawer_._m_node_height());
+					return nana::size(static_cast<int>(impl_->node_w_pixels(node_)), impl_->node_h_pixels());
 				}
 			private:
-				trigger& drawer_;
+				trigger::implement * impl_;
 				int item_pos_;
 				int item_ypos_;
 				nana::point pos_;
@@ -185,11 +767,11 @@ namespace gui
 			public:
 				typedef tree_cont_type::node_type node_type;
 
-				item_renderer(trigger& drawer, const nana::point& pos)
-					:drawer_(drawer), pos_(pos), node_height_pixels_(drawer._m_node_height())
+				item_renderer(implement * impl, const nana::point& pos)
+					:impl_(impl), pos_(pos), node_height_pixels_(impl->node_h_pixels())
 				{
-					bgcolor_ = drawer_.widget_->background();
-					fgcolor_ = drawer_.widget_->foreground();
+					bgcolor_ = impl_->data.widget_ptr->background();
+					fgcolor_ = impl_->data.widget_ptr->foreground();
 				}
 
 				//affect
@@ -198,28 +780,30 @@ namespace gui
 				//>=2 = Children, the last is a child of a node that before this node.
 				int operator()(const node_type& node, int affect)
 				{
+					implement * draw_impl = impl_;
+
 					iterated_node_ = &node;
 					switch(affect)
 					{
 					case 1:
-						pos_.x += drawer_.node_desc_.indent_size;
+						pos_.x += draw_impl->shape.indent_pixels;
 						break;
 					default:
 						if(affect >= 2)
-							pos_.x -= drawer_.node_desc_.indent_size * (affect - 1);
+							pos_.x -= draw_impl->shape.indent_pixels * (affect - 1);
 					}
 
 					item_attr_.expended = node.value.second.expanded;
 					item_attr_.text = node.value.second.text;
 					item_attr_.checked = false;
-					item_attr_.mouse_pointed = (drawer_.node_state_.highlight == iterated_node_);
-					item_attr_.selected = (drawer_.node_state_.selected == iterated_node_);
+					item_attr_.mouse_pointed = (draw_impl->node_state.pointed == iterated_node_);
+					item_attr_.selected = (draw_impl->node_state.selected == iterated_node_);
 
-					drawer_.renderer_->refer().render(*drawer_.graph_, bgcolor_, fgcolor_, this); 
+					draw_impl->data.renderer->refer().render(*draw_impl->data.graph, bgcolor_, fgcolor_, this); 
 
 					pos_.y += node_height_pixels_;
 
-					if(pos_.y > static_cast<int>(drawer_.graph_->height()))
+					if(pos_.y > static_cast<int>(draw_impl->data.graph->height()))
 						return 0;
 
 					return (node.child && node.value.second.expanded ? 1 : 2);
@@ -233,6 +817,7 @@ namespace gui
 
 				virtual bool comp_attribute(component_t comp, comp_attribute_t& attr) const override
 				{
+					implement * draw_impl = impl_;
 					switch(comp)
 					{
 					case component::expender:
@@ -245,35 +830,35 @@ namespace gui
 						}
 						return false;
 					case component::bground:
-						attr.area.x = pos_.x + drawer_.node_desc_.item_offset;
+						attr.area.x = pos_.x + draw_impl->shape.item_offset;
 						attr.area.y = pos_.y;
-						attr.area.width = drawer_.node_width(iterated_node_);
+						attr.area.width = impl_->node_w_pixels(iterated_node_);
 						attr.area.height = node_height_pixels_;
 						return true;
 					case component::crook:
-						if(drawer_.node_desc_.crook_pixels)
+						if(draw_impl->shape.crook_pixels)
 						{
-							attr.area.x = pos_.x + drawer_.node_desc_.item_offset + 2;
+							attr.area.x = pos_.x + draw_impl->shape.item_offset + 2;
 							attr.area.y = pos_.y;
-							attr.area.width = drawer_.node_desc_.crook_pixels;
+							attr.area.width = static_cast<unsigned>(draw_impl->shape.crook_pixels);
 							attr.area.height = node_height_pixels_;
 							return true;
 						}
 						return false;
 					case component::icon:
-						if(drawer_.node_desc_.image_pixels)
+						if(draw_impl->shape.image_pixels)
 						{
-							attr.area.x = pos_.x + drawer_.node_desc_.item_offset + drawer_.node_desc_.crook_pixels + 2;
+							attr.area.x = pos_.x + draw_impl->shape.item_offset + static_cast<int>(draw_impl->shape.crook_pixels) + 2;
 							attr.area.y = pos_.y + 2;
-							attr.area.width = drawer_.node_desc_.image_pixels;
+							attr.area.width = static_cast<unsigned>(draw_impl->shape.image_pixels);
 							attr.area.height = node_height_pixels_ - 2;
 							return true;
 						}
 						return false;
 					case component::text:
-						attr.area.x = pos_.x + drawer_.node_desc_.item_offset + drawer_.node_desc_.image_pixels + drawer_.node_desc_.text_offset;
+						attr.area.x = pos_.x + draw_impl->shape.item_offset + static_cast<int>(draw_impl->shape.image_pixels) + draw_impl->shape.text_offset;
 						attr.area.y = pos_.y;
-						attr.area.width = drawer_.node_width(iterated_node_) - ( attr.area.x - pos_.x);
+						attr.area.width = impl_->node_w_pixels(iterated_node_) - ( attr.area.x - pos_.x);
 						attr.area.height = node_height_pixels_;
 						return true;
 					default:
@@ -282,7 +867,7 @@ namespace gui
 					return false;
 				}
 			private:
-				trigger& drawer_;
+				trigger::implement * impl_;
 				nana::color_t bgcolor_;
 				nana::color_t fgcolor_;
 				nana::point pos_;
@@ -362,6 +947,7 @@ namespace gui
 				}
 			};//end class tooltip_window
 
+
 			//class trigger
 				//struct treebox_node_type
 					trigger::treebox_node_type::treebox_node_type()
@@ -389,17 +975,18 @@ namespace gui
 				//end struct treebox_node_type
 
 				trigger::trigger()
-					:graph_(nullptr), widget_(nullptr)
+					:	impl_(new implement)
 				{
-					renderer_ = nana::pat::cloneable<internal_renderer, renderer_interface>().clone();
-					adjust_.timer.enable(false);
-					adjust_.timer.make_tick(std::bind(&trigger::_m_deal_adjust, this));
-					adjust_.timer.interval(10);
+					impl_->data.renderer = nana::pat::cloneable<internal_renderer, renderer_interface>().clone();
+					impl_->adjust.timer.enable(false);
+					impl_->adjust.timer.make_tick(std::bind(&trigger::_m_deal_adjust, this));
+					impl_->adjust.timer.interval(10);
 				}
 
 				trigger::~trigger()
 				{
-					renderer_->self_delete();
+					impl_->data.renderer->self_delete();
+					delete impl_;
 				}
 
 				void trigger::renderer(const nana::pat::cloneable_interface<renderer_interface>& rd)
@@ -407,41 +994,41 @@ namespace gui
 					auto new_renderer = rd.clone();
 					if(new_renderer)
 					{
-						if(renderer_)
-							renderer_->self_delete();
+						if(impl_->data.renderer)
+							impl_->data.renderer->self_delete();
 
-						renderer_ = new_renderer;
+						impl_->data.renderer = new_renderer;
 					}
 				}
 
 				const nana::pat::cloneable_interface<renderer_interface> & trigger::renderer() const
 				{
-					return *renderer_;
+					return *impl_->data.renderer;
 				}
 
 				void trigger::auto_draw(bool ad)
 				{
-					if(attr_.auto_draw != ad)
+					if(impl_->attr.auto_draw != ad)
 					{
-						attr_.auto_draw = ad;
+						impl_->attr.auto_draw = ad;
 						if(ad)
-							API::update_window(widget_->handle());
+							API::update_window(impl_->data.widget_ptr->handle());
 					}
 				}
 
 				auto trigger::tree() -> tree_cont_type &
 				{
-					return attr_.tree_cont;
+					return impl_->attr.tree_cont;
 				}
 
 				auto trigger::tree() const -> tree_cont_type const &
 				{
-					return attr_.tree_cont;
+					return impl_->attr.tree_cont;
 				}
 
 				nana::any & trigger::value(node_type* node) const
 				{
-					if(attr_.tree_cont.check(node) == false)
+					if(impl_->attr.tree_cont.check(node) == false)
 						throw std::invalid_argument("Nana.GUI.treebox.value() invalid node");
 
 					return node->value.second.value;
@@ -449,29 +1036,29 @@ namespace gui
 
 				trigger::node_type* trigger::insert(node_type* node, const nana::string& key, const nana::string& title, const nana::any& v)
 				{
-					node_type * p = attr_.tree_cont.node(node, key);
+					node_type * p = impl_->attr.tree_cont.node(node, key);
 					if(p)
 					{
 						p->value.second.text = title;
 						p->value.second.value = v;
 					}
 					else
-						p = attr_.tree_cont.insert(node, key, treebox_node_type(title, v));
+						p = impl_->attr.tree_cont.insert(node, key, treebox_node_type(title, v));
 
-					if(p && attr_.auto_draw && _m_draw(true))
-						API::update_window(widget_->handle());
+					if(p && impl_->attr.auto_draw && impl_->draw(true))
+						API::update_window(impl_->data.widget_ptr->handle());
 					return p;
 				}
 
 				trigger::node_type* trigger::insert(const nana::string& path, const nana::string& title, const nana::any& v)
 				{
-					auto x = attr_.tree_cont.insert(path, treebox_node_type(title, v));
-					if(x && attr_.auto_draw && _m_draw(true))
-						API::update_window(widget_->handle());
+					auto x = impl_->attr.tree_cont.insert(path, treebox_node_type(title, v));
+					if(x && impl_->attr.auto_draw && impl_->draw(true))
+						API::update_window(impl_->data.widget_ptr->handle());
 					return x;
 				}
 
-				bool trigger::check(node_type* parent, node_type* child) const
+				bool trigger::check_kinship(node_type* parent, node_type* child) const
 				{
 					if(false == (parent && child)) return false;
 
@@ -483,71 +1070,69 @@ namespace gui
 
 				void trigger::remove(node_type* node)
 				{
-					if(check(node, node_state_.event_node))
-						node_state_.event_node = nullptr;
+					auto & shape = impl_->shape;
+					auto & node_state = impl_->node_state;
 
-					if(check(node, node_desc_.first))
-						node_desc_.first = nullptr;
+					if(check_kinship(node, node_state.event_node))
+						node_state.event_node = nullptr;
 
-					if(check(node, node_state_.selected))
-						node_state_.selected = nullptr;
+					if(check_kinship(node, shape.first))
+						shape.first = nullptr;
 
-					attr_.tree_cont.remove(node);
+					if(check_kinship(node, node_state.selected))
+						node_state.selected = nullptr;
+
+					impl_->attr.tree_cont.remove(node);
 				}
 
 				trigger::node_type* trigger::selected() const
 				{
-					return node_state_.selected;
+					return impl_->node_state.selected;
 				}
 
 				void trigger::selected(node_type* node)
 				{
-					if(attr_.tree_cont.check(node) && _m_set_selected(node))
+					if(impl_->attr.tree_cont.check(node) && impl_->set_selected(node))
 					{
-						_m_draw(true);
-						API::update_window(*widget_);
+						impl_->draw(true);
+						API::update_window(impl_->data.widget_ptr->handle());
 					}
 				}
 
 				void trigger::set_expand(node_type* node, bool exp)
 				{
-					if(widget_ && _m_set_expanded(node, exp))
+					if((impl_->data.widget_ptr) && impl_->set_expanded(node, exp))
 					{
-						_m_draw(true);
-						API::update_window(widget_->handle());
+						impl_->draw(true);
+						API::update_window(impl_->data.widget_ptr->handle());
 					}
 				}
 
 				void trigger::set_expand(const nana::string& path, bool exp)
 				{
-					if(_m_set_expanded(attr_.tree_cont.find(path), exp))
+					if(impl_->set_expanded(impl_->attr.tree_cont.find(path), exp))
 					{
-						_m_draw(true);
-						API::update_window(widget_->handle());
+						impl_->draw(true);
+						API::update_window(impl_->data.widget_ptr->handle());
 					}
-				}
-
-				unsigned trigger::visual_item_size() const
-				{
-					return attr_.tree_cont.child_size_if(STR(""), pred_allow_child());
 				}
 
 				void trigger::image(const nana::string& id, const node_image_tag& img)
 				{
-					shape_.image_table[id] = img;
+					impl_->shape.image_table[id] = img;
 				}
 
 				node_image_tag& trigger::image(const nana::string& id) const
 				{
-					auto i = shape_.image_table.find(id);
-					if(i != shape_.image_table.end())
+					auto i = impl_->shape.image_table.find(id);
+					if(i != impl_->shape.image_table.end())
 						return i->second;
 					throw std::invalid_argument("Nana.GUI.treebox.image() invalid image identifier");
 				}
 
 				void trigger::image_erase(const nana::string& id)
 				{
-					shape_.image_table.erase(id);
+					impl_->shape.image_table.erase(id);
 				}
 
 				void trigger::node_image(node_type* node, const nana::string& id)
@@ -555,15 +1140,15 @@ namespace gui
 					if(tree().check(node))
 					{
 						node->value.second.img_idstr = id;
-						auto i = shape_.image_table.find(id);
-						if((i != shape_.image_table.end()) && _m_draw(true))
-								API::update_window(widget_->handle());
+						auto i = impl_->shape.image_table.find(id);
+						if((i != impl_->shape.image_table.end()) && impl_->draw(true))
+							API::update_window(impl_->data.widget_ptr->handle());
 					}
 				}
 
-				unsigned long trigger::node_width(const node_type *node) const
+				unsigned trigger::node_width(const node_type *node) const
 				{
-					return (static_cast<int>(graph_->text_extent_size(node->value.second.text).width) + node_desc_.text_offset * 2 + node_desc_.crook_pixels + node_desc_.image_pixels);
+					return (static_cast<int>(impl_->data.graph->text_extent_size(node->value.second.text).width) + impl_->shape.text_offset * 2 + static_cast<unsigned>(impl_->shape.crook_pixels + impl_->shape.image_pixels));
 				}
 
 				bool trigger::rename(node_type *node, const nana::char_t* key, const nana::char_t* name)
@@ -592,20 +1177,20 @@ namespace gui
 
 				trigger::ext_event_type& trigger::ext_event() const
 				{
-					return attr_.ext_event;
+					return impl_->attr.ext_event;
 				}
 
 				void trigger::bind_window(widget_reference widget)
 				{
+					impl_->data.widget_ptr = & widget;
 					widget.background(0xFFFFFF);
-					widget_ = &widget;
 					widget.caption(STR("Nana Treebox"));
 				}
 
 				void trigger::attached(graph_reference graph)
 				{
-					graph_ = &graph;
-					window wd = widget_->handle();
+					impl_->data.graph = &graph;
+					window wd = impl_->data.widget_ptr->handle();
 					using namespace API::dev;
 					make_drawer_event<events::dbl_click>(wd);
 					make_drawer_event<events::mouse_move>(wd);
@@ -619,126 +1204,134 @@ namespace gui
 
 				void trigger::detached()
 				{
-					API::dev::umake_drawer_event(widget_->handle());
+					API::dev::umake_drawer_event(impl_->data.widget_ptr->handle());
 				}
 
 				void trigger::refresh(graph_reference)
 				{
-					_m_draw(false);
+					impl_->draw(false);
 				}
 
 				void trigger::dbl_click(graph_reference, const eventinfo& ei)
 				{
-					int xpos = attr_.tree_cont.indent_size(node_desc_.first) * node_desc_.indent_size - node_desc_.offset_x;
-					item_locator nl(*this, xpos, ei.mouse.x, ei.mouse.y);
-					attr_.tree_cont.for_each<item_locator&>(node_desc_.first, nl);
+					auto & shape = impl_->shape;
+
+					int xpos = impl_->attr.tree_cont.indent_size(shape.first) * shape.indent_pixels - shape.offset_x;
+					item_locator nl(impl_, xpos, ei.mouse.x, ei.mouse.y);
+					impl_->attr.tree_cont.for_each<item_locator&>(shape.first, nl);
 
 					if(nl.node() && (nl.what() == component::text || nl.what() == component::icon))
 					{
-						node_state_.event_node = nl.node();
-						_m_set_expanded(node_state_.event_node, !node_state_.event_node->value.second.expanded);
-						_m_draw(true);
+						impl_->node_state.event_node = nl.node();
+						impl_->set_expanded(impl_->node_state.event_node, !impl_->node_state.event_node->value.second.expanded);
+						impl_->draw(true);
 						API::lazy_refresh();
 					}
 				}
 
 				void trigger::mouse_down(graph_reference graph, const eventinfo& ei)
 				{
-					int xpos = attr_.tree_cont.indent_size(node_desc_.first) * node_desc_.indent_size - node_desc_.offset_x;
-					item_locator nl(*this, xpos, ei.mouse.x, ei.mouse.y);
-					attr_.tree_cont.for_each<item_locator&>(node_desc_.first, nl);
+					auto & shape = impl_->shape;
+
+					int xpos = impl_->attr.tree_cont.indent_size(shape.first) * shape.indent_pixels - shape.offset_x;
+					item_locator nl(impl_, xpos, ei.mouse.x, ei.mouse.y);
+					impl_->attr.tree_cont.for_each<item_locator&>(shape.first, nl);
 
 					bool has_redraw = false;
 
-					node_state_.event_node = nullptr;
+					auto & node_state = impl_->node_state;
+					node_state.event_node = nullptr;
 
 					if(nl.node())
 					{
-						node_state_.event_node = nl.node();
+						node_state.event_node = nl.node();
 						if(nl.what() != component::end)
 						{
 							if(nl.what() ==  component::expender)
 							{
-								if(_m_set_expanded(node_state_.event_node, !node_state_.event_node->value.second.expanded))
-									_m_adjust(node_state_.event_node, 0);
+								if(impl_->set_expanded(node_state.event_node, !node_state.event_node->value.second.expanded))
+									impl_->make_adjust(node_state.event_node, 0);
 
 								has_redraw = true;
 							}
 							else if(nl.item_body())
 							{
-								if(node_state_.selected != node_state_.event_node)
+								if(node_state.selected != node_state.event_node)
 								{
-									_m_set_selected(node_state_.event_node);
+									impl_->set_selected(node_state.event_node);
 									has_redraw = true;
 								}
 							}
 						}
-						else if(node_state_.selected != node_state_.event_node)
+						else if(node_state.selected != node_state.event_node)
 						{
-							_m_set_selected(node_state_.event_node);
+							impl_->set_selected(node_state.event_node);
 							has_redraw = true;
 						}
 					}
 
 					if(has_redraw)
 					{
-						_m_draw(true);
+						impl_->draw(true);
 						API::lazy_refresh();
 					}
 				}
 
 				void trigger::mouse_up(graph_reference, const eventinfo& ei)
 				{
-					int xpos = attr_.tree_cont.indent_size(node_desc_.first) * node_desc_.indent_size - node_desc_.offset_x;
-					item_locator nl(*this, xpos, ei.mouse.x, ei.mouse.y);
-					attr_.tree_cont.for_each<item_locator&>(node_desc_.first, nl);
+					auto & shape = impl_->shape;
 
-					if(nl.node() && (node_state_.selected != nl.node()) && nl.item_body())
+					int xpos = impl_->attr.tree_cont.indent_size(shape.first) * shape.indent_pixels - shape.offset_x;
+					item_locator nl(impl_, xpos, ei.mouse.x, ei.mouse.y);
+					impl_->attr.tree_cont.for_each<item_locator&>(shape.first, nl);
+
+					if(nl.node() && (impl_->node_state.selected != nl.node()) && nl.item_body())
 					{
-						_m_set_selected(nl.node());
-						if(_m_adjust(node_state_.selected, 1))
-							adjust_.scroll_timestamp = 1;
+						impl_->set_selected(nl.node());
+						if(impl_->make_adjust(impl_->node_state.selected, 1))
+							impl_->adjust.scroll_timestamp = 1;
 
-						_m_draw(true);
+						impl_->draw(true);
 						API::lazy_refresh();
 					}
 				}
 
 				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
 				{
-					if(_m_track_mouse(ei.mouse.x, ei.mouse.y))
+					if(impl_->track_mouse(ei.mouse.x, ei.mouse.y))
 					{
-						_m_draw(false);
+						impl_->draw(false);
 						API::lazy_refresh();
 					}
 				}
 
 				void trigger::mouse_wheel(graph_reference, const eventinfo& ei)
 				{
-					unsigned prev = shape_.prev_first_value;
+					auto & shape = impl_->shape;
+					std::size_t prev = shape.prev_first_value;
 
-					shape_.scrollbar.make_step(!ei.wheel.upwards);
+					shape.scroll.make_step(!ei.wheel.upwards);
 
-					_m_event_scrollbar(ei);
+					impl_->event_scrollbar(ei);
 
-					if(prev != shape_.prev_first_value)
+					if(prev != shape.prev_first_value)
 					{
-						_m_track_mouse(ei.wheel.x, ei.wheel.y);
+						impl_->track_mouse(ei.wheel.x, ei.wheel.y);
 
-						_m_draw(false);
+						impl_->draw(false);
 						API::lazy_refresh();
 					}
 				}
 
 				void trigger::resize(graph_reference, const eventinfo&)
 				{
-					_m_draw(false);
+					impl_->draw(false);
 					API::lazy_refresh();
-					_m_show_scrollbar();
-					if(shape_.scrollbar.empty() == false)
+					impl_->show_scrollbar();
+					if(false == impl_->shape.scroll.empty())
 					{
-						shape_.scrollbar.move(graph_->width() - 16, 0);
-						shape_.scrollbar.size(16, graph_->height());
+						nana::size s = impl_->data.graph->size();
+						impl_->shape.scroll.move(s.width - 16, 0, 16, s.height);
 					}
 				}
 
@@ -747,16 +1340,18 @@ namespace gui
 					bool redraw = false;
 					bool scroll = false; //Adjust the scrollbar
 
+					auto & node_state = impl_->node_state;
+
 					switch(ei.keyboard.key)
 					{
 					case keyboard::os_arrow_up:
-						if(node_state_.selected && node_state_.selected != attr_.tree_cont.get_root()->child)
+						if(node_state.selected && node_state.selected != impl_->attr.tree_cont.get_root()->child)
 						{
-							node_type * prev = node_state_.selected->owner;
-							if(prev->child != node_state_.selected)
+							node_type * prev = node_state.selected->owner;
+							if(prev->child != node_state.selected)
 							{
 								prev = prev->child;
-								while(prev->next != node_state_.selected)
+								while(prev->next != node_state.selected)
 									prev = prev->next;
 
 								while(prev->child && prev->value.second.expanded)
@@ -767,18 +1362,18 @@ namespace gui
 								}
 							}
 
-							_m_set_selected(prev);
+							impl_->set_selected(prev);
 
-							if(_m_adjust(prev, 4))
+							if(impl_->make_adjust(prev, 4))
 								scroll = true;
 
 							redraw = true;
 						}
 						break;
 					case keyboard::os_arrow_down:
-						if(node_state_.selected)
+						if(node_state.selected)
 						{
-							node_type * node = node_state_.selected;
+							node_type * node = node_state.selected;
 							if(node->value.second.expanded)
 							{
 								node = node->child;
@@ -799,44 +1394,44 @@ namespace gui
 
 							if(node)
 							{
-								_m_set_selected(node);
+								impl_->set_selected(node);
 								redraw = true;
-								if(_m_adjust(node_state_.selected, 4))
+								if(impl_->make_adjust(node_state.selected, 4))
 									scroll = true;
 							}
 						}
 						break;
 					case keyboard::os_arrow_left:
-						if(node_state_.selected)
+						if(node_state.selected)
 						{
-							if(node_state_.selected->value.second.expanded == false)
+							if(node_state.selected->value.second.expanded == false)
 							{
-								if(node_state_.selected->owner != attr_.tree_cont.get_root())
+								if(node_state.selected->owner != impl_->attr.tree_cont.get_root())
 								{
-									_m_set_selected(node_state_.selected->owner);
-									_m_adjust(node_state_.selected, 4);
+									impl_->set_selected(node_state.selected->owner);
+									impl_->make_adjust(node_state.selected, 4);
 								}
 							}
 							else
-								_m_set_expanded(node_state_.selected, false);
+								impl_->set_expanded(node_state.selected, false);
 
 							redraw = true;
 							scroll = true;
 						}
 						break;
 					case keyboard::os_arrow_right:
-						if(node_state_.selected)
+						if(node_state.selected)
 						{
-							if(node_state_.selected->value.second.expanded == false)
+							if(node_state.selected->value.second.expanded == false)
 							{
-								_m_set_expanded(node_state_.selected, true);
+								impl_->set_expanded(node_state.selected, true);
 								redraw = true;
 								scroll = true;
 							}
-							else if(node_state_.selected->child)
+							else if(node_state.selected->child)
 							{
-								_m_set_selected(node_state_.selected->child);
-								_m_adjust(node_state_.selected, 4);
+								impl_->set_selected(node_state.selected->child);
+								impl_->make_adjust(node_state.selected, 4);
 								redraw = true;
 								scroll = true;
 							}
@@ -846,584 +1441,76 @@ namespace gui
 
 					if(redraw)
 					{
-						_m_draw(scroll);
+						impl_->draw(scroll);
 						API::lazy_refresh();
 					}
 				}
 
 				void trigger::key_char(graph_reference, const eventinfo& ei)
 				{
-					auto node = const_cast<node_type*>(_m_find_track_node(ei.keyboard.key));
+					auto node = const_cast<node_type*>(impl_->find_track_node(ei.keyboard.key));
 
-					if(node && (node != node_state_.selected))
+					if(node && (node != impl_->node_state.selected))
 					{
-						_m_set_selected(node);
-						_m_adjust(node, 4);
-						_m_draw(false);
+						impl_->set_selected(node);
+						impl_->make_adjust(node, 4);
+						impl_->draw(false);
 						API::lazy_refresh();
 					}
 				}
 
-				void trigger::_m_find_first(unsigned long offset)
-				{
-					node_desc_.first = attr_.tree_cont.advance_if(nullptr, offset, pred_allow_child());
-				}
-
-				unsigned trigger::_m_node_height() const
-				{
-					return graph_->text_extent_size(STR("jh{")).height + 8;
-				}
-
-				unsigned trigger::_m_max_allow() const
-				{
-					return graph_->height() / _m_node_height();
-				}
-
-				bool no_sensitive_compare(const nana::string& text, const nana::char_t *pattern, std::size_t len)
-				{
-					if(len <= text.length())
-					{
-						const nana::char_t * s = text.c_str();
-						for(std::size_t i = 0; i < len; ++i)
-						{
-							if('a' <= s[i] && s[i] <= 'z')
-							{
-								if(pattern[i] != s[i] - ('a' - 'A'))
-									return false;
-							}
-							else
-								if(pattern[i] != s[i]) return false;
-						}
-						return true;
-					}
-					return false;
-				}
-
-				const trigger::node_type* find_track_child_node(const trigger::node_type* node, const trigger::node_type * end, const nana::char_t* pattern, std::size_t len, bool &finish)
-				{
-					if(node->value.second.expanded)
-					{
-						node = node->child;
-
-						while(node)
-						{
-							if(no_sensitive_compare(node->value.second.text, pattern, len)) return node;
-
-							if(node == end) break;
-
-							if(node->value.second.expanded)
-							{
-								auto t = find_track_child_node(node, end, pattern, len, finish);
-								if(t || finish)
-									return t;
-							}
-							node = node->next;
-						}
-					}
-
-					finish = (node && (node == end));
-					return nullptr;
-				}
-
-				const trigger::node_type* trigger::_m_find_track_node(nana::char_t key)
-				{
-					nana::string pattern;
-
-					if('a' <= key && key <= 'z') key -= 'a' - 'A';
-
-					unsigned long now = nana::system::timestamp();
-
-					if(now - track_node_.key_time > 1000)
-						track_node_.key_buf.clear();
-
-					if(track_node_.key_buf.length())
-					{
-						if(track_node_.key_buf[track_node_.key_buf.length() - 1] != key)
-							pattern = track_node_.key_buf;
-					}
-
-					track_node_.key_time = now;
-					pattern += key;
-					track_node_.key_buf += key;
-
-					const node_type *begin = node_state_.selected ? node_state_.selected : attr_.tree_cont.get_root()->child;
-
-					if(begin)
-					{
-						const node_type *node = begin;
-						const node_type *end = nullptr;
-						if(pattern.length() == 1)
-						{
-							if(node->value.second.expanded && node->child)
-							{
-								node = node->child;
-							}
-							else if(nullptr == node->next)
-							{
-								if(nullptr == node->owner->next)
-								{
-									end = begin;
-									node = attr_.tree_cont.get_root()->child;
-								}
-								else
-									node = node->owner->next;
-							}
-							else
-								node = node->next;
-						}
-
-						while(node)
-						{
-							if(no_sensitive_compare(node->value.second.text, pattern.c_str(), pattern.length())) return node;
-
-							bool finish;
-							const node_type *child = find_track_child_node(node, end, pattern.c_str(), pattern.length(), finish);
-							if(child)
-								return child;
-
-							if(finish || (node == end))
-								return nullptr;
-
-							if(nullptr == node->next)
-							{
-								node = (node->owner ? node->owner->next : nullptr);
-								if(nullptr == node)
-								{
-									node = attr_.tree_cont.get_root()->child;
-									end = begin;
-								}
-							}
-							else
-								node = node->next;
-						}
-					}
-					return nullptr;
-				}
-
-				nana::paint::image* trigger::_m_image(const node_type* node)
-				{
-					const nana::string& idstr = node->value.second.img_idstr;
-					if(idstr.size())
-					{
-						auto i = shape_.image_table.find(idstr);
-						if(i == shape_.image_table.end())
-							return nullptr;
-
-						unsigned long state = 0xFFFFFFFF;
-						if(node_state_.highlight == node && (node_state_.comp_highlighted == component::text || node_state_.comp_highlighted == component::crook || node_state_.comp_highlighted == component::icon))
-							state = (node_state_.highlight != node_state_.selected ? 0: 1);
-						else if(node_state_.selected == node)
-							state = 2;
-
-						node_image_tag & nodeimg = i->second;
-						if(node->value.second.expanded || (state == 1 || state == 2))
-							if(nodeimg.expanded.empty() == false)	return &nodeimg.expanded;
-
-						if(node->value.second.expanded == false && state == 0)
-							if(nodeimg.highlighted.empty() == false)	return &nodeimg.highlighted;
-
-						return &nodeimg.normal;
-					}
-					return nullptr;
-				}
-
-				bool trigger::_m_track_mouse(int x, int y)
-				{
-					int xpos = attr_.tree_cont.indent_size(node_desc_.first) * node_desc_.indent_size - node_desc_.offset_x;
-					item_locator nl(*this, xpos, x, y);
-					attr_.tree_cont.for_each<item_locator&>(node_desc_.first, nl);
-
-					bool redraw = false;
-					node_state_.event_node = nl.node();
-
-					if(nl.node() && (nl.what() != component::end))
-					{
-						if((nl.what() != node_state_.comp_highlighted || nl.node() != node_state_.highlight))
-						{
-							node_state_.comp_highlighted = nl.what();
-							node_state_.highlight = nl.node();
-							redraw = (node_state_.comp_highlighted != component::end);
-						}
-					}
-					else if(node_state_.highlight)
-					{
-						redraw = true;
-						node_state_.comp_highlighted = component::end;
-						node_state_.highlight = nullptr;
-						_m_close_tooltip_window();
-					}
-
-					if(redraw)
-					{
-						if(node_state_.comp_highlighted == component::text)
-						{
-							_m_adjust(node_state_.highlight, 2);
-							adjust_.scroll_timestamp = 1;
-
-							_m_tooltip_window(node_state_.highlight, nl.pos(), nl.size());
-						}
-					}
-
-					return redraw;
-				}
-
-				void trigger::_m_tooltip_window(node_type* node, const nana::point& pos, const nana::size& size)
-				{
-					_m_close_tooltip_window();
-
-					if((nullptr == node_state_.tooltip) && (pos.x + size.width > _m_visible_width()))
-					{
-						node_state_.tooltip = new tooltip_window(widget_->handle(), pos, size);
-						node_state_.tooltip->show_text(node->value.second.text, node_desc_.text_offset + node_desc_.image_pixels + node_desc_.crook_pixels, (node == node_state_.selected), this->_m_image(node));
-
-						node_state_.tooltip->make_event<events::mouse_leave>(*this, &trigger::_m_close_tooltip_window);
-						node_state_.tooltip->make_event<events::mouse_move>(*this, &trigger::_m_mouse_move_tooltip_window);
-
-						auto click_fn = nana::make_fun(*this, &trigger::_m_click_tooltip_window);
-						node_state_.tooltip->make_event<events::mouse_down>(click_fn);
-						node_state_.tooltip->make_event<events::mouse_up>(click_fn);
-						node_state_.tooltip->make_event<events::dbl_click>(click_fn);
-					}
-				}
-
-				void trigger::_m_close_tooltip_window()
-				{
-					if(node_state_.tooltip)
-					{
-						tooltip_window * x = node_state_.tooltip;
-						node_state_.tooltip = nullptr;
-						delete x;
-					}
-				}
-
-				void trigger::_m_mouse_move_tooltip_window()
-				{
-					nana::point pos = API::cursor_position();
-					API::calc_window_point(widget_->handle(), pos);
-
-					if(pos.x >= static_cast<int>(_m_visible_width()))
-						_m_close_tooltip_window();
-				}
-
-				void trigger::_m_click_tooltip_window(const eventinfo& ei)
-				{
-					bool redraw = false;
-					switch(ei.identifier)
-					{
-					case events::mouse_down::identifier:
-						if(_m_adjust(node_state_.highlight, 1))
-							adjust_.scroll_timestamp = 1;
-						break;
-					case events::mouse_up::identifier:
-						if(node_state_.selected != node_state_.highlight)
-						{
-							_m_set_selected(node_state_.highlight);
-							redraw = true;
-						}
-						break;
-					default:
-						_m_set_expanded(node_state_.selected, !node_state_.selected->value.second.expanded);
-						redraw = true;
-					}
-
-					if(redraw)
-					{
-						_m_draw(false);
-						API::update_window(widget_->handle());
-					}
-				}
-
-				bool trigger::_m_draw(bool scrollbar_react)
-				{
-					if(graph_ && (false == dwflags_.pause))
-					{
-						if(scrollbar_react)
-							_m_show_scrollbar();
-
-						//draw background
-						graph_->rectangle(widget_->background(), true);
-
-						_m_draw_tree();
-						return true;
-					}
-					return false;
-				}
-
-				void trigger::_m_draw_tree()
-				{
-					attr_.tree_cont.for_each(node_desc_.first, item_renderer(*this, nana::point(static_cast<int>(attr_.tree_cont.indent_size(node_desc_.first) * node_desc_.indent_size) - node_desc_.offset_x, 1)));
-				}
-
-				unsigned trigger::_m_visible_width() const
-				{
-					if(nullptr == graph_)
-						return 0;
-
-					return graph_->width() - (shape_.scrollbar.empty() ? 0 : shape_.scrollbar.size().width);
-				}
-
-				void trigger::_m_show_scrollbar()
-				{
-					if(nullptr == graph_) return;
-
-					unsigned max_allow = _m_max_allow();
-					unsigned visual_items = visual_item_size();
-
-					if(visual_items <= max_allow)
-					{
-						if(false == shape_.scrollbar.empty())
-						{
-							shape_.scrollbar.close();
-							node_desc_.first = nullptr;
-						}
-					}
-					else
-					{
-						if(shape_.scrollbar.empty())
-						{
-							shape_.prev_first_value = 0;
-							shape_.scrollbar.create(*widget_, nana::rectangle(graph_->width() - 16, 0, 16, graph_->height()));
-							auto scroll_fn = nana::make_fun(*this, &trigger::_m_event_scrollbar);
-							shape_.scrollbar.make_event<events::mouse_down>(scroll_fn);
-							shape_.scrollbar.make_event<events::mouse_move>(scroll_fn);
-							shape_.scrollbar.make_event<events::mouse_wheel>(scroll_fn);
-						}
-
-						shape_.scrollbar.amount(visual_items);
-						shape_.scrollbar.range(max_allow);
-					}
-
-					shape_.scrollbar.value(attr_.tree_cont.distance_if(node_desc_.first, pred_allow_child()));
-				}
-
-				void trigger::_m_event_scrollbar(const eventinfo& ei)
-				{
-					if(ei.identifier == events::mouse_wheel::identifier || ei.mouse.left_button)
-					{
-						if(shape_.prev_first_value != shape_.scrollbar.value())
-						{
-							shape_.prev_first_value = static_cast<unsigned long>(shape_.scrollbar.value());
-							adjust_.scroll_timestamp = nana::system::timestamp();
-							adjust_.timer.enable(true);
-
-							node_desc_.first = attr_.tree_cont.advance_if(0, shape_.prev_first_value, pred_allow_child());
-
-							if(ei.window == shape_.scrollbar.handle())
-							{
-								_m_draw(false);
-								API::update_window(widget_->handle());
-							}
-						}
-					}
-				}
-
-				bool trigger::_m_adjust(node_type * node, int reason)
-				{
-					if(nullptr == node) return false;
-
-					switch(reason)
-					{
-					case 0:
-						//adjust if the node expanded and the number of its children are over the max number allowed
-						if(node_desc_.first != node)
-						{
-							unsigned child_size = attr_.tree_cont.child_size_if(*node, pred_allow_child());
-							const unsigned max_allow = _m_max_allow();
-
-							if(child_size < max_allow)
-							{
-								unsigned off1 = attr_.tree_cont.distance_if(node_desc_.first, pred_allow_child());
-								unsigned off2 = attr_.tree_cont.distance_if(node, pred_allow_child());
-								const unsigned size = off2 - off1 + child_size + 1;
-								if(size > max_allow)
-									node_desc_.first = attr_.tree_cont.advance_if(node_desc_.first, size - max_allow, pred_allow_child());
-							}
-							else
-								node_desc_.first = node;
-						}
-						break;
-					case 1:
-					case 2:
-					case 3:
-						//param is the begin pos of an item in absolute.
-						{
-							int beg = static_cast<int>(attr_.tree_cont.indent_size(node) * node_desc_.indent_size) - node_desc_.offset_x;
-							int end = beg + static_cast<int>(this->node_width(node)) + node_desc_.item_offset;
-
-							bool adjust = false;
-							if(reason == 1)
-								adjust = (beg < 0 || (beg > 0 && end > static_cast<int>(_m_visible_width())));
-							else if(reason == 2)
-								adjust = (beg < 0);
-							else if(reason == 3)
-								return (beg > 0 && end > static_cast<int>(_m_visible_width()));
-
-							if(adjust)
-							{
-								adjust_.offset_x_adjust = node_desc_.offset_x + beg;
-								adjust_.node = node;
-								adjust_.timer.enable(true);
-								return true;
-							}
-						}
-						break;
-					case 4:
-						if(node_desc_.first != node)
-						{
-							unsigned off_first = attr_.tree_cont.distance_if(node_desc_.first, pred_allow_child());
-							unsigned off_node = attr_.tree_cont.distance_if(node, pred_allow_child());
-							if(off_node < off_first)
-							{
-								node_desc_.first = node;
-								return true;
-							}
-							else if(off_node - off_first > _m_max_allow())
-							{
-								node_desc_.first = attr_.tree_cont.advance_if(0, off_node - _m_max_allow() + 1, pred_allow_child());
-								return true;
-							}
-						}
-						break;
-					}
-					return false;
-				}
-
-				bool trigger::_m_set_selected(trigger::node_type * node)
-				{
-					if(node_state_.selected != node)
-					{
-						dwflags_.pause = true;
-						if(node_state_.selected)
-							attr_.ext_event.selected(widget_->handle(), reinterpret_cast<ext_event_type::node_type>(node_state_.selected), false);
-
-						node_state_.selected = node;
-						if(node)
-							attr_.ext_event.selected(widget_->handle(), reinterpret_cast<ext_event_type::node_type>(node), true);
-						dwflags_.pause = false;
-						return true;
-					}
-					return false;
-				}
-
-				bool trigger::_m_set_expanded(node_type* node, bool value)
-				{
-					if(node && node->value.second.expanded != value)
-					{
-						if(value == false)
-						{
-							//if contracting a parent of the selected node, select the contracted node.
-							if(check(node, node_state_.selected))
-								_m_set_selected(node);
-						}
-
-						node->value.second.expanded = value;
-						if(node->child)
-						{
-							dwflags_.pause = true;
-							attr_.ext_event.expand(widget_->handle(), reinterpret_cast<ext_event_type::node_type>(node), value);
-							dwflags_.pause = false;
-						}
-						return true;
-					}
-					return false;
-				}
-
 				void trigger::_m_deal_adjust()
 				{
-					if(adjust_.scroll_timestamp && (nana::system::timestamp() - adjust_.scroll_timestamp >= 500))
+					auto & adjust = impl_->adjust;
+					if(adjust.scroll_timestamp && (nana::system::timestamp() - adjust.scroll_timestamp >= 500))
 					{
-						if(adjust_.offset_x_adjust == 0)
+						if(adjust.offset_x_adjust == 0)
 						{
-							if(false == _m_adjust(adjust_.node ? adjust_.node : node_desc_.first, 1))
+							if(false == impl_->make_adjust(adjust.node ? adjust.node : impl_->shape.first, 1))
 							{
-								adjust_.offset_x_adjust = 0;
-								adjust_.node = nullptr;
-								adjust_.scroll_timestamp = 0;
-								adjust_.timer.enable(false);
+								adjust.offset_x_adjust = 0;
+								adjust.node = nullptr;
+								adjust.scroll_timestamp = 0;
+								adjust.timer.enable(false);
 								return;
 							}
 						}
 
+						auto & shape = impl_->shape;
 						const int delta = 5;
-						int old = node_desc_.offset_x;
-						if(node_desc_.offset_x < adjust_.offset_x_adjust)
+						int old = shape.offset_x;
+						if(shape.offset_x < adjust.offset_x_adjust)
 						{
-							node_desc_.offset_x += delta;
-							if(node_desc_.offset_x > adjust_.offset_x_adjust)
-								node_desc_.offset_x = adjust_.offset_x_adjust;
+							shape.offset_x += delta;
+							if(shape.offset_x > adjust.offset_x_adjust)
+								shape.offset_x = adjust.offset_x_adjust;
 						}
-						else if(node_desc_.offset_x > adjust_.offset_x_adjust)
+						else if(shape.offset_x > adjust.offset_x_adjust)
 						{
-							node_desc_.offset_x -= delta;
-							if(node_desc_.offset_x < adjust_.offset_x_adjust)
-								node_desc_.offset_x = adjust_.offset_x_adjust;
-						}
-
-						_m_draw(false);
-						API::update_window(widget_->handle());
-
-						if(node_state_.tooltip)
-						{
-							nana::point pos = node_state_.tooltip->pos();
-							pos.x -= (node_desc_.offset_x - old);
-							node_state_.tooltip->move(pos.x, pos.y);
+							shape.offset_x -= delta;
+							if(shape.offset_x < adjust.offset_x_adjust)
+								shape.offset_x = adjust.offset_x_adjust;
 						}
 
-						if(node_desc_.offset_x == adjust_.offset_x_adjust)
+						impl_->draw(false);
+						API::update_window(impl_->data.widget_ptr->handle());
+
+						if(impl_->node_state.tooltip)
 						{
-							adjust_.offset_x_adjust = 0;
-							adjust_.node = nullptr;
-							adjust_.scroll_timestamp = 0;
-							adjust_.timer.enable(false);
+							nana::point pos = impl_->node_state.tooltip->pos();
+							pos.x -= (shape.offset_x - old);
+							impl_->node_state.tooltip->move(pos.x, pos.y);
+						}
+
+						if(shape.offset_x == adjust.offset_x_adjust)
+						{
+							adjust.offset_x_adjust = 0;
+							adjust.node = nullptr;
+							adjust.scroll_timestamp = 0;
+							adjust.timer.enable(false);
 						}
 					}
 				}
-
-				//struct drawing_flags
-					trigger::drawing_flags::drawing_flags()
-						:pause(false)
-					{}
-				//end struct drawing_flags;
-
-				//struct shape_data_type
-					trigger::shape_data_type::shape_data_type()
-						:prev_first_value(0)
-					{}
-				//end struct shape_data_type
-
-				//struct attribute_type
-					trigger::attribute_type::attribute_type()
-						: auto_draw(true), visual_item_size(0), button_width(16)
-					{}
-				//end struct attribute_type
-
-				//struct node_desc_type
-					trigger::node_desc_type::node_desc_type()
-						:first(nullptr), indent_size(10),
-						 offset_x(0),
-						 item_offset(16), text_offset(3),
-						 crook_pixels(0),
-						 image_pixels(0)
-					{}
-				//end struct node_desc_type
-
-				//struct node_state
-					trigger::node_state::node_state()
-						:tooltip(nullptr), highlight(nullptr), comp_highlighted(component::end), selected(nullptr), event_node(nullptr)
-					{}
-				//end struct node_state
-
-				//struct track_node_tag
-					trigger::track_node_tag::track_node_tag()
-						:key_time(0)
-					{}
-				//end struct track_node_tag
-
-				//struct adjust_desc_type
-					trigger::adjust_desc_type::adjust_desc_type()
-						: offset_x_adjust(0), node(nullptr), scroll_timestamp(0)
-					{}
-				//end struct adjust_desc_type
 			//end class trigger
 		}//end namespace treebox
 	}//end namespace drawerbase

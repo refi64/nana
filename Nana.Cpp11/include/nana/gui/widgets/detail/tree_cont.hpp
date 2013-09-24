@@ -360,7 +360,7 @@ namespace detail
 			}
 
 			template<typename PredAllowChild>
-			node_type* advance_if(node_type* node, unsigned off, PredAllowChild pac)
+			node_type* advance_if(node_type* node, std::size_t off, PredAllowChild pac)
 			{
 				if(nullptr == node)	node = root_.child;
 

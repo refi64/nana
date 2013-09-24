@@ -85,6 +85,8 @@ namespace gui
 			class trigger
 				:public drawer_trigger
 			{
+				template<typename Renderer>
+				struct basic_implement;
 			public:
 				struct treebox_node_type
 				{
@@ -120,20 +122,19 @@ namespace gui
 				node_type* insert(node_type* node, const nana::string& key, const nana::string& title, const nana::any& v);
 				node_type* insert(const nana::string& path, const nana::string& title, const nana::any& v);
 
-				bool check(node_type* parent, node_type* child) const;
+				bool check_kinship(node_type* parent, node_type* child) const;
 				void remove(node_type*);
 				node_type * selected() const;
 				void selected(node_type*);
 				void set_expand(node_type* node, bool);
 				void set_expand(const nana::string& path, bool);
-				unsigned visual_item_size() const;
 
 				void image(const nana::string& id, const node_image_tag&);
 				node_image_tag& image(const nana::string&) const;
 				void image_erase(const nana::string&);
 				void node_image(node_type* node, const nana::string& id);
 
-				unsigned long node_width(const node_type *node) const;
+				unsigned node_width(const node_type *node) const;
 
 				bool rename(node_type *node, const nana::char_t* key, const nana::char_t* name);
 				ext_event_type& ext_event() const;
@@ -152,107 +153,14 @@ namespace gui
 				void key_down(graph_reference, const eventinfo&)	override;
 				void key_char(graph_reference, const eventinfo&)	override;
 			private:
-				void _m_find_first(unsigned long offset);
-				unsigned _m_node_height() const;
-				unsigned _m_max_allow() const;
-			private:
-				const node_type* _m_find_track_node(nana::char_t);
-				nana::paint::image* _m_image(const node_type*);
-				bool _m_track_mouse(int x, int y);
-				void _m_tooltip_window(node_type* node, const nana::point& pos, const nana::size& size);
-				void _m_close_tooltip_window();
-				void _m_mouse_move_tooltip_window();
-				void _m_click_tooltip_window(const eventinfo&);
-				bool _m_draw(bool scrollbar_react);
-				void _m_draw_tree();
-				unsigned _m_visible_width() const;
-				void _m_show_scrollbar();
-				void _m_event_scrollbar(const eventinfo&);
-				bool _m_adjust(node_type * node, int reason);
-				bool _m_set_selected(node_type * node);
-				bool _m_set_expanded(node_type* node, bool value);
 				void _m_deal_adjust();
 			private:
 				class item_renderer;
 				class item_locator;
 			private:
-				nana::paint::graphics	*graph_;
-				widget		*widget_;
-				nana::pat::cloneable_interface<renderer_interface> * renderer_;
+				typedef basic_implement<item_renderer> implement;
 
-				struct drawing_flags
-				{
-					drawing_flags();
-
-					bool pause;	//It is a drawing flag, if it is true, the draw function dose nothing.
-				}dwflags_;
-
-				struct shape_data_type
-				{
-					shape_data_type();
-
-					nana::upoint border;
-					nana::gui::scroll<true> scrollbar;
-					unsigned long prev_first_value; //
-
-					mutable std::map<nana::string, node_image_tag> image_table;
-				}shape_;
-
-				struct attribute_type
-				{
-					attribute_type();
-
-					bool auto_draw;
-					mutable ext_event_type ext_event;
-					std::size_t mutable visual_item_size;
-					uint32_t	button_width;
-					tree_cont_type tree_cont;
-				}attr_;
-
-				struct node_desc_type
-				{
-					node_desc_type();
-
-					tree_cont_type::node_type * first;
-					unsigned indent_size;
-					int offset_x;
-					int	item_offset;	//the offset of item to the start pos
-					int	text_offset;	//the offset of text to the item
-
-					unsigned crook_pixels;
-					unsigned image_pixels;
-				}node_desc_;
-
-				struct node_state
-				{
-					node_state();
-
-					tooltip_window	*tooltip;
-
-					tree_cont_type::node_type * highlight;
-					component comp_highlighted;
-
-					tree_cont_type::node_type * selected;
-					tree_cont_type::node_type * event_node;
-				}node_state_;
-
-				struct track_node_tag
-				{
-					track_node_tag();
-					nana::string key_buf;
-					unsigned long key_time;
-				}track_node_;
-			
-				struct adjust_desc_type
-				{
-					adjust_desc_type();
-
-					int offset_x_adjust; //It is a new value of offset_x, and offset_x will be adjusted to the new value.
-					tree_cont_type::node_type * node;
-					unsigned long scroll_timestamp;
-					nana::gui::timer timer;
-
-				}adjust_;
+				implement * const impl_;
 			}; //end class trigger
 		}//end namespace treebox
 	}//end namespace drawerbase

@@ -122,6 +122,7 @@ namespace gui
 				node_type* insert(node_type* node, const nana::string& key, const nana::string& title, const nana::any& v);
 				node_type* insert(const nana::string& path, const nana::string& title, const nana::any& v);
 
+				bool check(const void*) const;
 				bool check_kinship(node_type* parent, node_type* child) const;
 				void remove(node_type*);
 				node_type * selected() const;
@@ -389,7 +390,7 @@ namespace gui
 				path.insert(0, pnode->value.first);
 				return path;
 			}
-			return STR("");
+			return nana::string();
 		}
 	};
 }//end namespace gui

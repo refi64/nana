@@ -1058,6 +1058,11 @@ namespace gui
 					return x;
 				}
 
+				bool trigger::check(const void* node) const
+				{
+					return impl_->attr.tree_cont.check(reinterpret_cast<const node_type*>(node));
+				}
+
 				bool trigger::check_kinship(node_type* parent, node_type* child) const
 				{
 					if(false == (parent && child)) return false;

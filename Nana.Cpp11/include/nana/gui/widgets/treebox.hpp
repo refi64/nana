@@ -38,8 +38,6 @@ namespace gui
 				expender, crook, bground, icon, text, end
 			};
 
-			class tooltip_window;
-
 			template<typename NodeType>
 			struct extra_events
 			{
@@ -98,6 +96,7 @@ namespace gui
 					nana::string text;
 					nana::any value;
 					bool expanded;
+					bool checked;
 					nana::string img_idstr;
 				};
 
@@ -114,6 +113,8 @@ namespace gui
 				const nana::pat::cloneable_interface<renderer_interface> & renderer() const;
 
 				void auto_draw(bool);
+				void checkable(bool);
+				bool checkable() const;
 
 				const tree_cont_type & tree() const;
 				tree_cont_type & tree();
@@ -205,10 +206,20 @@ namespace gui
 			return get_drawer_trigger().renderer();
 		}
 
-
 		void auto_draw(bool ad)
 		{
 			get_drawer_trigger().auto_draw(ad);
+		}
+
+		treebox & checkable(bool enable)
+		{
+			get_drawer_trigger().checkable(enable);
+			return *this;
+		}
+
+		bool checkable() const
+		{
+			return get_drawer_trigger().checkable();
 		}
 
 		ext_event_type& ext_event() const

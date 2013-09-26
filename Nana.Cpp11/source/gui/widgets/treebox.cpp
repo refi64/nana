@@ -70,6 +70,8 @@ namespace gui
 					return nullptr;
 				}
 
+			class tooltip_window;
+
 			//struct implement
 			//@brief:	some data for treebox trigger
 			template<typename Renderer>
@@ -386,12 +388,10 @@ namespace gui
 
 				void show_scrollbar()
 				{
-					paint::graphics * graph = data.graph;
+					if(nullptr == data.graph) return;
 
-					if(nullptr == graph) return;
-
-					unsigned max_allow = max_allowed();
-					unsigned visual_items = visual_item_size();
+					std::size_t max_allow = max_allowed();
+					std::size_t visual_items = visual_item_size();
 
 					auto & scroll = shape.scroll;
 					if(visual_items <= max_allow)
@@ -407,7 +407,7 @@ namespace gui
 						if(scroll.empty())
 						{
 							shape.prev_first_value = 0;
-							scroll.create(*data.widget_ptr, nana::rectangle(graph->width() - 16, 0, 16, graph->height()));
+							scroll.create(*data.widget_ptr, nana::rectangle(data.graph->width() - 16, 0, 16, data.graph->height()));
 							auto scroll_fn = nana::make_fun(*this, &basic_implement::event_scrollbar);
 							scroll.make_event<events::mouse_down>(scroll_fn);
 							scroll.make_event<events::mouse_move>(scroll_fn);
@@ -427,7 +427,7 @@ namespace gui
 					{
 						if(shape.prev_first_value != shape.scroll.value())
 						{
-							shape.prev_first_value = static_cast<unsigned long>(shape.scroll.value());
+							shape.prev_first_value = shape.scroll.value();
 							adjust.scroll_timestamp = nana::system::timestamp();
 							adjust.timer.enable(true);
 
@@ -651,6 +651,8 @@ namespace gui
 
 					if(compset->comp_attribute(component::crook, attr))
 					{
+						attr.area.y += (attr.area.height - 16) / 2;
+						crook_.check(compset->item_attribute().checked ? element::crook_interface::state::checked : element::crook_interface::state::unchecked);
 						crook_.draw(graph, bgcolor, fgcolor, attr.area, attr.mouse_pointed ? element_state::hovered : element_state::normal);
 					}
 
@@ -795,7 +797,7 @@ namespace gui
 
 					item_attr_.expended = node.value.second.expanded;
 					item_attr_.text = node.value.second.text;
-					item_attr_.checked = false;
+					item_attr_.checked = node.value.second.checked;
 					item_attr_.mouse_pointed = (draw_impl->node_state.pointed == iterated_node_);
 					item_attr_.selected = (draw_impl->node_state.selected == iterated_node_);
 
@@ -818,6 +820,7 @@ namespace gui
 				virtual bool comp_attribute(component_t comp, comp_attribute_t& attr) const override
 				{
 					implement * draw_impl = impl_;
+					auto & shape = impl_->shape;
 					switch(comp)
 					{
 					case component::expender:
@@ -830,33 +833,33 @@ namespace gui
 						}
 						return false;
 					case component::bground:
-						attr.area.x = pos_.x + draw_impl->shape.item_offset;
+						attr.area.x = pos_.x + shape.item_offset;
 						attr.area.y = pos_.y;
 						attr.area.width = impl_->node_w_pixels(iterated_node_);
 						attr.area.height = node_height_pixels_;
 						return true;
 					case component::crook:
-						if(draw_impl->shape.crook_pixels)
+						if(shape.crook_pixels)
 						{
-							attr.area.x = pos_.x + draw_impl->shape.item_offset + 2;
+							attr.area.x = pos_.x + shape.item_offset + 2;
 							attr.area.y = pos_.y;
-							attr.area.width = static_cast<unsigned>(draw_impl->shape.crook_pixels);
+							attr.area.width = static_cast<unsigned>(shape.crook_pixels);
 							attr.area.height = node_height_pixels_;
 							return true;
 						}
 						return false;
 					case component::icon:
-						if(draw_impl->shape.image_pixels)
+						if(shape.image_pixels)
 						{
-							attr.area.x = pos_.x + draw_impl->shape.item_offset + static_cast<int>(draw_impl->shape.crook_pixels) + 2;
+							attr.area.x = pos_.x + shape.item_offset + static_cast<int>(shape.crook_pixels) + 2;
 							attr.area.y = pos_.y + 2;
-							attr.area.width = static_cast<unsigned>(draw_impl->shape.image_pixels);
+							attr.area.width = static_cast<unsigned>(shape.image_pixels);
 							attr.area.height = node_height_pixels_ - 2;
 							return true;
 						}
 						return false;
 					case component::text:
-						attr.area.x = pos_.x + draw_impl->shape.item_offset + static_cast<int>(draw_impl->shape.image_pixels) + draw_impl->shape.text_offset;
+						attr.area.x = pos_.x + shape.item_offset + static_cast<int>(shape.image_pixels + shape.crook_pixels) + shape.text_offset;
 						attr.area.y = pos_.y;
 						attr.area.width = impl_->node_w_pixels(iterated_node_) - ( attr.area.x - pos_.x);
 						attr.area.height = node_height_pixels_;
@@ -951,15 +954,15 @@ namespace gui
 			//class trigger
 				//struct treebox_node_type
 					trigger::treebox_node_type::treebox_node_type()
-						:expanded(false)
+						:expanded(false), checked(false)
 					{}
 
 					trigger::treebox_node_type::treebox_node_type(const nana::any& v)
-						:value(v), expanded(false)
+						:value(v), expanded(false), checked(false)
 					{}
 
 					trigger::treebox_node_type::treebox_node_type(const nana::string& text, const nana::any& v)
-						:text(text), value(v), expanded(false)
+						:text(text), value(v), expanded(false), checked(false)
 					{}
 
 					trigger::treebox_node_type& trigger::treebox_node_type::operator=(const treebox_node_type& rhs)
@@ -968,6 +971,7 @@ namespace gui
 						{
 							text = rhs.text;
 							value = rhs.value;
+							checked = rhs.checked;
 							img_idstr = rhs.img_idstr;
 						}
 						return *this;
@@ -1014,6 +1018,25 @@ namespace gui
 						if(ad)
 							API::update_window(impl_->data.widget_ptr->handle());
 					}
+				}
+
+				void trigger::checkable(bool enable)
+				{
+					if((0 != impl_->shape.crook_pixels) != enable)
+					{
+						impl_->shape.crook_pixels = (enable ? 16 : 0);
+
+						if(impl_->attr.auto_draw)
+						{
+							impl_->draw(false);
+							API::update_window(impl_->data.widget_ptr->handle());
+						}
+					}
+				}
+
+				bool trigger::checkable() const
+				{
+					return (0 != impl_->shape.crook_pixels);
 				}
 
 				auto trigger::tree() -> tree_cont_type &
@@ -1290,14 +1313,23 @@ namespace gui
 					item_locator nl(impl_, xpos, ei.mouse.x, ei.mouse.y);
 					impl_->attr.tree_cont.for_each<item_locator&>(shape.first, nl);
 
-					if(nl.node() && (impl_->node_state.selected != nl.node()) && nl.item_body())
+					if(nl.node())
 					{
-						impl_->set_selected(nl.node());
-						if(impl_->make_adjust(impl_->node_state.selected, 1))
-							impl_->adjust.scroll_timestamp = 1;
+						if((impl_->node_state.selected != nl.node()) && nl.item_body())
+						{
+							impl_->set_selected(nl.node());
+							if(impl_->make_adjust(impl_->node_state.selected, 1))
+								impl_->adjust.scroll_timestamp = 1;
 
-						impl_->draw(true);
-						API::lazy_refresh();
+							impl_->draw(true);
+							API::lazy_refresh();
+						}
+						else if(nl.what() == component::crook)
+						{
+							nl.node()->value.second.checked = ! nl.node()->value.second.checked;
+							impl_->draw(true);
+							API::lazy_refresh();
+						}
 					}
 				}
 

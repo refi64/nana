@@ -85,7 +85,7 @@ namespace detail
 				remove(root_.child);
 			}
 
-			bool check(const node_type* node) const
+			bool verify(const node_type* node) const
 			{
 				if(node)
 				{
@@ -130,7 +130,7 @@ namespace detail
 				if(nullptr == node)
 					return insert(key, elem);
 				
-				if(check(node))
+				if(verify(node))
 				{
 					node_type **new_node_ptr;
 					if(node->child)
@@ -173,7 +173,7 @@ namespace detail
 
 			void remove(node_type* node)
 			{
-				if(check(node))
+				if(verify(node))
 					delete node;
 			}
 

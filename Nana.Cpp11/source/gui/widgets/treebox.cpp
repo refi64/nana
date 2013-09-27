@@ -602,6 +602,17 @@ namespace gui
 						API::update_window(data.widget_ptr->handle());
 					}
 				}
+
+				void check_child(node_type * node, bool checked)
+				{
+					node->value.second.checked = (checked ? checkstate::checked : checkstate::unchecked);
+					node = node->child;
+					while(node)
+					{
+						check_child(node, checked);
+						node = node->next;
+					}
+				}
 			}; //end struct trigger::implement;
 
 			class internal_renderer
@@ -652,7 +663,7 @@ namespace gui
 					if(compset->comp_attribute(component::crook, attr))
 					{
 						attr.area.y += (attr.area.height - 16) / 2;
-						crook_.check(compset->item_attribute().checked ? element::crook_interface::state::checked : element::crook_interface::state::unchecked);
+						crook_.check(compset->item_attribute().checked);
 						crook_.draw(graph, bgcolor, fgcolor, attr.area, attr.mouse_pointed ? element_state::hovered : element_state::normal);
 					}
 
@@ -954,15 +965,15 @@ namespace gui
 			//class trigger
 				//struct treebox_node_type
 					trigger::treebox_node_type::treebox_node_type()
-						:expanded(false), checked(false)
+						:expanded(false), checked(checkstate::unchecked)
 					{}
 
 					trigger::treebox_node_type::treebox_node_type(const nana::any& v)
-						:value(v), expanded(false), checked(false)
+						:value(v), expanded(false), checked(checkstate::unchecked)
 					{}
 
 					trigger::treebox_node_type::treebox_node_type(const nana::string& text, const nana::any& v)
-						:text(text), value(v), expanded(false), checked(false)
+						:text(text), value(v), expanded(false), checked(checkstate::unchecked)
 					{}
 
 					trigger::treebox_node_type& trigger::treebox_node_type::operator=(const treebox_node_type& rhs)
@@ -1051,7 +1062,7 @@ namespace gui
 
 				nana::any & trigger::value(node_type* node) const
 				{
-					if(impl_->attr.tree_cont.check(node) == false)
+					if(impl_->attr.tree_cont.verify(node) == false)
 						throw std::invalid_argument("Nana.GUI.treebox.value() invalid node");
 
 					return node->value.second.value;
@@ -1081,12 +1092,12 @@ namespace gui
 					return x;
 				}
 
-				bool trigger::check(const void* node) const
+				bool trigger::verify(const void* node) const
 				{
-					return impl_->attr.tree_cont.check(reinterpret_cast<const node_type*>(node));
+					return impl_->attr.tree_cont.verify(reinterpret_cast<const node_type*>(node));
 				}
 
-				bool trigger::check_kinship(node_type* parent, node_type* child) const
+				bool trigger::verify_kinship(node_type* parent, node_type* child) const
 				{
 					if(false == (parent && child)) return false;
 
@@ -1096,18 +1107,74 @@ namespace gui
 					return (nullptr != child);
 				}
 
+				void trigger::check(node_type* node, checkstate cs)
+				{
+					if(checkstate::unchecked != cs)
+						cs = checkstate::checked;
+
+					if(node->value.second.checked != cs)
+					{
+						node->value.second.checked = cs;
+
+						//First, check the children of node
+						node_type * child = node->child;
+						while(child)
+						{
+							impl_->check_child(child, cs != checkstate::unchecked);
+							child = child->next;
+						}
+
+						//Then, change the parent node check state
+						node_type * owner = node->owner;
+						while(owner)
+						{
+							std::size_t len_checked = 0;
+							std::size_t size = 0;
+							checkstate cs = checkstate::unchecked;
+							child = owner->child;
+							while(child)
+							{
+								++size;
+								if(checkstate::checked == child->value.second.checked)
+								{
+									++len_checked;
+									if(size != len_checked)
+									{
+										cs = checkstate::partial;
+										break;
+									}
+								}
+								else if(checkstate::partial == child->value.second.checked)
+								{
+									cs = checkstate::partial;
+									break;
+								}
+								child = child->next;
+							}
+
+							if(size && size == len_checked)
+								cs = checkstate::checked;
+
+							if(cs == owner->value.second.checked)
+								break;
+							owner->value.second.checked = cs;
+							owner = owner->owner;
+						}
+					}
+				}
+
 				void trigger::remove(node_type* node)
 				{
 					auto & shape = impl_->shape;
 					auto & node_state = impl_->node_state;
 
-					if(check_kinship(node, node_state.event_node))
+					if(verify_kinship(node, node_state.event_node))
 						node_state.event_node = nullptr;
 
-					if(check_kinship(node, shape.first))
+					if(verify_kinship(node, shape.first))
 						shape.first = nullptr;
 
-					if(check_kinship(node, node_state.selected))
+					if(verify_kinship(node, node_state.selected))
 						node_state.selected = nullptr;
 
 					impl_->attr.tree_cont.remove(node);
@@ -1120,7 +1187,7 @@ namespace gui
 
 				void trigger::selected(node_type* node)
 				{
-					if(impl_->attr.tree_cont.check(node) && impl_->set_selected(node))
+					if(impl_->attr.tree_cont.verify(node) && impl_->set_selected(node))
 					{
 						impl_->draw(true);
 						API::update_window(impl_->data.widget_ptr->handle());
@@ -1165,7 +1232,7 @@ namespace gui
 
 				void trigger::node_image(node_type* node, const nana::string& id)
 				{
-					if(tree().check(node))
+					if(tree().verify(node))
 					{
 						node->value.second.img_idstr = id;
 						auto i = impl_->shape.image_table.find(id);
@@ -1181,7 +1248,7 @@ namespace gui
 
 				bool trigger::rename(node_type *node, const nana::char_t* key, const nana::char_t* name)
 				{
-					if((key || name ) && tree().check(node))
+					if((key || name ) && tree().verify(node))
 					{
 						if(key && (key != node->value.first))
 						{
@@ -1326,7 +1393,11 @@ namespace gui
 						}
 						else if(nl.what() == component::crook)
 						{
-							nl.node()->value.second.checked = ! nl.node()->value.second.checked;
+							checkstate cs = checkstate::unchecked;
+							if(checkstate::unchecked == nl.node()->value.second.checked)
+								cs = checkstate::checked;
+
+							check(nl.node(), cs);
 							impl_->draw(true);
 							API::lazy_refresh();
 						}

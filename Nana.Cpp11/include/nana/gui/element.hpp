@@ -28,11 +28,7 @@ namespace nana{	namespace gui
 		{
 		public:
 			typedef paint::graphics & graph_reference;
-
-			enum class state
-			{
-				unchecked, checked, partial
-			};
+			typedef checkstate	state;
 
 			struct data
 			{

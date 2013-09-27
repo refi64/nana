@@ -28,6 +28,11 @@ namespace gui
 		struct event_handle_impl{};
 	}
 
+	enum class checkstate
+	{
+		unchecked, checked, partial
+	};
+
 	enum class window_border
 	{
 		none,

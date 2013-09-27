@@ -58,7 +58,7 @@ namespace gui
 			struct node_attribute
 			{
 				bool expended;
-				bool checked;
+				checkstate checked;
 				bool selected;
 				bool mouse_pointed;
 				nana::paint::image icon;
@@ -96,7 +96,7 @@ namespace gui
 					nana::string text;
 					nana::any value;
 					bool expanded;
-					bool checked;
+					checkstate checked;
 					nana::string img_idstr;
 				};
 
@@ -123,8 +123,9 @@ namespace gui
 				node_type* insert(node_type* node, const nana::string& key, const nana::string& title, const nana::any& v);
 				node_type* insert(const nana::string& path, const nana::string& title, const nana::any& v);
 
-				bool check(const void*) const;
-				bool check_kinship(node_type* parent, node_type* child) const;
+				bool verify(const void*) const;
+				bool verify_kinship(node_type* parent, node_type* child) const;
+				void check(node_type*, checkstate);
 				void remove(node_type*);
 				node_type * selected() const;
 				void selected(node_type*);
@@ -367,7 +368,7 @@ namespace gui
 
 		node_type get_child(node_type node) const
 		{
-			if(get_drawer_trigger().check(reinterpret_cast<drawer_trigger_t::node_type*>(node)))
+			if(get_drawer_trigger().verify(reinterpret_cast<drawer_trigger_t::node_type*>(node)))
 				return reinterpret_cast<node_type>(
 							reinterpret_cast<drawer_trigger_t::node_type*>(node)->child
 							);
@@ -385,7 +386,7 @@ namespace gui
 		{
 			auto & tree = get_drawer_trigger().tree();
 			auto pnode = reinterpret_cast<drawer_trigger_t::node_type*>(node);
-			if(tree.check(pnode))
+			if(tree.verify(pnode))
 			{
 				auto root = tree.get_root();
 				nana::string path;

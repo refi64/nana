@@ -44,6 +44,7 @@ namespace gui
 				typedef NodeType node_type;
 
 				nana::fn_group<void(nana::gui::window, node_type, bool)> expand;
+				nana::fn_group<void(nana::gui::window, node_type, bool)> checked;
 				nana::fn_group<void(nana::gui::window, node_type, bool)> selected;
 			};
 
@@ -54,7 +55,6 @@ namespace gui
 				nana::paint::image expanded;
 			};
 
-			
 			struct node_attribute
 			{
 				bool expended;
@@ -115,6 +115,8 @@ namespace gui
 				void auto_draw(bool);
 				void checkable(bool);
 				bool checkable() const;
+				void check(node_type*, checkstate);
+				bool draw();
 
 				const tree_cont_type & tree() const;
 				tree_cont_type & tree();
@@ -125,7 +127,7 @@ namespace gui
 
 				bool verify(const void*) const;
 				bool verify_kinship(node_type* parent, node_type* child) const;
-				void check(node_type*, checkstate);
+
 				void remove(node_type*);
 				node_type * selected() const;
 				void selected(node_type*);
@@ -221,6 +223,26 @@ namespace gui
 		bool checkable() const
 		{
 			return get_drawer_trigger().checkable();
+		}
+
+		treebox& check(node_type node, bool checked)
+		{
+			auto & trg = get_drawer_trigger();
+			if(trg.verify(node))
+			{
+				trg.check(reinterpret_cast<drawer_trigger_t::node_type*>(node), checked);
+				if(trg.draw())
+					API::update_window(this->handle());
+			}
+			return *this;
+		}
+
+		bool checked(node_type node) const
+		{
+			if(get_drawer_trigger().verify(node))
+				return (checkstate::checked == reinterpret_cast<drawer_trigger_t::node_type*>(node)->value.second.checked);
+
+			return false;
 		}
 
 		ext_event_type& ext_event() const

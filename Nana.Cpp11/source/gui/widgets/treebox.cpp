@@ -346,6 +346,19 @@ namespace gui
 					return false;
 				}
 
+				bool set_checked(node_type * node, checkstate cs)
+				{
+					if(node && node->value.second.checked != cs)
+					{
+						node->value.second.checked = cs;
+						data.stop_drawing = true;
+						attr.ext_event.checked(data.widget_ptr->handle(), reinterpret_cast<ext_event_type::node_type>(node), (checkstate::unchecked != cs));
+						data.stop_drawing = false;
+						return true;
+					}
+					return false;
+				}
+
 				bool set_selected(node_type * node)
 				{
 					if(node_state.selected != node)
@@ -605,7 +618,7 @@ namespace gui
 
 				void check_child(node_type * node, bool checked)
 				{
-					node->value.second.checked = (checked ? checkstate::checked : checkstate::unchecked);
+					set_checked(node, (checked ? checkstate::checked : checkstate::unchecked));
 					node = node->child;
 					while(node)
 					{
@@ -1050,6 +1063,72 @@ namespace gui
 					return (0 != impl_->shape.crook_pixels);
 				}
 
+				void trigger::check(node_type* node, checkstate cs)
+				{
+					if(checkstate::unchecked != cs)
+						cs = checkstate::checked;
+
+					if(node->value.second.checked != cs)
+					{
+						impl_->set_checked(node, cs);
+						//First, check the children of node
+						node_type * child = node->child;
+						while(child)
+						{
+							impl_->check_child(child, cs != checkstate::unchecked);
+							child = child->next;
+						}
+
+						//Then, change the parent node check state
+						node_type * owner = node->owner;
+						while(owner)
+						{
+							std::size_t len_checked = 0;
+							std::size_t size = 0;
+							checkstate cs = checkstate::unchecked;
+							child = owner->child;
+							while(child)
+							{
+								++size;
+								if(checkstate::checked == child->value.second.checked)
+								{
+									++len_checked;
+									if(size != len_checked)
+									{
+										cs = checkstate::partial;
+										break;
+									}
+								}
+								else if((checkstate::partial == child->value.second.checked) || (len_checked && (len_checked < size)))
+								{
+									cs = checkstate::partial;
+									break;
+								}
+								child = child->next;
+							}
+
+							if(size && (size == len_checked))
+								cs = checkstate::checked;
+
+							if(cs == owner->value.second.checked)
+								break;
+
+							impl_->set_checked(owner, cs);
+							owner = owner->owner;
+						}
+					}
+				}
+
+				bool trigger::draw()
+				{
+					if(impl_->attr.auto_draw)
+					{
+						impl_->draw(false);
+						return true;
+					}
+					return false;
+				}
+
 				auto trigger::tree() -> tree_cont_type &
 				{
 					return impl_->attr.tree_cont;
@@ -1105,62 +1184,6 @@ namespace gui
 						child = child->owner;
 
 					return (nullptr != child);
-				}
-
-				void trigger::check(node_type* node, checkstate cs)
-				{
-					if(checkstate::unchecked != cs)
-						cs = checkstate::checked;
-
-					if(node->value.second.checked != cs)
-					{
-						node->value.second.checked = cs;
-
-						//First, check the children of node
-						node_type * child = node->child;
-						while(child)
-						{
-							impl_->check_child(child, cs != checkstate::unchecked);
-							child = child->next;
-						}
-
-						//Then, change the parent node check state
-						node_type * owner = node->owner;
-						while(owner)
-						{
-							std::size_t len_checked = 0;
-							std::size_t size = 0;
-							checkstate cs = checkstate::unchecked;
-							child = owner->child;
-							while(child)
-							{
-								++size;
-								if(checkstate::checked == child->value.second.checked)
-								{
-									++len_checked;
-									if(size != len_checked)
-									{
-										cs = checkstate::partial;
-										break;
-									}
-								}
-								else if(checkstate::partial == child->value.second.checked)
-								{
-									cs = checkstate::partial;
-									break;
-								}
-								child = child->next;
-							}
-
-							if(size && size == len_checked)
-								cs = checkstate::checked;
-
-							if(cs == owner->value.second.checked)
-								break;
-							owner->value.second.checked = cs;
-							owner = owner->owner;
-						}
-					}
 				}
 
 				void trigger::remove(node_type* node)

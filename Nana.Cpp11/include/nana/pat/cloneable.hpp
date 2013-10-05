@@ -64,7 +64,6 @@ namespace nana{ namespace pat{
 	private:
 		value_t object_;
 	};
-
 }//end namespace pat
 }//end namespace nana
 

@@ -188,6 +188,8 @@ namespace nana
 
 		rectangle& pare_off(int pixels);
 
+		bool is_hit(int x, int y) const;
+
 		int x;
 		int y;
 		unsigned width;

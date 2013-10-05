@@ -35,7 +35,7 @@ namespace gui
 		{
 			enum class component
 			{
-				expender, crook, bground, icon, text, end
+				begin, expender = begin, crook, icon, text, bground, end
 			};
 
 			template<typename NodeType>
@@ -43,9 +43,9 @@ namespace gui
 			{
 				typedef NodeType node_type;
 
-				nana::fn_group<void(nana::gui::window, node_type, bool)> expand;
-				nana::fn_group<void(nana::gui::window, node_type, bool)> checked;
-				nana::fn_group<void(nana::gui::window, node_type, bool)> selected;
+				nana::fn_group<void(window, node_type, bool)> expand;
+				nana::fn_group<void(window, node_type, bool)> checked;
+				nana::fn_group<void(window, node_type, bool)> selected;
 			};
 
 			struct node_image_tag
@@ -57,6 +57,7 @@ namespace gui
 
 			struct node_attribute
 			{
+				bool has_children;
 				bool expended;
 				checkstate checked;
 				bool selected;
@@ -66,11 +67,13 @@ namespace gui
 			};
 
 			typedef ::nana::gui::widgets::detail::compset<component, node_attribute> compset_interface;
+			typedef ::nana::gui::widgets::detail::compset_placer<component, node_attribute> compset_placer_interface;
 			
 			class renderer_interface
 			{
 			public:
 				typedef ::nana::paint::graphics& graph_reference;
+				typedef drawerbase::treebox::compset_interface compset_interface;
 				typedef compset_interface::item_attribute_t item_attribute_t;
 				typedef compset_interface::comp_attribute_t comp_attribute_t;
 
@@ -122,7 +125,7 @@ namespace gui
 				tree_cont_type & tree();
 
 				nana::any & value(node_type*) const;
-				node_type* insert(node_type* node, const nana::string& key, const nana::string& title, const nana::any& v);
+				node_type* insert(node_type*, const nana::string& key, const nana::string& title, const nana::any& v);
 				node_type* insert(const nana::string& path, const nana::string& title, const nana::any& v);
 
 				bool verify(const void*) const;
@@ -131,17 +134,17 @@ namespace gui
 				void remove(node_type*);
 				node_type * selected() const;
 				void selected(node_type*);
-				void set_expand(node_type* node, bool);
+				void set_expand(node_type*, bool);
 				void set_expand(const nana::string& path, bool);
 
 				void image(const nana::string& id, const node_image_tag&);
 				node_image_tag& image(const nana::string&) const;
 				void image_erase(const nana::string&);
-				void node_image(node_type* node, const nana::string& id);
+				void node_image(node_type*, const nana::string& id);
 
-				unsigned node_width(const node_type *node) const;
+				unsigned node_width(const node_type*) const;
 
-				bool rename(node_type *node, const nana::char_t* key, const nana::char_t* name);
+				bool rename(node_type*, const nana::char_t* key, const nana::char_t* name);
 				ext_event_type& ext_event() const;
 			private:
 				//Overrides drawer_trigger methods
@@ -180,7 +183,9 @@ namespace gui
 		typedef typename drawer_trigger_t::ext_event_type ext_event_type;
 		typedef drawerbase::treebox::node_image_tag node_image_type;
 		typedef drawerbase::treebox::renderer_interface renderer_interface;
+		typedef drawerbase::treebox::compset_placer_interface compset_placer_interface;
 
+		///member class cloneable_renderer
 		template<typename Renderer>
 		class cloneable_renderer
 			: public nana::pat::cloneable<Renderer, renderer_interface>

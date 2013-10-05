@@ -983,6 +983,24 @@ namespace paint
 			}
 		}
 
+
+		void graphics::paste(const nana::rectangle& r_src, graphics& dst, int x, int y)
+		{
+			if(handle_ && dst.handle_ && handle_ != dst.handle_)
+			{
+#if defined(NANA_WINDOWS)
+				::BitBlt(dst.handle_->context, x, y, r_src.width, r_src.height, handle_->context, r_src.x, r_src.y, SRCCOPY);
+#elif defined(NANA_X11)
+				Display* display = nana::detail::platform_spec::instance().open_display();
+				::XCopyArea(nana::detail::platform_spec::instance().open_display(),
+						handle_->pixmap, dst.handle_->pixmap, handle_->context,
+						r_src.x, r_src.y, r_src.width, r_src.height, x, y);
+
+				::XFlush(display);
+#endif
+			}
+		}
+
 		void graphics::stretch(const nana::rectangle& src_r, graphics& dst, const nana::rectangle& r) const
 		{
 			if(handle_ && dst.handle_ && (handle_ != dst.handle_))

@@ -38,14 +38,14 @@ namespace gui
 				begin, expender = begin, crook, icon, text, bground, end
 			};
 
-			template<typename NodeType>
+			template<typename ItemProxy>
 			struct extra_events
 			{
-				typedef NodeType node_type;
+				typedef ItemProxy item_proxy;
 
-				nana::fn_group<void(window, node_type, bool)> expand;
-				nana::fn_group<void(window, node_type, bool)> checked;
-				nana::fn_group<void(window, node_type, bool)> selected;
+				nana::fn_group<void(window, item_proxy, bool)> expand;
+				nana::fn_group<void(window, item_proxy, bool)> checked;
+				nana::fn_group<void(window, item_proxy, bool)> selected;
 			};
 
 			struct node_image_tag
@@ -83,17 +83,23 @@ namespace gui
 				virtual void render(graph_reference, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface *) const = 0;
 			};
 
+			class item_proxy;
+
 			class trigger
 				:public drawer_trigger
 			{
 				template<typename Renderer>
 				struct basic_implement;
+
+				class item_renderer;
+				class item_locator;
+
+				typedef basic_implement<item_renderer> implement;
 			public:
 				struct treebox_node_type
 				{
 					treebox_node_type();
-					treebox_node_type(const nana::any&);
-					treebox_node_type(const nana::string& text, const nana::any&);
+					treebox_node_type(const nana::string& text);
 					treebox_node_type& operator=(const treebox_node_type&);
 
 					nana::string text;
@@ -107,10 +113,12 @@ namespace gui
 
 				typedef nana::gui::widgets::detail::tree_cont<treebox_node_type> tree_cont_type;
 				typedef tree_cont_type::node_type	node_type;
-				typedef extra_events<pseudo_node_type*>	ext_event_type;
+				typedef extra_events<item_proxy>	ext_event_type;
 
 				trigger();
 				~trigger();
+
+				implement * impl() const;
 
 				void renderer(const nana::pat::cloneable_interface<renderer_interface>& );
 				const nana::pat::cloneable_interface<renderer_interface> & renderer() const;
@@ -125,8 +133,8 @@ namespace gui
 				tree_cont_type & tree();
 
 				nana::any & value(node_type*) const;
-				node_type* insert(node_type*, const nana::string& key, const nana::string& title, const nana::any& v);
-				node_type* insert(const nana::string& path, const nana::string& title, const nana::any& v);
+				node_type* insert(node_type*, const nana::string& key, const nana::string& title);
+				node_type* insert(const nana::string& path, const nana::string& title);
 
 				bool verify(const void*) const;
 				bool verify_kinship(node_type* parent, node_type* child) const;
@@ -163,24 +171,129 @@ namespace gui
 			private:
 				void _m_deal_adjust();
 			private:
-				class item_renderer;
-				class item_locator;
-			private:
-				typedef basic_implement<item_renderer> implement;
-
 				implement * const impl_;
 			}; //end class trigger
+
+
+			/// A proxy for accessing the node.
+			class item_proxy
+			{
+			public:
+				item_proxy(trigger*, trigger::node_type*);
+
+				/// Return true if the proxy does not refer to a node
+				bool empty() const;
+
+				/// Return the check state
+				bool checked() const;
+
+				/// Set the check state
+				item_proxy& check(bool);
+
+				/// Return true when the node expended
+				bool expended() const;
+
+				/// Expend/Shrink children of the node
+				item_proxy& expend(bool);
+
+				/// Return true when the node is selected.
+				bool selected() const;
+
+				/// Select the node.
+				item_proxy& select();
+
+				/// Return the icon.
+				const nana::string& icon() const;
+
+				/// Set the icon.
+				item_proxy& icon(const nana::string& id);
+
+				/// Return the text.
+				const nana::string& text() const;
+
+				/// Set a new key.
+				item_proxy& key(const nana::string& s);
+
+				/// Return the key.
+				const nana::string& key() const;
+
+				/// Set the text.
+				item_proxy& text(const nana::string&);
+
+				std::size_t size() const;
+
+				/// Return the first chilld of the node.
+				item_proxy child() const;
+
+				/// Return the owner of the node.
+				item_proxy owner() const;
+
+				/// Return the sibling of the node.
+				item_proxy sibling() const;
+
+				/// Return the first child of the node
+				item_proxy begin() const;
+
+				/// An end node.
+				item_proxy end() const;
+
+				/// Behavior of Iterator
+				item_proxy & operator++();
+
+				/// Behavior of Iterator
+				item_proxy	operator++(int);
+
+				/// Behavior of Iterator
+				item_proxy& operator*();
+
+				/// Behavior of Iterator
+				const item_proxy& operator*() const;
+
+				/// Behavior of Iterator
+				bool operator==(const item_proxy&) const;
+
+				/// Behavior of Iterator
+				bool operator!=(const item_proxy&) const;
+
+				template<typename T>
+				T * value() const
+				{
+					return _m_value().get<T>();
+				}
+
+				template<typename T>
+				item_proxy & value(const T& t)
+				{
+					_m_value() = t;
+					return *this;
+				};
+
+				template<typename T>
+				item_proxy & value(T&& t)
+				{
+					_m_value() = std::move(t);
+					return *this;
+				};
+
+				// Undocumentated methods for internal use
+				trigger::node_type * _m_node() const;
+			private:
+				nana::any& _m_value();
+				const nana::any& _m_value() const;
+			private:
+				trigger * trigger_;
+				trigger::node_type * node_;
+			};
 		}//end namespace treebox
 	}//end namespace drawerbase
 
-	template<typename UserData>
 	class treebox
 		:public widget_object<category::widget_tag, drawerbase::treebox::trigger>
 	{
 	public:
-		typedef UserData value_type;
-		typedef typename drawer_trigger_t::pseudo_node_type* node_type;
-		typedef typename drawer_trigger_t::ext_event_type ext_event_type;
+		typedef drawerbase::treebox::item_proxy	item_proxy;
+
+		typedef drawer_trigger_t::ext_event_type ext_event_type;
 		typedef drawerbase::treebox::node_image_tag node_image_type;
 		typedef drawerbase::treebox::renderer_interface renderer_interface;
 		typedef drawerbase::treebox::compset_placer_interface compset_placer_interface;
@@ -191,247 +304,42 @@ namespace gui
 			: public nana::pat::cloneable<Renderer, renderer_interface>
 		{};
 
-		treebox(){}
+		treebox();
 
-		treebox(window wd, bool visible)
-		{
-			create(wd, rectangle(), visible);
-		}
+		treebox(window wd, bool visible);
 
-		treebox(window wd, const rectangle& r, bool visible)
-		{
-			create(wd, r, visible);
-		}
+		treebox(window wd, const rectangle& r, bool visible);
 
-		treebox & renderer(const ::nana::pat::cloneable_interface<renderer_interface> & rd)
-		{
-			get_drawer_trigger().renderer(rd);
-			return *this;
-		}
+		treebox & renderer(const ::nana::pat::cloneable_interface<renderer_interface> & rd);
 
-		const nana::pat::cloneable_interface<renderer_interface> & renderer() const
-		{
-			return get_drawer_trigger().renderer();
-		}
+		const nana::pat::cloneable_interface<renderer_interface> & renderer() const;
 
-		void auto_draw(bool ad)
-		{
-			get_drawer_trigger().auto_draw(ad);
-		}
+		void auto_draw(bool);
 
-		treebox & checkable(bool enable)
-		{
-			get_drawer_trigger().checkable(enable);
-			return *this;
-		}
+		treebox & checkable(bool enable);
 
-		bool checkable() const
-		{
-			return get_drawer_trigger().checkable();
-		}
+		bool checkable() const;
 
-		treebox& check(node_type node, bool checked)
-		{
-			auto & trg = get_drawer_trigger();
-			if(trg.verify(node))
-			{
-				trg.check(reinterpret_cast<drawer_trigger_t::node_type*>(node), checked);
-				if(trg.draw())
-					API::update_window(this->handle());
-			}
-			return *this;
-		}
+		ext_event_type& ext_event() const;
 
-		bool checked(node_type node) const
-		{
-			if(get_drawer_trigger().verify(node))
-				return (checkstate::checked == reinterpret_cast<drawer_trigger_t::node_type*>(node)->value.second.checked);
+		treebox& image(const nana::string& id, const nana::paint::image& img);
 
-			return false;
-		}
+		treebox& image(const nana::string& id, const node_image_type& node_img);
 
-		ext_event_type& ext_event() const
-		{
-			return get_drawer_trigger().ext_event();
-		}
+		node_image_type& image(const nana::string& id) const;
 
-		value_type& value(node_type node) const
-		{
-			return get_drawer_trigger().value(reinterpret_cast<drawer_trigger_t::node_type*>(node));
-		}
+		void image_erase(const nana::string& id);
 
-		treebox& image(const nana::string& id, const nana::paint::image& img)
-		{
-			node_image_type node_img;
-			node_img.normal = img;
-			get_drawer_trigger().image(id, node_img);
-			return *this;
-		}
+		item_proxy insert(const nana::string& path_key, const nana::string& title);
 
-		treebox& image(const nana::string& id, const node_image_type& node_img)
-		{
-			get_drawer_trigger().image(id, node_img);
-			return *this;
-		}
+		item_proxy insert(item_proxy i, const nana::string& key, const nana::string& title);
 
-		node_image_type& image(const nana::string& id) const
-		{
-			return get_drawer_trigger().image(id);
-		}
+		item_proxy erase(item_proxy i);
 
-		void image_erase(const nana::string& id)
-		{
-			get_drawer_trigger().image_erase(id);
-		}
+		void erase(const nana::string& key_path);
 
-		void node_image(node_type node, const nana::string& id)
-		{
-			get_drawer_trigger().node_image(reinterpret_cast<drawer_trigger_t::node_type*>(node), id);
-		}
-
-		node_type insert(const nana::string& path_key, const nana::string& title, value_type value)
-		{
-			return reinterpret_cast<node_type>(get_drawer_trigger().insert(path_key, title, value));
-		}
-
-		node_type insert(node_type node, const nana::string& key, const nana::string& title, value_type value)
-		{
-			return reinterpret_cast<node_type>(get_drawer_trigger().insert(reinterpret_cast<drawer_trigger_t::node_type*>(node), key, title, value));
-		}
-
-		void remove(node_type node)
-		{
-			get_drawer_trigger().remove(reinterpret_cast<drawer_trigger_t::node_type*>(node));
-		}
-
-		void remove(const nana::string& key_path)
-		{
-			get_drawer_trigger().remove(
-				get_drawer_trigger().find(key_path)
-				);
-		}
-
-		void expand(node_type node, bool exp)
-		{
-			get_drawer_trigger().set_expand(reinterpret_cast<drawer_trigger_t::node_type*>(node), exp);
-		}
-
-		void expand(const nana::string& path_key, bool exp)
-		{
-			get_drawer_trigger().set_expand(path_key, exp);
-		}
-
-		bool expend(node_type node) const
-		{
-			if(get_drawer_trigger().check(reinterpret_cast<drawer_trigger_t::node_type*>(node)))
-				return reinterpret_cast<drawer_trigger_t::node_type*>(node)->value.second.expanded;
-			return false;	
-		}
-
-		node_type node(const nana::string& keypath)
-		{
-			return reinterpret_cast<node_type>(get_drawer_trigger().find(keypath));
-		}
-
-		nana::string key(node_type node) const
-		{
-			if(get_drawer_trigger().check(reinterpret_cast<drawer_trigger_t::node_type*>(node)))
-				return reinterpret_cast<drawer_trigger_t::node_type*>(node)->value.first;
-			
-			return nana::string();
-		}
-
-		bool key(node_type node, const nana::string& key)
-		{
-			return (get_drawer_trigger().rename(reinterpret_cast<drawer_trigger_t::node_type*>(node), key.c_str(), 0));
-		}
-
-		bool text(node_type node, const nana::string& str)
-		{
-			return (get_drawer_trigger().rename(reinterpret_cast<drawer_trigger_t::node_type*>(node), 0, str.c_str()));
-		}
-
-		nana::string text(node_type node) const
-		{
-			if(get_drawer_trigger().check(reinterpret_cast<drawer_trigger_t::node_type*>(node)))
-				return reinterpret_cast<drawer_trigger_t::node_type*>(node)->value.second.text;
-
-			return nana::string();
-		}
-
-		node_type selected() const
-		{
-			return reinterpret_cast<node_type>(get_drawer_trigger().selected());
-		}
-
-		void selected(node_type node)
-		{
-			get_drawer_trigger().selected(reinterpret_cast<drawer_trigger_t::node_type*>(node));
-		}
-
-		std::size_t children_size(node_type node) const
-		{
-			typedef drawer_trigger_t::node_type * node_t;
-			if(get_drawer_trigger().check(reinterpret_cast<node_t*>(node)))
-			{
-				node_t * child = reinterpret_cast<node_t*>(node)->child;
-
-				std::size_t n = 0;
-				for(; child; child = child->next)
-					++n;
-				return n;
-			}
-			return 0;
-		}
-
-		node_type get_sibling(node_type node) const
-		{
-			if(get_drawer_trigger().check(reinterpret_cast<drawer_trigger_t::node_type*>(node)))
-				return reinterpret_cast<node_type>(
-							reinterpret_cast<drawer_trigger_t::node_type*>(node)->next
-							);
-			return 0;
-		}
-
-		node_type get_child(node_type node) const
-		{
-			if(get_drawer_trigger().verify(reinterpret_cast<drawer_trigger_t::node_type*>(node)))
-				return reinterpret_cast<node_type>(
-							reinterpret_cast<drawer_trigger_t::node_type*>(node)->child
-							);
-			return 0;
-		}
-
-		node_type get_owner(node_type node) const
-		{
-			return reinterpret_cast<node_type>(
-					get_drawer_trigger().get_owner(reinterpret_cast<drawer_trigger_t::node_type*>(node))
-					);
-		}
-
-		nana::string make_key_path(node_type node, const nana::string& splitter) const
-		{
-			auto & tree = get_drawer_trigger().tree();
-			auto pnode = reinterpret_cast<drawer_trigger_t::node_type*>(node);
-			if(tree.verify(pnode))
-			{
-				auto root = tree.get_root();
-				nana::string path;
-				nana::string temp;
-				while(pnode->owner != root)
-				{
-					temp = splitter;
-					temp += pnode->value.first;
-					path.insert(0, temp);
-					pnode = pnode->owner;
-				}
-
-				path.insert(0, pnode->value.first);
-				return path;
-			}
-			return nana::string();
-		}
-	};
+		nana::string make_key_path(item_proxy i, const nana::string& splitter) const;
+	};//end class treebox
 }//end namespace gui
 }//end namespace nana
 

@@ -79,10 +79,11 @@ namespace gui
 			{
 				typedef trigger::node_type node_type;
 
-				struct essence_tag
+				struct rep_tag
 				{
 					nana::paint::graphics * graph;
 					widget * widget_ptr;
+					trigger * trigger_ptr;
 					nana::pat::cloneable_interface<compset_placer_interface> * comp_placer;
 					nana::pat::cloneable_interface<renderer_interface> * renderer;
 					bool stop_drawing;
@@ -351,7 +352,7 @@ namespace gui
 					{
 						node->value.second.checked = cs;
 						data.stop_drawing = true;
-						attr.ext_event.checked(data.widget_ptr->handle(), reinterpret_cast<ext_event_type::node_type>(node), (checkstate::unchecked != cs));
+						attr.ext_event.checked(data.widget_ptr->handle(), item_proxy(data.trigger_ptr, node), (checkstate::unchecked != cs));
 						data.stop_drawing = false;
 						return true;
 					}
@@ -364,11 +365,11 @@ namespace gui
 					{
 						data.stop_drawing = true;
 						if(node_state.selected)
-							attr.ext_event.selected(data.widget_ptr->handle(), reinterpret_cast<ext_event_type::node_type>(node_state.selected), false);
+							attr.ext_event.selected(data.widget_ptr->handle(), item_proxy(data.trigger_ptr, node_state.selected), false);
 
 						node_state.selected = node;
 						if(node)
-							attr.ext_event.selected(data.widget_ptr->handle(), reinterpret_cast<ext_event_type::node_type>(node), true);
+							attr.ext_event.selected(data.widget_ptr->handle(), item_proxy(data.trigger_ptr, node), true);
 						data.stop_drawing = false;
 						return true;
 					}
@@ -390,7 +391,7 @@ namespace gui
 						if(node->child)
 						{
 							data.stop_drawing = true;
-							attr.ext_event.expand(data.widget_ptr->handle(), reinterpret_cast<ext_event_type::node_type>(node), value);
+							attr.ext_event.expand(data.widget_ptr->handle(), item_proxy(data.trigger_ptr, node), value);
 							data.stop_drawing = false;
 						}
 						return true;
@@ -618,6 +619,192 @@ namespace gui
 					}
 				}
 			}; //end struct trigger::implement;
+
+			//class item_proxy
+				item_proxy::item_proxy(trigger* trg, trigger::node_type* node)
+					: trigger_(trg), node_(node)
+				{
+				}
+
+				bool item_proxy::empty() const
+				{
+					return !(trigger_ && node_);
+				}
+
+				bool item_proxy::checked() const
+				{
+					return (node_ && (checkstate::checked == node_->value.second.checked));
+				}
+
+				item_proxy& item_proxy::check(bool ck)
+				{
+					trigger_->check(node_, ck ? checkstate::checked : checkstate::unchecked);
+					if(trigger_->draw())
+						API::update_window(trigger_->impl()->data.widget_ptr->handle());
+					return *this;
+				}
+
+				bool item_proxy::expended() const
+				{
+					return (node_ && node_->value.second.expanded);
+				}
+
+				item_proxy& item_proxy::expend(bool exp)
+				{
+					auto * impl = trigger_->impl();
+					if(impl->set_expanded(node_, exp))
+					{
+						impl->draw(true);
+						API::update_window(impl->data.widget_ptr->handle());
+					}
+					return *this;
+				}
+
+				bool item_proxy::selected() const
+				{
+					return (trigger_->impl()->node_state.selected == node_);
+				}
+
+				item_proxy& item_proxy::select()
+				{
+					auto * impl = trigger_->impl();
+					if(impl->set_selected(node_))
+					{
+						impl->draw(true);
+						API::update_window(*impl->data.widget_ptr);
+					}
+					return *this;
+				}
+
+				const nana::string& item_proxy::icon() const
+				{
+					return node_->value.second.img_idstr;
+				}
+
+				item_proxy& item_proxy::icon(const nana::string& id)
+				{
+					node_->value.second.img_idstr = id;
+					return *this;
+				}
+
+				item_proxy& item_proxy::key(const nana::string& kstr)
+				{
+					trigger_->rename(node_, kstr.data(), nullptr);
+					return *this;
+				}
+
+				const nana::string& item_proxy::key() const
+				{
+					return node_->value.first;
+				}
+
+				const nana::string& item_proxy::text() const
+				{
+					return node_->value.second.text;
+				}
+
+				item_proxy& item_proxy::text(const nana::string& id)
+				{
+					trigger_->rename(node_, nullptr, id.data());
+					return *this;
+				}
+
+				std::size_t item_proxy::size() const
+				{
+					trigger::node_type * child = node_->child;
+					
+					std::size_t n = 0;
+					for(trigger::node_type * child = node_->child; child; child = child->child)
+						++n;
+
+					return n;
+				}
+
+				item_proxy item_proxy::child() const
+				{
+					return item_proxy(trigger_, node_->child);
+				}
+
+				item_proxy item_proxy::owner() const
+				{
+					return item_proxy(trigger_, node_->owner);
+				}
+
+				item_proxy item_proxy::sibling() const
+				{
+					return item_proxy(trigger_, node_->next);
+				}
+
+				item_proxy item_proxy::begin() const
+				{
+					return item_proxy(trigger_, node_->child);
+				}
+
+				item_proxy item_proxy::end() const
+				{
+					return item_proxy(nullptr, nullptr);
+				}
+
+				//Behavior like an iterator
+				item_proxy & item_proxy::operator++()
+				{
+					if(trigger_ && node_)
+						node_ = node_->child;
+
+					return *this;
+				}
+
+				item_proxy	item_proxy::operator++(int)
+				{
+					return sibling();
+				}
+
+				/// Behavior of Iterator
+				item_proxy& item_proxy::operator*()
+				{
+					return *this;
+				}
+
+				/// Behavior of Iterator
+				const item_proxy& item_proxy::operator*() const
+				{
+					return *this;
+				}
+
+				bool item_proxy::operator==(const item_proxy& rhs) const
+				{
+					if(empty() != rhs.empty())
+						return false;
+
+					//Not empty
+					if(node_ && trigger_)
+						return ((node_ == rhs.node_) && (trigger_ == rhs.trigger_));
+					
+					//Both are empty
+					return true;
+				}
+
+				bool item_proxy::operator!=(const item_proxy& rhs) const
+				{
+					return !(this->operator==(rhs));					
+				}
+
+				nana::any& item_proxy::_m_value()
+				{
+					return node_->value.second.value;
+				}
+
+				const nana::any& item_proxy::_m_value() const
+				{
+					return node_->value.second.value;
+				}
+
+				//Undocumentated methods for internal use.
+				trigger::node_type * item_proxy::_m_node() const
+				{
+					return node_;
+				}
+			//end class item_proxy
 
 			class internal_placer
 				: public compset_placer_interface
@@ -1095,12 +1282,8 @@ namespace gui
 						:expanded(false), checked(checkstate::unchecked)
 					{}
 
-					trigger::treebox_node_type::treebox_node_type(const nana::any& v)
-						:value(v), expanded(false), checked(checkstate::unchecked)
-					{}
-
-					trigger::treebox_node_type::treebox_node_type(const nana::string& text, const nana::any& v)
-						:text(text), value(v), expanded(false), checked(checkstate::unchecked)
+					trigger::treebox_node_type::treebox_node_type(const nana::string& text)
+						:text(text), expanded(false), checked(checkstate::unchecked)
 					{}
 
 					trigger::treebox_node_type& trigger::treebox_node_type::operator=(const treebox_node_type& rhs)
@@ -1119,6 +1302,7 @@ namespace gui
 				trigger::trigger()
 					:	impl_(new implement)
 				{
+					impl_->data.trigger_ptr = this;
 					impl_->data.renderer = nana::pat::cloneable<internal_renderer, renderer_interface>().clone();
 					impl_->data.comp_placer = nana::pat::cloneable<internal_placer, compset_placer_interface>().clone();
 					impl_->adjust.timer.enable(false);
@@ -1130,6 +1314,11 @@ namespace gui
 				{
 					impl_->data.renderer->self_delete();
 					delete impl_;
+				}
+
+				trigger::implement * trigger::impl() const
+				{
+					return impl_;
 				}
 
 				void trigger::renderer(const nana::pat::cloneable_interface<renderer_interface>& rd)
@@ -1179,6 +1368,7 @@ namespace gui
 					return impl_->data.comp_placer->refer().enabled(component::crook);
 				}
 
+				
 				void trigger::check(node_type* node, checkstate cs)
 				{
 					if(checkstate::unchecked != cs)
@@ -1263,30 +1453,27 @@ namespace gui
 					return node->value.second.value;
 				}
 
-				trigger::node_type* trigger::insert(node_type* node, const nana::string& key, const nana::string& title, const nana::any& v)
+				trigger::node_type* trigger::insert(node_type* node, const nana::string& key, const nana::string& title)
 				{
 					node_type * p = impl_->attr.tree_cont.node(node, key);
 					if(p)
-					{
 						p->value.second.text = title;
-						p->value.second.value = v;
-					}
 					else
-						p = impl_->attr.tree_cont.insert(node, key, treebox_node_type(title, v));
+						p = impl_->attr.tree_cont.insert(node, key, treebox_node_type(title));
 
 					if(p && impl_->attr.auto_draw && impl_->draw(true))
 						API::update_window(impl_->data.widget_ptr->handle());
 					return p;
 				}
 
-				trigger::node_type* trigger::insert(const nana::string& path, const nana::string& title, const nana::any& v)
+				trigger::node_type* trigger::insert(const nana::string& path, const nana::string& title)
 				{
-					auto x = impl_->attr.tree_cont.insert(path, treebox_node_type(title, v));
+					auto x = impl_->attr.tree_cont.insert(path, treebox_node_type(title));
 					if(x && impl_->attr.auto_draw && impl_->draw(true))
 						API::update_window(impl_->data.widget_ptr->handle());
 					return x;
 				}
-
+				
 				bool trigger::verify(const void* node) const
 				{
 					return impl_->attr.tree_cont.verify(reinterpret_cast<const node_type*>(node));
@@ -1764,5 +1951,122 @@ namespace gui
 			//end class trigger
 		}//end namespace treebox
 	}//end namespace drawerbase
+
+	//class treebox
+		treebox::treebox(){}
+
+		treebox::treebox(window wd, bool visible)
+		{
+			create(wd, rectangle(), visible);
+		}
+
+		treebox::treebox(window wd, const rectangle& r, bool visible)
+		{
+			create(wd, r, visible);
+		}
+
+		treebox & treebox::renderer(const ::nana::pat::cloneable_interface<renderer_interface> & rd)
+		{
+			get_drawer_trigger().renderer(rd);
+			return *this;
+		}
+
+		const nana::pat::cloneable_interface<treebox::renderer_interface> & treebox::renderer() const
+		{
+			return get_drawer_trigger().renderer();
+		}
+
+		void treebox::auto_draw(bool ad)
+		{
+			get_drawer_trigger().auto_draw(ad);
+		}
+
+		treebox & treebox::checkable(bool enable)
+		{
+			get_drawer_trigger().checkable(enable);
+			return *this;
+		}
+
+		bool treebox::checkable() const
+		{
+			return get_drawer_trigger().checkable();
+		}
+
+		treebox::ext_event_type& treebox::ext_event() const
+		{
+			return get_drawer_trigger().ext_event();
+		}
+
+		treebox& treebox::image(const nana::string& id, const nana::paint::image& img)
+		{
+			node_image_type node_img;
+			node_img.normal = img;
+			get_drawer_trigger().image(id, node_img);
+			return *this;
+		}
+
+		treebox& treebox::image(const nana::string& id, const node_image_type& node_img)
+		{
+			get_drawer_trigger().image(id, node_img);
+			return *this;
+		}
+
+		treebox::node_image_type& treebox::image(const nana::string& id) const
+		{
+			return get_drawer_trigger().image(id);
+		}
+
+		void treebox::image_erase(const nana::string& id)
+		{
+			get_drawer_trigger().image_erase(id);
+		}
+
+		treebox::item_proxy treebox::insert(const nana::string& path_key, const nana::string& title)
+		{
+			return item_proxy(&get_drawer_trigger(), get_drawer_trigger().insert(path_key, title));
+		}
+
+		treebox::item_proxy treebox::insert(item_proxy i, const nana::string& key, const nana::string& title)
+		{
+			return item_proxy(&get_drawer_trigger(), get_drawer_trigger().insert(i._m_node(), key, title));
+		}
+
+		treebox::item_proxy treebox::erase(item_proxy i)
+		{
+			auto next = i.sibling();
+			get_drawer_trigger().remove(i._m_node());
+			return next;
+		}
+
+		void treebox::erase(const nana::string& key_path)
+		{
+			get_drawer_trigger().remove(
+				get_drawer_trigger().tree().find(key_path)
+				);
+		}
+
+		nana::string treebox::make_key_path(item_proxy i, const nana::string& splitter) const
+		{
+			auto & tree = get_drawer_trigger().tree();
+			auto pnode = i._m_node();
+			if(tree.verify(pnode))
+			{
+				auto root = tree.get_root();
+				nana::string path;
+				nana::string temp;
+				while(pnode->owner != root)
+				{
+					temp = splitter;
+					temp += pnode->value.first;
+					path.insert(0, temp);
+					pnode = pnode->owner;
+				}
+
+				path.insert(0, pnode->value.first);
+				return path;
+			}
+			return nana::string();
+		}
+	//end class treebox
 }//end namespace gui
 }//end namespace nana

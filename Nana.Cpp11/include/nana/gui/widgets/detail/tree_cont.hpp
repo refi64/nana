@@ -107,9 +107,7 @@ namespace detail
 
 			node_type* get_owner(const node_type* node) const
 			{
-				if(check(node))
-					return (node->owner == &root_ ? 0 : node->owner);
-				return 0;
+				return (verify(node) && (node->owner != &root_) ? node->owner : nullptr);
 			}
 
 			node_type * node(node_type* node, const nana::string& key)

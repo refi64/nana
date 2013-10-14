@@ -179,6 +179,7 @@ namespace gui
 			class item_proxy
 			{
 			public:
+				item_proxy();
 				item_proxy(trigger*, trigger::node_type*);
 
 				/// Return true if the proxy does not refer to a node
@@ -237,6 +238,13 @@ namespace gui
 				/// An end node.
 				item_proxy end() const;
 
+				bool operator==(const nana::string&) const;
+				bool operator==(const char*) const;
+				bool operator==(const wchar_t*) const;
+
+				/// Behavior of Iterator
+				item_proxy& operator=(const item_proxy&);
+
 				/// Behavior of Iterator
 				item_proxy & operator++();
 
@@ -283,9 +291,10 @@ namespace gui
 			private:
 				trigger * trigger_;
 				trigger::node_type * node_;
-			};
+			};//end class item_proxy
 		}//end namespace treebox
 	}//end namespace drawerbase
+
 
 	class treebox
 		:public widget_object<category::widget_tag, drawerbase::treebox::trigger>

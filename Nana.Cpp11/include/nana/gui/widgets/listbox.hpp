@@ -24,12 +24,6 @@ namespace nana{ namespace gui{
 		{
 			typedef std::size_t size_type;
 
-			struct extra_events
-			{
-				nana::fn_group<void(gui::listbox&, size_type, size_type, bool)> checked;
-				nana::fn_group<void(gui::listbox&, size_type, size_type, bool)> selected;
-			};
-
 			//struct essence_t
 			//@brief:	this struct gives many data for listbox,
 			//			the state of the struct does not effect on member funcions, therefore all data members are public.
@@ -47,7 +41,7 @@ namespace nana{ namespace gui{
 				essence_t& essence();
 				essence_t& essence() const;
 				void draw();
-				void update();
+				//void update();
 			private:
 				void _m_draw_border();
 			private:
@@ -70,6 +64,219 @@ namespace nana{ namespace gui{
 				drawer_header_impl *drawer_header_;
 				drawer_lister_impl *drawer_lister_;
 			};//end class trigger
+
+			/// An interface that performances a translation between the object of T and an item of listbox.
+			template<typename T>
+			class resolver_interface
+			{
+			public:
+				/// The type that will be resolved.
+				typedef T target;
+
+				/// The destructor
+				virtual ~resolver_interface(){}
+
+				virtual nana::string decode(std::size_t, const target&) const = 0;
+				virtual void encode(target&, std::size_t, const nana::string&) const = 0;
+			};
+
+			template<typename T>
+			struct resolver_proxy
+			{
+				pat::cloneable_interface<resolver_interface<T> > * res;
+
+				resolver_proxy()
+					: res(nullptr)
+				{}
+
+				resolver_proxy(const resolver_proxy& rhs)
+					: res(rhs.res ? rhs.res->clone() : nullptr)
+				{}
+
+				~resolver_proxy()
+				{
+					if(res)
+						res->self_delete();
+				}
+			};
+
+
+			class item_proxy
+				: public std::iterator<std::input_iterator_tag, item_proxy>
+			{
+			public:
+				item_proxy();
+				item_proxy(essence_t* ess, std::size_t cat, std::size_t pos);
+
+				bool empty() const;
+
+				item_proxy & check(bool ck);
+				bool checked() const;
+
+				item_proxy & select(bool);
+				bool selected() const;
+
+				item_proxy & bgcolor(nana::color_t);
+				nana::color_t bgcolor() const;
+
+				item_proxy& fgcolor(nana::color_t);
+				nana::color_t fgcolor() const;
+
+				std::size_t columns() const;
+				item_proxy & text(std::size_t pos, const nana::string&);
+				item_proxy & text(std::size_t pos, nana::string&&);
+				nana::string text(std::size_t pos) const;
+
+				template<typename T>
+				item_proxy & value(const T& t)
+				{
+					auto proxy = _m_resolver().template get<resolver_proxy<T> >();
+					if(nullptr == proxy)
+						throw std::invalid_argument("Nana.Listbox.ItemProxy: the type passed to value() does not match the resolver.");
+					
+					auto & res = proxy->res->refer();
+					const std::size_t headers = columns();
+
+					for(std::size_t i = 0; i < headers; ++i)
+						text(i, res.decode(i, t));
+					
+					return *this;
+				}
+
+				template<typename T>
+				T value() const
+				{
+					auto proxy = _m_resolver().template get<resolver_proxy<T> >();
+					if(nullptr == proxy)
+						throw std::invalid_argument("Nana.Listbox.ItemProxy: the type passed to value() does not match the resolver.");
+					
+					T t;
+					auto & res = proxy->res->refer();
+					const std::size_t headers = columns();
+					for(std::size_t i = 0; i < headers; ++i)
+						res.encode(t, i, text(i));
+
+					return std::move(t);
+				}
+
+				/// Behavior of Iterator's value_type
+				bool operator==(const nana::string& s) const;
+				bool operator==(const char * s) const;
+				bool operator==(const wchar_t * s) const;
+
+				/// Behavior of Iterator
+				item_proxy & operator=(const item_proxy&);
+
+				/// Behavior of Iterator
+				item_proxy & operator++();
+
+				/// Behavior of Iterator
+				item_proxy	operator++(int);
+
+				/// Behavior of Iterator
+				item_proxy& operator*();
+
+				/// Behavior of Iterator
+				const item_proxy& operator*() const;
+
+				/// Behavior of Iterator
+				item_proxy* operator->();
+
+				/// Behavior of Iterator
+				const item_proxy* operator->() const;
+
+				/// Behavior of Iterator
+				bool operator==(const item_proxy&) const;
+
+				/// Behavior of Iterator
+				bool operator!=(const item_proxy&) const;
+
+				//Undocumented method
+				essence_t * _m_ess() const;
+				std::pair<std::size_t, std::size_t> _m_where() const;
+			private:
+				const nana::any & _m_resolver() const;
+			private:
+				essence_t * ess_;
+				std::size_t cat_;
+				std::size_t pos_;
+			};
+
+			class cat_proxy
+				: public std::iterator<std::input_iterator_tag, cat_proxy>
+			{
+			public:
+				cat_proxy();
+				cat_proxy(essence_t * ess, std::size_t pos);
+
+				/// Append an item at end of the category
+				template<typename T>
+				cat_proxy& append(const T& t)
+				{
+					auto proxy = _m_resolver().template get<resolver_proxy<T> >();
+					if(proxy)
+					{
+						auto & res = proxy->res->refer();
+						std::size_t pos = size();
+						push_back(res.decode(0, t));
+						item_proxy ip(ess_, pos_, pos);
+						const std::size_t headers = columns();
+						for(std::size_t i = 1; i < headers; ++i)
+							ip.text(i, res.decode(i, t));
+					}
+					return *this;
+				}
+
+				std::size_t columns() const;
+
+				/// Behavior of a container
+				void push_back(const nana::string&);
+				void push_back(nana::string&&);
+				item_proxy begin() const;
+				item_proxy end() const;
+				item_proxy cbegin() const;
+				item_proxy cend() const;
+
+				std::size_t size() const;
+
+				/// Behavior of Iterator
+				cat_proxy& operator=(const cat_proxy&);
+
+				/// Behavior of Iterator
+				cat_proxy & operator++();
+
+				/// Behavior of Iterator
+				cat_proxy	operator++(int);
+
+				/// Behavior of Iterator
+				cat_proxy& operator*();
+
+				/// Behavior of Iterator
+				const cat_proxy& operator*() const;
+
+				/// Behavior of Iterator
+				cat_proxy* operator->();
+
+				/// Behavior of Iterator
+				const cat_proxy* operator->() const;
+
+				/// Behavior of Iterator
+				bool operator==(const cat_proxy&) const;
+
+				/// Behavior of Iterator
+				bool operator!=(const cat_proxy&) const;
+			private:
+				const nana::any & _m_resolver() const;
+			private:
+				essence_t * ess_;
+				std::size_t pos_;
+			};
+
+			struct extra_events
+			{
+				nana::fn_group<void(item_proxy, bool)> checked;
+				nana::fn_group<void(item_proxy, bool)> selected;
+			};
 		}
 	}//end namespace drawerbase
 
@@ -81,35 +288,14 @@ namespace nana{ namespace gui{
 		typedef drawerbase::listbox::size_type size_type;
 		typedef std::pair<size_type, size_type>	index_pair_t;
 		typedef drawerbase::listbox::extra_events ext_event_type;
+		typedef drawerbase::listbox::cat_proxy	cat_proxy;
+		typedef drawerbase::listbox::item_proxy item_proxy;
 
+		/// An interface that performances a translation between the object of T and an item of listbox.
 		template<typename T>
 		class resolver_interface
+			: public drawerbase::listbox::resolver_interface<T>
 		{
-		public:
-			typedef T target;
-			virtual ~resolver_interface(){}
-			virtual nana::string decode(std::size_t, const target&) const = 0;
-			virtual void encode(target&, std::size_t, const nana::string&) const = 0;
-		};
-	private:
-		template<typename T>
-		struct inner_resolver_proxy
-		{
-			pat::cloneable_interface<resolver_interface<T> > * res;
-
-			inner_resolver_proxy()
-				: res(nullptr)
-			{}
-
-			inner_resolver_proxy(const inner_resolver_proxy& rhs)
-				: res(rhs.res ? rhs.res->clone() : nullptr)
-			{}
-
-			~inner_resolver_proxy()
-			{
-				if(res)
-					res->self_delete();
-			}
 		};
 	public:
 		listbox();
@@ -119,94 +305,38 @@ namespace nana{ namespace gui{
 		ext_event_type& ext_event() const;
 
 		void auto_draw(bool);
-		void append_categ(const nana::string& text);
+
 		void append_header(const nana::string&, unsigned width = 120);
-		void append_item(const nana::string&);
-		void append_item(size_type cat, const nana::string&);
-		
-		template<typename T>
-		void append(size_type cat, const T& t)
-		{
-			auto proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
-			if(proxy)
-			{
-				auto & res = proxy->res->refer();
-				size_type index = size_item(cat);
-				append_item(cat, res.decode(0, t));
-				std::size_t headers = _m_headers();
-				for(std::size_t i = 1; i < headers; ++i)
-					set_item_text(cat, index, i, res.decode(i, t));
-			}
-		}
+
+		cat_proxy append(const nana::string& text);
+		cat_proxy at(std::size_t pos) const;
 
 		void insert(size_type cat, size_type index, const nana::string&);
 
-		template<typename T>
-		void insert(size_type cat, size_type index, const T& t)
-		{
-			auto proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
-			if(proxy)
-			{
-				auto & res = proxy->res->refer();
-				insert(cat, index, res.decode(0, t));
-				std::size_t headers = _m_headers();
-				for(std::size_t i = 1; i < headers; ++i)
-					set_item_text(cat, index, i, res.decode(i, t));
-			}
-		}
-
 		void checkable(bool);
-		bool checked(size_type item) const;
-		bool checked(size_type cat, size_type item) const;
 		void checked(std::vector<std::pair<size_type, size_type> >&);
-		void checked(size_type cat, size_type item, bool);
 
 		void clear(size_type cat);
 		void clear();
-		void erase(size_type cat, size_type item);
 		void erase(size_type cat);
 		void erase();
+		item_proxy erase(item_proxy);
 
 		template<typename Resolver>
 		void resolver(const Resolver & res)
 		{
-			inner_resolver_proxy<typename Resolver::target> proxy;
-			proxy.res = pat::cloneable<Resolver, resolver_interface<typename Resolver::target> >(res).clone();
+			drawerbase::listbox::resolver_proxy<typename Resolver::target> proxy;
+			proxy.res = pat::cloneable<Resolver, drawerbase::listbox::resolver_interface<typename Resolver::target> >(res).clone();
 			_m_resolver(nana::any(proxy));
 		}
 
-		template<typename T>
-		bool item(size_type cat, size_type index, T & t) const
-		{
-			auto proxy = _m_resolver().template get<inner_resolver_proxy<T> >();
-			if(proxy)
-			{
-				auto & res = proxy->res->refer();
-				std::size_t headers = _m_headers();
-				for(std::size_t i = 0; i < headers; ++i)
-					res.encode(t, i, item_text(cat, index, i));
-				return true;
-			}
-			return false;
-		}
-
-		nana::string item_text(size_type cat, size_type index, size_type sub) const;
-		void set_item_text(size_type index, size_type sub, const nana::string&);
-		void set_item_text(size_type cat, size_type index, size_type sub, const nana::string&);
 		void set_sort_compare(size_type sub, std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> strick_ordering);
 		void show_header(bool);
 		bool visible_header() const;
-		bool selected(size_type item) const;
-		bool selected(size_type cat, size_type item) const;
 		void selected(std::vector<index_pair_t>&);
-		void selected(size_type cat, size_type item, bool);
 		void move_select(bool upwards);
 		void icon(size_type cat, size_type index, const nana::paint::image&);
 		nana::paint::image icon(size_type cat, size_type index) const;
-		void item_background(size_type cat, size_type index, nana::color_t color);
-		nana::color_t item_background(size_type cat, size_type index) const;
-		void item_foreground(size_type cat, size_type index, nana::color_t color);
-		nana::color_t item_foreground(size_type cat, size_type index) const;
 		size_type size_categ() const;
 		size_type size_item() const;
 		size_type size_item(size_type cat) const;

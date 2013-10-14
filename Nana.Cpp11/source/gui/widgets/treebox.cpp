@@ -621,6 +621,10 @@ namespace gui
 			}; //end struct trigger::implement;
 
 			//class item_proxy
+				item_proxy::item_proxy()
+					: trigger_(nullptr), node_(nullptr)
+				{}
+
 				item_proxy::item_proxy(trigger* trg, trigger::node_type* node)
 					: trigger_(trg), node_(node)
 				{
@@ -743,6 +747,32 @@ namespace gui
 				item_proxy item_proxy::end() const
 				{
 					return item_proxy(nullptr, nullptr);
+				}
+
+				bool item_proxy::operator==(const nana::string& s) const
+				{
+					return (node_ && (node_->value.second.text == s));
+				}
+
+				bool item_proxy::operator==(const char* s) const
+				{
+					return (node_ && (node_->value.second.text == nana::string(nana::charset(s))));
+				}
+
+				bool item_proxy::operator==(const wchar_t* s) const
+				{
+					return (node_ && (node_->value.second.text == nana::string(nana::charset(s))));
+				}
+
+				/// Behavior of Iterator
+				item_proxy& item_proxy::operator=(const item_proxy& r)
+				{
+					if(this != &r)
+					{
+						trigger_ = r.trigger_;
+						node_ = r.node_;
+					}
+					return *this;
 				}
 
 				//Behavior like an iterator

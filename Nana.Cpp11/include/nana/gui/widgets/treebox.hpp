@@ -318,18 +318,6 @@ namespace gui
 		typedef drawerbase::treebox::renderer_interface renderer_interface;
 		typedef drawerbase::treebox::compset_placer_interface compset_placer_interface;
 
-		///member class cloneable_renderer
-		template<typename Renderer>
-		class cloneable_renderer
-			: public nana::pat::cloneable<Renderer, renderer_interface>
-		{};
-
-		///member class cloneable_placer
-		template<typename CompsetPlacer>
-		class cloneable_placer
-			: public nana::pat::cloneable<CompsetPlacer, compset_placer_interface>
-		{};
-
 		treebox();
 		treebox(window wd, bool visible);
 		treebox(window, const nana::rectangle& = rectangle(), bool visible = true);

@@ -2075,24 +2075,6 @@ namespace gui
 			return get_drawer_trigger().ext_event();
 		}
 
-		/*
-		treebox& treebox::icon(const nana::string& id, const nana::paint::image& img)
-		{
-			node_image_type node_img;
-			node_img.normal = img;
-			get_drawer_trigger().image(id, node_img);
-			return *this;
-		}
-		*/
-
-		/*
-		treebox& treebox::icon(const nana::string& id, const node_image_type& node_img)
-		{
-			get_drawer_trigger().icon(id, node_img);
-			return *this;
-		}
-		*/
-
 		treebox::node_image_type& treebox::icon(const nana::string& id) const
 		{
 			return get_drawer_trigger().icon(id);

@@ -51,7 +51,7 @@ namespace gui
 			struct node_image_tag
 			{
 				nana::paint::image normal;
-				nana::paint::image highlighted;
+				nana::paint::image hovered;
 				nana::paint::image expanded;
 			};
 
@@ -62,7 +62,9 @@ namespace gui
 				checkstate checked;
 				bool selected;
 				bool mouse_pointed;
-				nana::paint::image icon;
+				nana::paint::image icon_normal;
+				nana::paint::image icon_hover;
+				nana::paint::image icon_expanded;
 				nana::string text;
 			};
 
@@ -120,9 +122,6 @@ namespace gui
 
 				implement * impl() const;
 
-				void renderer(const nana::pat::cloneable_interface<renderer_interface>& );
-				const nana::pat::cloneable_interface<renderer_interface> & renderer() const;
-
 				void auto_draw(bool);
 				void checkable(bool);
 				bool checkable() const;
@@ -131,6 +130,11 @@ namespace gui
 
 				const tree_cont_type & tree() const;
 				tree_cont_type & tree();
+
+				void renderer(const ::nana::pat::cloneable_interface<renderer_interface>&);
+				::nana::pat::cloneable_interface<renderer_interface>* renderer() const;
+				void placer(const ::nana::pat::cloneable_interface<compset_placer_interface>&);
+				::nana::pat::cloneable_interface<compset_placer_interface>* placer() const;
 
 				nana::any & value(node_type*) const;
 				node_type* insert(node_type*, const nana::string& key, const nana::string& title);
@@ -145,10 +149,10 @@ namespace gui
 				void set_expand(node_type*, bool);
 				void set_expand(const nana::string& path, bool);
 
-				void image(const nana::string& id, const node_image_tag&);
-				node_image_tag& image(const nana::string&) const;
-				void image_erase(const nana::string&);
-				void node_image(node_type*, const nana::string& id);
+				//void image(const nana::string& id, const node_image_tag&);
+				node_image_tag& icon(const nana::string&) const;
+				void icon_erase(const nana::string&);
+				void node_icon(node_type*, const nana::string& id);
 
 				unsigned node_width(const node_type*) const;
 
@@ -177,6 +181,7 @@ namespace gui
 
 			/// A proxy for accessing the node.
 			class item_proxy
+				: public std::iterator<std::input_iterator_tag, item_proxy>
 			{
 			public:
 				item_proxy();
@@ -258,6 +263,12 @@ namespace gui
 				const item_proxy& operator*() const;
 
 				/// Behavior of Iterator
+				item_proxy* operator->();
+
+				/// Behavior of Iterator
+				const item_proxy* operator->() const;
+
+				/// Behavior of Iterator
 				bool operator==(const item_proxy&) const;
 
 				/// Behavior of Iterator
@@ -313,15 +324,33 @@ namespace gui
 			: public nana::pat::cloneable<Renderer, renderer_interface>
 		{};
 
+		///member class cloneable_placer
+		template<typename CompsetPlacer>
+		class cloneable_placer
+			: public nana::pat::cloneable<CompsetPlacer, compset_placer_interface>
+		{};
+
 		treebox();
-
 		treebox(window wd, bool visible);
+		treebox(window, const nana::rectangle& = rectangle(), bool visible = true);
 
-		treebox(window wd, const rectangle& r, bool visible);
-
-		treebox & renderer(const ::nana::pat::cloneable_interface<renderer_interface> & rd);
+		template<typename ItemRenderer>
+		treebox & renderer(const ItemRenderer & rd)
+		{
+			get_drawer_trigger().renderer(::nana::pat::cloneable<ItemRenderer, renderer_interface>(rd));
+			return *this;
+		}
 
 		const nana::pat::cloneable_interface<renderer_interface> & renderer() const;
+
+		template<typename Placer>
+		treebox & placer(const Placer & r)
+		{
+			get_drawer_trigger().placer(::nana::pat::cloneable<Placer, compset_placer_interface>(r));
+			return *this;
+		}
+
+		const nana::pat::cloneable_interface<compset_placer_interface> & placer() const;
 
 		void auto_draw(bool);
 
@@ -331,13 +360,13 @@ namespace gui
 
 		ext_event_type& ext_event() const;
 
-		treebox& image(const nana::string& id, const nana::paint::image& img);
+		//treebox& icon(const nana::string& id, const nana::paint::image& img);
 
-		treebox& image(const nana::string& id, const node_image_type& node_img);
+		treebox& icon(const nana::string& id, const node_image_type& node_img);
 
-		node_image_type& image(const nana::string& id) const;
+		node_image_type& icon(const nana::string& id) const;
 
-		void image_erase(const nana::string& id);
+		void icon_erase(const nana::string& id);
 
 		item_proxy insert(const nana::string& path_key, const nana::string& title);
 

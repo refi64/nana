@@ -61,7 +61,7 @@ namespace nana{	namespace gui { namespace widgets{ namespace detail
 		virtual ~compset_placer(){}
 
 		/// Enable/Disable the specified component.
-		virtual compset_placer& enable(component_t, bool) = 0;
+		virtual void enable(component_t, bool) = 0;
 		virtual bool enabled(component_t) const = 0;
 
 		/// Height of an item, in pixels.

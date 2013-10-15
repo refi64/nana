@@ -167,7 +167,21 @@ namespace gui
 					ndattr.text = node->value.second.text;
 					ndattr.checked = node->value.second.checked;
 					ndattr.mouse_pointed = (node_state.pointed == node);
-					ndattr.selected = (node_state.selected == node);			
+					ndattr.selected = (node_state.selected == node);
+
+					ndattr.icon_hover.close();
+					ndattr.icon_normal.close();
+					ndattr.icon_expanded.close();
+					if(data.comp_placer->refer().enabled(component::icon))
+					{
+						auto i = shape.image_table.find(node->value.second.img_idstr);
+						if(i != shape.image_table.end())
+						{
+							ndattr.icon_normal = i->second.normal;
+							ndattr.icon_expanded = i->second.expanded;
+							ndattr.icon_hover = i->second.hovered;
+						}
+					}
 				}
 
 				bool draw(bool scrollbar_react)
@@ -764,7 +778,7 @@ namespace gui
 					return (node_ && (node_->value.second.text == nana::string(nana::charset(s))));
 				}
 
-				/// Behavior of Iterator
+				// Behavior of Iterator
 				item_proxy& item_proxy::operator=(const item_proxy& r)
 				{
 					if(this != &r)
@@ -775,7 +789,6 @@ namespace gui
 					return *this;
 				}
 
-				//Behavior like an iterator
 				item_proxy & item_proxy::operator++()
 				{
 					if(trigger_ && node_)
@@ -789,16 +802,24 @@ namespace gui
 					return sibling();
 				}
 
-				/// Behavior of Iterator
 				item_proxy& item_proxy::operator*()
 				{
 					return *this;
 				}
 
-				/// Behavior of Iterator
 				const item_proxy& item_proxy::operator*() const
 				{
 					return *this;
+				}
+
+				item_proxy* item_proxy::operator->()
+				{
+					return this;
+				}
+
+				const item_proxy* item_proxy::operator->() const
+				{
+					return this;
 				}
 
 				bool item_proxy::operator==(const item_proxy& rhs) const
@@ -840,7 +861,7 @@ namespace gui
 				: public compset_placer_interface
 			{
 				static const unsigned item_offset = 16;
-				static const unsigned text_offset = 3;
+				static const unsigned text_offset = 4;
 			public:
 				internal_placer()
 					:	pixels_crook_(0),
@@ -849,7 +870,7 @@ namespace gui
 			private:
 				//Implement the compset_locator_interface
 
-				virtual compset_placer_interface& enable(component_t comp, bool enabled) override
+				virtual void enable(component_t comp, bool enabled) override
 				{
 					switch(comp)
 					{
@@ -862,7 +883,6 @@ namespace gui
 					default:
 						break;
 					}
-					return *this;
 				}
 
 				virtual bool enabled(component_t comp) const override
@@ -922,6 +942,7 @@ namespace gui
 							r->y = 2;
 							r->width = pixels_icon_;
 							r->height -= 2;
+							return true;
 						}
 						return false;
 					case component_t::text:
@@ -995,7 +1016,19 @@ namespace gui
 					}
 
 					if(compset->comp_attribute(component::icon, attr))
-						compset->item_attribute().icon.paste(graph, attr.area.x, attr.area.y);
+					{
+						const nana::paint::image * img = nullptr;
+						if(compset->item_attribute().mouse_pointed)
+							img = &(compset->item_attribute().icon_hover);
+						else if(compset->item_attribute().expended)
+							img = &(compset->item_attribute().icon_expanded);
+
+						if((nullptr == img) || img->empty())
+							img = &(compset->item_attribute().icon_normal);
+
+						if(! img->empty())
+							img->paste(graph, attr.area.x + (attr.area.width - img->size().width) / 2, attr.area.y + (attr.area.height - img->size().height) / 2);
+					}
 
 					if(compset->comp_attribute(component::text, attr))
 						graph.string(attr.area.x, attr.area.y + 3, fgcolor, compset->item_attribute().text);
@@ -1087,7 +1120,7 @@ namespace gui
 
 				bool item_body() const
 				{
-					return (component::text == what_ || component::icon == what_);
+					return (component::text == what_ || component::icon == what_ || component::bground == what_);
 				}
 
 				nana::rectangle text_pos() const
@@ -1351,23 +1384,6 @@ namespace gui
 					return impl_;
 				}
 
-				void trigger::renderer(const nana::pat::cloneable_interface<renderer_interface>& rd)
-				{
-					auto new_renderer = rd.clone();
-					if(new_renderer)
-					{
-						if(impl_->data.renderer)
-							impl_->data.renderer->self_delete();
-
-						impl_->data.renderer = new_renderer;
-					}
-				}
-
-				const nana::pat::cloneable_interface<renderer_interface> & trigger::renderer() const
-				{
-					return *impl_->data.renderer;
-				}
-
 				void trigger::auto_draw(bool ad)
 				{
 					if(impl_->attr.auto_draw != ad)
@@ -1475,6 +1491,32 @@ namespace gui
 					return impl_->attr.tree_cont;
 				}
 
+				void trigger::renderer(const ::nana::pat::cloneable_interface<renderer_interface>& r)
+				{
+					if(impl_->data.renderer)
+						impl_->data.renderer->self_delete();
+
+					impl_->data.renderer = r.clone();
+				}
+
+				::nana::pat::cloneable_interface<renderer_interface>* trigger::renderer() const
+				{
+					return impl_->data.renderer;
+				}
+
+				void trigger::placer(const ::nana::pat::cloneable_interface<compset_placer_interface>& r)
+				{
+					if(impl_->data.comp_placer)
+						impl_->data.comp_placer->self_delete();
+
+					impl_->data.comp_placer = r.clone();				
+				}
+
+				::nana::pat::cloneable_interface<compset_placer_interface>* trigger::placer() const
+				{
+					return impl_->data.comp_placer;
+				}
+
 				nana::any & trigger::value(node_type* node) const
 				{
 					if(impl_->attr.tree_cont.verify(node) == false)
@@ -1568,25 +1610,32 @@ namespace gui
 					}
 				}
 
+				/*
 				void trigger::image(const nana::string& id, const node_image_tag& img)
 				{
 					impl_->shape.image_table[id] = img;
 				}
+				*/
 
-				node_image_tag& trigger::image(const nana::string& id) const
+				node_image_tag& trigger::icon(const nana::string& id) const
 				{
 					auto i = impl_->shape.image_table.find(id);
 					if(i != impl_->shape.image_table.end())
 						return i->second;
-					throw std::invalid_argument("Nana.GUI.treebox.image() invalid image identifier");
+
+					impl_->data.comp_placer->refer().enable(component::icon, true);
+
+					return impl_->shape.image_table[id];
 				}
 
-				void trigger::image_erase(const nana::string& id)
+				void trigger::icon_erase(const nana::string& id)
 				{
 					impl_->shape.image_table.erase(id);
+					if(0 == impl_->shape.image_table.size())
+						impl_->data.comp_placer->refer().enable(component::icon, false);
 				}
 
-				void trigger::node_image(node_type* node, const nana::string& id)
+				void trigger::node_icon(node_type* node, const nana::string& id)
 				{
 					if(tree().verify(node))
 					{
@@ -1995,15 +2044,14 @@ namespace gui
 			create(wd, r, visible);
 		}
 
-		treebox & treebox::renderer(const ::nana::pat::cloneable_interface<renderer_interface> & rd)
-		{
-			get_drawer_trigger().renderer(rd);
-			return *this;
-		}
-
 		const nana::pat::cloneable_interface<treebox::renderer_interface> & treebox::renderer() const
 		{
-			return get_drawer_trigger().renderer();
+			return *get_drawer_trigger().impl()->data.renderer;
+		}
+
+		const nana::pat::cloneable_interface<treebox::compset_placer_interface> & treebox::placer() const
+		{
+			return *get_drawer_trigger().impl()->data.comp_placer;
 		}
 
 		void treebox::auto_draw(bool ad)
@@ -2027,28 +2075,32 @@ namespace gui
 			return get_drawer_trigger().ext_event();
 		}
 
-		treebox& treebox::image(const nana::string& id, const nana::paint::image& img)
+		/*
+		treebox& treebox::icon(const nana::string& id, const nana::paint::image& img)
 		{
 			node_image_type node_img;
 			node_img.normal = img;
 			get_drawer_trigger().image(id, node_img);
 			return *this;
 		}
+		*/
 
-		treebox& treebox::image(const nana::string& id, const node_image_type& node_img)
+		/*
+		treebox& treebox::icon(const nana::string& id, const node_image_type& node_img)
 		{
-			get_drawer_trigger().image(id, node_img);
+			get_drawer_trigger().icon(id, node_img);
 			return *this;
 		}
+		*/
 
-		treebox::node_image_type& treebox::image(const nana::string& id) const
+		treebox::node_image_type& treebox::icon(const nana::string& id) const
 		{
-			return get_drawer_trigger().image(id);
+			return get_drawer_trigger().icon(id);
 		}
 
-		void treebox::image_erase(const nana::string& id)
+		void treebox::icon_erase(const nana::string& id)
 		{
-			get_drawer_trigger().image_erase(id);
+			get_drawer_trigger().icon_erase(id);
 		}
 
 		treebox::item_proxy treebox::insert(const nana::string& path_key, const nana::string& title)

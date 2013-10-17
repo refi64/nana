@@ -30,6 +30,9 @@ namespace gui
 
 	bool intersection(const rectangle & r, point pos_beg, point pos_end, point& good_pos_beg, point& good_pos_end);
 
+	/// Zoom the input_s to fit for ref_s
+	void fit_zoom(const size& input_s, const size& ref_s, size& result_s);
+
 	//zoom
 	//@brief:	Calculate the scaled rectangle by refer dst rectangle, that scale factor is same as that between scaled and refer.
 	void zoom(const rectangle& refer, const rectangle& scaled, const rectangle& refer_dst, rectangle& r);

@@ -1027,7 +1027,21 @@ namespace gui
 							img = &(compset->item_attribute().icon_normal);
 
 						if(! img->empty())
-							img->paste(graph, attr.area.x + (attr.area.width - img->size().width) / 2, attr.area.y + (attr.area.height - img->size().height) / 2);
+						{
+							auto size = img->size();
+							if(size.width > attr.area.width || size.height > attr.area.height)
+							{
+								nana::size fit_size;
+								gui::fit_zoom(size, attr.area, fit_size);
+
+								attr.area.x += (attr.area.width - fit_size.width) / 2;
+								attr.area.y += (attr.area.height - fit_size.height) / 2;
+								attr.area = fit_size;
+								img->stretch(size, graph, attr.area);
+							}
+							else
+								img->paste(graph, attr.area.x + static_cast<int>(attr.area.width - size.width) / 2, attr.area.y + static_cast<int>(attr.area.height - size.height) / 2);
+						}
 					}
 
 					if(compset->comp_attribute(component::text, attr))
@@ -1563,6 +1577,9 @@ namespace gui
 
 				void trigger::remove(node_type* node)
 				{
+					if(false == verify(node))
+						return;
+
 					auto & shape = impl_->shape;
 					auto & node_state = impl_->node_state;
 
@@ -2085,6 +2102,12 @@ namespace gui
 			get_drawer_trigger().icon_erase(id);
 		}
 
+		auto treebox::find(const nana::string& keypath) -> item_proxy
+		{
+			auto * trg = &get_drawer_trigger();
+			return item_proxy(trg, trg->tree().find(keypath));
+		}
+
 		treebox::item_proxy treebox::insert(const nana::string& path_key, const nana::string& title)
 		{
 			return item_proxy(&get_drawer_trigger(), get_drawer_trigger().insert(path_key, title));
@@ -2102,11 +2125,11 @@ namespace gui
 			return next;
 		}
 
-		void treebox::erase(const nana::string& key_path)
+		void treebox::erase(const nana::string& keypath)
 		{
-			get_drawer_trigger().remove(
-				get_drawer_trigger().tree().find(key_path)
-				);
+			auto i = find(keypath);
+			if(false == i.empty())
+				get_drawer_trigger().remove(i._m_node());
 		}
 
 		nana::string treebox::make_key_path(item_proxy i, const nana::string& splitter) const
@@ -2127,7 +2150,7 @@ namespace gui
 				}
 
 				path.insert(0, pnode->value.first);
-				return path;
+				return std::move(path);
 			}
 			return nana::string();
 		}

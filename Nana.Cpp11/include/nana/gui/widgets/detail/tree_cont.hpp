@@ -175,9 +175,9 @@ namespace detail
 					delete node;
 			}
 
-			node_type* find(const nana::string& path)
+			node_type* find(const nana::string& path) const
 			{
-				return _m_locate<false>(path);
+				return _m_locate(path);
 			}
 
 			node_type* ref(const nana::string& path)

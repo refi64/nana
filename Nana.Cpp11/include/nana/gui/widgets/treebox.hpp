@@ -348,21 +348,19 @@ namespace gui
 
 		ext_event_type& ext_event() const;
 
-		//treebox& icon(const nana::string& id, const nana::paint::image& img);
-
 		treebox& icon(const nana::string& id, const node_image_type& node_img);
 
 		node_image_type& icon(const nana::string& id) const;
 
 		void icon_erase(const nana::string& id);
 
+		item_proxy find(const nana::string& keypath);
+
 		item_proxy insert(const nana::string& path_key, const nana::string& title);
-
 		item_proxy insert(item_proxy i, const nana::string& key, const nana::string& title);
-
 		item_proxy erase(item_proxy i);
 
-		void erase(const nana::string& key_path);
+		void erase(const nana::string& keypath);
 
 		nana::string make_key_path(item_proxy i, const nana::string& splitter) const;
 	};//end class treebox

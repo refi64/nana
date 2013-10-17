@@ -231,6 +231,25 @@ namespace gui
 		return true;
 	}
 
+	void fit_zoom(const size& input_s, const size& ref_s, size& result_s)
+	{
+		double rate_input = double(input_s.width) / double(input_s.height);
+		double rate_ref = double(ref_s.width) / double(ref_s.height);
+
+		if(rate_input < rate_ref)
+		{
+			result_s.height = ref_s.height;
+			result_s.width = static_cast<unsigned>(ref_s.height * rate_input);
+		}
+		else if(rate_input > rate_ref)
+		{
+			result_s.width = ref_s.width;
+			result_s.height = static_cast<unsigned>(ref_s.width / rate_input);
+		}
+		else
+			result_s = ref_s;
+	}
+
 	void zoom(const rectangle& ref, const rectangle& scaled, const rectangle& ref_dst, rectangle& r)
 	{
 		double rate_x = (scaled.x - ref.x) / double(ref.width);

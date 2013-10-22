@@ -100,28 +100,6 @@ namespace nana{ namespace gui{
 		typedef drawerbase::slider::seekdir seekdir;
 		typedef drawerbase::slider::extra_events ext_event_type;
 
-		template<typename ExtRenderer>
-		class renderer_cloneable
-			: public pat::cloneable<ExtRenderer, renderer>
-		{
-		public:
-			renderer_cloneable(){}
-			renderer_cloneable(const ExtRenderer& rnd)
-				: pat::cloneable<ExtRenderer, renderer>(rnd)
-			{}
-		};
-
-		template<typename ExtProvider>
-		class provider_cloneable
-			: public pat::cloneable<ExtProvider, provider>
-		{
-		public:
-			provider_cloneable(){}
-			provider_cloneable(const ExtProvider& pvd)
-				: pat::cloneable<ExtProvider, provider>(pvd)
-			{}
-		};
-
 		slider();
 		slider(window, bool visible);
 		slider(window, const rectangle& = rectangle(), bool visible = true);
@@ -136,9 +114,9 @@ namespace nana{ namespace gui{
 		unsigned move_step(bool forward);
 		unsigned adorn() const;
 
-		pat::cloneable_interface<renderer>& ext_renderer();
-		void ext_renderer(const pat::cloneable_interface<renderer>&);
-		void ext_provider(const pat::cloneable_interface<provider>&);
+		pat::cloneable<renderer>& ext_renderer();
+		void ext_renderer(const pat::cloneable<renderer>&);
+		void ext_provider(const pat::cloneable<provider>&);
 		void transparent(bool);
 		bool transparent() const;
 	};

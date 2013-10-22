@@ -356,15 +356,9 @@ namespace nana{	namespace gui{
 				scheme()
 					: graph_(nullptr)
 				{
-					proto_.ui_renderer = pat::cloneable<interior_renderer, renderer>().clone();
+					proto_.ui_renderer = pat::cloneable<renderer>(interior_renderer());
 					style_.mode = mode::normal;
 					style_.listbox = nullptr;
-				}
-
-				~scheme()
-				{
-					if(proto_.ui_renderer)
-						proto_.ui_renderer->self_delete();
 				}
 
 				void attach(nana::paint::graphics* graph)
@@ -400,12 +394,11 @@ namespace nana{	namespace gui{
 					nana::rectangle r = _m_make_rectangle(); //_m_make_rectangle must be called after _m_calc_scale()
 					_m_calc_pixels(r);
 
-					renderer & rd = proto_.ui_renderer->refer();
-					rd.background(*graph_, window_, r, ui_el_);
+					proto_.ui_renderer->background(*graph_, window_, r, ui_el_);
 					if(head_)
-						rd.root_arrow(*graph_, _m_make_root_rectangle(), style_.state);
+						proto_.ui_renderer->root_arrow(*graph_, _m_make_root_rectangle(), style_.state);
 					_m_draw_items(r);
-					rd.border(*graph_);
+					proto_.ui_renderer->border(*graph_);
 				}
 
 				bool locate(int x, int y) const
@@ -737,7 +730,6 @@ namespace nana{	namespace gui{
 
 				void _m_draw_items(const nana::rectangle& r)
 				{
-					renderer & rd = proto_.ui_renderer->refer();
 					nana::rectangle item_r = r;
 					item_r.height = item_height_;
 					std::size_t index = head_;
@@ -753,7 +745,7 @@ namespace nana{	namespace gui{
 							item_r.y += item_height_;
 						}
 						item_r.width = i->value.second.pixels;
-						rd.item(*graph_, item_r, index++, i->value.first, i->value.second.scale.height, i->child != 0, style_.state);
+						proto_.ui_renderer->item(*graph_, item_r, index++, i->value.first, i->value.second.scale.height, i->child != 0, style_.state);
 						item_r.x += item_r.width;
 					}
 				}
@@ -780,7 +772,7 @@ namespace nana{	namespace gui{
 
 				struct proto_tag
 				{
-					pat::cloneable_interface<renderer> * ui_renderer;
+					pat::cloneable<renderer> ui_renderer;
 				}proto_;
 
 				mutable ext_event_raw_tag	ext_event_;

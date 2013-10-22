@@ -19,14 +19,8 @@ namespace nana
 				struct stretch_tag
 				{
 					typedef paint::image_process::stretch_interface	interface_t;
-					typedef pat::cloneable_interface<interface_t>	cloneable_t;
-					typedef	std::map<std::string, cloneable_t*>		table_t;
-
-					template<typename ImageProcessor>
-					struct generator
-					{
-						typedef pat::cloneable<ImageProcessor, interface_t> type;
-					};
+					typedef pat::mutable_cloneable<interface_t>	cloneable_t;
+					typedef	std::map<std::string, cloneable_t>		table_t;
 
 					table_t table;
 					interface_t* employee;
@@ -35,14 +29,8 @@ namespace nana
 				struct alpha_blend_tag
 				{
 					typedef paint::image_process::alpha_blend_interface	interface_t;
-					typedef pat::cloneable_interface<interface_t>	cloneable_t;
-					typedef std::map<std::string, cloneable_t*>		table_t;
-
-					template<typename ImageProcessor>
-					struct generator
-					{
-						typedef pat::cloneable<ImageProcessor, interface_t> type;
-					};
+					typedef pat::mutable_cloneable<interface_t>	cloneable_t;
+					typedef std::map<std::string, cloneable_t>		table_t;
 
 					table_t	table;
 					interface_t	* employee;				
@@ -51,14 +39,8 @@ namespace nana
 				struct blend_tag
 				{
 					typedef paint::image_process::blend_interface	interface_t;
-					typedef pat::cloneable_interface<interface_t>	cloneable_t;
-					typedef std::map<std::string, cloneable_t*>		table_t;
-
-					template<typename ImageProcessor>
-					struct generator
-					{
-						typedef pat::cloneable<ImageProcessor, interface_t> type;
-					};
+					typedef pat::mutable_cloneable<interface_t>	cloneable_t;
+					typedef std::map<std::string, cloneable_t>		table_t;
 
 					table_t	table;
 					interface_t	* employee;
@@ -67,14 +49,8 @@ namespace nana
 				struct line_tag
 				{
 					typedef paint::image_process::line_interface	interface_t;
-					typedef pat::cloneable_interface<interface_t>	cloneable_t;
-					typedef std::map<std::string, cloneable_t*>		table_t;
-
-					template<typename ImageProcessor>
-					struct generator
-					{
-						typedef pat::cloneable<ImageProcessor, interface_t>	type;
-					};
+					typedef pat::mutable_cloneable<interface_t>	cloneable_t;
+					typedef std::map<std::string, cloneable_t>		table_t;
 
 					table_t	table;
 					interface_t * employee;
@@ -83,21 +59,14 @@ namespace nana
 				struct blur_tag
 				{
 					typedef paint::image_process::blur_interface	interface_t;
-					typedef pat::cloneable_interface<interface_t>	cloneable_t;
-					typedef std::map<std::string, cloneable_t*>		table_t;
-
-					template<typename ImageProcessor>
-					struct generator
-					{
-						typedef pat::cloneable<ImageProcessor, interface_t>	type;
-					};
+					typedef pat::mutable_cloneable<interface_t>	cloneable_t;
+					typedef std::map<std::string, cloneable_t>		table_t;
 
 					table_t	table;
 					interface_t * employee;				
 				}blur_;
 			public:
 
-				~image_process_provider();
 				static image_process_provider & instance();
 
 				stretch_tag & ref_stretch_tag();
@@ -125,7 +94,7 @@ namespace nana
 				{
 					auto i = tag.table.find(name);
 					if(i != tag.table.end())
-						tag.employee = &(i->second->refer());
+						tag.employee = &(*(i->second));
 				}
 
 				//add
@@ -137,10 +106,11 @@ namespace nana
 				{
 					if(tag.table.count(name) == 0)
 					{
-						typename Tag::cloneable_t * obj = typename Tag::template generator<ImageProcessor>::type().clone();
-						tag.table[name] = obj;
+						typedef typename Tag::cloneable_t cloneable_t;
+						auto & obj = tag.table[name];
+						obj = cloneable_t(ImageProcessor());
 						if(nullptr == tag.employee)
-							tag.employee = &(obj->refer());
+							tag.employee = &(*obj);
 					}
 				}
 			private:
@@ -148,16 +118,7 @@ namespace nana
 				typename Tag::interface_t* _m_read(const Tag& tag, const std::string& name) const
 				{
 					auto i = tag.table.find(name);
-					return (i != tag.table.end() ? &(i->second->refer()) : tag.employee);
-				}
-
-				template<typename Tag>
-				void _m_release(Tag & tag)
-				{
-					for(auto m : tag.table)
-						m.second->self_delete();
-
-					tag.table.clear();
+					return (i != tag.table.end() ? &(*i->second) : tag.employee);
 				}
 			};
 		}

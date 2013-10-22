@@ -154,8 +154,8 @@ namespace nana{ namespace gui{
 			renderer(rdptr);
 			rdptr->self_delete();
 		}
-		void renderer(const pat::cloneable_interface<renderer_interface>*);
-		pat::cloneable_interface<renderer_interface>* renderer() const;
+		void renderer(const pat::cloneable<renderer_interface>&);
+		const pat::cloneable<renderer_interface>& renderer() const;
 
 	private:
 		void _m_destroy_menu_window();

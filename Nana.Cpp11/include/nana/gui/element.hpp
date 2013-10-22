@@ -71,7 +71,7 @@ namespace nana{	namespace gui
 				}
 			};
 
-			void add_crook(const std::string& name, const pat::cloneable_interface<factory_interface<crook_interface>>&);
+			void add_crook(const std::string& name, const pat::cloneable<factory_interface<crook_interface>>&);
 			crook_interface* const * keeper_crook(const std::string& name);
 		};
 
@@ -79,7 +79,7 @@ namespace nana{	namespace gui
 		void add_crook(const std::string& name)
 		{
 			typedef provider::factory<UserElement, crook_interface> factory_t;
-			provider().add_crook(name, pat::cloneable<factory_t, typename factory_t::interface_type>());
+			provider().add_crook(name, pat::cloneable<typename factory_t::interface_type>(factory_t()));
 		}
 		
 		class crook;

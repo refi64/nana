@@ -131,10 +131,10 @@ namespace gui
 				const tree_cont_type & tree() const;
 				tree_cont_type & tree();
 
-				void renderer(const ::nana::pat::cloneable_interface<renderer_interface>&);
-				::nana::pat::cloneable_interface<renderer_interface>* renderer() const;
-				void placer(const ::nana::pat::cloneable_interface<compset_placer_interface>&);
-				::nana::pat::cloneable_interface<compset_placer_interface>* placer() const;
+				void renderer(::nana::pat::cloneable<renderer_interface>&&);
+				const ::nana::pat::cloneable<renderer_interface>& renderer() const;
+				void placer(::nana::pat::cloneable<compset_placer_interface>&&);
+				const ::nana::pat::cloneable<compset_placer_interface>& placer() const;
 
 				nana::any & value(node_type*) const;
 				node_type* insert(node_type*, const nana::string& key, const nana::string& title);
@@ -325,20 +325,20 @@ namespace gui
 		template<typename ItemRenderer>
 		treebox & renderer(const ItemRenderer & rd)
 		{
-			get_drawer_trigger().renderer(::nana::pat::cloneable<ItemRenderer, renderer_interface>(rd));
+			get_drawer_trigger().renderer(::nana::pat::cloneable<renderer_interface>(rd));
 			return *this;
 		}
 
-		const nana::pat::cloneable_interface<renderer_interface> & renderer() const;
+		const nana::pat::cloneable<renderer_interface> & renderer() const;
 
 		template<typename Placer>
 		treebox & placer(const Placer & r)
 		{
-			get_drawer_trigger().placer(::nana::pat::cloneable<Placer, compset_placer_interface>(r));
+			get_drawer_trigger().placer(::nana::pat::cloneable<compset_placer_interface>(r));
 			return *this;
 		}
 
-		const nana::pat::cloneable_interface<compset_placer_interface> & placer() const;
+		const nana::pat::cloneable<compset_placer_interface> & placer() const;
 
 		void auto_draw(bool);
 

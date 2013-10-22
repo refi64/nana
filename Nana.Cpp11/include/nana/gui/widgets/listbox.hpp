@@ -83,20 +83,17 @@ namespace nana{ namespace gui{
 			template<typename T>
 			struct resolver_proxy
 			{
-				pat::cloneable_interface<resolver_interface<T> > * res;
+				pat::cloneable<resolver_interface<T>> res;
 
 				resolver_proxy()
-					: res(nullptr)
 				{}
 
 				resolver_proxy(const resolver_proxy& rhs)
-					: res(rhs.res ? rhs.res->clone() : nullptr)
+					: res(rhs.res)
 				{}
 
 				~resolver_proxy()
 				{
-					if(res)
-						res->self_delete();
 				}
 			};
 
@@ -134,11 +131,11 @@ namespace nana{ namespace gui{
 					if(nullptr == proxy)
 						throw std::invalid_argument("Nana.Listbox.ItemProxy: the type passed to value() does not match the resolver.");
 					
-					auto & res = proxy->res->refer();
+					auto & res = proxy->res;
 					const std::size_t headers = columns();
 
 					for(std::size_t i = 0; i < headers; ++i)
-						text(i, res.decode(i, t));
+						text(i, res->decode(i, t));
 					
 					return *this;
 				}
@@ -216,13 +213,13 @@ namespace nana{ namespace gui{
 					auto proxy = _m_resolver().template get<resolver_proxy<T> >();
 					if(proxy)
 					{
-						auto & res = proxy->res->refer();
+						auto & res = proxy->res;
 						std::size_t pos = size();
-						push_back(res.decode(0, t));
+						push_back(res->decode(0, t));
 						item_proxy ip(ess_, pos_, pos);
 						const std::size_t headers = columns();
 						for(std::size_t i = 1; i < headers; ++i)
-							ip.text(i, res.decode(i, t));
+							ip.text(i, res->decode(i, t));
 					}
 					return *this;
 				}
@@ -326,7 +323,7 @@ namespace nana{ namespace gui{
 		void resolver(const Resolver & res)
 		{
 			drawerbase::listbox::resolver_proxy<typename Resolver::target> proxy;
-			proxy.res = pat::cloneable<Resolver, drawerbase::listbox::resolver_interface<typename Resolver::target> >(res).clone();
+			proxy.res = pat::cloneable<drawerbase::listbox::resolver_interface<typename Resolver::target> >(res);
 			_m_resolver(nana::any(proxy));
 		}
 

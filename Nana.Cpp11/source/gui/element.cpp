@@ -237,21 +237,18 @@ namespace nana{	namespace gui
 		: nana::noncopyable, nana::nonmovable
 	{
 		typedef ElementInterface element_t;
-		typedef pat::cloneable_interface<element::provider::factory_interface<element_t>> factory_interface;
+		typedef pat::cloneable<element::provider::factory_interface<element_t>> factory_interface;
 
 	public:
 		element_object()
-			:	factory_(nullptr), element_ptr_(nullptr)
+			:	element_ptr_(nullptr)
 		{
 		}
 
 		~element_object()
 		{
 			if(factory_)
-			{
-				factory_->refer().destroy(element_ptr_);
-				factory_->self_delete();
-			}
+				factory_->destroy(element_ptr_);
 		}
 
 		void push(const factory_interface& rhs)
@@ -259,16 +256,15 @@ namespace nana{	namespace gui
 			auto keep_f = factory_;
 			auto keep_e = element_ptr_;
 
-			factory_ = rhs.clone();
-			element_ptr_ = rhs.refer().create();
+			factory_ = rhs;
+			element_ptr_ = factory_->create();
 
 			if(nullptr == factory_ || nullptr == element_ptr_)
 			{
 				if(element_ptr_)
-					rhs.refer().destroy(element_ptr_);
+					factory_->destroy(element_ptr_);
 
-				if(factory_)
-					factory_->self_delete();
+				factory_.reset();
 
 				factory_ = keep_f;
 				element_ptr_ = keep_e;
@@ -282,9 +278,9 @@ namespace nana{	namespace gui
 			return &element_ptr_;
 		}
 	private:
-		factory_interface * factory_;	//Keep the factory for destroying the element
+		factory_interface factory_;	//Keep the factory for destroying the element
 		element_t * element_ptr_;
-		std::vector<std::pair<element_t*, factory_interface*>> spare_;
+		std::vector<std::pair<element_t*, factory_interface>> spare_;
 	};
 
 	class element_manager
@@ -314,7 +310,7 @@ namespace nana{	namespace gui
 			return obj;
 		}
 
-		void crook(const std::string& name, const pat::cloneable_interface<element::provider::factory_interface<element::crook_interface>>& factory)
+		void crook(const std::string& name, const pat::cloneable<element::provider::factory_interface<element::crook_interface>>& factory)
 		{
 			_m_add(name, crook_, factory);
 		}
@@ -327,7 +323,7 @@ namespace nana{	namespace gui
 		typedef std::lock_guard<std::recursive_mutex> lock_guard;
 
 		template<typename ElementInterface>
-		void _m_add(const std::string& name, item<ElementInterface>& m, const pat::cloneable_interface<element::provider::factory_interface<ElementInterface>>& factory)
+		void _m_add(const std::string& name, item<ElementInterface>& m, const pat::cloneable<element::provider::factory_interface<ElementInterface>>& factory)
 		{
 			typedef element_object<ElementInterface> element_object_t;
 			lock_guard lock(mutex_);
@@ -361,7 +357,7 @@ namespace nana{	namespace gui
 	namespace element
 	{
 		//class provider
-		void provider::add_crook(const std::string& name, const pat::cloneable_interface<factory_interface<crook_interface>>& factory)
+		void provider::add_crook(const std::string& name, const pat::cloneable<factory_interface<crook_interface>>& factory)
 		{
 			element_manager::instance().crook(name, factory);
 		}

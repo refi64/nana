@@ -157,17 +157,6 @@ namespace nana{	namespace gui
 		typedef drawerbase::categorize::extra_events<categorize> ext_event_type;
 		typedef drawerbase::categorize::renderer renderer;
 
-		template<typename ExtRenderer>
-		class renderer_cloneable
-			: public pat::cloneable<ExtRenderer, renderer>
-		{
-		public:
-			renderer_cloneable(){}
-			renderer_cloneable(const ExtRenderer& rnd)
-				: pat::cloneable<ExtRenderer, renderer>(rnd)
-			{}
-		};
-
 		categorize()
 		{}
 

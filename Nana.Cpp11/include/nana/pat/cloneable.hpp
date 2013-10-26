@@ -80,7 +80,8 @@ namespace nana{ namespace pat{
 		{
 			void operator()(interface_t * p)
 			{
-				p->self_delete();
+				if(p)
+					p->self_delete();
 			}
 		};
 
@@ -203,7 +204,8 @@ namespace nana{ namespace pat{
 		{
 			void operator()(interface_t * p)
 			{
-				p->self_delete();
+				if(p)
+					p->self_delete();
 			}
 		};
 

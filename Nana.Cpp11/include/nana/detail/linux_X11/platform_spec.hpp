@@ -95,6 +95,8 @@ namespace detail
 		Pixmap	pixmap;
 		GC	context;
 		font_ptr_t font;
+		
+		nana::point	line_begin_pos;
 
 		struct string_spec
 		{

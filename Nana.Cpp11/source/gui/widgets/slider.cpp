@@ -24,21 +24,11 @@ namespace nana{ namespace gui{
 				virtual void bar(window, graph_reference graph, const bar_t& bi)
 				{
 					//draw border
-					nana::color_t dark = 0x83909F;
-					nana::color_t gray = 0x9DAEC2;
+					const nana::color_t dark = 0x83909F;
+					const nana::color_t gray = 0x9DAEC2;
 
-					int x1 = bi.r.x + 1, x2 = bi.r.x + bi.r.width - 2;
-					int y1 = bi.r.y, y2 = bi.r.y + bi.r.height - 1;
-
-					graph.line(x1, y1, x2, y1, dark);
-					graph.line(x1, y2, x2, y2, gray);
-					x1 = bi.r.x;
-					x2 = bi.r.x + bi.r.width - 1;
-					y1 = bi.r.y + 1;
-					y2 = bi.r.y + bi.r.height - 2;
-
-					graph.line(x1, y1, x1, y2, dark);
-					graph.line(x2, y1, x2, y2, gray);
+					graph.rectangle_line(bi.r, 
+							dark, dark, gray, gray);
 				}
 
 				virtual void adorn(window, graph_reference graph, const adorn_t& ad)
@@ -777,18 +767,16 @@ namespace nana{ namespace gui{
 				drawerbase::slider::controller* ctrl = this->get_drawer_trigger().ctrl();
 				unsigned val = ctrl->move_step(forward);
 				if(val != ctrl->vcur())
-				{
 					API::update_window(handle());
-				}
+				return val;
 			}
 			return 0;
 		}
 
 		unsigned slider::adorn() const
 		{
-			if(handle())
-				return get_drawer_trigger().ctrl()->adorn();
-			return 0;
+			if(empty())	return 0;
+			return get_drawer_trigger().ctrl()->adorn();
 		}
 
 		pat::cloneable<slider::renderer>& slider::ext_renderer()

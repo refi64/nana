@@ -74,6 +74,7 @@ namespace gui
 			class renderer_interface
 			{
 			public:
+				typedef drawerbase::treebox::component component;
 				typedef ::nana::paint::graphics& graph_reference;
 				typedef drawerbase::treebox::compset_interface compset_interface;
 				typedef compset_interface::item_attribute_t item_attribute_t;
@@ -82,7 +83,11 @@ namespace gui
 				virtual ~renderer_interface()
 				{}
 
-				virtual void render(graph_reference, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface *) const = 0;
+				virtual void bground(graph_reference, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface *) const = 0;
+				virtual void expander(graph_reference, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface *) const = 0;
+				virtual void crook(graph_reference, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface *) const = 0;
+				virtual void icon(graph_reference, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface *) const = 0;
+				virtual void text(graph_reference, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface *) const = 0;
 			};
 
 			class item_proxy;

@@ -210,13 +210,7 @@ namespace nana{ namespace gui{
 						color = 0x3C7FB1; break;
 					}
 					
-					int inner_x = x + width - 2;
-					int inner_y = y + height - 2;
-					
-					graph.line(x + 1, y, inner_x, y, color);
-					graph.line(x + 1, inner_y + 1, inner_x, inner_y + 1, color);
-					graph.line(x, y + 1, x, inner_y, color);
-					graph.line(inner_x + 1, y + 1, inner_x + 1, inner_y, color);
+					graph.rectangle(rectangle(x, y, width, height), color, false);
 
 					unsigned color_x = graph.mix(color, 0xFFFFFF, 0.5);
 

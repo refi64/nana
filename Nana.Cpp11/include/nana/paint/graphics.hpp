@@ -100,13 +100,17 @@ namespace nana
 			void rectangle(int x, int y, unsigned width, unsigned height, color_t, bool solid);
 			void rectangle(color_t, bool solid);
 			void rectangle(const nana::rectangle&, color_t, bool solid);
+			void rectangle_line(const nana::rectangle&, color_t left, color_t top, color_t right, color_t bottom);
 			void round_rectangle(int x, int y, unsigned width, unsigned height, unsigned radius_x, unsigned radius_y, color_t, bool solid, color_t color_if_solid);
 			void round_rectangle(const nana::rectangle&, unsigned radius_x, unsigned radius_y, color_t, bool solid, color_t color_if_solid);
 			void shadow_rectangle(const nana::rectangle&, color_t beg_color, color_t end_color, bool vertical);
 			void shadow_rectangle(int x, int y, unsigned width, unsigned height, color_t beg_color, color_t end_color, bool vertical);
 
-			void line(int x1, int y1, int x2, int y2, color_t color);
-			void line(const point& beg, const point& end, color_t color);
+			void line(int x1, int y1, int x2, int y2, color_t);
+			void line(const point& beg, const point& end, color_t);
+			void lines(const point* points, std::size_t n_of_points, color_t);
+			void line_begin(int x, int y);
+			void line_to(int x, int y, color_t);
 			
 			void bitblt(int x, int y, const graphics& source);
 			void bitblt(const nana::rectangle& r_dst, native_window_type src);

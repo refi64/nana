@@ -621,6 +621,17 @@ namespace paint
 			rectangle(r.x, r.y, r.width, r.height, color, solid);
 		}
 
+		void graphics::rectangle_line(const nana::rectangle& r, color_t color_left, color_t color_top, color_t color_right, color_t color_bottom)
+		{
+			int right = r.x + r.width - 1;
+			int bottom = r.y + r.height -1;
+			line_begin(r.x, r.y);
+			line_to(right, r.y, color_top);
+			line_to(right, bottom, color_right);
+			line_to(r.x, bottom, color_bottom);
+			line_to(r.x, r.y, color_left);
+		}
+
 		void graphics::round_rectangle(int x, int y, unsigned width, unsigned height, unsigned radius_x, unsigned radius_y, color_t color, bool solid, color_t color_if_solid)
 		{
 			if(handle_)
@@ -733,18 +744,14 @@ namespace paint
 		{
 			if(!handle_)	return;
 #if defined(NANA_WINDOWS)
-			if(x1 == x2 && y1 == y2)
-			{
-				::SetPixel(handle_->context, x1, y1, NANA_RGB(color));
-			}
-			else
+			if(x1 != x2 || y1 != y2)
 			{
 				handle_->pen.set(handle_->context, PS_SOLID, 1, color);
 
 				::MoveToEx(handle_->context, x1, y1, 0);
 				::LineTo(handle_->context, x2, y2);
-				::SetPixel(handle_->context, x2, y2, NANA_RGB(color));
 			}
+			::SetPixel(handle_->context, x2, y2, NANA_RGB(color));
 #elif defined(NANA_X11)
 			Display* disp = nana::detail::platform_spec::instance().open_display();
 			handle_->fgcolor(color);
@@ -756,6 +763,68 @@ namespace paint
 		void graphics::line(const point& beg, const point& end, color_t color)
 		{
 			line(beg.x, beg.y, end.x, end.y, color);
+		}
+
+		void graphics::lines(const point* points, std::size_t n_of_points, color_t color)
+		{
+			if(!handle_ || nullptr == points || 0 == n_of_points)	return;
+#if defined(NANA_WINDOWS)
+
+			handle_->pen.set(handle_->context, PS_SOLID, 1, color);
+
+			::MoveToEx(handle_->context, points->x, points->y, nullptr);
+			const point * end = points + n_of_points;
+			for(const point * i = points + 1; i != end; ++i)
+				::LineTo(handle_->context, i->x, i->y);
+			
+			if(*points != *(end - 1))
+				::SetPixel(handle_->context, (end-1)->x, (end-1)->y, NANA_RGB(color));
+#elif defined(NANA_X11)
+			Display* disp = nana::detail::platform_spec::instance().open_display();
+			handle_->fgcolor(color);
+
+			XPoint * const x11points = new XPoint[n_of_points];
+			XPoint * end = x11points + n_of_points;
+			for(XPoint * i = x11points; i != end; ++i)
+			{
+				i->x = points->x;
+				i->y = points->y;
+				++points;
+			}
+			::XDrawLines(disp, handle_->pixmap, handle_->context, x11points, static_cast<int>(n_of_points), CoordModePrevious);
+			delete [] x11points;
+#endif
+			if(changed_ == false) changed_ = true;		
+		}
+
+		void graphics::line_begin(int x, int y)
+		{
+			if(!handle_)	return;
+#if defined(NANA_WINDOWS)
+			::MoveToEx(handle_->context, x, y, 0);
+			
+#elif defined(NANA_X11)
+			handle_->line_begin_pos.x = x;
+			handle_->line_begin_pos.y = y;
+#endif		
+		}
+
+		void graphics::line_to(int x, int y, color_t color)
+		{
+			if(!handle_)	return;
+#if defined(NANA_WINDOWS)
+			handle_->pen.set(handle_->context, PS_SOLID, 1, color);
+			::LineTo(handle_->context, x, y);
+#elif defined(NANA_X11)
+			Display* disp = nana::detail::platform_spec::instance().open_display();
+			handle_->fgcolor(color);
+			::XDrawLine(disp, handle_->pixmap, handle_->context,
+						handle_->line_begin_pos.x, handle_->line_begin_pos.y,
+						x, y);
+			handle_->line_begin_pos.x = x;
+			handle_->line_begin_pos.y = y;
+#endif
+			if(changed_ == false) changed_ = true;		
 		}
 
 		void graphics::bitblt(int x, int y, const graphics& src)

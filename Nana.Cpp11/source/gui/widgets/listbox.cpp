@@ -2101,17 +2101,6 @@ namespace nana{ namespace gui{
 					_m_draw_border();
 				}
 
-				/*
-				void trigger::update()
-				{
-					if(essence_->auto_draw)
-					{
-						essence_->adjust_scroll_life();
-						API::refresh_window(*(essence_->lister.wd_ptr()));
-					}
-				}
-				*/
-
 				void trigger::_m_draw_border()
 				{
 					auto & graph = *essence_->graph;

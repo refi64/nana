@@ -117,16 +117,11 @@ namespace gui
 
 			void trigger::_m_draw_box(graph_reference graph)
 			{
-				unsigned width = graph.width();
-				unsigned height = graph.height();
-				graph.shadow_rectangle(0, 0, width, height, gui::color::button_face_shadow_end, gui::color::button_face_shadow_start, true);
-				graph.line(0, height - 2, 0, 0, 0x808080);
-				graph.line(0, 0, width - 2, 0, 0x808080);
+				rectangle r = graph.size();
+				graph.shadow_rectangle(r, gui::color::button_face_shadow_end, gui::color::button_face_shadow_start, true);
 
-				int right = width - 1;
-				int bottom = height - 1;
-				graph.line(0, bottom, right, bottom, 0xFFFFFF);
-				graph.line(right, 0, right, bottom, 0xFFFFFF);
+				graph.rectangle_line(r,
+						0x808080, 0x808080, 0xFFFFFF, 0xFFFFFF);
 			}
 
 			void trigger::_m_draw_progress(graph_reference graph)

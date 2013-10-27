@@ -128,15 +128,9 @@ namespace nana{	namespace gui{
 				void border(graph_reference graph)
 				{
 					graph.rectangle(0xF0F0F0, false);
-
-					const int left = 1, top = 1;
-					int right = static_cast<int>(graph.width()) - 2, bottom = static_cast<int>(graph.height()) - 2;
-					graph.line(left, top, right, top, 0x484E55);
-					graph.line(left, bottom, right, bottom, 0x9DABB9);
-					graph.line(left, top, left, bottom, 0x9DABB9);
-					graph.line(right, top, right, bottom - 1, 0x484E55);
+					graph.rectangle_line(nana::rectangle(graph.size()).pare_off(1),
+										0x9DABB9, 0x484E55, 0x484E55, 0x9DABB9);
 				}
-
 			private:
 				void _m_item_bground(graph_reference graph, int x, int y, unsigned width, unsigned height, mouse_action state)
 				{

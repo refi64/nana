@@ -469,10 +469,9 @@ namespace drawerbase
 			nana::rectangle r(graph.size());
 			int right = r.width - 1;
 			int bottom = r.height - 1;
-			graph.line(1, 0, right - 1, 0, 0x7F7F7F);
-			graph.line(1, bottom, right - 1, bottom, 0x707070);
-			graph.line(0, 1, 0, bottom - 1, 0x7F7F7F);
-			graph.line(right, 1, right, bottom - 1, 0x707070);
+
+			graph.rectangle_line(r,
+					0x7F7F7F, 0x7F7F7F, 0x707070, 0x707070);
 
 			graph.set_pixel(1, 1, 0x919191);
 			graph.set_pixel(right - 1, 1, 0x919191);

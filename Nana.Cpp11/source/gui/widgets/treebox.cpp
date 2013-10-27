@@ -964,7 +964,7 @@ namespace gui
 			class internal_renderer
 				: public renderer_interface
 			{
-				void render(graph_reference graph, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface * compset) const override
+				void bground(graph_reference graph, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface * compset) const override
 				{
 					comp_attribute_t attr;
 
@@ -992,7 +992,11 @@ namespace gui
 							graph.rectangle(attr.area.pare_off(1), *colptr, true);
 						}
 					}
+				}
 
+				void expander(graph_reference graph, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface * compset) const override
+				{
+					comp_attribute_t attr;
 					if(compset->comp_attribute(component::expender, attr))
 					{
 						using namespace nana::paint;
@@ -1006,14 +1010,22 @@ namespace gui
 						}
 						gadget::arrow_16_pixels(graph, attr.area.x, attr.area.y + (attr.area.height - 16) / 2, (attr.mouse_pointed ? 0x1CC4F7 : 0x0), style, dir);
 					}
-
+				}
+				
+				void crook(graph_reference graph, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface * compset) const override
+				{
+					comp_attribute_t attr;
 					if(compset->comp_attribute(component::crook, attr))
 					{
 						attr.area.y += (attr.area.height - 16) / 2;
 						crook_.check(compset->item_attribute().checked);
 						crook_.draw(graph, bgcolor, fgcolor, attr.area, attr.mouse_pointed ? element_state::hovered : element_state::normal);
 					}
+				}
 
+				virtual void icon(graph_reference graph, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface * compset) const override
+				{
+					comp_attribute_t attr;
 					if(compset->comp_attribute(component::icon, attr))
 					{
 						const nana::paint::image * img = nullptr;
@@ -1042,10 +1054,13 @@ namespace gui
 								img->paste(graph, attr.area.x + static_cast<int>(attr.area.width - size.width) / 2, attr.area.y + static_cast<int>(attr.area.height - size.height) / 2);
 						}
 					}
+				}
 
+				virtual void text(graph_reference graph, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface * compset) const override
+				{
+					comp_attribute_t attr;
 					if(compset->comp_attribute(component::text, attr))
 						graph.string(attr.area.x, attr.area.y + 3, fgcolor, compset->item_attribute().text);
-
 				}
 
 			private:
@@ -1193,7 +1208,12 @@ namespace gui
 					node_r_.width = comp_placer->item_width(*impl_->data.graph, node_attr_);
 					node_r_.height = comp_placer->item_height(*impl_->data.graph);
 
-					draw_impl->data.renderer->render(*draw_impl->data.graph, bgcolor_, fgcolor_, this); 
+					auto renderer = draw_impl->data.renderer;
+					renderer->bground(*draw_impl->data.graph, bgcolor_, fgcolor_, this);
+					renderer->expander(*draw_impl->data.graph, bgcolor_, fgcolor_, this);
+					renderer->crook(*draw_impl->data.graph, bgcolor_, fgcolor_, this);
+					renderer->icon(*draw_impl->data.graph, bgcolor_, fgcolor_, this);
+					renderer->text(*draw_impl->data.graph, bgcolor_, fgcolor_, this);
 
 					pos_.y += node_r_.height;
 
@@ -1277,7 +1297,13 @@ namespace gui
 						nana::paint::graphics item_graph(item_r_.width, item_r_.height);
 						item_graph.typeface(graph_->typeface());
 
-						renderer_->render(item_graph, widget_->background(), widget_->foreground(), this);
+						auto bgcolor = widget_->background();
+						auto fgcolor = widget_->foreground();
+						renderer_->bground(item_graph, bgcolor, fgcolor, this);
+						renderer_->expander(item_graph, bgcolor, fgcolor, this);
+						renderer_->crook(item_graph, bgcolor, fgcolor, this);
+						renderer_->icon(item_graph, bgcolor, fgcolor, this);
+						renderer_->text(item_graph, bgcolor, fgcolor, this);
 
 						item_graph.paste(attr.area, *graph_, 1, 1);
 						graph_->rectangle(0x0, false);

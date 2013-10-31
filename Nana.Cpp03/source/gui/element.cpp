@@ -1,7 +1,8 @@
 #include <nana/gui/element.hpp>
 #include <nana/gui/detail/bedrock.hpp>
+#include <nana/threads/mutex.hpp>
+#include <nana/memory.hpp>
 #include <map>
-#include <mutex>
 #include <string>
 
 namespace nana{	namespace gui
@@ -12,7 +13,7 @@ namespace nana{	namespace gui
 		class crook
 			: public crook_interface
 		{
-			bool draw(graph_reference graph, nana::color_t bgcolor, nana::color_t fgcolor, const nana::rectangle& r, element_state es, const data& crook_data) override
+			bool draw(graph_reference graph, nana::color_t bgcolor, nana::color_t fgcolor, const nana::rectangle& r, element_state::t es, const data& crook_data)
 			{
 				if(crook_data.radio)
 				{
@@ -173,8 +174,8 @@ namespace nana{	namespace gui
 					case state::partial:
 						graph.rectangle(x + 2, y + 2, 9, 9, fgcolor, true);
 						break;
-					default:
-						break;
+                    default:
+                        break;
 					}
 				}
 				return true;
@@ -184,7 +185,7 @@ namespace nana{	namespace gui
 		class menu_crook
 			: public crook_interface
 		{
-			bool draw(graph_reference graph, nana::color_t, nana::color_t fgcolor, const nana::rectangle& r, element_state es, const data& crook_data) override
+			bool draw(graph_reference graph, nana::color_t, nana::color_t fgcolor, const nana::rectangle& r, element_state::t es, const data& crook_data)
 			{
 				if(crook_data.check_state == state::unchecked)
 					return true;
@@ -204,7 +205,7 @@ namespace nana{	namespace gui
 
 					int x = r.x + (static_cast<int>(r.width) - 8) / 2;
 					int y = r.y + (static_cast<int>(r.height) - 8) / 2;
-			
+
 					for(int u = 0; u < 8; ++u)
 					{
 						for(int v = 0; v < 8; ++v)
@@ -234,17 +235,17 @@ namespace nana{	namespace gui
 			}
 		};
 	}
-	
+
 	template<typename ElementInterface>
 	class element_object
-		: nana::noncopyable, nana::nonmovable
+		: nana::noncopyable
 	{
 		typedef ElementInterface element_t;
-		typedef pat::cloneable<element::provider::factory_interface<element_t>> factory_interface;
+		typedef pat::cloneable<element::provider::factory_interface<element_t> > factory_interface;
 
 	public:
 		element_object()
-			:	element_ptr_(nullptr)
+			:	element_ptr_(0)
 		{
 		}
 
@@ -256,13 +257,13 @@ namespace nana{	namespace gui
 
 		void push(const factory_interface& rhs)
 		{
-			auto keep_f = factory_;
-			auto keep_e = element_ptr_;
+			factory_interface keep_f = factory_;
+			element_t * keep_e = element_ptr_;
 
 			factory_ = rhs;
 			element_ptr_ = factory_->create();
 
-			if(nullptr == factory_ || nullptr == element_ptr_)
+			if(!factory_ || !element_ptr_)
 			{
 				if(element_ptr_)
 					factory_->destroy(element_ptr_);
@@ -273,7 +274,7 @@ namespace nana{	namespace gui
 				element_ptr_ = keep_e;
 			}
 			else
-				spare_.emplace_back(keep_e, keep_f);
+				spare_.push_back(std::pair<element_t*, factory_interface>(keep_e, keep_f));
 		}
 
 		element_t * const * keeper() const
@@ -283,25 +284,23 @@ namespace nana{	namespace gui
 	private:
 		factory_interface factory_;	//Keep the factory for destroying the element
 		element_t * element_ptr_;
-		std::vector<std::pair<element_t*, factory_interface>> spare_;
+		std::vector<std::pair<element_t*, factory_interface> > spare_;
 	};
 
 	class element_manager
-		: nana::noncopyable, nana::nonmovable
+		: nana::noncopyable
 	{
-		//VC2012 does not support alias declaration.
-		//template<typename E> using factory_interface = element::provider::factory_interface<E>;
-
 		template<typename ElementInterface>
 		struct item
 		{
+			typedef nana::shared_ptr<element_object<ElementInterface> > shared_t;
 			element_object<ElementInterface> * employee;
-			std::map<std::string, std::shared_ptr<element_object<ElementInterface>>> table;
+			std::map<std::string, shared_t> table;
 		};
 
 		element_manager()
 		{
-			crook_.employee = nullptr;
+			crook_.employee = 0;
 			element::add_crook<element::crook>("");
 			element::add_crook<element::menu_crook>("menu_crook");
 		}
@@ -313,7 +312,7 @@ namespace nana{	namespace gui
 			return obj;
 		}
 
-		void crook(const std::string& name, const pat::cloneable<element::provider::factory_interface<element::crook_interface>>& factory)
+		void crook(const std::string& name, const pat::cloneable<element::provider::factory_interface<element::crook_interface> >& factory)
 		{
 			_m_add(name, crook_, factory);
 		}
@@ -323,29 +322,32 @@ namespace nana{	namespace gui
 			return _m_get(name, crook_).keeper();
 		}
 	private:
-		typedef std::lock_guard<std::recursive_mutex> lock_guard;
+		typedef nana::threads::lock_guard<nana::threads::recursive_mutex> lock_guard;
 
 		template<typename ElementInterface>
-		void _m_add(const std::string& name, item<ElementInterface>& m, const pat::cloneable<element::provider::factory_interface<ElementInterface>>& factory)
+		void _m_add(const std::string& name, item<ElementInterface>& m, const pat::cloneable<element::provider::factory_interface<ElementInterface> >& factory)
 		{
 			typedef element_object<ElementInterface> element_object_t;
+			typedef typename item<ElementInterface>::shared_t shared_t;
+
 			lock_guard lock(mutex_);
 
-			auto & eop = m.table[name];
-			if(nullptr == eop)
-				eop = std::shared_ptr<element_object_t>(new element_object_t);
+			shared_t & eop = m.table[name];
+			if(! eop)
+				eop = shared_t(new element_object_t);
 
 			eop->push(factory);
-			if(nullptr == m.employee)
+			if(0 == m.employee)
 				m.employee = eop.get();
 		}
 
 		template<typename ElementInterface>
 		const element_object<ElementInterface>& _m_get(const std::string& name, const item<ElementInterface>& m) const
 		{
+			typedef typename item<ElementInterface>::shared_t shared_t;
 			lock_guard lock(mutex_);
-			
-			auto i = m.table.find(name);
+
+			typename std::map<std::string, shared_t>::const_iterator i = m.table.find(name);
 			if(i != m.table.end())
 				return *(i->second);
 
@@ -353,16 +355,16 @@ namespace nana{	namespace gui
 		}
 
 	private:
-		mutable std::recursive_mutex mutex_;
+		mutable nana::threads::recursive_mutex mutex_;
 		item<element::crook_interface> crook_;
 	};
 
 	namespace element
 	{
 		//class provider
-		void provider::add_crook(const std::string& name, const pat::cloneable<factory_interface<crook_interface>>& factory)
+		void provider::add_crook(const std::string& name, const pat::cloneable<factory_interface<crook_interface> >& f)
 		{
-			element_manager::instance().crook(name, factory);
+			element_manager::instance().crook(name, f);
 		}
 
 		crook_interface* const * provider::keeper_crook(const std::string& name)
@@ -393,13 +395,13 @@ namespace nana{	namespace gui
 			return *this;
 		}
 
-		facade<element::crook> & facade<element::crook>::check(state s)
+		facade<element::crook> & facade<element::crook>::check(state::t s)
 		{
 			data_.check_state = s;
 			return *this;
 		}
 
-		facade<element::crook>::state facade<element::crook>::checked() const
+		facade<element::crook>::state::t facade<element::crook>::checked() const
 		{
 			return data_.check_state;
 		}
@@ -420,7 +422,7 @@ namespace nana{	namespace gui
 			keeper_ = element::provider().keeper_crook(name);
 		}
 
-		bool facade<element::crook>::draw(graph_reference graph, nana::color_t bgcol, nana::color_t fgcol, const nana::rectangle& r, element_state es)
+		bool facade<element::crook>::draw(graph_reference graph, nana::color_t bgcol, nana::color_t fgcol, const nana::rectangle& r, element_state::t es)
 		{
 			return (*keeper_)->draw(graph, bgcol, fgcol, r, es, data_);
 		}

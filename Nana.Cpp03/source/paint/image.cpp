@@ -52,7 +52,7 @@ namespace paint
 
 				if(handle)
 				{
-					refer_ = handle;
+					ptr_ = nana::shared_ptr<HICON>(new HICON(handle));
 					ICONINFO info;
 					::GetIconInfo(handle, &info);
 					size_.width = (info.xHotspot << 1);
@@ -73,12 +73,12 @@ namespace paint
 
 			bool image_ico::empty() const
 			{
-				return refer_.empty();
+				return (!ptr_);
 			}
 
 			void image_ico::close()
 			{
-				refer_.release();
+				ptr_.reset();
 			}
 
 			nana::size image_ico::size() const
@@ -88,27 +88,27 @@ namespace paint
 
 			void image_ico::paste(const nana::rectangle& src_r, graph_reference graph, int x, int y) const
 			{
-				if((refer_.empty() == false) && (graph.empty() == false))
+				if(ptr_ && (graph.empty() == false))
 				{
 #if defined(NANA_WINDOWS)
-					::DrawIconEx(graph.handle()->context, x, y, refer_.handle(), src_r.width, src_r.height, 0, 0, DI_NORMAL);
+					::DrawIconEx(graph.handle()->context, x, y, *ptr_, src_r.width, src_r.height, 0, 0, DI_NORMAL);
 #endif
 				}
 			}
 
 			void image_ico::stretch(const nana::rectangle&, graph_reference graph, const nana::rectangle& r) const
 			{
-				if((refer_.empty() == false) && (graph.empty() == false))
+				if(ptr_ && (graph.empty() == false))
 				{
 #if defined(NANA_WINDOWS)
-					::DrawIconEx(graph.handle()->context, r.x, r.y, refer_.handle(), r.width, r.height, 0, 0, DI_NORMAL);
+					::DrawIconEx(graph.handle()->context, r.x, r.y, *ptr_, r.width, r.height, 0, 0, DI_NORMAL);
 #endif
 				}
 			}
 
-			const image_ico::refer_type& image_ico::ref() const
+			const image_ico::ptr_t& image_ico::ptr() const
 			{
-				return refer_;
+				return ptr_;
 			}
 
 #if defined(NANA_WINDOWS)
@@ -140,7 +140,7 @@ namespace paint
 		{}
 
 		image::image(const image& rhs)
-			:ref_image_(rhs.ref_image_)
+			:image_ptr_(rhs.image_ptr_)
 		{}
 
 		image::image(const nana::char_t* file)
@@ -162,14 +162,14 @@ namespace paint
 		image & image::operator=(const image& rhs)
 		{
 			if(this != &rhs)
-				ref_image_ = rhs.ref_image_;
+				image_ptr_ = rhs.image_ptr_;
 			
 			return * this;
 		}
 
 		bool image::open(const nana::string& filename)
 		{
-			ref_image_.release();
+			image_ptr_.reset();
 			image::image_impl_interface * helper = 0;
 
 			if(filename.size())
@@ -211,53 +211,53 @@ namespace paint
 				}
 
 				if(helper)
-					ref_image_ = helper;
+				{
+					image_ptr_ = nana::shared_ptr<image_impl_interface>(helper);
+					return helper->open(filename.data());
+				}
 			}
-			return (helper ? helper->open(filename.c_str()) : false);
+			return false;
 		}
 
 		bool image::empty() const
 		{
-			return (ref_image_.empty() || (ref_image_.handle()->empty()));
+			return ((!image_ptr_) || image_ptr_->empty());
 		}
 
-		image::operator void *() const
+		image::operator const void*() const
 		{
-			return (ref_image_.empty() ? 0 : const_cast<image*>(this));
+			return (image_ptr_ ? this : 0);
 		}
 
 		void image::close()
 		{
-			ref_image_.release();
+			image_ptr_.reset();
 		}
 
 		nana::size image::size() const
 		{
-			if(ref_image_.empty() == false)
-				return ref_image_.handle()->size();
-
-			return nana::size();
+			return (image_ptr_ ? image_ptr_->size() : nana::size());
 		}
 
 		void image::paste(graphics& dst, int x, int y) const
 		{
-			if(ref_image_)
-			{
-				nana::size sz = ref_image_.handle()->size();
-				ref_image_.handle()->paste(nana::rectangle(0, 0, sz.width, sz.height), dst, x, y);
-			}
+			image_impl_interface * sp = image_ptr_.get();
+			if(sp)
+				sp->paste(sp->size(), dst, x, y);
 		}
 
 		void image::paste(const nana::rectangle& r_src, graphics & dst, const nana::point& p_dst) const
 		{
-			if(ref_image_)
-				ref_image_.handle()->paste(r_src, dst, p_dst.x, p_dst.y);	
+			image_impl_interface * sp = image_ptr_.get();
+			if(sp)
+				sp->paste(r_src, dst, p_dst.x, p_dst.y);	
 		}
 
 		void image::stretch(const nana::rectangle& r_src, graphics& dst, const nana::rectangle & r_dst) const
 		{
-			if(ref_image_)
-				ref_image_.handle()->stretch(r_src, dst, r_dst);			
+			image_impl_interface * sp = image_ptr_.get();
+			if(sp)
+				sp->stretch(r_src, dst, r_dst);			
 		}
 	//end class image
 

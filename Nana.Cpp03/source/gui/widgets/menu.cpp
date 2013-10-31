@@ -2,6 +2,7 @@
 #include <nana/gui/widgets/menu.hpp>
 #include <nana/system/platform.hpp>
 #include <nana/paint/gadget.hpp>
+#include <nana/gui/element.hpp>
 #include <nana/gui/wvl.hpp>
 #include <nana/paint/text_renderer.hpp>
 
@@ -54,6 +55,14 @@ namespace nana{ namespace gui{
 			class internal_renderer
 				: public renderer_interface
 			{
+			public:
+				internal_renderer()
+					:	crook_("menu_crook")
+				{
+					crook_.check(facade<element::crook>::state::checked);
+				}
+			private:
+				//Implement renderer_interface
 				void background(graph_reference graph, window)
 				{
 					graph.rectangle(nana::gui::color::gray_border, false);
@@ -83,7 +92,11 @@ namespace nana{ namespace gui{
 					{
 						graph.rectangle(r, 0xCDD3E6, false);
 						graph.rectangle(nana::rectangle(r).pare_off(1), 0xE6EFF4, true);
-						nana::paint::gadget::checker(graph, r.x, r.y, r.height, (at.check_style == gui::menu::check_option ? nana::paint::gadget::checkers::radio : nana::paint::gadget::checkers::clasp), 0x0);
+
+						nana::rectangle crook_r = r;
+						crook_r.width = 16;
+						crook_.radio(at.check_style == gui::menu::check_option);
+						crook_.draw(graph, 0xE6EFF4, 0x0, crook_r, element_state::normal);
 					}
 				}
 
@@ -102,6 +115,8 @@ namespace nana{ namespace gui{
 				{
 					nana::paint::gadget::arrow_16_pixels(graph, pos.x, pos.y + static_cast<int>(pixels - 16) / 2, 0x0, 0, nana::paint::gadget::directions::to_east);
 				}
+			private:
+				facade<element::crook> crook_;
 			};
 
 			//class renderer_interface
@@ -124,13 +139,12 @@ namespace nana{ namespace gui{
 					root_.max_pixels = API::screen_size().width * 2 / 3;
 					root_.item_pixels = 24;
 
-					this->renderer_ = pat::cloneable<internal_renderer, renderer_interface>().clone();
+					this->renderer_ = pat::cloneable<renderer_interface>(internal_renderer());
 				}
 
 				~menu_builder()
 				{
 					this->destroy();
-					this->renderer_->self_delete();
 				}
 
 				void check_style(std::size_t index, int style)
@@ -235,18 +249,18 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				pat::cloneable_interface<renderer_interface> * renderer() const
+				pat::cloneable<renderer_interface>& renderer()
 				{
 					return renderer_;
 				}
 
-				void renderer(pat::cloneable_interface<renderer_interface>* rdptr)
+				void renderer(const pat::cloneable<renderer_interface>& rd)
 				{
-					renderer_ = rdptr;
+					renderer_ = rd;
 				}
 			private:
 				menu_type root_;
-				pat::cloneable_interface<renderer_interface> * renderer_;
+				pat::cloneable<renderer_interface> renderer_;
 			};//end class menu_builder
 
 			class menu_drawer
@@ -1099,7 +1113,7 @@ namespace nana{ namespace gui{
 				close();
 
 				typedef drawerbase::menu::menu_window menu_window;
-				impl_->uiobj = &(nana::gui::form_loader<menu_window>()(wd, point(x, y), &(impl_->mbuilder.renderer()->refer())));
+				impl_->uiobj = &(nana::gui::form_loader<menu_window>()(wd, point(x, y), &(*impl_->mbuilder.renderer())));
 				impl_->uiobj->make_event<nana::gui::events::destroy>(*this, &menu::_m_destroy_menu_window);
 				impl_->uiobj->popup(impl_->mbuilder.data(), owner_menubar);
 			}
@@ -1192,15 +1206,14 @@ namespace nana{ namespace gui{
 			return impl_->mbuilder.data().item_pixels;
 		}
 
-		pat::cloneable_interface<menu::renderer_interface> * menu::renderer() const
+		const pat::cloneable<menu::renderer_interface>& menu::renderer() const
 		{
 			return impl_->mbuilder.renderer();
 		}
 
-		void menu::renderer(const pat::cloneable_interface<renderer_interface>* rdptr)
+		void menu::renderer(const pat::cloneable<renderer_interface>& rd)
 		{
-			if(rdptr)
-				impl_->mbuilder.renderer(rdptr->clone());
+			impl_->mbuilder.renderer(rd);
 		}
 
 		void menu::_m_destroy_menu_window()

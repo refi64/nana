@@ -175,6 +175,7 @@
     <ClCompile Include="..\..\source\gui\dragger.cpp" />
     <ClCompile Include="..\..\source\gui\drawing.cpp" />
     <ClCompile Include="..\..\source\gui\effects.cpp" />
+    <ClCompile Include="..\..\source\gui\element.cpp" />
     <ClCompile Include="..\..\source\gui\functional.cpp" />
     <ClCompile Include="..\..\source\gui\layout.cpp" />
     <ClCompile Include="..\..\source\gui\layout_utility.cpp" />
@@ -209,6 +210,7 @@
     <ClCompile Include="..\..\source\gui\widgets\treebox.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\widget.cpp" />
     <ClCompile Include="..\..\source\gui\wvl.cpp" />
+    <ClCompile Include="..\..\source\memory.cpp" />
     <ClCompile Include="..\..\source\paint\detail\image_process_provider.cpp" />
     <ClCompile Include="..\..\source\paint\detail\native_paint_interface.cpp" />
     <ClCompile Include="..\..\source\paint\gadget.cpp" />

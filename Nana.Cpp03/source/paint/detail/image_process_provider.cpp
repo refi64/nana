@@ -35,10 +35,6 @@ namespace paint
 			add<paint::detail::algorithms::superfast_blur>(blur_, "supefast_blur");
 		}
 
-		image_process_provider::~image_process_provider()
-		{
-			_m_release(stretch_);
-		}
 
 		image_process_provider::stretch_tag& image_process_provider::ref_stretch_tag()
 		{

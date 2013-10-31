@@ -282,5 +282,8 @@
     <ClCompile Include="..\..\source\gui\effects.cpp">
       <Filter>Source Files\gui</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\gui\element.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

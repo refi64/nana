@@ -17,8 +17,7 @@
 #include <iterator>
 
 #include <nana/deploy.hpp>
-#include <nana/refer.hpp>
-
+#include <nana/memory.hpp>
 
 #ifdef NANA_WINDOWS
 	#include <windows.h>
@@ -160,7 +159,7 @@ namespace filesystem
 		#endif
 			if(false == end_)
 			{
-				refer_ = handle;
+				find_ptr_ = nana::shared_ptr<find_handle_t>(new find_handle_t(handle), inner_handle_deleter());
 				handle_ = handle;
 			}
 		}
@@ -211,14 +210,14 @@ namespace filesystem
 	private:
 		struct inner_handle_deleter
 		{
-			void operator()(find_handle_t handle)
+			void operator()(find_handle_t* p)
 			{
-				if(handle)
+				if(p && *p)
 				{
   				#if defined(NANA_WINDOWS)
-					::FindClose(handle);
-            			#elif defined(NANA_LINUX)
-					::closedir(handle);
+					::FindClose(*p);
+            	#elif defined(NANA_LINUX)
+					::closedir(*p);
 				#endif
 				}
 			}
@@ -232,7 +231,7 @@ namespace filesystem
 #elif defined(NANA_LINUX)
 		std::string	path_;
 #endif
-		nana::refer<find_handle_t, inner_handle_deleter>	refer_;
+		nana::shared_ptr<find_handle_t> find_ptr_;
 		find_handle_t	handle_;
 		value_type	value_;
 	};

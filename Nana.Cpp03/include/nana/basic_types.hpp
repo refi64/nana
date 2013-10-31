@@ -80,6 +80,19 @@ namespace nana
 				begin, normal = begin, over, pressed, end
 			};
 		};
+
+		struct element_state
+		{
+			enum t
+			{
+				normal,
+				hovered,
+				focus_normal,
+				focus_hovered,
+				pressed,
+				disabled
+			};
+		};
 	}
 
 	typedef unsigned scalar_t;
@@ -178,6 +191,7 @@ namespace nana
 		rectangle & operator=(const size&);
 
 		rectangle& pare_off(int pixels);
+		bool is_hit(int x, int y) const;
 
 		int x;
 		int y;

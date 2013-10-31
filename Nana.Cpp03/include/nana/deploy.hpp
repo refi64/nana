@@ -57,15 +57,6 @@ namespace nana
 {
 	bool is_incomplete(const nana::string& str, unsigned pos);
 
-	struct state
-	{
-#if defined(NANA_UNICODE)
-		static const bool unicode = true;
-#else
-		static const bool unicode = false;
-#endif
-	};
-
 	inline unsigned make_rgb(unsigned char red, unsigned char green, unsigned char blue)
 	{
 

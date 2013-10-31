@@ -295,11 +295,6 @@ namespace nana{	namespace gui
 				}
 			}
 		};//end struct frameset::impl
-
-		void frameset::impl_deleter::operator()(impl* p) const
-		{
-			delete p;
-		}
 	//public:
 		frameset::frameset()
 			: impl_(new impl)
@@ -307,19 +302,17 @@ namespace nana{	namespace gui
 
 		void frameset::push_back(const paint::image& m)
 		{
-			impl * ip = impl_.handle();
-			bool located = ip->this_frame != ip->frames.end();
-			ip->frames.push_back(m);
+			bool located = impl_->this_frame != impl_->frames.end();
+			impl_->frames.push_back(m);
 			if(false == located)
-				ip->this_frame = ip->frames.begin();
+				impl_->this_frame = impl_->frames.begin();
 		}
 
 		void frameset::push_back(framebuilder&fb, std::size_t length)
 		{
-			impl * ip = impl_.handle();
-			ip->frames.push_back(frame(fb, length));
-			if(1 == ip->frames.size())
-				ip->this_frame = ip->frames.begin();
+			impl_->frames.push_back(frame(fb, length));
+			if(1 == impl_->frames.size())
+				impl_->this_frame = impl_->frames.begin();
 		}
 	//end class frameset
 
@@ -336,7 +329,7 @@ namespace nana{	namespace gui
 				std::vector<impl*> animations;
 
 				std::size_t active;				//The number of active animations
-				nana::refer<nana::threads::thread*> thread;
+				nana::shared_ptr<nana::threads::thread> thread;
 				double performance_parameter;
 			};
 
@@ -492,10 +485,8 @@ namespace nana{	namespace gui
 				thread_variable* thr = new thread_variable;
 				thr->animations.push_back(p);
 				thr->performance_parameter = 0.0;
-				nana::threads::thread * thrptr = new nana::threads::thread;
-				thr->thread = thrptr;
-
-				thrptr->start(perf_thread(this, thr));
+				thr->thread = nana::shared_ptr<nana::threads::thread>(new nana::threads::thread);
+				thr->thread->start(perf_thread(this, thr));
 
 				threads_.push_back(thr);
 				return thr;
@@ -651,7 +642,7 @@ namespace nana{	namespace gui
 
 		frameset::impl* animation::_m_frameset_impl(frameset & p)
 		{
-			return p.impl_.handle();
+			return p.impl_.get();
 		}
 	//end class animation
 

@@ -2,8 +2,8 @@
  *	A Menu implementation
  *	Copyright(C) 2009 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Boost Software License, Version 1.0. 
- *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	Distributed under the Boost Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/widgets/menu.hpp
@@ -114,7 +114,7 @@ namespace nana{ namespace gui{
 		typedef drawerbase::menu::menu_item_type item_type;
 		typedef item_type::item_proxy item_proxy;
 		typedef item_type::event_fn_t event_fn_t;
-		
+
 		menu();
 		~menu();
 		void append(const nana::string& text, const event_fn_t& = event_fn_t());
@@ -150,9 +150,7 @@ namespace nana{ namespace gui{
 		template<typename Renderer>
 		void renderer(const Renderer& rd)
 		{
-			const pat::cloneable_interface<renderer_interface> * rdptr = pat::cloneable<Renderer, renderer_interface>(rd).clone();
-			renderer(rdptr);
-			rdptr->self_delete();
+			renderer(rd);
 		}
 		void renderer(const pat::cloneable<renderer_interface>&);
 		const pat::cloneable<renderer_interface>& renderer() const;

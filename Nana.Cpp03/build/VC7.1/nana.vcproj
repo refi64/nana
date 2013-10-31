@@ -122,6 +122,9 @@
 					RelativePath="..\..\source\exceptions.cpp">
 				</File>
 				<File
+					RelativePath="..\..\source\memory.cpp">
+				</File>
+				<File
 					RelativePath="..\..\source\traits.cpp">
 				</File>
 				<File
@@ -154,6 +157,9 @@
 					</File>
 					<File
 						RelativePath="..\..\source\gui\effects.cpp">
+					</File>
+					<File
+						RelativePath="..\..\source\gui\element.cpp">
 					</File>
 					<File
 						RelativePath="..\..\source\gui\functional.cpp">

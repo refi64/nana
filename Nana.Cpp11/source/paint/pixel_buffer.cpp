@@ -363,18 +363,16 @@ namespace nana{	namespace paint
 		return (nullptr == storage_);
 	}
 
-	pixel_buffer::operator const void*() const
+	pixel_buffer::operator unspecified_bool_t() const
 	{
-		return (storage_ ? this : nullptr);
+		return (storage_ ? &pixel_buffer::empty : nullptr);
 	}
 
 	std::size_t pixel_buffer::bytes() const
 	{
-		if(storage_)
-		{
-			nana::size sz = storage_->pixel_size;
-			return sizeof(pixel_rgb_t) * (static_cast<std::size_t>(sz.width) * static_cast<std::size_t>(sz.height));
-		}
+		auto sp = storage_.get();
+		if(sp)
+			return sizeof(pixel_rgb_t) * (static_cast<std::size_t>(sp->pixel_size.width) * static_cast<std::size_t>(sp->pixel_size.height));
 		return 0;
 	}
 

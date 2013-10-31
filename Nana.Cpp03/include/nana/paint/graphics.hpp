@@ -14,7 +14,7 @@
 
 #include "../basic_types.hpp"
 #include "../gui/basis.hpp"
-#include "../refer.hpp"
+#include <nana/memory.hpp>
 
 namespace nana
 {
@@ -23,10 +23,6 @@ namespace nana
 		namespace detail
 		{
 			struct native_font_signature;
-			struct graphics_handle_deleter
-			{
-				void operator()(const nana::detail::drawable_impl_type*) const;
-			};
 		}// end namespace detail
 
 		typedef detail::native_font_signature*		native_font_type;
@@ -126,6 +122,7 @@ namespace nana
 			void paste(native_window_type dst, const nana::rectangle&, int sx, int sy) const;
 			void paste(native_window_type dst, int dx, int dy, unsigned width, unsigned height, int sx, int sy) const;
 			void paste(drawable_type dst, int x, int y) const;
+			void paste(const nana::rectangle& r_src, graphics& dst, int x, int y);
 			void rgb_to_wb();
 
 			void stretch(const nana::rectangle& src_r, graphics& dst, const nana::rectangle& r) const;
@@ -142,7 +139,8 @@ namespace nana
 
 			static color_t mix(color_t colorX, color_t colorY, double persent);
 		private:
-            nana::refer<drawable_type, detail::graphics_handle_deleter> ref_;
+			nana::shared_ptr<nana::detail::drawable_impl_type> dwptr_;
+
             drawable_type	handle_;
 			nana::size	size_;
 			bool changed_;

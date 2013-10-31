@@ -1,5 +1,8 @@
 #ifndef NANA_PAT_PROTOTYPE_HPP
 #define NANA_PAT_PROTOTYPE_HPP
+
+#include <cstddef>
+#include <type_traits>
 #include <memory>
 
 namespace nana{ namespace pat{
@@ -65,7 +68,7 @@ namespace nana{ namespace pat{
 				(delete this);
 			}
 		private:
-			value_t object_;	
+			value_t object_;
 		};
 
 	}//end namespace detail
@@ -101,7 +104,7 @@ namespace nana{ namespace pat{
 			: fast_ptr_(nullptr)
 		{}
 
-		cloneable(nullptr_t)
+		cloneable(std::nullptr_t)
 			: fast_ptr_(nullptr)
 		{}
 
@@ -120,7 +123,8 @@ namespace nana{ namespace pat{
 		{}
 
 		cloneable(const cloneable& r)
-			: fast_ptr_(nullptr)
+			:	cwrapper_(nullptr),
+				fast_ptr_(nullptr)
 		{
 			if(r.cwrapper_)
 			{
@@ -225,7 +229,7 @@ namespace nana{ namespace pat{
 			: fast_ptr_(nullptr)
 		{}
 
-		mutable_cloneable(nullptr_t)
+		mutable_cloneable(std::nullptr_t)
 			: fast_ptr_(nullptr)
 		{}
 
@@ -242,7 +246,8 @@ namespace nana{ namespace pat{
 		{}
 
 		mutable_cloneable(const mutable_cloneable& r)
-			: fast_ptr_(nullptr)
+			:	cwrapper_(nullptr),
+				fast_ptr_(nullptr)
 		{
 			if(r.cwrapper_)
 			{

@@ -119,6 +119,8 @@ namespace nana{ namespace gui{
 				item_proxy& fgcolor(nana::color_t);
 				nana::color_t fgcolor() const;
 
+				std::pair<std::size_t, std::size_t> pos() const;
+
 				std::size_t columns() const;
 				item_proxy & text(std::size_t pos, const nana::string&);
 				item_proxy & text(std::size_t pos, nana::string&&);
@@ -190,7 +192,6 @@ namespace nana{ namespace gui{
 
 				//Undocumented method
 				essence_t * _m_ess() const;
-				std::pair<std::size_t, std::size_t> _m_where() const;
 			private:
 				const nana::any & _m_resolver() const;
 			private:

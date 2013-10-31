@@ -1438,7 +1438,7 @@ namespace detail
 			(owner && (impl_->menu.owner == owner))
 			)
 		{
-			return (is_keyboard_condition ? (impl_->menu.has_keyboard ? impl_->menu.window : 0) : impl_->menu.window);
+			return ((!is_keyboard_condition) || impl_->menu.has_keyboard ? impl_->menu.window : 0);
 		}
 
 		return 0;
@@ -1652,40 +1652,40 @@ namespace detail
 		if(wd_manager.available(wd))
 		{
 			thread_context * thrd = get_thread_context(wd->thread_id);
-			if(thrd)
+			if(0 == thrd)
+				return;
+			
+			if((wd->predef_cursor == nana::gui::cursor::arrow) && (thrd->cursor.window == wd))
 			{
-				if((wd->predef_cursor == nana::gui::cursor::arrow) && (thrd->cursor.window == wd))
+				if(thrd->cursor.predef_cursor != nana::gui::cursor::arrow)
 				{
-					if(thrd->cursor.predef_cursor != nana::gui::cursor::arrow)
-					{
-						SetCursor(wd, nana::gui::cursor::arrow);
-						thrd->cursor.window = 0;
-						thrd->cursor.predef_cursor = nana::gui::cursor::arrow;
-					}
-					return;
+					SetCursor(wd, nana::gui::cursor::arrow);
+					thrd->cursor.window = 0;
+					thrd->cursor.predef_cursor = nana::gui::cursor::arrow;
 				}
+				return;
+			}
 
-				nana::point pos = native_interface::cursor_position();
-				native_window_type native_handle = native_interface::find_window(pos.x, pos.y);
-				if(0 == native_handle)
-					return;
+			nana::point pos = native_interface::cursor_position();
+			native_window_type native_handle = native_interface::find_window(pos.x, pos.y);
+			if(0 == native_handle)
+				return;
 
-				native_interface::calc_window_point(native_handle, pos);
-				if(wd != wd_manager.find_window(native_handle, pos.x, pos.y))
-					return;
+			native_interface::calc_window_point(native_handle, pos);
+			if(wd != wd_manager.find_window(native_handle, pos.x, pos.y))
+				return;
 
-				if(wd->predef_cursor != thrd->cursor.predef_cursor)
+			if(wd->predef_cursor != thrd->cursor.predef_cursor)
+			{
+				if(thrd->cursor.predef_cursor != nana::gui::cursor::arrow)
+					thrd->cursor.window = 0;
+
+				if(wd->predef_cursor != cursor::arrow)
 				{
-					if(thrd->cursor.predef_cursor != nana::gui::cursor::arrow)
-						thrd->cursor.window = 0;
-
-					if(wd->predef_cursor != cursor::arrow)
-					{
-						thrd->cursor.window = wd;
-						SetCursor(wd, wd->predef_cursor);
-					}
-					thrd->cursor.predef_cursor = wd->predef_cursor;
+					thrd->cursor.window = wd;
+					SetCursor(wd, wd->predef_cursor);
 				}
+				thrd->cursor.predef_cursor = wd->predef_cursor;
 			}
 		}
 	}

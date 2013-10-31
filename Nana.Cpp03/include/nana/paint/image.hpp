@@ -33,14 +33,14 @@ namespace paint
 		image & operator=(const image& rhs);
 		bool open(const nana::string& filename);
 		bool empty() const;
-		operator void*() const;
+		operator const void*() const;
 		void close();
 		nana::size size() const;
 		void paste(graphics& dst, int x, int y) const;
 		void paste(const nana::rectangle& r_src, graphics& dst, const nana::point& p_dst) const;
 		void stretch(const nana::rectangle& r_src, graphics& dst, const nana::rectangle& r_dst) const;
 	private:
-		nana::refer<image_impl_interface*> ref_image_;
+		nana::shared_ptr<image_impl_interface> image_ptr_;
 	};//end class image
 
 }//end namespace paint

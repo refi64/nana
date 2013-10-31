@@ -18,6 +18,7 @@
 #include "widgets/form.hpp"
 #include "drawing.hpp"
 #include "msgbox.hpp"
+#include "../exceptions.hpp"
 
 namespace nana
 {

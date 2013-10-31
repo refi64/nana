@@ -228,7 +228,7 @@ namespace API
 	bool calc_screen_point(window, point&);
 	bool calc_window_point(window, point&);
 
-	nana::gui::window find_window(const nana::point& mspos);
+	window find_window(const nana::point& mspos);
 
 	void register_menu_window(window, bool has_keyboard);
 	bool attach_menubar(window menubar);
@@ -238,6 +238,7 @@ namespace API
 	bool is_window_zoomed(window, bool ask_for_max);
 
 	nana::gui::mouse_action::t mouse_action(window);
+	nana::gui::element_state::t element_state(window);
 }//end namespace API
 }//end namespace gui
 }//end namespace nana

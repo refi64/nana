@@ -15,9 +15,9 @@ namespace nana{	namespace paint
 			{
 				void operator()(HICON handle) const;
 			};//end struct handle_deleter
-			typedef nana::refer<HICON, handle_deleter> refer_type;
+			typedef nana::shared_ptr<HICON> ptr_t;
 #else
-			typedef nana::refer<int*> refer_type;
+			typedef nana::shared_ptr<int*> ptr_t;
 #endif
 		public:
 			image_ico(bool is_ico);
@@ -30,11 +30,11 @@ namespace nana{	namespace paint
 			virtual void paste(const nana::rectangle& src_r, graph_reference graph, int x, int y) const;
 			virtual void stretch(const nana::rectangle&, graph_reference graph, const nana::rectangle& r) const;
 
-			const refer_type & ref() const;
+			const ptr_t & ptr() const;
 		private:
 			const bool	is_ico_;
 			nana::size	size_;
-			refer_type refer_;
+			ptr_t		ptr_;
 		};//end class image_ico
 	}
 }//end namespace paint

@@ -12,7 +12,8 @@
 #ifndef NANA_PAINT_PIXEL_BUFFER_HPP
 #define NANA_PAINT_PIXEL_BUFFER_HPP
 
-#include <nana/paint/graphics.hpp>
+#include <nana/gui/basis.hpp>
+#include <nana/memory.hpp>
 
 namespace nana{	namespace paint
 {
@@ -32,6 +33,7 @@ namespace nana{	namespace paint
 	{
 		struct pixel_buffer_storage;
 	public:
+		
 		pixel_buffer();
 		pixel_buffer(drawable_type, const nana::rectangle& want_rectangle);
 		pixel_buffer(drawable_type, std::size_t top, std::size_t lines);
@@ -82,7 +84,7 @@ namespace nana{	namespace paint
 		void blur(const nana::rectangle& r, std::size_t radius);
 
 	private:
-		nana::refer<pixel_buffer_storage*> storage_;
+		nana::shared_ptr<pixel_buffer_storage> storage_;
 	};
 }//end namespace paint
 }//end namespace nana

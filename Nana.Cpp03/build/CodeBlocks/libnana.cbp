@@ -59,6 +59,7 @@
 		<Unit filename="../../source/gui/dragger.cpp" />
 		<Unit filename="../../source/gui/drawing.cpp" />
 		<Unit filename="../../source/gui/effects.cpp" />
+		<Unit filename="../../source/gui/element.cpp" />
 		<Unit filename="../../source/gui/functional.cpp" />
 		<Unit filename="../../source/gui/layout.cpp" />
 		<Unit filename="../../source/gui/layout_utility.cpp" />
@@ -93,6 +94,7 @@
 		<Unit filename="../../source/gui/widgets/treebox.cpp" />
 		<Unit filename="../../source/gui/widgets/widget.cpp" />
 		<Unit filename="../../source/gui/wvl.cpp" />
+		<Unit filename="../../source/memory.cpp" />
 		<Unit filename="../../source/paint/detail/image_process_provider.cpp" />
 		<Unit filename="../../source/paint/detail/native_paint_interface.cpp" />
 		<Unit filename="../../source/paint/gadget.cpp" />

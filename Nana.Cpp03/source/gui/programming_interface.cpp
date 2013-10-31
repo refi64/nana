@@ -1266,6 +1266,29 @@ namespace API
 			return iwd->flags.action;
 		return nana::gui::mouse_action::normal;
 	}
+	
+	nana::gui::element_state::t element_state(window wd)
+	{
+		internal_scope_guard isg;
+		restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+		if(restrict::window_manager.available(iwd))
+		{
+			const bool is_focused = (iwd->root_widget->other.attribute.root->focus == iwd);
+			switch(iwd->flags.action)
+			{
+			case gui::mouse_action::normal:
+				return (is_focused ? gui::element_state::focus_normal : gui::element_state::normal);
+			case gui::mouse_action::over:
+				return (is_focused ? gui::element_state::focus_hovered : gui::element_state::hovered);
+			case gui::mouse_action::pressed:
+				return gui::element_state::pressed;
+			default:
+				if(false == iwd->flags.enabled)
+					return gui::element_state::disabled;
+			}
+		}
+		return gui::element_state::normal;
+	}
 }//end namespace API
 }//end namespace gui
 }//end namespace nana

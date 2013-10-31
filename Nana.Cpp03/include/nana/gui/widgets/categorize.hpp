@@ -109,8 +109,8 @@ namespace nana{	namespace gui
 				bool childset_erase(const nana::string&);
 				bool clear();
 
-				//splitstr
-				//@brief: Sets the splitstr. If the parameter will be ingored if it is an empty string.
+				///splitstr
+				///@brief: Sets the splitstr. If the parameter will be ingored if it is an empty string.
 				void splitstr(const nana::string&);
 				const nana::string& splitstr() const;
 				
@@ -148,26 +148,23 @@ namespace nana{	namespace gui
 		}//end namespace categorize
 	}//end namespace drawerbase
 
+	///A categorize widget is used for representing the architecture of categories and
+	///which category is chosen.
 	template<typename T>
 	class categorize
 		: public widget_object<category::widget_tag, drawerbase::categorize::trigger>
 	{
 	public:
+		///The value type.
 		typedef T value_type;
+
+		///The methods for extra events.
 		typedef drawerbase::categorize::extra_events<categorize> ext_event_type;
+
+		///The interface for user-defined renderer.
 		typedef drawerbase::categorize::renderer renderer;
 
-		template<typename ExtRenderer>
-		class renderer_cloneable
-			: public pat::cloneable<ExtRenderer, renderer>
-		{
-		public:
-			renderer_cloneable(){}
-			renderer_cloneable(const ExtRenderer& rnd)
-				: pat::cloneable<ExtRenderer, renderer>(rnd)
-			{}
-		};
-
+		///The default construction without creating it.
 		categorize()
 		{}
 
@@ -178,14 +175,14 @@ namespace nana{	namespace gui
 
 		categorize(window wd, const nana::string& text, bool visible = true)
 		{
-				create(wd, rectangle(), visible);
-				caption(text);
+			create(wd, rectangle(), visible);
+			caption(text);
 		}
 
 		categorize(window wd, const nana::char_t* text, bool visible = true)
 		{
-				create(wd, rectangle(), visible);
-				caption(text);
+			create(wd, rectangle(), visible);
+			caption(text);
 		}
 
 		categorize(window wd, const rectangle& r = rectangle(), bool visible = true)

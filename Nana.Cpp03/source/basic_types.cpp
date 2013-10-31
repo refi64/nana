@@ -160,6 +160,12 @@ namespace nana
 			height -= (pixels << 1);
 			return *this;
 		}
+
+		bool rectangle::is_hit(int pos_x, int pos_y) const
+		{
+			return	(x <= pos_x && pos_x < x + static_cast<int>(width)) &&
+					(y <= pos_y && pos_y < y + static_cast<int>(height));		
+		}
 	//end struct rectangle
 
 	//struct arrange

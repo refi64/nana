@@ -28,6 +28,20 @@ namespace gui
 		struct event_handle_impl{};
 	}
 
+	/// The type defines some states for checkbox, and
+	/// this is a strong-typed enumeration type.
+	struct checkstate
+	{
+		enum t
+		{
+			unchecked,
+			checked,
+			partial
+		};
+	};
+
+	/// The type defines the borders for a window, and
+	/// this is a strong-typed enumeration type.
 	struct window_border
 	{
 		enum t
@@ -38,6 +52,8 @@ namespace gui
 		};
 	};
 
+	/// The type defines the modes for bground effect, and
+	/// this is a strong-typed enumeration type.
 	struct bground_mode
 	{
 		enum t

@@ -29,51 +29,52 @@ namespace paint
 {
 	namespace detail
 	{
-		//struct graphics_handle_deleter
-		void graphics_handle_deleter::operator()(const nana::detail::drawable_impl_type* x) const
+		struct drawable_deleter
+		{
+			void operator()(const drawable_type p) const
 			{
 #if defined(NANA_WINDOWS)
-				delete x;
+				delete p;
 #elif defined(NANA_X11)
-				if(x)
+				if(p)
 				{
 					Display* disp = reinterpret_cast<Display*>(nana::detail::platform_spec::instance().open_display());
 	#if defined(NANA_UNICODE)
-					::XftDrawDestroy(x->xftdraw);
+					::XftDrawDestroy(p->xftdraw);
 	#endif
-					::XFreeGC(disp, x->context);
-					::XFreePixmap(disp, x->pixmap);
-					delete x;
+					::XFreeGC(disp, p->context);
+					::XFreePixmap(disp, p->pixmap);
+					delete p;
 				}
 #endif
 			}
-		//end struct graphics_handle_deleter
+		};//end class drawable_deleter
 	}//end namespace detail
 
 	//class font
 		struct font::impl_type
 		{
-			typedef nana::detail::platform_spec::font_refer_t refer_t;
-			refer_t refer;
+			typedef nana::detail::platform_spec::font_ptr_t font_ptr_t;
+			font_ptr_t font_ptr;
 		};
 
 		font::font()
 			: impl_(new impl_type)
 		{
-			impl_->refer = nana::detail::platform_spec::instance().default_native_font();
+			impl_->font_ptr = nana::detail::platform_spec::instance().default_native_font();
 		}
 
 		font::font(drawable_type dw)
 			: impl_(new impl_type)
 		{
-			impl_->refer = dw->font;
+			impl_->font_ptr = dw->font;
 		}
 
 		font::font(const font& rhs)
 			: impl_(new impl_type)
 		{
 			if(rhs.impl_)
-				impl_->refer = rhs.impl_->refer;
+				impl_->font_ptr = rhs.impl_->font_ptr;
 		}
 
 		font::font(const nana::char_t* name, unsigned size, bool bold, bool italic, bool underline, bool strike_out)
@@ -90,7 +91,7 @@ namespace paint
 
 		bool font::empty() const
 		{
-			return ((0 == impl_) || impl_->refer.empty());
+			return ((0 == impl_) || (! impl_->font_ptr));
 		}
 
 		void font::make(const nana::char_t* name, unsigned size, bool bold, bool italic, bool underline, bool strike_out)
@@ -103,65 +104,65 @@ namespace paint
 		{
 			if(impl_)
 			{
-				impl_type::refer_t f = nana::detail::platform_spec::instance().make_native_font(name, height, weight, italic, underline, strike_out);
-				if(!f.empty())
-					impl_->refer = f;
+				::nana::detail::platform_spec::font_ptr_t p = nana::detail::platform_spec::instance().make_native_font(name, height, weight, italic, underline, strike_out);
+				if(p)
+					impl_->font_ptr = p;
 			}
 		}
 
 		nana::string font::name() const
 		{
-			if(this->empty()) return nana::string();
-			return impl_->refer.handle()->name;
+			if(empty()) return nana::string();
+			return impl_->font_ptr->name;
 		}
 
 		unsigned font::size() const
 		{
 			if(this->empty()) return 0;
-			return nana::detail::platform_spec::instance().font_height_to_size(impl_->refer.handle()->height);
+			return nana::detail::platform_spec::instance().font_height_to_size(impl_->font_ptr->height);
 		}
 
 		bool font::bold() const
 		{
 			if(this->empty()) return false;
-			return (impl_->refer.handle()->weight >= 700);
+			return (impl_->font_ptr->weight >= 700);
 		}
 
 		unsigned font::height() const
 		{
 			if(this->empty()) return false;
-			return (impl_->refer.handle()->height);
+			return (impl_->font_ptr->height);
 		}
 
 		unsigned font::weight() const
 		{
 			if(this->empty()) return false;
-			return (impl_->refer.handle()->weight);
+			return (impl_->font_ptr->weight);
 		}
 
 		bool font::italic() const
 		{
 			if(this->empty()) return false;
-			return (impl_->refer.handle()->italic);
+			return (impl_->font_ptr->italic);
 		}
 
 		native_font_type font::handle() const
 		{
 			if(this->empty())	return 0;
-			return reinterpret_cast<native_font_type>(impl_->refer.handle()->handle);
+			return reinterpret_cast<native_font_type>(impl_->font_ptr->handle);
 		}
 
 		void font::release()
 		{
 			if(impl_)
-				impl_->refer.release();
+				impl_->font_ptr.reset();
 		}
 
 		font & font::operator=(const font& rhs)
 		{
 			if(impl_ && rhs.impl_ && (this != &rhs))
 			{
-				impl_->refer = rhs.impl_->refer;
+				impl_->font_ptr = rhs.impl_->font_ptr;
 			}
 			return *this;
 		}
@@ -170,17 +171,16 @@ namespace paint
 		{
 			if(this->empty() == rhs.empty())
 			{
-				return (this->empty() || (impl_->refer.handle()->handle == rhs.impl_->refer.handle()->handle));
+				return (this->empty() || (impl_->font_ptr->handle == rhs.impl_->font_ptr->handle));
 			}
 			return false;
 		}
 
 		bool font::operator!=(const font& rhs) const
 		{
-			if(this->empty() == rhs.empty())
-			{
-				return ((this->empty() == false) && (impl_->refer.handle()->handle != rhs.impl_->refer.handle()->handle));
-			}
+			if(empty() == rhs.empty())
+				return ((empty() == false) && (impl_->font_ptr->handle != rhs.impl_->font_ptr->handle));
+
 			return true;
 		}
 	//end class font
@@ -203,7 +203,7 @@ namespace paint
 		}
 
 		graphics::graphics(const graphics& rhs)
-			:ref_(rhs.ref_), handle_(rhs.handle_), size_(rhs.size_), changed_(true)
+			:	dwptr_(rhs.dwptr_), handle_(rhs.handle_), size_(rhs.size_), changed_(true)
 		{}
 
 		graphics& graphics::operator=(const graphics& rhs)
@@ -211,7 +211,7 @@ namespace paint
 			if(this != &rhs)
 			{
 				size_ = rhs.size_;
-				ref_ = rhs.ref_;
+				dwptr_ = rhs.dwptr_;
 				handle_ = rhs.handle_;
 				if(changed_ == false) changed_ = true;
 			}
@@ -253,12 +253,12 @@ namespace paint
 			{
 				nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
 
-				//The object will be delete while ref_ is performing a release.
+				//The object will be delete while dwptr_ is performing a release.
 				drawable_type dw = new nana::detail::drawable_impl_type;
 				//Reuse the old font
-				if(!ref_.empty())
+				if(dwptr_)
 				{
-					drawable_type reuse = ref_.handle();
+					drawable_type reuse = dwptr_.get();
 					dw->font = reuse->font;
 					dw->string.tab_length = reuse->string.tab_length;
 				}
@@ -283,7 +283,7 @@ namespace paint
 				if(bmp)
 				{
 					::DeleteObject((HBITMAP)::SelectObject(cdc, bmp));
-					::DeleteObject(::SelectObject(cdc, dw->font.handle()->handle));
+					::DeleteObject(::SelectObject(cdc, dw->font->handle));
 
 					dw->context = cdc;
 					dw->pixmap = bmp;
@@ -315,7 +315,7 @@ namespace paint
 #if defined(NANA_WINDOWS)
 					dw->bytes_per_line = width * sizeof(pixel_rgb_t);
 #endif
-					ref_ = dw;
+					dwptr_ = nana::shared_ptr<nana::detail::drawable_impl_type>(dw, detail::drawable_deleter());
 					handle_ = dw;
 					size_.width = width;
 					size_.height = height;
@@ -339,9 +339,9 @@ namespace paint
 		{
 			if(handle_ && (false == f.empty()))
 			{
-				handle_->font = f.impl_->refer;
+				handle_->font = f.impl_->font_ptr;
 #if defined(NANA_WINDOWS)
-				::SelectObject(handle_->context, reinterpret_cast<HFONT>(f.impl_->refer.handle()->handle));
+				::SelectObject(handle_->context, reinterpret_cast<HFONT>(f.impl_->font_ptr->handle));
 #endif
 				handle_->string.tab_pixels = detail::raw_text_extent_size(handle_, STR("\t"), 1).width;
 				handle_->string.whitespace_pixels = detail::raw_text_extent_size(handle_, STR(" "), 1).width;
@@ -1018,6 +1018,23 @@ namespace paint
 #endif
 			}
 		}
+		
+		void graphics::paste(const nana::rectangle& r_src, graphics& dst, int x, int y)
+		{
+			if(handle_ && dst.handle_ && handle_ != dst.handle_)
+			{
+#if defined(NANA_WINDOWS)
+				::BitBlt(dst.handle_->context, x, y, r_src.width, r_src.height, handle_->context, r_src.x, r_src.y, SRCCOPY);
+#elif defined(NANA_X11)
+				Display* display = nana::detail::platform_spec::instance().open_display();
+				::XCopyArea(nana::detail::platform_spec::instance().open_display(),
+						handle_->pixmap, dst.handle_->pixmap, handle_->context,
+						r_src.x, r_src.y, r_src.width, r_src.height, x, y);
+
+				::XFlush(display);
+#endif
+			}
+		}
 
 		void graphics::stretch(const nana::rectangle& src_r, graphics& dst, const nana::rectangle& r) const
 		{
@@ -1060,7 +1077,7 @@ namespace paint
 
 		void graphics::release()
 		{
-			ref_.release();
+			dwptr_.reset();
 			handle_ = 0;
 			size_.width = size_.height = 0;
 		}

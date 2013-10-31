@@ -59,6 +59,7 @@
 		<Unit filename="../../source/gui/dragger.cpp" />
 		<Unit filename="../../source/gui/drawing.cpp" />
 		<Unit filename="../../source/gui/effects.cpp" />
+		<Unit filename="../../source/gui/element.cpp" />
 		<Unit filename="../../source/gui/filebox.cpp" />
 		<Unit filename="../../source/gui/functional.cpp" />
 		<Unit filename="../../source/gui/layout.cpp" />

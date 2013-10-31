@@ -4,6 +4,7 @@
 #include <nana/gui/widgets/button.hpp>
 #include <nana/gui/widgets/label.hpp>
 #include <nana/gui/tooltip.hpp>
+#include <nana/paint/gadget.hpp>
 #include <vector>
 
 namespace nana{ namespace gui{ namespace drawerbase{ namespace login

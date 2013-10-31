@@ -91,6 +91,7 @@ namespace nana{ namespace gui{
 		}//end namespace slider
 	}//end namespace drawerbase
 
+	/// The slider can be used for dragging for tracking
 	class slider
 		: public widget_object<category::widget_tag, drawerbase::slider::trigger>
 	{
@@ -100,30 +101,18 @@ namespace nana{ namespace gui{
 		typedef drawerbase::slider::seekdir seekdir;
 		typedef drawerbase::slider::extra_events ext_event_type;
 
-		template<typename ExtRenderer>
-		class renderer_cloneable
-			: public pat::cloneable<ExtRenderer, renderer>
-		{
-		public:
-			renderer_cloneable(){}
-			renderer_cloneable(const ExtRenderer& rnd)
-				: pat::cloneable<ExtRenderer, renderer>(rnd)
-			{}
-		};
-
-		template<typename ExtProvider>
-		class provider_cloneable
-			: public pat::cloneable<ExtProvider, provider>
-		{
-		public:
-			provider_cloneable(){}
-			provider_cloneable(const ExtProvider& pvd)
-				: pat::cloneable<ExtProvider, provider>(pvd)
-			{}
-		};
-
+		/// The default constructor without creating a widget.
 		slider();
+
+		/// The constructor that creates a widget.
+		/// @param window, a handle to the parent window of the widget being created.
+		/// @param visible, specifying the visible of the widget after creating.
 		slider(window, bool visible);
+
+		/// The constructor that creates a widget.
+		/// @param window, a handle to the parent window of the widget being created.
+		/// @param rectangle, the size and position of the widget in its parent window coordinate.
+		/// @param visible, specifying the visible of the widget after creating.
 		slider(window, const rectangle& = rectangle(), bool visible = true);
 		ext_event_type& ext_event() const;
 		void seek(seekdir::t);
@@ -136,9 +125,9 @@ namespace nana{ namespace gui{
 		unsigned move_step(bool forward);
 		unsigned adorn() const;
 
-		pat::cloneable_interface<renderer>& ext_renderer();
-		void ext_renderer(const pat::cloneable_interface<renderer>&);
-		void ext_provider(const pat::cloneable_interface<provider>&);
+		pat::cloneable<renderer>& ext_renderer();
+		void ext_renderer(const pat::cloneable<renderer>&);
+		void ext_provider(const pat::cloneable<provider>&);
 		void transparent(bool);
 		bool transparent() const;
 	};

@@ -18,6 +18,9 @@
 
 #if defined(NANA_WINDOWS)
 	//TryEnterCriticalSection requires _WIN32_WINNT >= 0x400
+	#ifdef _WIN32_WINNT
+		#undef _WIN32_WINNT
+	#endif
 	#define _WIN32_WINNT 0x0400
 	#include <windows.h>
 #elif defined(NANA_LINUX)

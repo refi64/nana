@@ -22,6 +22,7 @@ namespace paint
 	class image
 	{
 		friend class image_accessor;
+		typedef bool (image::* unspecified_bool_t)() const; 
 	public:
 		class image_impl_interface;
 
@@ -35,7 +36,7 @@ namespace paint
 		image& operator=(image&&);
 		bool open(const nana::string& filename);
 		bool empty() const;
-		operator void*() const;
+		operator unspecified_bool_t() const;
 		void close();
 		nana::size size() const;
 		void paste(graphics& dst, int x, int y) const;

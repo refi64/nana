@@ -147,16 +147,8 @@ namespace nana{ namespace gui{
 		menu& item_pixels(unsigned);
 		unsigned item_pixels() const;
 
-		template<typename Renderer>
-		void renderer(const Renderer& rd)
-		{
-			const pat::cloneable_interface<renderer_interface> * rdptr = pat::cloneable<Renderer, renderer_interface>(rd).clone();
-			renderer(rdptr);
-			rdptr->self_delete();
-		}
-		void renderer(const pat::cloneable_interface<renderer_interface>*);
-		pat::cloneable_interface<renderer_interface>* renderer() const;
-
+		void renderer(const pat::cloneable<renderer_interface>&);
+		const pat::cloneable<renderer_interface>& renderer() const;
 	private:
 		void _m_destroy_menu_window();
 	private:

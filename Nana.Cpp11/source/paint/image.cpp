@@ -224,9 +224,12 @@ namespace paint
 				}
 
 				if(helper)
+				{
 					image_ptr_ = std::shared_ptr<image_impl_interface>(helper);
+					return helper->open(filename.data());
+				}
 			}
-			return (helper ? helper->open(filename.c_str()) : false);
+			return false;
 		}
 
 		bool image::empty() const
@@ -234,9 +237,9 @@ namespace paint
 			return ((nullptr == image_ptr_) || image_ptr_->empty());
 		}
 
-		image::operator void *() const
+		image::operator unspecified_bool_t() const
 		{
-			return (image_ptr_ ? const_cast<image*>(this) : nullptr);
+			return (image_ptr_ ? &image::empty : nullptr);
 		}
 
 		void image::close()

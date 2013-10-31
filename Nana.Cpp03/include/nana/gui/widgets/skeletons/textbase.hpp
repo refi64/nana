@@ -14,7 +14,8 @@
 #define NANA_GUI_WIDGET_DETAIL_TEXTBASE_HPP
 #include <string>
 #include <deque>
-#include <nana/refer.hpp>
+//#include <nana/refer.hpp>
+#include <nana/memory.hpp>
 #include <fstream>
 #include <nana/charset.hpp>
 
@@ -301,9 +302,9 @@ namespace skeletons
 		{
 			if(pos < text_cont_.size())
 				return text_cont_[pos];
-			if(nullstr_.empty())
-				nullstr_ = string_type();
-			return nullstr_.handle();
+			if(! nullstr_)
+				nullstr_ = nana::shared_ptr<string_type>(new string_type);
+			return *nullstr_;
 		}
 
 		std::pair<size_t, size_t> max_line() const
@@ -511,7 +512,7 @@ namespace skeletons
 
 		mutable bool		changed_;
 		mutable std::string	filename_;	//A string for saved filename
-		mutable nana::refer<string_type> nullstr_;
+		mutable nana::shared_ptr<string_type> nullstr_;
 
 		struct attr_max
 		{

@@ -400,25 +400,14 @@ namespace nana{ namespace gui{
 					basis_.graph = 0;
 				}
 
-				pat::cloneable_interface<item_renderer> & ext_renderer() const
+				const pat::cloneable<item_renderer> & ext_renderer() const
 				{
-					return (*basis_.cloneable_renderer);
+					return basis_.renderer;
 				}
 
-				void ext_renderer(const pat::cloneable_interface<item_renderer>& ir)
+				void ext_renderer(const pat::cloneable<item_renderer>& rd)
 				{
-					if(basis_.cloneable_renderer != &ir)
-					{
-						pat::cloneable_interface<item_renderer>* odi = basis_.cloneable_renderer;
-						pat::cloneable_interface<item_renderer>* ndi = ir.clone();
-						if(ndi && (odi != ndi))
-						{
-							basis_.cloneable_renderer = ndi;
-							basis_.renderer = &(ndi->refer());
-							if(odi)
-								odi->self_delete();
-						}
-					}
+					basis_.renderer = rd;
 				}
 
 				void event_trigger(internal_event_trigger* iet)
@@ -1131,8 +1120,7 @@ namespace nana{ namespace gui{
 				{
 					nana::gui::window wd;
 					nana::paint::graphics * graph;
-					pat::cloneable_interface<item_renderer> * cloneable_renderer;
-					item_renderer	* renderer;
+					pat::cloneable<item_renderer> renderer;
 					unsigned max_pixels;
 					unsigned min_pixels;
 					unsigned item_pixels;
@@ -1140,13 +1128,11 @@ namespace nana{ namespace gui{
 					std::size_t active;
 
 					basis_tag()
-						:	wd(0), graph(0), renderer(0),
+						:	wd(0), graph(0),
+							renderer(def_renderer()),
 							max_pixels(250), min_pixels(100), item_pixels(max_pixels), scroll_pixels(0),
 							active(npos)
 					{
-						//renderer = new def_renderer;
-						cloneable_renderer = new pat::cloneable<def_renderer, item_renderer>;
-						renderer = &cloneable_renderer->refer();
 					}
 				}basis_;
 			};
@@ -1187,12 +1173,12 @@ namespace nana{ namespace gui{
 					return layouter_->at_no_bound_check(i);
 				}
 
-				pat::cloneable_interface<item_renderer> & trigger::ext_renderer() const
+				const pat::cloneable<item_renderer> & trigger::ext_renderer() const
 				{
 					return layouter_->ext_renderer();
 				}
 
-				void trigger::ext_renderer(const pat::cloneable_interface<item_renderer>& ir)
+				void trigger::ext_renderer(const pat::cloneable<item_renderer>& ir)
 				{
 					layouter_->ext_renderer(ir);
 				}

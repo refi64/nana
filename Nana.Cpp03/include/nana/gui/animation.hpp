@@ -13,9 +13,8 @@
 #define NANA_GUI_ANIMATION_HPP
 
 #include <nana/paint/image.hpp>
-
 #include <nana/functor.hpp>
-#include <nana/refer.hpp>
+#include <nana/memory.hpp>
 
 
 namespace nana{	namespace gui
@@ -33,12 +32,7 @@ namespace nana{	namespace gui
 		void push_back(const paint::image&);
 		void push_back(framebuilder& fb, std::size_t length);
 	private:
-		struct impl_deleter
-		{
-			void operator()(impl*) const;
-		};
-
-		nana::refer<impl*, impl_deleter> impl_;
+		nana::shared_ptr<impl> impl_;
 	};
 
 	class animation

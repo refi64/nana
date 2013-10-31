@@ -72,6 +72,38 @@ namespace gui
 
 			class tooltip_window;
 
+			//item_locator should be defined before the definition of basic_implement
+			class trigger::item_locator
+			{
+			public:
+				typedef tree_cont_type::node_type node_type;
+
+				item_locator(implement * impl, int item_pos, int x, int y);
+				int operator()(node_type &node, int affect);
+				node_type * node() const;
+				component what() const;
+				bool item_body() const;
+
+				nana::rectangle text_pos() const;
+			private:
+				trigger::implement * impl_;
+				nana::point item_pos_;
+				const nana::point pos_;		//Mouse pointer position
+				component	what_;
+				node_type * node_;
+				node_attribute node_attr_;
+				nana::rectangle node_r_;
+				nana::rectangle node_text_r_;
+			};
+
+			struct pred_allow_child
+			{
+				bool operator()(const trigger::tree_cont_type::node_type& node)
+				{
+					return node.value.second.expanded;
+				}
+			};
+
 			//struct implement
 			//@brief:	some data for treebox trigger
 			template<typename Renderer>
@@ -161,7 +193,7 @@ namespace gui
 
 				void assign_node_attr(node_attribute& ndattr, const node_type* node) const
 				{
-					ndattr.has_children = (nullptr != node->child); 
+					ndattr.has_children = (nullptr != node->child);
 					ndattr.expended = node->value.second.expanded;
 					ndattr.text = node->value.second.text;
 					ndattr.checked = node->value.second.checked;
@@ -435,9 +467,9 @@ namespace gui
 							shape.prev_first_value = 0;
 							scroll.create(*data.widget_ptr, nana::rectangle(data.graph->width() - 16, 0, 16, data.graph->height()));
 							auto scroll_fn = nana::make_fun(*this, &basic_implement::event_scrollbar);
-							scroll.make_event<events::mouse_down>(scroll_fn);
-							scroll.make_event<events::mouse_move>(scroll_fn);
-							scroll.make_event<events::mouse_wheel>(scroll_fn);
+							scroll.template make_event<events::mouse_down>(scroll_fn);
+							scroll.template make_event<events::mouse_move>(scroll_fn);
+							scroll.template make_event<events::mouse_wheel>(scroll_fn);
 						}
 
 						scroll.amount(visual_items);
@@ -513,7 +545,7 @@ namespace gui
 							if(nodeimg.expanded.empty() == false)	return &nodeimg.expanded;
 
 						if(node->value.second.expanded == false && state == 0)
-							if(nodeimg.highlighted.empty() == false)	return &nodeimg.highlighted;
+							if(nodeimg.hovered.empty() == false)	return &nodeimg.hovered;
 
 						return &nodeimg.normal;
 					}
@@ -524,7 +556,7 @@ namespace gui
 				{
 					int xpos = attr.tree_cont.indent_size(shape.first) * shape.indent_pixels - shape.offset_x;
 					item_locator nl(this, xpos, x, y);
-					attr.tree_cont.for_each<item_locator&>(shape.first, nl);
+					attr.tree_cont.template for_each<item_locator&>(shape.first, nl);
 
 					bool redraw = false;
 					node_state.event_node = nl.node();
@@ -570,13 +602,13 @@ namespace gui
 						node_state.tooltip->impl().assign(node_attr, &data.renderer, &data.comp_placer);
 						node_state.tooltip->show();
 
-						node_state.tooltip->make_event<events::mouse_leave>(*this, &basic_implement::close_tooltip_window);
-						node_state.tooltip->make_event<events::mouse_move>(*this, &basic_implement::mouse_move_tooltip_window);
+						node_state.tooltip->template make_event<events::mouse_leave>(*this, &basic_implement::close_tooltip_window);
+						node_state.tooltip->template make_event<events::mouse_move>(*this, &basic_implement::mouse_move_tooltip_window);
 
 						auto click_fn = nana::make_fun(*this, &basic_implement::click_tooltip_window);
-						node_state.tooltip->make_event<events::mouse_down>(click_fn);
-						node_state.tooltip->make_event<events::mouse_up>(click_fn);
-						node_state.tooltip->make_event<events::dbl_click>(click_fn);
+						node_state.tooltip->template make_event<events::mouse_down>(click_fn);
+						node_state.tooltip->template make_event<events::mouse_up>(click_fn);
+						node_state.tooltip->template make_event<events::dbl_click>(click_fn);
 					}
 				}
 
@@ -728,8 +760,6 @@ namespace gui
 
 				std::size_t item_proxy::size() const
 				{
-					trigger::node_type * child = node_->child;
-					
 					std::size_t n = 0;
 					for(trigger::node_type * child = node_->child; child; child = child->child)
 						++n;
@@ -829,14 +859,14 @@ namespace gui
 					//Not empty
 					if(node_ && trigger_)
 						return ((node_ == rhs.node_) && (trigger_ == rhs.trigger_));
-					
+
 					//Both are empty
 					return true;
 				}
 
 				bool item_proxy::operator!=(const item_proxy& rhs) const
 				{
-					return !(this->operator==(rhs));					
+					return !(this->operator==(rhs));
 				}
 
 				nana::any& item_proxy::_m_value()
@@ -1011,7 +1041,7 @@ namespace gui
 						gadget::arrow_16_pixels(graph, attr.area.x, attr.area.y + (attr.area.height - 16) / 2, (attr.mouse_pointed ? 0x1CC4F7 : 0x0), style, dir);
 					}
 				}
-				
+
 				void crook(graph_reference graph, nana::color_t bgcolor, nana::color_t fgcolor, const compset_interface * compset) const override
 				{
 					comp_attribute_t attr;
@@ -1068,20 +1098,16 @@ namespace gui
 			};
 
 
-			class trigger::item_locator
-			{
-			public:
-				typedef tree_cont_type::node_type node_type;
-
-				item_locator(implement * impl, int item_pos, int x, int y)
+			//class trigger::item_locator
+				trigger::item_locator::item_locator(implement * impl, int item_pos, int x, int y)
 					:	impl_(impl),
 						item_pos_(item_pos, 1),
-						pos_(x, y), 
-						what_(component::end), 
+						pos_(x, y),
+						what_(component::end),
 						node_(nullptr)
 				{}
 
-				int operator()(node_type &node, int affect)
+				int trigger::item_locator::operator()(node_type &node, int affect)
 				{
 					auto & node_desc = impl_->shape;
 
@@ -1136,38 +1162,29 @@ namespace gui
 					return 2;
 				}
 
-				node_type * node() const
+				trigger::item_locator::node_type * trigger::item_locator::node() const
 				{
 					return node_;
 				}
 
-				component what() const
+				component trigger::item_locator::what() const
 				{
 					return what_;
 				}
 
-				bool item_body() const
+				bool trigger::item_locator::item_body() const
 				{
 					return (component::text == what_ || component::icon == what_ || component::bground == what_);
 				}
 
-				nana::rectangle text_pos() const
+				nana::rectangle trigger::item_locator::text_pos() const
 				{
 					auto r = node_text_r_;
 					r.x += item_pos_.x;
 					r.y += item_pos_.y;
 					return r;
 				}
-			private:
-				trigger::implement * impl_;
-				nana::point item_pos_;
-				const nana::point pos_;		//Mouse pointer position
-				component	what_;
-				node_type * node_;
-				node_attribute node_attr_;
-				nana::rectangle node_r_;
-				nana::rectangle node_text_r_;
-			};
+			//end class item_locator
 
 			class trigger::item_renderer
 				: public compset_interface
@@ -1249,14 +1266,6 @@ namespace gui
 				item_attribute_t node_attr_;
 				nana::rectangle node_r_;
 			};
-
-			struct pred_allow_child
-			{
-				bool operator()(const trigger::tree_cont_type::node_type& node)
-				{
-					return node.value.second.expanded;
-				}
-			};
 		}
 
 		//Treebox Implementation
@@ -1333,7 +1342,7 @@ namespace gui
 					comp_attr.area = item_r_;
 					if(placer_->locate(comp, item_attr_, &comp_attr.area))
 						return true;
-					
+
 					return false;
 				}
 			private:
@@ -1436,7 +1445,7 @@ namespace gui
 					return impl_->data.comp_placer->enabled(component::crook);
 				}
 
-				
+
 				void trigger::check(node_type* node, checkstate cs)
 				{
 					if(checkstate::unchecked != cs)
@@ -1561,7 +1570,7 @@ namespace gui
 						API::update_window(impl_->data.widget_ptr->handle());
 					return x;
 				}
-				
+
 				bool trigger::verify(const void* node) const
 				{
 					return impl_->attr.tree_cont.verify(reinterpret_cast<const node_type*>(node));

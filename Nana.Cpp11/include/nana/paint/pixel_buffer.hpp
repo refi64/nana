@@ -32,6 +32,7 @@ namespace nana{	namespace paint
 	class pixel_buffer
 	{
 		struct pixel_buffer_storage;
+		typedef bool (pixel_buffer:: * unspecified_bool_t)() const;
 	public:
 		pixel_buffer();
 		pixel_buffer(drawable_type, const nana::rectangle& want_rectangle);
@@ -53,7 +54,7 @@ namespace nana{	namespace paint
 
 		bool empty() const;
 
-		operator const void*() const;
+		operator unspecified_bool_t() const;
 
 		std::size_t bytes() const;
 		std::size_t bytes_per_line() const;

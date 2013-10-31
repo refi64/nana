@@ -282,7 +282,7 @@ namespace gui
 				template<typename T>
 				T * value() const
 				{
-					return _m_value().get<T>();
+					return _m_value().template get<T>();
 				}
 
 				template<typename T>

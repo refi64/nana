@@ -425,7 +425,7 @@ namespace paint
 			delete [] dx;
 #elif defined(NANA_X11)
 			Display * disp = nana::detail::platform_spec::instance().open_display();
-			XftFont * xft = handle_->font.handle()->handle;
+			XftFont * xft = handle_->font->handle;
 
 			XGlyphInfo extents;
 			for(std::size_t i = 0; i < len; ++i)
@@ -476,10 +476,10 @@ namespace paint
 				internal_leading = static_cast<unsigned>(tm.tmInternalLeading);
 				return true;
 #elif defined(NANA_X11)
-				if(false == handle_->font.empty())
+				if(handle_->font)
 				{
 	#if defined(NANA_UNICODE)
-					XftFont * fs = reinterpret_cast<XftFont*>(handle_->font.handle()->handle);
+					XftFont * fs = reinterpret_cast<XftFont*>(handle_->font.get()->handle);
 					ascent = fs->ascent;
 					descent = fs->descent;
 					internal_leading = 0;

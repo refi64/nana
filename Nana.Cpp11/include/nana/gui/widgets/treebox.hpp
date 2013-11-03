@@ -24,6 +24,7 @@
 #include <nana/gui/timer.hpp>
 #include <nana/any.hpp>
 #include <nana/pat/cloneable.hpp>
+#include <stdexcept>
 
 namespace nana
 {
@@ -192,6 +193,19 @@ namespace gui
 				item_proxy();
 				item_proxy(trigger*, trigger::node_type*);
 
+				/// Append a child.
+				item_proxy append(const nana::string& key, const nana::string& name);
+
+				/// Append a child with a specified value.
+				template<typename T>
+				item_proxy append(const nana::string& key, const nana::string& name, const T&t)
+				{
+					item_proxy ip = append(key, name);
+					if(false == ip.empty())
+						ip.value(t);
+					return ip;
+				}
+
 				/// Return true if the proxy does not refer to a node
 				bool empty() const;
 
@@ -211,7 +225,7 @@ namespace gui
 				bool selected() const;
 
 				/// Select the node.
-				item_proxy& select();
+				item_proxy& select(bool);
 
 				/// Return the icon.
 				const nana::string& icon() const;
@@ -280,9 +294,18 @@ namespace gui
 				bool operator!=(const item_proxy&) const;
 
 				template<typename T>
-				T * value() const
+				T * value_ptr() const
 				{
 					return _m_value().template get<T>();
+				}
+
+				template<typename T>
+				T& value() const
+				{
+					T* p = _m_value().template get<T>();
+					if(0 == p)
+						throw std::runtime_error("treebox::value<T>() Invalid type of value.");
+					return *p;
 				}
 
 				template<typename T>
@@ -320,11 +343,25 @@ namespace gui
 
 		typedef drawer_trigger_t::ext_event_type ext_event_type;
 		typedef drawerbase::treebox::node_image_tag node_image_type;
+
+		/// The interface of treebox renderer
 		typedef drawerbase::treebox::renderer_interface renderer_interface;
+
+		/// The interface of treebox compset_placer
 		typedef drawerbase::treebox::compset_placer_interface compset_placer_interface;
 
+		/// The default constructor without creating the widget.
 		treebox();
+
+		/// The construct that creates a widget.
+		/// @param wd, A handle to the parent window of the widget being created.
+		/// @param visible, specifying the visible after creating.
 		treebox(window wd, bool visible);
+
+		/// The construct that creates a widget.
+		/// @param wd, A handle to the parent window of the widget being created.
+		/// @param r, the size and position of the widget in its parent window coordinate.
+		/// @param visible, specifying the visible after creating.
 		treebox(window, const nana::rectangle& = rectangle(), bool visible = true);
 
 		template<typename ItemRenderer>
@@ -345,10 +382,15 @@ namespace gui
 
 		const nana::pat::cloneable<compset_placer_interface> & placer() const;
 
+		/// Eanble the widget that draws automatically when it is operating.
+		/// @param bool, whether to enable.
 		void auto_draw(bool);
 
+		/// Enable the checkbox for each item of the widget.
+		/// @param bool, wheter to enable.
 		treebox & checkable(bool enable);
 
+		/// Determinte whether the checkbox is enabled.
 		bool checkable() const;
 
 		ext_event_type& ext_event() const;
@@ -368,6 +410,7 @@ namespace gui
 		void erase(const nana::string& keypath);
 
 		nana::string make_key_path(item_proxy i, const nana::string& splitter) const;
+		item_proxy selected() const;
 	};//end class treebox
 }//end namespace gui
 }//end namespace nana

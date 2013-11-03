@@ -145,7 +145,6 @@ namespace detail
 	class platform_spec
 	{
 	public:
-		//typedef drawable_impl_type::font_refer_t font_refer_t;
 		typedef drawable_impl_type::font_ptr_t font_ptr_t;
 
 		class co_initializer

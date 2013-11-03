@@ -1,11 +1,11 @@
 /*
  *	This is a demo of Nana C++ Library
  *	Author: Jinhao
- *	The demo requires Nana 0.2.5 and C++03 compiler
+ *	The demo requires Nana 0.6
  *	Screenshot at http://sourceforge.net/projects/stdex
  */
 #include <nana/gui/wvl.hpp>
-#include <nana/gui/layout.hpp>
+#include <nana/gui/place.hpp>
 #include <nana/gui/widgets/button.hpp>
 #include <nana/gui/widgets/categorize.hpp>
 #include <nana/gui/widgets/combox.hpp>
@@ -35,24 +35,24 @@ namespace demo
 		tab_page_listbox(window wd)
 			: panel<false>(wd)
 		{
-			gird_.bind(*this);
+			place_.bind(*this);
+			place_.div("<list vertical>");
+
 			listbox_.create(*this);
 			listbox_.append_header(STR("Supported compilers"), 200);
-			listbox_.append_categ(STR("Nana.C++03"));
-			listbox_.append_item(1, STR("GCC 3.4 and later"));
-			listbox_.append_item(1, STR("Visual C++ 2003 and later"));
+			nana::gui::listbox::cat_proxy cat = listbox_.append(STR("Nana.C++03"));
+			cat.push_back(STR("GCC 3.4 and later"));
+			cat.push_back(STR("Visual C++ 2003 and later"));
 
-			listbox_.append_categ(STR("Nana.C++11"));
-			listbox_.append_item(2, STR("GCC 4.6 and later"));
-			listbox_.append_item(2, STR("Visual C++ 2012 and later"));
+			cat = listbox_.append(STR("Nana.C++11"));
+			cat.push_back(STR("GCC 4.6 and later"));
+			cat.push_back(STR("Visual C++ 2012 and later"));
 
 			checkbox_.create(*this);
 			checkbox_.caption(STR("Checkable Listbox"));
 			checkbox_.make_event<events::click>(nana::make_fun(*this, &tab_page_listbox::_m_checked));
 
-			gird_.add(listbox_, 0, 0);
-			gird * vgird = gird_.add(10, 140);
-			vgird->push(checkbox_, 0, 40);
+			place_.field("list")<<listbox_<<5<<place_.fixed(checkbox_, 30);
 		}
 	private:
 		void _m_checked()
@@ -60,7 +60,7 @@ namespace demo
 			this->listbox_.checkable(this->checkbox_.checked());
 		}
 	private:
-		gird gird_;
+		place place_;
 		listbox		listbox_;
 		checkbox	checkbox_;
 	};
@@ -69,34 +69,35 @@ namespace demo
 		: public panel<false>
 	{
 	public:
-		typedef treebox<int>::node_type node_type;
+		typedef treebox::item_proxy item_proxy;
 
 		tab_page_treebox(window wd)
 			: panel<false>(wd)
 		{
-			gird_.bind(*this);
+			place_.bind(*this);
+			place_.div("<tree>");
 			treebox_.create(*this);
-			gird_.push(treebox_, 0, 0);
+			place_.field("tree")<<treebox_;
 
 #if defined(NANA_WINDOWS)
-			node_type node = treebox_.insert(STR("C:"), STR("Local Drive(C:)"), 0);
+			item_proxy node = treebox_.insert(STR("C:"), STR("Local Drive(C:)"));
 			nana::filesystem::file_iterator i(STR("C:\\")), end;
 #elif defined(NANA_LINUX)
 			//Use a whitespace for the root key string under Linux
-			node_type node = treebox_.insert(STR(" "), STR("Root"), 0);
+			item_proxy node = treebox_.insert(STR(" "), STR("Root"));
 			nana::filesystem::file_iterator i(STR("/")), end;
 #endif
 			for(; i != end; ++i)
 			{
 				if(false == i->directory) continue;
 
-				treebox_.insert(node, i->name, i->name, 0);
+				treebox_.insert(node, i->name, i->name);
 				break;
 			}
 			treebox_.ext_event().expand = nana::make_fun(*this, &tab_page_treebox::_m_expand);
 		}
 	private:
-		void _m_expand(nana::gui::window, node_type node, bool exp)
+		void _m_expand(nana::gui::window, item_proxy node, bool exp)
 		{
 			if(!exp) return; //If this is contracted.
 
@@ -113,8 +114,8 @@ namespace demo
 			{
 				if(false == i->directory) continue; //If it is not a directory.
 
-				node_type child = treebox_.insert(node, i->name, i->name, 0);
-				if(0 == child) continue;
+				item_proxy child = treebox_.insert(node, i->name, i->name);
+				if(child.empty()) continue;
             
 				//Find a directory in child directory, if there is a directory,
 				//insert it into the child, just insert one node to indicate the
@@ -124,14 +125,14 @@ namespace demo
 				for(; u != end; ++u)
 				{
 					if(false == u->directory) continue; //If it is not a directory.
-					treebox_.insert(child, u->name, u->name, 0);
+					treebox_.insert(child, u->name, u->name);
 					break;
 				}
 			}
 		}
 	private:
-		gird gird_;
-		treebox<int> treebox_;
+		place place_;
+		treebox treebox_;
 	};
 
 	class tab_page_datechooser
@@ -157,9 +158,10 @@ namespace demo
 		tab_page_radiogroup(window wd)
 			:	panel<false>(wd)
 		{
-			gird_.bind(*this);
-			gird * gdcontext = gird_.add(10, 0);
-			gird * gdbox = gdcontext->push(0, 0);
+			place_.bind(*this);
+
+			place_.div("<weight=5><vertical<check vertical><bottom vertical weight=50>><weight=5>");
+
 			const nana::string str[6] = {
 					STR("Airbus"), STR("AHTOHOB"),
 					STR("Boeing"), STR("Bombardier"),
@@ -167,24 +169,23 @@ namespace demo
 					
 			for(int i = 0; i < 6; ++i)
 			{
-				box_[i].create(*this);
+				nana::shared_ptr<checkbox> p(new checkbox(*this));
+				box_.push_back(p);
 
 				//Add the checkbox to the radio group. The radio group does not
 				//manage the life of checkboxs.
-				group_.add(box_[i]);
-				gdbox->push(box_[i], 5, 20);
-				box_[i].caption(str[i]);
-				box_[i].make_event<events::click>(nana::make_fun(*this, &tab_page_radiogroup::_m_selected));	
+				group_.add(*p);
+				place_.field("check")<<place_.fixed(*p, 20)<<5;
+				p->caption(str[i]);
+				p->make_event<events::click>(nana::make_fun(*this, &tab_page_radiogroup::_m_selected));	
 			}
-			gird_.add(0, 10);
 			
 			label_.create(*this);
 			label_.caption(STR("Select an airplane manufacturer"));
-			gdcontext->push(label_, 10, 20);
 
 			categorize_.create(*this);
-			gdcontext->push(categorize_, 10, 22);
-			gdcontext->push(0, 10);
+
+			place_.field("bottom")<<place_.fixed(label_, 20)<<5<<place_.fixed(categorize_, 20);
 
 			std::map<nana::string, std::vector<nana::string> > map;
 			std::vector<nana::string>* p = &(map[str[0]]);
@@ -224,15 +225,15 @@ namespace demo
 		void _m_selected()
 		{
 			std::size_t index = group_.checked();
-			nana::string str = box_[index].caption();
+			nana::string str = box_[index]->caption();
 
 			label_.caption(STR("You have selected ") + str);
 			categorize_.caption(STR("Manufacturer\\") + str);		
 		}
 	private:
-		gird gird_;
+		place place_;
 		radio_group group_;
-		checkbox box_[6];
+		std::vector<nana::shared_ptr<checkbox> > box_;
 		label label_;
 		categorize<int> categorize_;
 	};
@@ -245,7 +246,8 @@ namespace demo
 			: form(API::make_center(500, 400), appear::decorate<appear::sizable>())
 		{
 			this->caption(STR("This is a demo of Nana C++ Library"));
-			gird_.bind(*this);
+			place_.bind(*this);
+			place_.div("vertical<weight=40%<weight=10><vertical <weight=10><table grid[6,4] gap = 10>>><tab weight=20><tab_frame>");
 
 			_m_init_buttons();
 			_m_init_comboxs();
@@ -254,12 +256,8 @@ namespace demo
 			_m_init_tabbar();
 
 			this->make_event<events::unload>(nana::make_fun(*this, &widget_show::_m_ask_for_quit));
-		}
-
-		~widget_show()
-		{
-			for(std::vector<panel<false>*>::iterator i = this->tabpages_.begin(); i != this->tabpages_.end(); ++i)
-				delete (*i);
+			
+			place_.collocate();
 		}
 	private:
 		void _m_ask_for_quit(const eventinfo& ei)
@@ -272,49 +270,47 @@ namespace demo
 	private:
 		void _m_init_buttons()
 		{
-			gird * gdbutton = gird_.push(10, 22);
 
 			msgbox mb(*this, STR("Msgbox"));
 			mb.icon(mb.icon_information);
 			mb<<STR("Button Clicked");
 			for(int i = 0; i < 3; ++i)
 			{
-				buttons_[i].create(*this);
-				gdbutton->add(buttons_[i], 10, 0);
-				buttons_[i].make_event<events::click>(mb);
+				nana::shared_ptr<button> p(new button(*this));
+				buttons_.push_back(p);
+				place_.field("table")<<place_.room(*p, 2, 1);
+				p->make_event<events::click>(mb);
 			}
-			gdbutton->add(0, 10);
-
-			button * ptr = &(buttons_[0]);
+			
+			nana::shared_ptr<button> ptr = buttons_[0];
 			ptr->caption(STR("Normal Button"));
 
-			ptr = &(buttons_[1]);
+			ptr = buttons_[1];
 			ptr->icon(STR("image.ico"));
 			ptr->caption(STR("Button with An Image"));
 
-			ptr = &(buttons_[2]);
+			ptr = buttons_[2];
 			ptr->caption(STR("Pushed Button"));
 			ptr->enable_pushed(true);
 		}
 
 		void _m_init_comboxs()
 		{
-			gird * gd = gird_.push(10, 24);
 			for(int i = 0; i < 2; ++i)
 			{
-				comboxs_[i].create(*this);
-				gd->add(comboxs_[i], 10, 0);
-				comboxs_[i].push_back(STR("Item 0"));
-				comboxs_[i].push_back(STR("Item 1"));
+				nana::shared_ptr<combox> p(new combox(*this));
+				comboxs_.push_back(p);
+				place_.field("table")<<place_.room(*p, 3, 1);
+				p->push_back(STR("Item 0"));
+				p->push_back(STR("Item 1"));
 			}
-			gd->add(0, 10);
 
-			combox* ptr = &(comboxs_[0]);
+			nana::shared_ptr<combox> ptr = comboxs_[0];
 			ptr->editable(true);
 			ptr->caption(STR("This is an editable combox"));
 			ptr->ext_event().selected = nana::make_fun(*this, &widget_show::_m_combox_selected);
 
-			ptr = &(comboxs_[1]);
+			ptr = comboxs_[1];
 			ptr->caption(STR("This is an uneditable combox"));
 			ptr->ext_event().selected = nana::make_fun(*this, &widget_show::_m_combox_selected);
 		}
@@ -330,33 +326,32 @@ namespace demo
 
 		void _m_init_labels()
 		{
-			gird * gd = gird_.push(10, 20);
 			for(int i = 0; i < 2; ++i)
 			{
-				labels_[i].create(*this);
-				gd->add(labels_[i], 10, 0);
+				nana::shared_ptr<label> p(new label(*this));
+				labels_.push_back(p);
+				place_.field("table")<<place_.room(*p, 3, 1);
 			}
 
-			label * wd = &(labels_[0]);
+			nana::shared_ptr<label> wd = labels_[0];
 			wd->caption(STR("This is a normal label"));
 
-			wd = &(labels_[1]);
+			wd = labels_[1];
 			wd->format(true);
 			wd->caption(STR("This is a <bold, color=0xFF0000, font=\"Consolas\">formatted label</>"));
 		}
 
 		void _m_init_progresses()
 		{
-			gird * gd = gird_.push(10, 20);
 			const nana::string tipstr[] = {STR("Unknwon in progress"), STR("Known in progress")};
 			for(int i = 0; i < 2; ++i)
 			{
-				progresses_[i].create(*this);
-				gd->add(progresses_[i], 10, 0);
-				progresses_[i].unknown(i == 0);	//The first progress is known style, the second is unknown.
-				tooltip_.set(progresses_[i], tipstr[i]);
+				nana::shared_ptr<progress> p(new progress(*this));
+				place_.field("table")<<place_.room(*p, 3, 1);
+				progresses_.push_back(p);
+				p->unknown(i == 0);	//The first progress is unknown mode, the second is known mode.
+				tooltip_.set(*p, tipstr[i]);
 			}
-			gd->add(0, 10);
 
 			timer_.make_tick(nana::make_fun(*this, &widget_show::_m_timer_tick));
 			timer_.interval(80);
@@ -366,7 +361,7 @@ namespace demo
 		{
 			for(int i = 0; i < 2; ++i)
 			{
-				progress * p = &(progresses_[i]);
+				nana::shared_ptr<progress> p = progresses_[i];
 				if(false == p->unknown())
 				{
 					if(p->value() == p->amount())
@@ -379,37 +374,38 @@ namespace demo
 		void _m_init_tabbar()
 		{
 			tabbar_.create(*this);
-			gird_.push(tabbar_, 10, 24);
-			tabbar_.push_back(STR("listbox"));
-			tabpages_.push_back(new tab_page_listbox(*this));
-			tabbar_.push_back(STR("treebox"));
-			tabpages_.push_back(new tab_page_treebox(*this));
-			tabbar_.push_back(STR("date_chooser"));
-			tabpages_.push_back(new tab_page_datechooser(*this));
-			tabbar_.push_back(STR("radio_group"));
-			tabpages_.push_back(new tab_page_radiogroup(*this));
+			place_.field("tab")<<tabbar_;
 
-			gird * gd_tabpage = gird_.push(0, 0);
+			typedef nana::shared_ptr<panel<false> > panel_shared_t;
+			tabbar_.push_back(STR("listbox"));
+			tabpages_.push_back(panel_shared_t(new tab_page_listbox(*this)));
+			tabbar_.push_back(STR("treebox"));
+			tabpages_.push_back(panel_shared_t(new tab_page_treebox(*this)));
+			tabbar_.push_back(STR("date_chooser"));
+			tabpages_.push_back(panel_shared_t(new tab_page_datechooser(*this)));
+			tabbar_.push_back(STR("radio_group"));
+			tabpages_.push_back(panel_shared_t(new tab_page_radiogroup(*this)));
+
 			std::size_t index = 0;
-			for(std::vector<panel<false>*>::iterator i = tabpages_.begin(); i != tabpages_.end(); ++i)
+			for(std::vector<panel_shared_t>::iterator i = tabpages_.begin(); i != tabpages_.end(); ++i)
 			{
-				tabbar_.relate(index++, (*i)->handle());
-				gd_tabpage->fasten((*i)->handle());
+				tabbar_.relate(index++, *(i->get()));
+				place_.field("tab_frame").fasten(*(i->get()));	//Fasten the tab pages
 			}
 		}
 	private:
 		//A gird layout management
-		gird gird_;
+		place place_;
 		nana::gui::timer timer_;
 		nana::gui::tooltip tooltip_;
-		button buttons_[3];
-		combox comboxs_[2];
-		label labels_[2];
-		progress progresses_[2];
+		std::vector<nana::shared_ptr<button>> buttons_;
+		std::vector<nana::shared_ptr<combox>> comboxs_;
+		std::vector<nana::shared_ptr<label>>	labels_;
+		std::vector<nana::shared_ptr<progress>> progresses_;
 		tabbar<nana::string> tabbar_;
-		std::vector<panel<false>*> tabpages_;
+		std::vector<nana::shared_ptr<panel<false> > > tabpages_;
 		
-	};//end class nana_demo
+	};//end class widget_show
 	
 	void go()
 	{

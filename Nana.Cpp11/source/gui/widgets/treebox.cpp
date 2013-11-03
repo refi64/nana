@@ -673,6 +673,19 @@ namespace gui
 				item_proxy::item_proxy(trigger* trg, trigger::node_type* node)
 					: trigger_(trg), node_(node)
 				{
+					//Make it an end itertor if one of them is a nullptr
+					if(nullptr == trg || nullptr == node)
+					{
+						trigger_ = nullptr;
+						node_ = nullptr;
+					}
+				}
+
+				item_proxy item_proxy::append(const nana::string& key, const nana::string& name)
+				{
+					if(nullptr == trigger_ || nullptr == node_)
+						return item_proxy();
+					return item_proxy(trigger_, trigger_->insert(node_, key, name));
 				}
 
 				bool item_proxy::empty() const
@@ -714,10 +727,10 @@ namespace gui
 					return (trigger_->impl()->node_state.selected == node_);
 				}
 
-				item_proxy& item_proxy::select()
+				item_proxy& item_proxy::select(bool s)
 				{
 					auto * impl = trigger_->impl();
-					if(impl->set_selected(node_))
+					if(impl->set_selected(s ? node_ : nullptr))
 					{
 						impl->draw(true);
 						API::update_window(*impl->data.widget_ptr);
@@ -1445,7 +1458,6 @@ namespace gui
 					return impl_->data.comp_placer->enabled(component::crook);
 				}
 
-
 				void trigger::check(node_type* node, checkstate cs)
 				{
 					if(checkstate::unchecked != cs)
@@ -2164,6 +2176,11 @@ namespace gui
 				return std::move(path);
 			}
 			return nana::string();
+		}
+
+		treebox::item_proxy treebox::selected() const
+		{
+			return item_proxy(const_cast<drawer_trigger_t*>(&get_drawer_trigger()), get_drawer_trigger().selected());
 		}
 	//end class treebox
 }//end namespace gui

@@ -284,22 +284,24 @@ namespace detail
 		}
 	}
 
-	//struct font_tag::deleter
-	void font_tag::deleter::operator()(const font_tag* tag) const
+	class font_deleter
 	{
-		if(tag && tag->handle)
+	public:
+		void operator()(const font_tag* fp) const
 		{
-			platform_scope_guard psg;
+			if(fp && fp->handle)
+			{
+				platform_scope_guard psg;
 #if defined(NANA_UNICODE)
-			::XftFontClose(nana::detail::platform_spec::instance().open_display(), tag->handle);
+				::XftFontClose(nana::detail::platform_spec::instance().open_display(), fp->handle);
 #else
-			::XFreeFontSet(nana::detail::platform_spec::instance().open_display(), tag->handle);
+				::XFreeFontSet(nana::detail::platform_spec::instance().open_display(), fp->handle);
 #endif
+			}
+			delete fp;
 		}
-		delete tag;
-	}
-	//end struct font_tag::deleter
-	//
+	}; //end class font_deleter
+	
 	platform_scope_guard::platform_scope_guard()
 	{
 		platform_spec::instance().lock_xlib();
@@ -391,20 +393,20 @@ namespace detail
 		atombase_.xdnd_finished = ::XInternAtom(display_, "XdndFinished", False);
 
 		//Create default font object.
-		def_font_ref_ = make_native_font(0, font_size_to_height(10), 400, false, false, false);
+		def_font_ptr_ = make_native_font(0, font_size_to_height(10), 400, false, false, false);
 		msg_dispatcher_ = new msg_dispatcher(display_);
 	}
 
 	platform_spec::~platform_spec()
 	{
 		delete msg_dispatcher_;
-		def_font_ref_.release();
+		def_font_ptr_.reset();
 		close_display();
 	}
 
-	const platform_spec::font_refer_t& platform_spec::default_native_font() const
+	const platform_spec::font_ptr_t& platform_spec::default_native_font() const
 	{
-		return this->def_font_ref_;
+		return def_font_ptr_;
 	}
 
 	unsigned platform_spec::font_size_to_height(unsigned size) const
@@ -417,9 +419,8 @@ namespace detail
 		return height;
 	}
 
-	platform_spec::font_refer_t platform_spec::make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out)
+	platform_spec::font_ptr_t platform_spec::make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out)
 	{
-		font_refer_t ref;
 #if defined(NANA_UNICODE)
 		if(0 == name || *name == 0)
 			name = STR("*");
@@ -458,9 +459,9 @@ namespace detail
 			impl->underline = underline;
 			impl->strikeout = strike_out;
 			impl->handle = handle;
-			ref = impl;
+			return font_ptr_t(impl, font_deleter());
 		}
-		return ref;
+		return font_ptr_t();
 	}
 
 	Display* platform_spec::open_display()

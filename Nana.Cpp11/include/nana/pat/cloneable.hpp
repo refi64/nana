@@ -183,6 +183,11 @@ namespace nana{ namespace pat{
 			return fast_ptr_;
 		}
 
+		base_t * get() const
+		{
+			return fast_ptr_;
+		}
+
 		void reset()
 		{
 			fast_ptr_ = nullptr;
@@ -292,6 +297,11 @@ namespace nana{ namespace pat{
 		}
 
 		base_t * operator->() const
+		{
+			return fast_ptr_;
+		}
+
+		base_t * get() const
 		{
 			return fast_ptr_;
 		}

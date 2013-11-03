@@ -377,7 +377,7 @@ namespace paint
 		nana::size graphics::glyph_extent_size(const nana::char_t * str, std::size_t len, std::size_t begin, std::size_t end) const
 		{
 			if(len < end) end = len;
-			if(0 == handle_ || 0 == str || 0 == len || begin >= end) return nana::size();
+			if(nullptr == handle_ || nullptr == str || 0 == len || begin >= end) return nana::size();
 
 			nana::size sz;
 #if defined(NANA_WINDOWS)
@@ -407,7 +407,7 @@ namespace paint
 
 		bool graphics::glyph_pixels(const nana::char_t * str, std::size_t len, unsigned* pxbuf) const
 		{
-			if(handle_ == 0 || handle_->context == 0 || str == 0 || pxbuf == 0) return false;
+			if(nullptr == handle_ || nullptr == handle_->context || nullptr == str || nullptr == pxbuf) return false;
 			if(len == 0) return true;
 
 			unsigned tab_pixels = handle_->string.tab_length * handle_->string.whitespace_pixels;
@@ -425,7 +425,7 @@ namespace paint
 			delete [] dx;
 #elif defined(NANA_X11)
 			Display * disp = nana::detail::platform_spec::instance().open_display();
-			XftFont * xft = handle_->font.get()->handle;
+			XftFont * xft = handle_->font->handle;
 
 			XGlyphInfo extents;
 			for(std::size_t i = 0; i < len; ++i)

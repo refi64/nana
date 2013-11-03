@@ -69,10 +69,30 @@ namespace nana{ namespace gui{
 	{
 		typedef drawer_trigger_t::extra_evtbase_t ext_event_type;
 	public:
+		/// The default constructor without creating the widget.
 		textbox();
+
+		/// The construct that creates a widget.
+		/// @param wd, A handle to the parent window of the widget being created.
+		/// @param visible, specifying the visible after creating.
 		textbox(window, bool visible);
+
+		/// The construct that creates a widget with a specified text.
+		/// @param window, A handle to the parent window of the widget being created.
+		/// @param text, the text that will be displayed.
+		/// @param visible, specifying the visible after creating.
 		textbox(window, const nana::string& text, bool visible = true);
+
+		/// The construct that creates a widget with a specified text.
+		/// @param window, A handle to the parent window of the widget being created.
+		/// @param text, the text that will be displayed.
+		/// @param visible, specifying the visible after creating.
 		textbox(window, const nana::char_t* text, bool visible = true);
+
+		/// The construct that creates a widget.
+		/// @param window, A handle to the parent window of the widget being created.
+		/// @param rectangle, the size and position of the widget in its parent window coordinate.
+		/// @param visible, specifying the visible after creating.
 		textbox(window, const rectangle& = rectangle(), bool visible = true);
 
 		ext_event_type & ext_event() const;
@@ -81,21 +101,20 @@ namespace nana{ namespace gui{
 		void store(const nana::char_t* file) const;
 		void store(const nana::char_t* file, nana::unicode encoding) const;
 
-		///@brief	The file of last store operation.
-		///@return	The filename
+		/// The file of last store operation.
 		std::string filename() const;
 
-		///@brief	Test the change of text.
-		///@return	Returns true if it is changed.
+		/// Determine whether the text is edited.
 		bool edited() const;
 
-		///@brief	Test the text whether it is saved to a file.
-		///@return	Returns true if the textbox saved the change of text.
+		/// Determine whether the changed text has been saved into the file.
 		bool saved() const;
 
 		bool getline(std::size_t n, nana::string&) const;
 		textbox& append(const nana::string&, bool at_caret);
 		textbox& border(bool);
+
+		/// Determine whether the text is multi-line enabled.
 		bool multi_lines() const;
 		textbox& multi_lines(bool);
 		bool editable() const;

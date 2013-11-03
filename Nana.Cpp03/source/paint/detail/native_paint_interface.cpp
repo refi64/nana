@@ -167,14 +167,14 @@ namespace detail
 	#if defined(NANA_UNICODE)
 		std::string utf8str = nana::charset(nana::string(text, len));
 		XGlyphInfo ext;
-		XftFont * fs = reinterpret_cast<XftFont*>(dw->font.handle()->handle);
+		XftFont * fs = reinterpret_cast<XftFont*>(dw->font->handle);
 		::XftTextExtentsUtf8(nana::detail::platform_spec::instance().open_display(), fs,
 								reinterpret_cast<XftChar8*>(const_cast<char*>(utf8str.c_str())), utf8str.size(), &ext);
 		return nana::size(ext.xOff, fs->ascent + fs->descent);
 	#else
 		XRectangle ink;
 		XRectangle logic;
-		::XmbTextExtents(reinterpret_cast<XFontSet>(dw->font.handle()->handle), text, len, &ink, &logic);
+		::XmbTextExtents(reinterpret_cast<XFontSet>(dw->font->handle), text, len, &ink, &logic);
 		return nana::size(logic.width, logic.height);
 	#endif
 #endif
@@ -182,32 +182,8 @@ namespace detail
 
 	nana::size text_extent_size(drawable_type dw, const nana::char_t * text, std::size_t len)
 	{
-		if(0 == dw || 0 == text || 0 == len) return nana::size(0, 0);
-		nana::size extents;
-#if defined(NANA_WINDOWS)
-		::SIZE size;
-		if(::GetTextExtentPoint32(dw->context, text, static_cast<int>(len), &size))
-		{
-			extents.width = size.cx;
-			extents.height = size.cy;
-		}
-#elif defined(NANA_X11)
-	#if defined(NANA_UNICODE)
-		std::string utf8str = nana::charset(nana::string(text, len));
-		XGlyphInfo ext;
-		XftFont * fs = reinterpret_cast<XftFont*>(dw->font.handle()->handle);
-		::XftTextExtentsUtf8(nana::detail::platform_spec::instance().open_display(), fs,
-								reinterpret_cast<XftChar8*>(const_cast<char*>(utf8str.c_str())), utf8str.size(), &ext);
-		extents.width = ext.xOff;
-		extents.height = fs->ascent + fs->descent;
-	#else
-		XRectangle ink;
-		XRectangle logic;
-		::XmbTextExtents(reinterpret_cast<XFontSet>(dw->font.handle()->handle), text, len, &ink, &logic);
-		extents.width = logic.width;
-		extents.height = logic.height;
-	#endif
-#endif
+		nana::size extents = raw_text_extent_size(dw, text, len);
+
 		const nana::char_t* const end = text + len;
 		int tabs = 0;
 		for(; text != end; ++text)
@@ -232,11 +208,11 @@ namespace detail
 			utf8str = nana::charset(wbstr);
 		else
 			utf8str = nana::charset(wbstr.substr(0, len));
-		XftFont * fs = reinterpret_cast<XftFont*>(dw->font.handle()->handle);
+		XftFont * fs = reinterpret_cast<XftFont*>(dw->font->handle);
 		::XftDrawStringUtf8(dw->xftdraw, &(dw->xft_fgcolor), fs, x, y + fs->ascent,
 							reinterpret_cast<XftChar8*>(const_cast<char*>(utf8str.c_str())), utf8str.size());
 	#else
-		XFontSet fs = reinterpret_cast<XFontSet>(dw->font.handle()->handle);
+		XFontSet fs = reinterpret_cast<XFontSet>(dw->font->handle);
 		XFontSetExtents * ext = ::XExtentsOfFontSet(fs);
 		XFontStruct ** fontstructs;
 		char ** font_names;
@@ -251,7 +227,7 @@ namespace detail
 			if(descent < (*i)->descent)
 				descent = (*i)->descent;
 		}
-		XmbDrawString(display, dw->pixmap, reinterpret_cast<XFontSet>(dw->font.handle()->handle), dw->context, x, y + ascent + descent, buf, len);
+		XmbDrawString(display, dw->pixmap, reinterpret_cast<XFontSet>(dw->font->handle), dw->context, x, y + ascent + descent, buf, len);
 	#endif
 #endif
 	}

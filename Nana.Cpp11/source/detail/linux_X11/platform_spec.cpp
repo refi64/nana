@@ -280,22 +280,24 @@ namespace detail
 		}
 	}
 
-	//struct font_tag::deleter
-	void font_tag::deleter::operator()(const font_tag* tag) const
+	class font_deleter
 	{
-		if(tag && tag->handle)
-		{
-			platform_scope_guard psg;
+    public:
+        void operator()(const font_tag* fp) const
+        {
+            if(fp && fp->handle)
+            {
+                platform_scope_guard psg;
 #if defined(NANA_UNICODE)
-			::XftFontClose(nana::detail::platform_spec::instance().open_display(), tag->handle);
+                ::XftFontClose(nana::detail::platform_spec::instance().open_display(), fp->handle);
 #else
-			::XFreeFontSet(nana::detail::platform_spec::instance().open_display(), tag->handle);
+                ::XFreeFontSet(nana::detail::platform_spec::instance().open_display(), fp->handle);
 #endif
-		}
-		delete tag;
-	}
-	//end struct font_tag::deleter
-	//
+            }
+            delete fp;
+        }
+	};//end class font_deleter
+
 	platform_scope_guard::platform_scope_guard()
 	{
 		platform_spec::instance().lock_xlib();
@@ -423,7 +425,7 @@ namespace detail
 #if defined(NANA_UNICODE)
 		if(0 == name || *name == 0)
 			name = STR("*");
-		
+
 		std::string nmstr = nana::charset(name);
 		XftFont* handle = 0;
 		std::stringstream ss;
@@ -457,9 +459,9 @@ namespace detail
 			impl->underline = underline;
 			impl->strikeout = strike_out;
 			impl->handle = handle;
-			ref = std::shared_ptr<font_tag>(impl, font_tag::deleter());
+			return font_ptr_t(impl, font_deleter());
 		}
-		return ref;
+		return font_ptr_t();
 	}
 
 	Display* platform_spec::open_display()
@@ -808,7 +810,7 @@ namespace detail
 			crt.graph.paste(crt.window, crt.rev, 0, 0);
 		}
 	}
-	
+
 	bool platform_spec::caret_update(native_window_type wd, nana::paint::graphics& root_graph, bool is_erase_caret_from_root_graph)
 	{
 		platform_scope_guard psg;
@@ -818,7 +820,7 @@ namespace detail
 			caret_tag & crt = *i->second;
 			if(is_erase_caret_from_root_graph)
 			{
-				root_graph.bitblt(crt.rev, crt.rev_graph);	
+				root_graph.bitblt(crt.rev, crt.rev_graph);
 			}
 			else
 			{
@@ -828,11 +830,11 @@ namespace detail
 				{
 					crt.rev_graph.bitblt(crt.size, root_graph, crt.pos);
 					crt_graph = &crt.graph;
-					owns_caret = true;	
+					owns_caret = true;
 				}
 				else
 					crt_graph = &crt.rev_graph;
-					
+
 				root_graph.bitblt(crt.rev, *crt_graph);
 				return owns_caret;
 			}
@@ -962,7 +964,7 @@ namespace detail
 	}
 
 	void platform_spec::msg_dispatch(native_window_type modal)
-	{	
+	{
 		msg_dispatcher_->dispatch(reinterpret_cast<Window>(modal));
 	}
 
@@ -1069,12 +1071,12 @@ namespace detail
 							}
 						}
 
-						
+
 						self.selection_.items.erase(self.selection_.items.begin());
 
 						std::lock_guard<decltype(im->cond_mutex)> lock(im->cond_mutex);
 						im->cond.notify_one();
-						
+
 					}
 				}
 				else if(evt.xselection.property == self.atombase_.xdnd_selection)
@@ -1109,7 +1111,7 @@ namespace detail
 								msg.u.mouse_drop.y = self.xdnd_.pos.y;
 								msg.u.mouse_drop.files = files;
 							}
-							
+
 							accepted = true;
 							::XFree(data);
 						}
@@ -1158,7 +1160,7 @@ namespace detail
 				std::string str;
 				if(self.selection_.content.utf8_string)
 					str = *self.selection_.content.utf8_string;
-				
+
 				::XChangeProperty(self.display_, evt.xselectionrequest.requestor, evt.xselectionrequest.property, evt.xselectionrequest.target, 8, 0,
 									reinterpret_cast<unsigned char*>(str.size() ? const_cast<std::string::value_type*>(str.c_str()) : 0), static_cast<int>(str.size()));
 			}
@@ -1258,7 +1260,7 @@ namespace detail
 				respond.xclient.data.l[2] = 0;
 				respond.xclient.data.l[3] = 0;
 				respond.xclient.data.l[4] = self.atombase_.xdnd_action_copy;
-				
+
 				::XSendEvent(self.display_, wd_src, True, NoEventMask, &respond);
 				return 2;
 			}

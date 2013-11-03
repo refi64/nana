@@ -212,7 +212,7 @@ namespace nana{	namespace gui
 			enum t{none, filesystem};
 		};
 
-		typedef treebox<kind::t>::node_type node_type;
+		typedef treebox::item_proxy item_proxy;
 	public:
 
 		filebox_implement(window owner, bool io_read, const nana::string& title)
@@ -383,22 +383,35 @@ namespace nana{	namespace gui
 
 			//The path in linux is starting with the character '/', the name of root key should be
 			//"FS.HOME", "FS.ROOT". Because a key of the tree widget should not be '/'
-			nodes_.home = tree_.insert(STR("FS.HOME"), STR("Home"), kind::filesystem);
-			nodes_.filesystem = tree_.insert(STR("FS.ROOT"), STR("Filesystem"), kind::filesystem);
+			nodes_.home = tree_.insert(STR("FS.HOME"), STR("Home"));
+			nodes_.home.value(kind::filesystem);
+
+			nodes_.filesystem = tree_.insert(STR("FS.ROOT"), STR("Filesystem"));
+			nodes_.filesystem.value(kind::filesystem);
 
 			file_iterator end;
 			for(nana::filesystem::file_iterator i(path_user()); i != end; ++i)
 			{
 				if((false == i->directory) || (i->name.size() && i->name[0] == '.')) continue;
-				if(tree_.insert(nodes_.home, i->name, i->name, kind::filesystem))
+
+				item_proxy node = tree_.insert(nodes_.home, i->name, i->name);
+				if(false == node.empty())
+				{
+					node.value(kind::filesystem);
 					break;
+				}
 			}
 
 			for(file_iterator i(STR("/")); i != end; ++i)
 			{
 				if((false == i->directory) || (i->name.size() && i->name[0] == '.')) continue;
-				if(tree_.insert(nodes_.filesystem, i->name, i->name, kind::filesystem))
+
+				item_proxy node = tree_.insert(nodes_.filesystem, i->name, i->name);
+				if(false == node.empty())
+				{
+					node.value(kind::filesystem);
 					break;
+				}
 			}
 
 			tree_.ext_event().expand = nana::make_fun(*this, &filebox_implement::_m_tr_expand);
@@ -463,22 +476,22 @@ namespace nana{	namespace gui
 			if((path.size() == 0) || (path[path.size() - 1] != STR('/')))
 				path += STR('/');
 
-			node_type beg_node = tree_.selected();
-			while(beg_node && (beg_node != nodes_.home) && (beg_node != nodes_.filesystem))
-				beg_node = tree_.get_owner(beg_node);
+			item_proxy beg_node = tree_.selected();
+			while(!beg_node.empty() && (beg_node != nodes_.home) && (beg_node != nodes_.filesystem))
+				beg_node = beg_node.owner();
 			
 			nana::string head = nana::filesystem::path_user();
 			if(path.size() >= head.size() && (path.substr(0, head.size()) == head))
 			{//This is HOME
 				path_.caption(STR("HOME"));
 				if(beg_node != nodes_.home)
-					tree_.selected(nodes_.home);
+					nodes_.home->select(true);
 			}
 			else
 			{	//Redirect to '/'
 				path_.caption(STR("FILESYSTEM"));
 				if(beg_node != nodes_.filesystem)
-					tree_.selected(nodes_.filesystem);
+					nodes_.filesystem->select(true);
 				head.clear();
 			}
 
@@ -545,14 +558,13 @@ namespace nana{	namespace gui
 
 			std::vector<nana::string>* ext_types = cb_types_.anyobj<std::vector<nana::string> >(cb_types_.option());
 
+			listbox::cat_proxy cat = ls_file_.at(0);
 			for(std::vector<item_fs>::iterator i = file_container_.begin(); i != file_container_.end(); ++i)
 			{
 				item_fs & fs = *i;
 				if(_m_filter_allowed(fs.name, fs.directory, filter, ext_types))
 				{
-					std::size_t index = ls_file_.size_item();
-					ls_file_.append(0, fs);
-					ls_file_.anyobj(0, index, fs);
+					cat.append(fs).value(fs);
 				}
 			}
 			ls_file_.auto_draw(true);
@@ -661,9 +673,9 @@ namespace nana{	namespace gui
 			if(sel.size() == 0)
 				return;
 			std::pair<std::size_t, std::size_t> index = sel[0];
-			item_fs m;
-			if(false == ls_file_.item(index.first, index.second, m))
-				return;
+
+			
+			item_fs m = ls_file_.at(index.first, index.second).resolve<item_fs>();
 
 			if(events::dbl_click::identifier == ei.identifier)
 			{
@@ -757,11 +769,11 @@ namespace nana{	namespace gui
 				_m_finish(kind::filesystem, selection_.target);
 		}
 
-		void _m_tr_expand(window, node_type node, bool exp)
+		void _m_tr_expand(window, item_proxy node, bool exp)
 		{
 			if(false == exp) return;
-			kind::t node_kind = tree_.value(node);
-			if(kind::filesystem == node_kind)
+
+			if(kind::filesystem == node.value<kind::t>())
 			{
 				nana::string path = tree_.make_key_path(node, STR("/")) + STR("/");
 				_m_resolute_path(path);
@@ -770,13 +782,14 @@ namespace nana{	namespace gui
 				for(nana::filesystem::file_iterator i(path); i != end; ++i)
 				{
 					if((false == i->directory) || (i->name.size() && i->name[0] == '.')) continue;
-					node_type child = tree_.insert(node, i->name, i->name, node_kind);
-					if(child)
+					item_proxy child = node.append(i->name, i->name, kind::filesystem);
+					if(!child.empty())
 					{
 						for(nana::filesystem::file_iterator u(path + i->name); u != end; ++u)
 						{
 							if(false == u->directory || (u->name.size() && u->name[0] == '.')) continue;
-							tree_.insert(child, u->name, u->name, node_kind);
+							
+							child.append(u->name, u->name, kind::filesystem);
 							break;
 						}
 					}
@@ -784,9 +797,9 @@ namespace nana{	namespace gui
 			}
 		}
 
-		void _m_tr_selected(window, node_type node, bool set)
+		void _m_tr_selected(window, item_proxy node, bool set)
 		{
-			if(set && (tree_.value(node) == kind::filesystem))
+			if(set && (node.value<kind::t>() == kind::filesystem))
 			{
 				nana::string path = tree_.make_key_path(node, STR("/")) + STR("/");
 				_m_resolute_path(path);
@@ -822,7 +835,7 @@ namespace nana{	namespace gui
 		categorize<int> path_;
 		textbox		filter_;
 		button	btn_folder_;
-		treebox<kind::t> tree_;
+		treebox tree_;
 		listbox	ls_file_;
 
 		label lb_file_;
@@ -832,8 +845,8 @@ namespace nana{	namespace gui
 
 		struct tree_node_tag
 		{
-			node_type home;
-			node_type filesystem;
+			item_proxy home;
+			item_proxy filesystem;
 		}nodes_;
 
 		std::vector<item_fs> file_container_;

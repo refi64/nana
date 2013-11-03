@@ -301,14 +301,20 @@ namespace nana{	namespace gui
 		element_manager()
 		{
 			crook_.employee = 0;
-			element::add_crook<element::crook>("");
-			element::add_crook<element::menu_crook>("menu_crook");
 		}
 
 	public:
 		static element_manager& instance()
 		{
+			static bool initial = true;
 			static element_manager obj;
+			if(initial)
+			{
+				initial = false;
+
+				element::add_crook<element::crook>("");
+				element::add_crook<element::menu_crook>("menu_crook");					
+			}
 			return obj;
 		}
 

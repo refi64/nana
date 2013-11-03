@@ -76,11 +76,6 @@ namespace detail
 #else
 		XFontSet handle;
 #endif
-
-		struct deleter
-		{
-			void operator()(const font_tag*) const;
-		};
 	};
 
 	struct drawable_impl_type
@@ -95,7 +90,7 @@ namespace detail
 		Pixmap	pixmap;
 		GC	context;
 		font_ptr_t font;
-		
+
 		nana::point	line_begin_pos;
 
 		struct string_spec
@@ -138,7 +133,7 @@ namespace detail
 		Atom net_wm_window_type_utility;
 		Atom net_wm_window_type_dialog;
 		Atom motif_wm_hints;
-		
+
 		Atom clipboard;
 		Atom text;
 		Atom text_uri_list;
@@ -203,7 +198,7 @@ namespace detail
 		Visual* screen_visual();
 
 		Colormap& colormap();
-		
+
 		static self_type& instance();
 		const atombase_tag & atombase() const;
 

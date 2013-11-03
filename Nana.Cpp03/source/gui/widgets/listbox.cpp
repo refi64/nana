@@ -2579,6 +2579,16 @@ namespace nana{ namespace gui{
 				{
 					return ess_->resolver;
 				}
+
+				nana::any * item_proxy::_m_value(bool alloc_if_empty)
+				{
+					return ess_->lister.anyobj(cat_, pos_, alloc_if_empty);
+				}
+
+				const nana::any * item_proxy::_m_value() const
+				{
+					return ess_->lister.anyobj(cat_, pos_, false);
+				}
 			//end class item_proxy
 
 			//class cat_proxy
@@ -2633,6 +2643,13 @@ namespace nana{ namespace gui{
 				item_proxy cat_proxy::cend() const
 				{
 					return end();
+				}
+
+				item_proxy cat_proxy::at(std::size_t pos) const
+				{
+					if(pos >= size())
+						throw std::out_of_range("listbox.cat_proxy.at() invalid position");
+					return item_proxy(ess_, pos_, pos);
 				}
 
 				std::size_t cat_proxy::size() const
@@ -2767,6 +2784,11 @@ namespace nana{ namespace gui{
 			if(pos >= ess.lister.size_categ())
 				throw std::out_of_range("Nana.Listbox.at(): invalid position");
 			return cat_proxy(&ess, pos);
+		}
+
+		listbox::item_proxy listbox::at(std::size_t pos, std::size_t index) const
+		{
+			return at(pos).at(index);
 		}
 
 		void listbox::insert(size_type cat, size_type index, const nana::string& text)

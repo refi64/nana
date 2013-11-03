@@ -24,6 +24,7 @@
 #include <nana/gui/timer.hpp>
 #include <nana/any.hpp>
 #include <nana/pat/cloneable.hpp>
+#include <stdexcept>
 
 namespace nana
 {
@@ -190,8 +191,21 @@ namespace gui
 				item_proxy();
 				item_proxy(trigger*, trigger::node_type*);
 
+				/// Append a child.
+				item_proxy append(const nana::string& key, const nana::string& name);
+
+				/// Append a child with a specified value.
+				template<typename T>
+				item_proxy append(const nana::string& key, const nana::string& name, const T&t)
+				{
+					item_proxy ip = append(key, name);
+					if(false == ip.empty())
+						ip.value(t);
+					return ip;
+				}
+
 				/// Return true if the proxy does not refer to a node
-				bool empty() const;
+				bool empty() const;				
 
 				/// Return the check state
 				bool checked() const;
@@ -209,7 +223,7 @@ namespace gui
 				bool selected() const;
 
 				/// Select the node.
-				item_proxy& select();
+				item_proxy& select(bool);
 
 				/// Return the icon.
 				const nana::string& icon() const;
@@ -278,9 +292,18 @@ namespace gui
 				bool operator!=(const item_proxy&) const;
 
 				template<typename T>
-				T * value() const
+				T * value_ptr() const
 				{
 					return _m_value().template get<T>();
+				}
+
+				template<typename T>
+				T& value() const
+				{
+					T* p = _m_value().template get<T>();
+					if(0 == p)
+						throw std::runtime_error("treebox::value<T>() Invalid type of value.");
+					return *p;
 				}
 
 				template<typename T>
@@ -374,6 +397,7 @@ namespace gui
 		void erase(const nana::string& keypath);
 
 		nana::string make_key_path(item_proxy i, const nana::string& splitter) const;
+		item_proxy selected() const;
 	};
 }//end namespace gui
 }//end namespace nana

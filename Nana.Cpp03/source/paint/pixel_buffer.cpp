@@ -230,8 +230,8 @@ namespace nana{	namespace paint
 #elif defined(NANA_X11)
 		try
 		{
-			storage_ = new pixel_buffer_storage(drawable, sz);
-			storage_.handle()->detach();
+			storage_ = nana::shared_ptr<pixel_buffer_storage>(new pixel_buffer_storage(drawable, sz));
+			storage_->detach();
 			return true;
 		}
 		catch(...)
@@ -299,8 +299,8 @@ namespace nana{	namespace paint
 		::XGetGeometry(spec.open_display(), drawable->pixmap, &root, &x, &y, &width, &height, &border, &depth);
 
 		XImage * image = ::XGetImage(spec.open_display(), drawable->pixmap, r.x, r.y, r.width, r.height, AllPlanes, ZPixmap);
-		storage_ = new pixel_buffer_storage(want_r.width, want_r.height);
-		pixel_rgb_t * pixbuf = storage_.handle()->raw_pixel_buffer;
+		storage_ = nana::shared_ptr<pixel_buffer_storage>(new pixel_buffer_storage(want_r.width, want_r.height));
+		pixel_rgb_t * pixbuf = storage_->raw_pixel_buffer;
 		if(image->depth == 32 || (image->depth == 24 && image->bitmap_pad == 32))
 		{
 			if(want_r.width != static_cast<unsigned>(image->width) || want_r.height != static_cast<unsigned>(image->height))

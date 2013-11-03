@@ -315,10 +315,8 @@ namespace nana{	namespace gui{	namespace widgets
 				else if(API::caret_size(window_).height != line_pixels)
 					reset_caret_height();
 
-				if(visible == false && API::caret_visible(window_))
-					API::caret_visible(window_, false);
-				else if(visible && (API::caret_visible(window_) == false))
-					API::caret_visible(window_, true);
+				if(visible != API::caret_visible(window_))
+					API::caret_visible(window_, visible);
 
 				if(visible)
 					API::caret_pos(window_, pos_x, pos_y);

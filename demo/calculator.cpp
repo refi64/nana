@@ -4,7 +4,7 @@
  *	This is a demo for Nana C++ Library.
  *	It creates an intermediate level graphical calculator with few code.
  */
-#include <windows.h>
+
 #include <nana/gui/wvl.hpp>
 #include <nana/gui/widgets/button.hpp>
 #include <nana/gui/widgets/label.hpp>

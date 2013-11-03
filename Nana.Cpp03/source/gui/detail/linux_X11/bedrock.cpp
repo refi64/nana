@@ -658,7 +658,7 @@ namespace detail
 					if(msgwnd->flags.enabled)
 					{
 						make_eventinfo(ei, msgwnd, message, xevent);
-						bool hit = is_hit_the_rectangle(rectangle(msgwnd->pos_owner, msgwnd->dimension), xevent.xbutton.x, xevent.xbutton.y);
+						bool hit = is_hit_the_rectangle(rectangle(msgwnd->dimension), ei.mouse.x, ei.mouse.y);
 						bool fire_click = false;
 						if(bedrock.wd_manager.available(mouse_window) && (msgwnd == mouse_window))
 						{

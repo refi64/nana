@@ -127,13 +127,13 @@ namespace nana{ namespace gui{
 				nana::string text(std::size_t pos) const;
 
 				template<typename T>
-				item_proxy & value(const T& t)
+				item_proxy & resolve(const T& t)
 				{
 					auto proxy = _m_resolver().template get<resolver_proxy<T> >();
 					if(nullptr == proxy)
 						throw std::invalid_argument("Nana.Listbox.ItemProxy: the type passed to value() does not match the resolver.");
 					
-					auto & res = proxy->res;
+					auto * res = proxy->res.get();
 					const std::size_t headers = columns();
 
 					for(std::size_t i = 0; i < headers; ++i)
@@ -143,19 +143,46 @@ namespace nana{ namespace gui{
 				}
 
 				template<typename T>
-				T value() const
+				T resolve() const
 				{
 					auto proxy = _m_resolver().template get<resolver_proxy<T> >();
 					if(nullptr == proxy)
 						throw std::invalid_argument("Nana.Listbox.ItemProxy: the type passed to value() does not match the resolver.");
 					
 					T t;
-					auto & res = proxy->res->refer();
+					auto * res = proxy->res.get();
 					const std::size_t headers = columns();
 					for(std::size_t i = 0; i < headers; ++i)
-						res.encode(t, i, text(i));
+						res->encode(t, i, text(i));
 
 					return std::move(t);
+				}
+
+				template<typename T>
+				T* value_ptr() const
+				{
+					nana::any * pany = _m_value();
+					return (pany ? pany->template get<T>() : nullptr);
+				}
+
+				template<typename T>
+				T & value() const
+				{
+					nana::any * pany = _m_value();
+					if(nullptr == pany)
+						throw std::runtime_error("treebox::item_proxy.value<T>() is empty");
+
+					T * p = pany->template get<T>();
+					if(nullptr == p)
+						throw std::runtime_error("treebox::item_proxy.value<T>() invalid type of value");
+					return *p;
+				}
+
+				template<typename T>
+				item_proxy & value(const T& t)
+				{
+					*_m_value(true) = t;
+					return *this;
 				}
 
 				/// Behavior of Iterator's value_type
@@ -194,6 +221,8 @@ namespace nana{ namespace gui{
 				essence_t * _m_ess() const;
 			private:
 				const nana::any & _m_resolver() const;
+				nana::any * _m_value(bool alloc_if_empty);
+				const nana::any * _m_value() const;
 			private:
 				essence_t * ess_;
 				std::size_t cat_;
@@ -209,7 +238,7 @@ namespace nana{ namespace gui{
 
 				/// Append an item at end of the category
 				template<typename T>
-				cat_proxy& append(const T& t)
+				item_proxy append(const T& t)
 				{
 					auto proxy = _m_resolver().template get<resolver_proxy<T> >();
 					if(proxy)
@@ -221,8 +250,9 @@ namespace nana{ namespace gui{
 						const std::size_t headers = columns();
 						for(std::size_t i = 1; i < headers; ++i)
 							ip.text(i, res->decode(i, t));
+						return ip;
 					}
-					return *this;
+					return item_proxy();
 				}
 
 				std::size_t columns() const;
@@ -234,6 +264,8 @@ namespace nana{ namespace gui{
 				item_proxy end() const;
 				item_proxy cbegin() const;
 				item_proxy cend() const;
+
+				item_proxy at(std::size_t pos) const;
 
 				std::size_t size() const;
 
@@ -308,6 +340,7 @@ namespace nana{ namespace gui{
 
 		cat_proxy append(const nana::string& text);
 		cat_proxy at(std::size_t pos) const;
+		item_proxy at(std::size_t pos, std::size_t index) const;
 
 		void insert(size_type cat, size_type index, const nana::string&);
 

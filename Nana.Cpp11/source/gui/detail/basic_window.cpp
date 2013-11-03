@@ -22,6 +22,7 @@ namespace nana{	namespace gui{
 					{
 						native_interface::caret_create(wd_->root, size_.width, size_.height);
 						real_visible_state_ = false;
+						visible_ = false;
 						this->position(point_.x, point_.y);
 					}
 					else

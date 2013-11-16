@@ -7,8 +7,19 @@
 
 #ifndef NANA_MEMORY_HPP
 #define NANA_MEMORY_HPP
-#include <nana/functor.hpp>
 
+#ifdef NANA_USE_BOOST_SMART_PTR
+
+#include <boost/shared_ptr.hpp>
+
+namespace nana
+{
+	using boost::shared_ptr;
+}
+
+#else
+
+#include <nana/functor.hpp>
 
 namespace nana
 {
@@ -153,6 +164,8 @@ bool operator==(const nana::shared_ptr<T> & a, const nana::shared_ptr<U> & b)
 {
 	return (a.get() == b.get());
 }
+
+#endif
 	
 #endif
 

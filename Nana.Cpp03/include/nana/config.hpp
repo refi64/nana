@@ -45,8 +45,9 @@
 
 
 //If Boost C++ Library is installed in current system. Nana recommends
-//enabling Boost mutex and condition_variable instead of the mutex
-//and condition_variable that provided by Nana. Only for C++03
-//#define NANA_USE_BOOST_MUTEX_CONDITION_VARIABLE 1
+//enabling Boost instead of classes that provided by Nana. Only for C++03
+
+//#define NANA_USE_BOOST_MUTEX_CONDITION_VARIABLE	1
+//#define NANA_USE_BOOST_SMART_PTR	1
 
 #endif

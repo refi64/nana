@@ -18,6 +18,7 @@
 #include <nana/paint/pixel_buffer.hpp>
 #include <nana/paint/detail/native_paint_interface.hpp>
 #include <nana/auto_buf.hpp>
+#include <algorithm>
 
 namespace nana
 {

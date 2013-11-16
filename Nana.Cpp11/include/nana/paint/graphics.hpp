@@ -145,6 +145,7 @@ namespace nana
 			static color_t mix(color_t colorX, color_t colorY, double persent);
 		private:
 			std::shared_ptr<nana::detail::drawable_impl_type> dwptr_;
+			font			font_shadow_;
             drawable_type	handle_;
 			nana::size	size_;
 			nana::paint::pixel_buffer pxbuf_;

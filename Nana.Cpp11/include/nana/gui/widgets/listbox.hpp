@@ -127,7 +127,7 @@ namespace nana{ namespace gui{
 				nana::string text(std::size_t pos) const;
 
 				template<typename T>
-				item_proxy & resolve(const T& t)
+				item_proxy & resolve_from(const T& t)
 				{
 					auto proxy = _m_resolver().template get<resolver_proxy<T> >();
 					if(nullptr == proxy)
@@ -143,19 +143,16 @@ namespace nana{ namespace gui{
 				}
 
 				template<typename T>
-				T resolve() const
+				void resolve_to(T& t) const
 				{
 					auto proxy = _m_resolver().template get<resolver_proxy<T> >();
 					if(nullptr == proxy)
 						throw std::invalid_argument("Nana.Listbox.ItemProxy: the type passed to value() does not match the resolver.");
 					
-					T t;
 					auto * res = proxy->res.get();
 					const std::size_t headers = columns();
 					for(std::size_t i = 0; i < headers; ++i)
 						res->encode(t, i, text(i));
-
-					return std::move(t);
 				}
 
 				template<typename T>

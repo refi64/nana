@@ -337,6 +337,8 @@ namespace paint
 
 		void graphics::typeface(const font& f)
 		{
+			//Keep the font, even if the graphics is empty. Setting the font is futile when the size
+			//of a widget is zero.
 			font_shadow_ = f;
 			if(handle_ && (false == f.empty()))
 			{

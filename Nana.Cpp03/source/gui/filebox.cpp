@@ -675,7 +675,8 @@ namespace nana{	namespace gui
 			std::pair<std::size_t, std::size_t> index = sel[0];
 
 			
-			item_fs m = ls_file_.at(index.first, index.second).resolve<item_fs>();
+			item_fs m;
+			ls_file_.at(index.first, index.second).resolve_to(m);
 
 			if(events::dbl_click::identifier == ei.identifier)
 			{

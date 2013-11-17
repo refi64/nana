@@ -247,7 +247,7 @@ namespace gui
 				*sig.info.str = this->_m_caption();
 				break;
 			case detail::signals::destroy:
-				handle_ = 0; break;
+				handle_ = nullptr; break;
 			}
 		}
 	private:
@@ -299,6 +299,21 @@ namespace gui
 		{
 			API::window_icon(handle_, ico);
 		}
+
+		void restore()
+		{
+			API::restore_window(handle_);
+		}
+
+		void zoom(bool ask_for_max)
+		{
+			API::zoom_window(handle_, ask_for_max);
+		}
+
+		bool is_zoomed(bool ask_for_max) const
+		{
+			return API::is_window_zoomed(handle_, ask_for_max);
+		}
 	protected:
 		DrawerTrigger& get_drawer_trigger()
 		{
@@ -321,7 +336,7 @@ namespace gui
 				*sig.info.str = this->_m_caption();
 				break;
 			case detail::signals::destroy:
-				handle_ = 0; break;
+				handle_ = nullptr; break;
 			}
 		}
 

@@ -100,6 +100,39 @@ namespace nana{
 		threads::recursive_mutex mutex_;
 		map_t map_;
 	};
+
+	//This function is a proxy for ShowWindow/ShowWindowAsync
+	//It determines which API should be called.
+	void msw_show_window(HWND wd, int cmd)
+	{
+		bool async = true;
+		const DWORD tid = ::GetCurrentThreadId();
+		if(tid == ::GetWindowThreadProcessId(wd, 0))
+		{
+			HWND owner = ::GetWindow(wd, GW_OWNER);
+			if ((0 == owner) || (tid == ::GetWindowThreadProcessId(owner, 0)))
+			{
+				async = false;
+				HWND owned = ::GetWindow(wd, GW_HWNDPREV);
+				while (owned)
+				{
+					if (::GetWindow(owned, GW_OWNER) == wd)
+					{
+						if (tid != ::GetWindowThreadProcessId(owned, 0))
+						{
+							async = true;
+							break;
+						}
+					}
+					owned = ::GetWindow(owned, GW_HWNDPREV);
+				}
+			}
+		}
+		if (async)
+			::ShowWindowAsync(wd, cmd);
+		else
+			::ShowWindow(wd, cmd);
+	}
 #elif defined(NANA_X11)
 	namespace restrict
 	{
@@ -560,33 +593,7 @@ namespace nana{
 		{
 #if defined(NANA_WINDOWS)
 			int cmd = (show ? (active ? SW_SHOW : SW_SHOWNA) : SW_HIDE);
-			bool async = true;
-			const DWORD tid = ::GetCurrentThreadId();
-			if(tid == ::GetWindowThreadProcessId(reinterpret_cast<HWND>(wd), 0))
-			{
-				HWND owner = ::GetWindow(reinterpret_cast<HWND>(wd), GW_OWNER);
-				if((0 == owner) || (tid == ::GetWindowThreadProcessId(owner, 0)))
-				{
-					async = false;
-					HWND owned = ::GetWindow(reinterpret_cast<HWND>(wd), GW_HWNDPREV);
-					while(owned)
-					{
-						if(::GetWindow(owned, GW_OWNER) == reinterpret_cast<HWND>(wd))
-						{
-							if(tid != ::GetWindowThreadProcessId(owned, 0))
-							{
-								async = true;
-								break;
-							}
-						}
-						owned = ::GetWindow(owned, GW_HWNDPREV);
-					}
-				}
-			}
-			if(async)
-				::ShowWindowAsync(reinterpret_cast<HWND>(wd), cmd);
-			else
-				::ShowWindow(reinterpret_cast<HWND>(wd), cmd);
+			msw_show_window(reinterpret_cast<HWND>(wd), cmd);
 #elif defined(NANA_X11)
 			if(wd)
 			{
@@ -610,8 +617,10 @@ namespace nana{
 		void native_interface::restore_window(native_window_type wd)
 		{
 #if defined(NANA_WINDOWS)
-			::ShowWindowAsync(reinterpret_cast<HWND>(wd), SW_RESTORE);
+			msw_show_window(reinterpret_cast<HWND>(wd), SW_RESTORE);
 #elif defined(NANA_X11)
+			//Restore the window by removing NET_WM_STATE_MAXIMIZED_HORZ,
+			//_NET_WM_STATE_MAXIMIZED_VERT and _NET_WM_STATE_FULLSCREEN.
 			Display * disp = restrict::spec.open_display();
 			const nana::detail::atombase_tag & atombase = restrict::spec.atombase();
 			XEvent evt;
@@ -620,7 +629,7 @@ namespace nana{
 			evt.xclient.message_type = atombase.net_wm_state;
 			evt.xclient.format = 32;
 			evt.xclient.window = reinterpret_cast<Window>(wd);
-			evt.xclient.data.l[0] = 0;
+			evt.xclient.data.l[0] = 0;	//_NET_WM_STATE_REMOVE
 			evt.xclient.data.l[1] = atombase.net_wm_state_maximized_horz;
 			evt.xclient.data.l[2] = atombase.net_wm_state_maximized_vert;
 			evt.xclient.data.l[3] = evt.xclient.data.l[4] = 0;
@@ -628,18 +637,51 @@ namespace nana{
 			nana::detail::platform_scope_guard psg;
 			::XSendEvent(disp, XDefaultRootWindow(disp), False, SubstructureRedirectMask | SubstructureNotifyMask, &evt);
 			evt.xclient.data.l[1] = atombase.net_wm_state_fullscreen;
-			evt.xclient.data.l[2] = evt.xclient.data.l[3] = evt.xclient.data.l[4] = 0;
+			evt.xclient.data.l[2] = 0;
 			::XSendEvent(disp, XDefaultRootWindow(disp), False, SubstructureRedirectMask | SubstructureNotifyMask, &evt);
-			::XMapWindow(disp, reinterpret_cast<Window>(wd));
+
+			//Transfer the window from IconState to NormalState.
+			evt.xclient.message_type = atombase.wm_change_state;
+			evt.xclient.data.l[0] = NormalState;
+			evt.xclient.data.l[1] = 0;
+			::XSendEvent(disp, XDefaultRootWindow(disp), False, SubstructureRedirectMask | SubstructureNotifyMask, &evt);
+			::XSetInputFocus(disp, reinterpret_cast<Window>(wd), RevertToPointerRoot, CurrentTime);
+#endif
+		}
+
+		void native_interface::zoom_window(native_window_type wd, bool ask_for_max)
+		{
+#if defined(NANA_WINDOWS)
+			msw_show_window(reinterpret_cast<HWND>(wd), ask_for_max ? SW_MAXIMIZE : SW_MINIMIZE);
+#elif defined(NANA_X11)
+			Display * disp = restrict::spec.open_display();
+			if (ask_for_max)
+			{
+				const nana::detail::atombase_tag & atombase = restrict::spec.atombase();
+				XEvent evt;
+				evt.xclient.type = ClientMessage;
+				evt.xclient.display = restrict::spec.open_display();
+				evt.xclient.message_type = atombase.net_wm_state;
+				evt.xclient.format = 32;
+				evt.xclient.window = reinterpret_cast<Window>(wd);
+				evt.xclient.data.l[0] = 1;	//_NET_WM_STATE_ADD
+				evt.xclient.data.l[1] = atombase.net_wm_state_maximized_horz;
+				evt.xclient.data.l[2] = atombase.net_wm_state_maximized_vert;
+				evt.xclient.data.l[3] = evt.xclient.data.l[4] = 0;
+
+				nana::detail::platform_scope_guard psg;
+				::XSendEvent(disp, XDefaultRootWindow(disp), False, SubstructureRedirectMask | SubstructureNotifyMask, &evt);
+				::XMapWindow(disp, reinterpret_cast<Window>(wd));
+			}
+			else
+				::XIconifyWindow(disp, reinterpret_cast<Window>(wd), XDefaultScreen(disp));
 #endif
 		}
 
 		void native_interface::refresh_window(native_window_type wd)
 		{
 #if defined(NANA_WINDOWS)
-			RECT rect;
-			::GetClientRect(reinterpret_cast<HWND>(wd), &rect);
-			::InvalidateRect(reinterpret_cast<HWND>(wd), &rect, true);
+			::InvalidateRect(reinterpret_cast<HWND>(wd), 0, true);
 #elif defined(NANA_X11)
 #endif
 		}

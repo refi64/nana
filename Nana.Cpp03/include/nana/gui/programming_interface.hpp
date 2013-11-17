@@ -99,6 +99,7 @@ namespace API
 	void close_window(window);
 	void show_window(window, bool show);
 	void restore_window(window);
+	void zoom_window(window, bool ask_for_max);
 	bool visible(window);
 	window get_parent_window(window);
 	window get_owner_window(window);

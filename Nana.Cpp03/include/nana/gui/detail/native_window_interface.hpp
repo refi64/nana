@@ -49,6 +49,7 @@ namespace detail
 		static void close_window(native_window_type);
 		static void show_window(native_window_type, bool show, bool active);
 		static void restore_window(native_window_type);
+		static void zoom_window(native_window_type, bool ask_for_max);
 		static void	refresh_window(native_window_type);
 		static bool is_window(native_window_type);
 		static bool	is_window_visible(native_window_type);

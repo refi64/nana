@@ -629,6 +629,7 @@ namespace nana{
 			//Restore the window by removing NET_WM_STATE_MAXIMIZED_HORZ,
 			//_NET_WM_STATE_MAXIMIZED_VERT and _NET_WM_STATE_FULLSCREEN.
 			Display * disp = restrict::spec.open_display();
+			Window default_root = XDefaultRootWindow(disp);
 			const nana::detail::atombase_tag & atombase = restrict::spec.atombase();
 			XEvent evt;
 			evt.xclient.type = ClientMessage;
@@ -642,16 +643,18 @@ namespace nana{
 			evt.xclient.data.l[3] = evt.xclient.data.l[4] = 0;
 
 			nana::detail::platform_scope_guard psg;
-			::XSendEvent(disp, XDefaultRootWindow(disp), False, SubstructureRedirectMask | SubstructureNotifyMask, &evt);
+			::XSendEvent(disp, default_root, False, SubstructureRedirectMask | SubstructureNotifyMask, &evt);
 			evt.xclient.data.l[1] = atombase.net_wm_state_fullscreen;
 			evt.xclient.data.l[2] = 0;
-			::XSendEvent(disp, XDefaultRootWindow(disp), False, SubstructureRedirectMask | SubstructureNotifyMask, &evt);
+			::XSendEvent(disp, default_root, False, SubstructureRedirectMask | SubstructureNotifyMask, &evt);
 
 			//Transfer the window from IconState to NormalState.
 			evt.xclient.message_type = atombase.wm_change_state;
 			evt.xclient.data.l[0] = NormalState;
 			evt.xclient.data.l[1] = 0;
-			::XSendEvent(disp, XDefaultRootWindow(disp), False, SubstructureRedirectMask | SubstructureNotifyMask, &evt);
+			::XSendEvent(disp, default_root, False, SubstructureRedirectMask | SubstructureNotifyMask, &evt);
+			::XMapWindow(disp, reinterpret_cast<Window>(wd));
+			restrict::spec.set_error_handler();
 			::XSetInputFocus(disp, reinterpret_cast<Window>(wd), RevertToPointerRoot, CurrentTime);
 #endif
 		}

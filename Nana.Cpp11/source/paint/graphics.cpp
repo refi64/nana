@@ -112,6 +112,14 @@ namespace paint
 			}
 		}
 
+		void font::set_default() const
+		{
+			if(empty())
+				return;
+
+			nana::detail::platform_spec::instance().default_native_font(impl_->font_ptr);
+		}
+
 		nana::string font::name() const
 		{
 			if(empty()) return nana::string();

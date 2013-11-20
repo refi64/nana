@@ -39,6 +39,8 @@ namespace nana
 			bool empty() const;
 			void make(const nana::char_t* name, unsigned size, bool bold = false, bool italic = false, bool underline = false, bool strike_out = false);
 			void make_raw(const nana::char_t*, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out);
+
+			void set_default() const;
 			nana::string name() const;
 			unsigned size() const;
 			bool bold() const;

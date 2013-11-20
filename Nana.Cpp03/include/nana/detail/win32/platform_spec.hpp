@@ -159,6 +159,7 @@ namespace detail
 		platform_spec();
 
 		const font_ptr_t& default_native_font() const;
+		void default_native_font(const font_ptr_t&);
 		unsigned font_size_to_height(unsigned) const;
 		unsigned font_height_to_size(unsigned) const;
 		font_ptr_t make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out);

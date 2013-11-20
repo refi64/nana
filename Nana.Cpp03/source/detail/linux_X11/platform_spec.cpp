@@ -409,6 +409,11 @@ namespace detail
 	{
 		return def_font_ptr_;
 	}
+	
+	void platform_spec::default_native_font(const font_ptr_t& fp)
+	{
+		def_font_ptr_ = fp;	
+	}
 
 	unsigned platform_spec::font_size_to_height(unsigned size) const
 	{

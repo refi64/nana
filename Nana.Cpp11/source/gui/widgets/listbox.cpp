@@ -1522,6 +1522,9 @@ namespace nana{ namespace gui{
 				{
 					std::pair<size_type, size_type> target;
 
+					if(scroll.v.empty() || !scroll.v.scrollable(upwards))
+						return false;
+
 					if(upwards == false)
 						lister.forward(scroll.offset_y.x, scroll.offset_y.y, 1, target);
 					else

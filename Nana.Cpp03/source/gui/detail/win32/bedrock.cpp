@@ -655,6 +655,7 @@ namespace detail
 		case WM_IME_STARTCOMPOSITION:
 		case WM_DROPFILES:
 		case WM_MOUSELEAVE:
+		case WM_MOUSEWHEEL:	//The WM_MOUSELAST may not include the WM_MOUSEWHEEL when the version of SDK is low.
 			return false;
 		default:
 			if((WM_MOUSEFIRST <= msg && msg <= WM_MOUSELAST) || (WM_KEYFIRST <= msg && msg <= WM_KEYLAST))

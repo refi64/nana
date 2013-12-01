@@ -212,12 +212,20 @@ namespace nana
 		bool operator!=(t) const;
 	};
 
-	//The definition of text alignment
+	///The definition of horizontal alignment
 	struct align
 	{
 		enum t{
 			left, center, right
 		};
+	};
+
+	///The definition of vertical alignment
+	struct align_v
+	{
+		enum t{
+			top, center, bottom
+		};		
 	};
 }//end namespace nana
 

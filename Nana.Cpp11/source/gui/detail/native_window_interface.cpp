@@ -862,7 +862,13 @@ namespace nana{
 					x += (owner_rect.left - pos.x);
 					y += (owner_rect.top - pos.y);
 				}
-				::MoveWindow(reinterpret_cast<HWND>(wd), x, y, width, height, true);
+
+				RECT client, wd_area;
+				::GetClientRect(reinterpret_cast<HWND>(wd), &client);
+				::GetWindowRect(reinterpret_cast<HWND>(wd), &wd_area);
+				unsigned ext_w = (wd_area.right - wd_area.left) - client.right;
+				unsigned ext_h = (wd_area.bottom - wd_area.top) - client.bottom;
+				::MoveWindow(reinterpret_cast<HWND>(wd), x, y, width + ext_w, height + ext_h, true);
 			}
 #elif defined(NANA_X11)
 			Display * disp = restrict::spec.open_display();

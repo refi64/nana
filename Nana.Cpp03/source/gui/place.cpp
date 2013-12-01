@@ -19,7 +19,7 @@
 
 namespace nana{	namespace gui
 {
-	//number_t is used to store a number type variable
+	//number_t is used for storing a number type variable
 	//such as integer, real and percent. Essentially, percent is a typo of real.
 	class number_t
 	{
@@ -334,7 +334,7 @@ namespace nana{	namespace gui
 		class div_vertical_arrange;
 		class div_grid;
 
-		//this is used to answer the place resize event.
+		//this is used for answering the place resize event.
 		struct place_resize_answer;
 
 		window window_handle;

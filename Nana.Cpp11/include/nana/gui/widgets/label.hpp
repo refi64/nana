@@ -28,8 +28,9 @@ namespace nana{ namespace gui{
 			//@brief:	draw the label
 			class trigger: public drawer_trigger
 			{
-				struct impl_t;
 			public:
+				struct impl_t;
+
 				trigger();
 				~trigger();
 				void bind_window(widget_reference);
@@ -48,8 +49,8 @@ namespace nana{ namespace gui{
 		}//end namespace label
 	}//end namespace drawerbase
 
-	//class label
-	//@brief: defaine a label widget and it provides the interfaces to be operationa
+	///class label
+	///@brief: defaine a label widget and it provides the interfaces to be operationa
 	class label
 		: public widget_object<category::widget_tag, drawerbase::label::trigger>
 	{
@@ -65,9 +66,8 @@ namespace nana{ namespace gui{
 		void format(bool);
 		void add_format_listener(const std::function<void(command, const nana::string&)> &);
 		void add_format_listener(std::function<void(command, const nana::string&)> &&);
-		nana::size measure() const;
-		unsigned extent_size() const;
-		void text_align(align);
+		nana::size measure(unsigned limited) const;
+		void text_align(align, align_v = align_v::top);
 	private:
 		void _m_caption(const nana::string&);
 	};

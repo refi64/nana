@@ -19,7 +19,7 @@
 
 namespace nana{	namespace gui
 {
-	//number_t is used to store a number type variable
+	//number_t is used for storing a number type variable
 	//such as integer, real and percent. Essentially, percent is a typo of real.
 	class number_t
 	{

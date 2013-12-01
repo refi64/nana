@@ -322,7 +322,7 @@ namespace threads
 				pto->thr_state = state::finished;
 			}
 
-			//Here defines the a function used to creating a thread.
+			//Here defines the a function used for creating a thread.
 			//This is platform-specified.
 #if defined(NANA_WINDOWS)
 			static unsigned __stdcall _m_thr_starter(pool_throbj * pto)

@@ -201,10 +201,16 @@ namespace nana
 		unknown, horizontal, vertical, horizontal_vertical
 	};
 
-	//The definition of text alignment
+	///The definition of horizontal alignment
 	enum class align
 	{
 		left, center, right
+	};
+
+	///The definition of vertical alignment
+	enum class align_v
+	{
+		top, center, bottom
 	};
 }//end namespace nana
 

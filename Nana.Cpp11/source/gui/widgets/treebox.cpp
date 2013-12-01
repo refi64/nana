@@ -393,12 +393,17 @@ namespace gui
 
 				bool set_checked(node_type * node, checkstate cs)
 				{
-					if(node && node->value.second.checked != cs)
+					if (node && node->value.second.checked != cs)
 					{
 						node->value.second.checked = cs;
-						data.stop_drawing = true;
-						attr.ext_event.checked(data.widget_ptr->handle(), item_proxy(data.trigger_ptr, node), (checkstate::unchecked != cs));
-						data.stop_drawing = false;
+
+						//Don't call the extevent when node is the root node.
+						if (node->owner)
+						{
+							data.stop_drawing = true;
+							attr.ext_event.checked(data.widget_ptr->handle(), item_proxy(data.trigger_ptr, node), (checkstate::unchecked != cs));
+							data.stop_drawing = false;
+						}
 						return true;
 					}
 					return false;

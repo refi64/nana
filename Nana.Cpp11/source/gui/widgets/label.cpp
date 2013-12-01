@@ -158,7 +158,7 @@ namespace gui
 						if(false == _m_each_line(graph, line, rs))
 							break;
 
-						rs.pos.y += rs.pixels.back().pixels;
+						rs.pos.y += static_cast<int>(rs.pixels.back().pixels);
 						if(rs.pos.y >= static_cast<int>(graph.height()))
 							break;
 					}
@@ -206,8 +206,10 @@ namespace gui
 						if(retsize.width < w)
 							retsize.width = w;
 
-						for(std::vector<pixel_tag>::iterator u = rs.pixels.begin(); u != rs.pixels.end(); ++u)
-							retsize.height += u->pixels;
+						//for(std::vector<pixel_tag>::iterator u = rs.pixels.begin(); u != rs.pixels.end(); ++u)
+						//	retsize.height += u->pixels;
+						for (auto & px : rs.pixels)
+							retsize.height += static_cast<unsigned>(px.pixels);
 					}
 
 					return retsize;
@@ -259,7 +261,7 @@ namespace gui
 					return fp->font_size;			
 				}
 
-				std::size_t _m_bold(nana::gui::widgets::skeletons::fblock* fp)
+				bool _m_bold(nana::gui::widgets::skeletons::fblock* fp)
 				{
 					while(fp->bold_empty)
 					{
@@ -286,7 +288,7 @@ namespace gui
 					if(fp != fblock_)
 					{
 						const nana::string& name = _m_fontname(fp);
-						std::size_t fontsize = _m_font_size(fp);
+						auto fontsize = static_cast<unsigned>(_m_font_size(fp));
 						bool bold = _m_bold(fp);
 
 						if((fontsize != font_.size()) || bold != font_.bold() || name != font_.name())
@@ -301,21 +303,21 @@ namespace gui
 				void _m_measure(graph_reference graph)
 				{
 					nana::paint::font ft = font_;
-					for(dstream::iterator i = dstream_.begin(), end = dstream_.end(); i != end; ++i)
+					//for(dstream::iterator i = dstream_.begin(), end = dstream_.end(); i != end; ++i)
+					for (auto line : dstream_)
 					{
-						dstream::linecontainer& line = *i;
-						
-						for(dstream::linecontainer::iterator u = line.begin(), uend = line.end(); u != uend; ++u)
+						//dstream::linecontainer& line = *i;
+						for(auto i = line.begin(), end = line.end(); i != end; ++i)
 						{
-							_m_change_font(graph, u->fblock_ptr);
-							u->data_ptr->measure(graph);
+							_m_change_font(graph, i->fblock_ptr);
+							i->data_ptr->measure(graph);
 						}
 					}
 					if(font_ != ft)
 					{
 						font_ = ft;
 						graph.typeface(ft);
-						fblock_ = 0;
+						fblock_ = nullptr;
 					}
 				}
 
@@ -358,8 +360,8 @@ namespace gui
 
 						if(fblock::aligns::baseline == i->fblock_ptr->text_align)
 						{
-							as = data_ptr->ascent();
-							ds = sz.height - as;
+							as = static_cast<unsigned>(data_ptr->ascent());
+							ds = static_cast<unsigned>(sz.height - as);
 
 							if(max_descent < ds)
 								max_descent = ds;
@@ -461,12 +463,10 @@ namespace gui
 								nana::size sz = value.data_ptr->size();
 
 								pixel_tag px = rs.pixels[rs.index];
-
-								//if(_m_overline(rs, rs.pos.x + sz.width, false))
 								if(rs.allowed_width < rs.pos.x + sz.width)
 								{
 									//Change a line.
-									rs.pos.y += px.pixels;
+									rs.pos.y += static_cast<int>(px.pixels);
 									px = rs.pixels[++rs.index];
 									rs.pos.x = px.x_base;
 								}
@@ -498,58 +498,6 @@ namespace gui
 						}
 					}
 					return (rs.pos.y <= lastpos);
-/*
-					for(iterator i = line.begin(), end = line.end(); i != end; ++i)
-					{
-						if(false == i->data_ptr->is_text())
-						{
-							if(text.size())
-							{
-								_m_draw_block(graph, text, block_start, rs);
-								if(lastpos < rs.pos.y)
-									return false;
-
-								text.clear();
-							}
-
-							nana::size sz = i->data_ptr->size();
-
-							pixel_tag px = rs.pixels[rs.index];
-
-							//if(_m_overline(rs, rs.pos.x + sz.width, false))
-							if(rs.allowed_width < rs.pos.x + sz.width)
-							{
-								//Change a line.
-								rs.pos.y += px.pixels;
-								px = rs.pixels[++rs.index];
-								rs.pos.x = px.x_base;
-							}
-
-							int y = rs.pos.y + _m_text_top(px, i->fblock_ptr, i->data_ptr);
-
-							i->data_ptr->nontext_render(graph, rs.pos.x, y);
-							_m_inser_if_traceable(rs.pos.x, y, sz, i->fblock_ptr);
-							rs.pos.x += static_cast<int>(sz.width);
-
-							if(lastpos < y)
-								return false;
-						}
-						else
-						{
-							//hold the block while the text is empty,
-							//it stands for the first block
-							if(text.empty())
-								block_start = i;
-
-							text += i->data_ptr->text();
-						}
-					}
-					
-					if(text.size())
-						_m_draw_block(graph, text, block_start, rs);
-
-					return (lastpos < rs.pos.y);
-*/
 				}
 
 				static bool _m_overline(const render_status& rs, int right, bool equal_required)
@@ -560,16 +508,16 @@ namespace gui
 					return (equal_required ? rs.pixels[rs.index].x_base <= 0 : rs.pixels[rs.index].x_base < 0);
 				}
 
-				static unsigned _m_text_top(const pixel_tag& px, fblock* fblock_ptr, const data* data_ptr)
+				static int _m_text_top(const pixel_tag& px, fblock* fblock_ptr, const data* data_ptr)
 				{
 					switch(fblock_ptr->text_align)
 					{
 					case fblock::aligns::center:
-						return (px.pixels - data_ptr->size().height) / 2;
+						return static_cast<int>(px.pixels - data_ptr->size().height) / 2;
 					case fblock::aligns::bottom:
-						return (px.pixels - data_ptr->size().height);
+						return static_cast<int>(px.pixels - data_ptr->size().height);
 					case fblock::aligns::baseline:
-						return (px.baseline - (data_ptr->is_text() ? data_ptr->ascent() : data_ptr->size().height));
+						return static_cast<int>(px.baseline - (data_ptr->is_text() ? data_ptr->ascent() : data_ptr->size().height));
 					default:	break;
 					}
 					return 0;
@@ -800,7 +748,7 @@ namespace gui
 
 				void trigger::refresh(graph_reference graph)
 				{
-					if(0 == impl_->wd) return;
+					if(nullptr == impl_->wd) return;
 
 					nana::gui::window wd = impl_->wd->handle();
 					if(bground_mode::basic != API::effects_bground_mode(wd))

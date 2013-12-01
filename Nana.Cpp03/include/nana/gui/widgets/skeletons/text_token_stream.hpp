@@ -24,7 +24,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 			number, string, _true, _false, red, green, blue, white, black, binary, min_limited, max_limited,
 			
 			equal, comma, backslash,
-			data, endl, dividable,
+			data, endl,
 			eof
 		};
 	};
@@ -159,17 +159,6 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 			{
 				_m_read_number();
 				return token::data;
-			}
-			
-			if(ch == ' ')
-			{
-				
-				/*
-				whspace_size_ = 1;
-				while(*(++iptr_) == ' ')
-					++whspace_size_;
-				return token::dividable;
-				*/
 			}
 			
 			if(('<' == ch) && format_enabled_)
@@ -509,11 +498,6 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		{
 		}
 		
-		virtual std::size_t length() const
-		{
-			return str_.size();
-		}
-		
 		virtual const nana::size & size() const
 		{
 			return size_;
@@ -527,69 +511,6 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		nana::string str_;
 		nana::size	size_;
 		std::size_t ascent_;
-	};
-	
-	class data_dividable
-		: public data
-	{
-	public:
-		data_dividable(nana::char_t c, std::size_t len)
-			:	ascent_(0),
-				is_ws_(' ' == c || '\t' == c)
-		{
-			for(std::size_t i = 0; i < len; ++i)
-				str_ += c;
-		}
-	private:
-		virtual bool is_text() const
-		{
-			return true;
-		}
-
-		virtual bool is_whitespace() const
-		{
-			return is_ws_;
-		}
-		
-		virtual const nana::string& text() const
-		{
-			return str_;
-		}
-		
-		virtual void measure(graph_reference graph)
-		{
-			size_ = graph.text_extent_size(str_);
-
-			unsigned ascent;
-			unsigned descent;
-			unsigned internal_leading;
-			graph.text_metrics(ascent, descent, internal_leading);
-			ascent_ = ascent;
-		}
-
-		virtual void nontext_render(graph_reference, int, int)
-		{
-		}
-		
-		virtual std::size_t length() const
-		{
-			return str_.size();
-		}
-		
-		virtual const nana::size & size() const
-		{
-			return size_;
-		}
-
-		virtual std::size_t ascent() const
-		{
-			return ascent_;
-		}
-	private:
-		nana::string str_;
-		nana::size	size_;
-		std::size_t ascent_;
-		bool is_ws_;
 	};
 	
 	class data_image
@@ -652,12 +573,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 			else
 				image_.paste(graph, x, y);
 		}
-		
-		virtual std::size_t length() const
-		{
-			return 0;
-		}
-		
+
 		virtual const nana::size & size() const
 		{
 			return size_;
@@ -722,7 +638,6 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				switch(tk)
 				{
 				case token::data:
-				case token::dividable:
 					_m_data_factory(tk, tknizer.idstr(), fstack.top(), lines_.back());
 					break;
 				case token::endl:

@@ -550,7 +550,7 @@ namespace gui
 							if((static_cast<int>(sz.width) > w) && (rs.pos.x != px.x_base))
 							{
 								//Change a new line
-								rs.pos.y += px.pixels;
+								rs.pos.y += static_cast<int>(px.pixels);
 								px = rs.pixels[++rs.index];
 								rs.pos.x = px.x_base;
 							}

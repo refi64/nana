@@ -10,13 +10,10 @@
  */
 
 #include <nana/gui/widgets/label.hpp>
-#include <nana/system/platform.hpp>
 #include <nana/unicode_bidi.hpp>
-#include <nana/paint/text_renderer.hpp>
 #include <nana/gui/widgets/skeletons/text_token_stream.hpp>
 #include <stdexcept>
 #include <sstream>
-#include <numeric>	//accumulate
 
 namespace nana
 {
@@ -56,14 +53,6 @@ namespace gui
 					nana::string id;
 				};
 
-				struct calc_metrics
-				{
-					unsigned total_width;
-					unsigned processed_width;
-					unsigned max_ascent;
-					unsigned max_descent;
-					unsigned max_px;
-				};
 			public:
 				typedef nana::paint::graphics& graph_reference;
 				typedef gui::widgets::skeletons::dstream dstream;
@@ -71,7 +60,8 @@ namespace gui
 				typedef gui::widgets::skeletons::data data;
 
 				renderer()
-					: fblock_(0), format_enabled_(false)
+					:	fblock_(nullptr),
+						format_enabled_(false)
 				{
 				}
 				
@@ -96,10 +86,9 @@ namespace gui
 
 					nana::paint::font ft = graph.typeface();	//used for restoring the font
 					font_ = ft;
-					fblock_ = 0;
+					fblock_ = nullptr;
 					
 					_m_set_default(ft, fgcolor);
-
 
 					_m_measure(graph);
 
@@ -113,13 +102,13 @@ namespace gui
 
 					std::size_t extent_v_pixels = 0;	//the pixels, in height, that text will be painted.
 
-					for(dstream::iterator i = dstream_.begin(), end = dstream_.end(); i != end; ++i)
+					for (auto & line : dstream_)
 					{
 						rs.pixels.clear();
-						_m_line_pixels(*i, rs);
+						_m_line_pixels(line, rs);
 
-						for(std::vector<pixel_tag>::iterator u = rs.pixels.begin(); u != rs.pixels.end(); ++u)
-							extent_v_pixels += u->pixels;
+						for(auto i = rs.pixels.begin(); i != rs.pixels.end(); ++i)
+							extent_v_pixels += i->pixels;
 
 						std::vector<pixel_tag> tmp;
 						pixel_lines.push_back(tmp);
@@ -139,17 +128,13 @@ namespace gui
 					else
 						rs.pos.y = 0;
 
-					std::deque<std::vector<pixel_tag> >::iterator pixels_iterator = pixel_lines.begin();
+					auto pixels_iterator = pixel_lines.begin();
 
-					//draw_function df(*this, rs, graph);
-					for(dstream::iterator i = dstream_.begin(), end = dstream_.end(); i != end; ++i)
+					for (auto & line : dstream_)
 					{
 						rs.index = 0;
 						rs.pixels.clear();
 
-						dstream::linecontainer & line = *i;
-
-						//_m_line_pixels(line, rs);
 						rs.pixels.swap(*pixels_iterator++);
 
 						rs.pos.x = rs.pixels.front().x_base;
@@ -168,11 +153,11 @@ namespace gui
 
 				bool find(int x, int y, nana::string& id) const
 				{
-					for(std::deque<traceable>::const_iterator i = traceable_.begin(); i != traceable_.end(); ++i)
+					for (auto & t : traceable_)
 					{
-						if(i->r.is_hit(x, y))
+						if(t.r.is_hit(x, y))
 						{
-							id = i->id;
+							id = t.id;
 							return true;
 						}
 					}
@@ -186,7 +171,7 @@ namespace gui
 
 					nana::paint::font ft = graph.typeface();	//used for restoring the font
 					font_ = ft;
-					fblock_ = 0;
+					fblock_ = nullptr;
 					
 					_m_set_default(ft, 0);
 					_m_measure(graph);
@@ -197,17 +182,17 @@ namespace gui
 					rs.text_align = th;
 					rs.text_align_v = tv;
 
-					for(dstream::iterator i = dstream_.begin(), end = dstream_.end(); i != end; ++i)
+					for(auto i = dstream_.begin(), end = dstream_.end(); i != end; ++i)
 					{
 						rs.pixels.clear();
 						unsigned w = _m_line_pixels(*i, rs);
+
 						if(limited && (w > limited))
 							w = limited;
+
 						if(retsize.width < w)
 							retsize.width = w;
 
-						//for(std::vector<pixel_tag>::iterator u = rs.pixels.begin(); u != rs.pixels.end(); ++u)
-						//	retsize.height += u->pixels;
 						for (auto & px : rs.pixels)
 							retsize.height += static_cast<unsigned>(px.pixels);
 					}
@@ -244,7 +229,7 @@ namespace gui
 					while(fp->fgcolor == 0xFFFFFFFF)
 					{
 						fp = fp->parent;
-						if(0 == fp)
+						if(nullptr == fp)
 							return def_.fgcolor;
 					}
 					return fp->fgcolor;
@@ -255,7 +240,7 @@ namespace gui
 					while(fp->font_size == 0xFFFFFFFF)
 					{
 						fp = fp->parent;
-						if(0 == fp)
+						if(nullptr == fp)
 							return def_.font_size;
 					}
 					return fp->font_size;			
@@ -266,7 +251,7 @@ namespace gui
 					while(fp->bold_empty)
 					{
 						fp = fp->parent;
-						if(0 == fp)
+						if(nullptr == fp)
 							return def_.font_bold;
 					}
 					return fp->bold;	
@@ -277,7 +262,7 @@ namespace gui
 					while(fp->font.empty())
 					{
 						fp = fp->parent;
-						if(0 == fp)
+						if(nullptr == fp)
 							return def_.font_name;
 					}
 					return fp->font;					
@@ -303,14 +288,12 @@ namespace gui
 				void _m_measure(graph_reference graph)
 				{
 					nana::paint::font ft = font_;
-					//for(dstream::iterator i = dstream_.begin(), end = dstream_.end(); i != end; ++i)
-					for (auto line : dstream_)
+					for (auto & line : dstream_)
 					{
-						//dstream::linecontainer& line = *i;
-						for(auto i = line.begin(), end = line.end(); i != end; ++i)
+						for (auto & value : line)
 						{
-							_m_change_font(graph, i->fblock_ptr);
-							i->data_ptr->measure(graph);
+							_m_change_font(graph, value.fblock_ptr);
+							value.data_ptr->measure(graph);
 						}
 					}
 					if(font_ != ft)
@@ -438,19 +421,16 @@ namespace gui
 				
 				bool _m_each_line(graph_reference graph, dstream::linecontainer& line, render_status& rs)
 				{
-					typedef dstream::linecontainer::iterator iterator;
 					nana::string text;
 					iterator block_start;
 
-					const int lastpos = graph.height() - 1;
+					const int lastpos = static_cast<int>(graph.height()) - 1;
 
-					for(std::vector<pixel_tag>::iterator i = rs.pixels.begin(), end = rs.pixels.end(); i != end; ++i)
-					{
-						std::vector<iterator> & values = i->values;
-						
-						for(std::vector<iterator>::iterator u = values.begin(), uend = values.end(); u != uend; ++u)
+					for(auto i = rs.pixels.begin(), end = rs.pixels.end(); i != end; ++i)
+					{	
+						for(auto u = i->values.begin(), uend = i->values.end(); u != uend; ++u)
 						{
-							dstream::linecontainer::value_type & value = *(*u);
+							auto & value = *(*u);
 							if(false == value.data_ptr->is_text())
 							{
 								if(text.size())
@@ -531,26 +511,26 @@ namespace gui
 					
 					pixel_tag px = rs.pixels[rs.index];
 
-					for(std::vector<nana::unicode_bidi::entity>::iterator i = reordered.begin(); i != reordered.end(); ++i)
+					for(auto & bidi : reordered)
 					{
-						std::size_t pos = i->begin - s.data();
-						std::size_t len = i->end - i->begin;
+						std::size_t pos = bidi.begin - s.data();
+						std::size_t len = bidi.end - bidi.begin;
 
 						while(true)
 						{
-							dstream::linecontainer::iterator u = block_start;
+							dstream::linecontainer::iterator i = block_start;
 
-							const std::size_t off = _m_locate(u, pos);
+							const std::size_t off = _m_locate(i, pos);
 							
-							fblock * fblock_ptr = u->fblock_ptr;
-							data * data_ptr = u->data_ptr;
+							fblock * fblock_ptr = i->fblock_ptr;
+							data * data_ptr = i->data_ptr;
 							
 							const int w = static_cast<int>(rs.allowed_width) - rs.pos.x;
 							nana::size sz = data_ptr->size();
 							if((static_cast<int>(sz.width) > w) && (rs.pos.x != px.x_base))
 							{
 								//Change a new line
-								rs.pos.y += px.pixels;
+								rs.pos.y += static_cast<int>(px.pixels);
 								px = rs.pixels[++rs.index];
 								rs.pos.x = px.x_base;
 							}
@@ -615,37 +595,10 @@ namespace gui
 					nana::string target;	//It indicates which target is tracing.
 
 					impl_t()
-						:	wd(0), graph(0), text_align(align::left),
-                            format_state_(false)
+						:	wd(nullptr),
+							graph(nullptr),
+							text_align(align::left)
 					{
-						//renderer = new simple_renderer;
-					}
-
-					~impl_t()
-					{
-					}
-
-					bool format(bool enabled)
-					{
-						if((enabled != format_state_) && wd)
-						{
-							/*
-							internal_scope_guard isg;
-							renderer_interface * rnd_if = renderer;
-							if(enabled)
-							{
-								renderer = new format_renderer;
-								renderer->bind_listener(nana::make_fun(*this, &impl_t::_m_call_listener));
-							}
-							else
-								renderer = new simple_renderer;
-							format_state_ = enabled;
-							API::refresh_window(wd->handle());
-							delete rnd_if;
-							return true;
-							*/
-						}
-						return false;
 					}
 
 					void add_listener(const std::function<void(command, const nana::string&)> & f)
@@ -658,7 +611,6 @@ namespace gui
 						listener_(cmd, tar);
 					}
 				private:
-					bool format_state_;
 					nana::fn_group<void(command, const nana::string&)> listener_;
 				};
 
@@ -750,7 +702,7 @@ namespace gui
 				{
 					if(nullptr == impl_->wd) return;
 
-					nana::gui::window wd = impl_->wd->handle();
+					window wd = impl_->wd->handle();
 					if(bground_mode::basic != API::effects_bground_mode(wd))
 						graph.rectangle(API::background(wd), true);
 

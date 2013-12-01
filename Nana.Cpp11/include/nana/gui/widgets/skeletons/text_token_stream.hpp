@@ -15,18 +15,15 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 	//into two parts.
 	//Formatted tokens: The tokens present in a format block, they form the format-syntax.
 	//Data tokens: The tokens present a text displaying on the screen.
-	struct token
+	enum class token
 	{
-		enum t
-		{
-			tag_begin, tag_end, format_end,
-			font, bold, size, color, url, target, image, top, center, bottom, baseline,
-			number, string, _true, _false, red, green, blue, white, black, binary, min_limited, max_limited,
+		tag_begin, tag_end, format_end,
+		font, bold, size, color, url, target, image, top, center, bottom, baseline,
+		number, string, _true, _false, red, green, blue, white, black, binary, min_limited, max_limited,
 			
-			equal, comma, backslash,
-			data, endl, dividable,
-			eof
-		};
+		equal, comma, backslash,
+		data, endl,
+		eof
 	};
 	
 	class tokenizer
@@ -41,17 +38,17 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		{
 		}
 		
-		void push(token::t tk)
+		void push(token tk)
 		{
 			revert_token_ = tk;
 		}
 		
 		//Read the token.
-		token::t read()
+		token read()
 		{
 			if(revert_token_ != token::eof)
 			{
-				token::t tk = revert_token_;
+				token tk = revert_token_;
 				revert_token_ = token::eof;
 				return tk;
 			}
@@ -70,7 +67,6 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		{
 			return idstr_;
 		}
-
 
 		const std::pair<nana::string, nana::string>& binary() const
 		{
@@ -107,7 +103,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		}
 
 		//Read the data token
-		token::t _m_token()
+		token _m_token()
 		{
 			nana::char_t ch = *iptr_;
 
@@ -161,17 +157,6 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				return token::data;
 			}
 			
-			if(ch == ' ')
-			{
-				
-				/*
-				whspace_size_ = 1;
-				while(*(++iptr_) == ' ')
-					++whspace_size_;
-				return token::dividable;
-				*/
-			}
-			
 			if(('<' == ch) && format_enabled_)
 			{
 				//pos keeps the current position, and it used for restring
@@ -219,7 +204,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		}
 		
 		//Read the format token
-		token::t _m_format_token()
+		token _m_format_token()
 		{
 			_m_eat_whitespace();
 			
@@ -426,7 +411,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 
 		std::size_t	whspace_size_;
 		
-		token::t revert_token_;
+		token revert_token_;
 	};
 	
 	//The fblock states a format, and a format from which it is inherted
@@ -480,22 +465,22 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 			: str_(s)
 		{}
 	private:
-		virtual bool is_text() const
+		virtual bool is_text() const override
 		{
 			return true;
 		}
 
-		virtual bool is_whitespace() const
+		virtual bool is_whitespace() const override
 		{
 			return false;
 		}
 		
-		virtual const nana::string& text() const
+		virtual const nana::string& text() const override
 		{
 			return str_;
 		}
 		
-		virtual void measure(graph_reference graph)
+		virtual void measure(graph_reference graph) override
 		{
 			size_ = graph.text_extent_size(str_);
 			unsigned ascent;
@@ -505,21 +490,16 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 			ascent_ = ascent;
 		}
 
-		virtual void nontext_render(graph_reference, int, int)
+		virtual void nontext_render(graph_reference, int, int) override
 		{
 		}
 		
-		virtual std::size_t length() const
-		{
-			return str_.size();
-		}
-		
-		virtual const nana::size & size() const
+		virtual const nana::size & size() const override
 		{
 			return size_;
 		}
 
-		virtual std::size_t ascent() const
+		virtual std::size_t ascent() const override
 		{
 			return ascent_;
 		}
@@ -527,69 +507,6 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		nana::string str_;
 		nana::size	size_;
 		std::size_t ascent_;
-	};
-	
-	class data_dividable
-		: public data
-	{
-	public:
-		data_dividable(nana::char_t c, std::size_t len)
-			:	ascent_(0),
-				is_ws_(' ' == c || '\t' == c)
-		{
-			for(std::size_t i = 0; i < len; ++i)
-				str_ += c;
-		}
-	private:
-		virtual bool is_text() const
-		{
-			return true;
-		}
-
-		virtual bool is_whitespace() const
-		{
-			return is_ws_;
-		}
-		
-		virtual const nana::string& text() const
-		{
-			return str_;
-		}
-		
-		virtual void measure(graph_reference graph)
-		{
-			size_ = graph.text_extent_size(str_);
-
-			unsigned ascent;
-			unsigned descent;
-			unsigned internal_leading;
-			graph.text_metrics(ascent, descent, internal_leading);
-			ascent_ = ascent;
-		}
-
-		virtual void nontext_render(graph_reference, int, int)
-		{
-		}
-		
-		virtual std::size_t length() const
-		{
-			return str_.size();
-		}
-		
-		virtual const nana::size & size() const
-		{
-			return size_;
-		}
-
-		virtual std::size_t ascent() const
-		{
-			return ascent_;
-		}
-	private:
-		nana::string str_;
-		nana::size	size_;
-		std::size_t ascent_;
-		bool is_ws_;
 	};
 	
 	class data_image
@@ -626,26 +543,26 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		}
 	private:
 		//implement data interface
-		virtual bool is_text() const
+		virtual bool is_text() const override
 		{
 			return false;
 		}
 
-		virtual bool is_whitespace() const
+		virtual bool is_whitespace() const override
 		{
 			return false;
 		}
 		
-		virtual const nana::string& text() const
+		virtual const nana::string& text() const override
 		{
 			return str_;
 		}
 		
-		virtual void measure(graph_reference)
+		virtual void measure(graph_reference) override
 		{
 		}
 
-		virtual void nontext_render(graph_reference graph, int x, int y)
+		virtual void nontext_render(graph_reference graph, int x, int y) override
 		{
 			if(size_ != image_.size())
 				image_.stretch(image_.size(), graph, nana::rectangle(x, y, size_.width, size_.height));
@@ -653,17 +570,12 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				image_.paste(graph, x, y);
 		}
 		
-		virtual std::size_t length() const
-		{
-			return 0;
-		}
-		
-		virtual const nana::size & size() const
+		virtual const nana::size & size() const override
 		{
 			return size_;
 		}
 
-		virtual std::size_t ascent() const
+		virtual std::size_t ascent() const override
 		{
 			return size_.height;
 		}
@@ -692,16 +604,16 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		
 		void close()
 		{
-			for(std::list<std::deque<value> >::iterator i = lines_.begin(); i != lines_.end(); ++i)
+			for(auto & values: lines_)
 			{
-				for(std::deque<value>::iterator u = i->begin(); u != i->end(); ++u)
+				for(std::deque<value>::iterator u = values.begin(); u != values.end(); ++u)
 					delete u->data_ptr;
 			}
 
 			lines_.clear();
 
-			for(std::vector<fblock*>::iterator i = fblocks_.begin(); i != fblocks_.end(); ++i)
-				delete (*i);
+			for(auto p : fblocks_)
+				delete p;
 
 			fblocks_.clear();
 		}
@@ -717,16 +629,15 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 			
 			while(true)
 			{
-				token::t tk = tknizer.read();
+				token tk = tknizer.read();
 				
 				switch(tk)
 				{
 				case token::data:
-				case token::dividable:
 					_m_data_factory(tk, tknizer.idstr(), fstack.top(), lines_.back());
 					break;
 				case token::endl:
-					lines_.push_back(std::deque<value>());
+					lines_.emplace_back();
 					break;
 				case token::tag_begin:
 					_m_parse_format(tknizer, fstack);
@@ -750,11 +661,6 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 					*debug = 0;
 				}
 			}
-		}
-		
-		std::size_t lines() const
-		{
-			return lines_.size();
 		}
 		
 		iterator begin()
@@ -805,7 +711,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 						break;
 					case token::binary:
 						{
-							std::pair<unsigned, unsigned> value = tknizer.binary_number();
+							auto value = tknizer.binary_number();
 							attr_image_.size.width = value.first;
 							attr_image_.size.height = value.second;
 						}
@@ -895,7 +801,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 					break;
 				case token::bold:
 					{
-						token::t tk = tknizer.read();
+						token tk = tknizer.read();
 						if(token::equal == tk)
 						{
 							switch(tknizer.read())
@@ -940,10 +846,10 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 			fbp->bgcolor = 0xFFFFFFFF;
 			fbp->fgcolor = 0xFFFFFFFF;
 			
-			fbp->parent = 0;
+			fbp->parent = nullptr;
 					
 			fblocks_.push_back(fbp);
-			lines_.push_back(std::deque<value>());
+			lines_.emplace_back();
 			
 			return fbp;
 		}
@@ -968,7 +874,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 			return fbp;
 		}
 		
-		void _m_data_factory(token::t tk, const nana::string& idstr, fblock* fp, std::deque<value>& line)
+		void _m_data_factory(token tk, const nana::string& idstr, fblock* fp, std::deque<value>& line)
 		{
 			value v;
 			v.fblock_ptr = fp;

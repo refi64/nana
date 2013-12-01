@@ -656,7 +656,7 @@ namespace nana
 					else
 						cur.level += 2;
 					continue;
-				case RLE:
+				case RLE:	//X2
 					stack.push_back(cur);
 					if(begin_character)
 					{
@@ -1088,14 +1088,20 @@ namespace nana
 			}
 		}
 
-		unicode_bidi::bidi_category::t unicode_bidi::_m_bidi_category(bidi_char::t bidi_char_type)
+		unicode_bidi::bidi_category::t unicode_bidi::_m_bidi_category(bidi_char::t type)
 		{
-			return static_cast<unicode_bidi::bidi_category::t>((static_cast<int>(bidi_char_type) & 0xF000) >> 12);
+			return static_cast<unicode_bidi::bidi_category::t>(static_cast<int>(type) & 0xF000);
 		}
 
 		unicode_bidi::bidi_char::t unicode_bidi::_m_char_dir(char_type ch)
 		{
-			return static_cast<bidi_char::t>(bidi_charmap::bidi_char_type(ch));
+			bidi_charmap::t type = bidi_charmap::bidi_char_type(ch);
+			if(type < bidi_charmap::PDF)
+				return static_cast<bidi_char::t>(type);
+			if(type < bidi_charmap::B)
+				return static_cast<bidi_char::t>(static_cast<int>(type - bidi_charmap::PDF) + 0x1000);
+
+			return static_cast<bidi_char::t>(static_cast<int>(type - bidi_charmap::B) + 0x2000);
 		}
 	//end class unicode_bidi
 }//end namespace nana

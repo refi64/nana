@@ -656,7 +656,7 @@ namespace nana{ namespace gui{
 
 				struct widget_detail
 				{
-					nana::point	monitor_pos;	//It used to determinate the monitor.
+					nana::point	monitor_pos;	//It is used for determinating the monitor.
 					nana::upoint border;
 				}detail_;
 			};//end class menu_drawer

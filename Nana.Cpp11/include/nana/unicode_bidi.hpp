@@ -18,12 +18,12 @@ namespace nana
 		{
 			L, LRE, LRO, R, AL, RLE, RLO,
 			PDF = 0x1000, EN, ES, ET, AN, CS, NSM, BN,
-			B = 0x2000, S, WS, ON	
+			B = 0x2000, S, WS, ON
 		};
 
 		enum class bidi_category
 		{
-			strong, weak, neutral
+			strong, weak = 0x1000, neutral = 0x2000
 		};
 		
 		const static char_type LRE = 0x202A;

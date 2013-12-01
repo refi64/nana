@@ -1081,12 +1081,18 @@ namespace nana
 
 		unicode_bidi::bidi_category unicode_bidi::_m_bidi_category(bidi_char bidi_char_type)
 		{
-			return static_cast<unicode_bidi::bidi_category>((static_cast<int>(bidi_char_type) & 0xF000) >> 12);
+			return static_cast<unicode_bidi::bidi_category>(static_cast<int>(bidi_char_type) & 0xF000);
 		}
 		
 		unicode_bidi::bidi_char unicode_bidi::_m_char_dir(char_type ch)
 		{
-			return static_cast<bidi_char>(bidi_charmap::bidi_char_type(ch));
+			bidi_charmap::t type = bidi_charmap::bidi_char_type(ch);
+			if (type < bidi_charmap::PDF)
+				return static_cast<bidi_char>(type);
+			if (type < bidi_charmap::B)
+				return static_cast<bidi_char>(static_cast<int>(type - bidi_charmap::PDF) + 0x1000);
+
+			return static_cast<bidi_char>(static_cast<int>(type - bidi_charmap::B) + 0x2000);
 		}
 	//end class unicode_bidi
 }//end namespace nana

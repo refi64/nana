@@ -11,19 +11,19 @@ namespace nana
 		
 		struct directional_override_status
 		{
-			enum t{neutral, right_to_left, left_to_right};	
+			enum t{neutral, right_to_left, left_to_right};
 		};
 
 		struct bidi_char
 		{
 			enum t{	L, LRE, LRO, R, AL, RLE, RLO,
 				PDF = 0x1000, EN, ES, ET, AN, CS, NSM, BN,
-				B = 0x2000, S, WS, ON};	
+				B = 0x2000, S, WS, ON};
 		};
 
 		struct bidi_category
 		{
-			enum t{strong, weak, neutral};
+			enum t{strong, weak = 0x1000, neutral = 0x2000};
 		};
 		
 		const static char_type LRE = 0x202A;

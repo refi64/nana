@@ -1180,7 +1180,7 @@ namespace nana{ namespace gui{
 			private:
 				essence_t * ess_;
 				nana::gui::listbox * widget_;
-				std::size_t sorted_index_;		//It stands for the index of header which is used to sort.
+				std::size_t sorted_index_;		//It stands for the index of header which is used for sorting.
 				bool		sorted_reverse_;
 				container list_;
 			};//end class es_lister

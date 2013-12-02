@@ -516,37 +516,51 @@ namespace gui
 						std::size_t pos = bidi.begin - s.data();
 						std::size_t len = bidi.end - bidi.begin;
 
-						while(true)
+						while (true)
 						{
-							dstream::linecontainer::iterator i = block_start;
+							auto i = block_start;
 
-							const std::size_t off = _m_locate(i, pos);
-							
+							//Text range indicates the position of text where begin to output
+							//The output length is the min between len and the second of text range.
+							auto text_range = _m_locate(i, pos);
+
+							if (text_range.second > len)
+								text_range.second = len;
+
 							fblock * fblock_ptr = i->fblock_ptr;
 							data * data_ptr = i->data_ptr;
-							
+
 							const int w = static_cast<int>(rs.allowed_width) - rs.pos.x;
 							nana::size sz = data_ptr->size();
-							if((static_cast<int>(sz.width) > w) && (rs.pos.x != px.x_base))
+							if ((static_cast<int>(sz.width) > w) && (rs.pos.x != px.x_base))
 							{
 								//Change a new line
 								rs.pos.y += static_cast<int>(px.pixels);
 								px = rs.pixels[++rs.index];
 								rs.pos.x = px.x_base;
 							}
-							
+
 							const int y = rs.pos.y + _m_text_top(px, fblock_ptr, data_ptr);
 
 							_m_change_font(graph, fblock_ptr);
-							graph.string(rs.pos.x, y, _m_fgcolor(fblock_ptr), data_ptr->text());
-							_m_inser_if_traceable(rs.pos.x, y, sz, fblock_ptr);
 
+							if (text_range.second == data_ptr->text().length())
+							{
+								graph.string(rs.pos.x, y, _m_fgcolor(fblock_ptr), data_ptr->text());
+							}
+							else
+							{
+								nana::string str = data_ptr->text().substr(text_range.first, text_range.second);
+								graph.string(rs.pos.x, y, _m_fgcolor(fblock_ptr), str);
+								sz = graph.text_extent_size(str);
+							}
+							_m_inser_if_traceable(rs.pos.x, y, sz, fblock_ptr);
 							rs.pos.x += static_cast<int>(sz.width);
 
-							if(off < len)
+							if(text_range.second < len)
 							{
-								len -= off;
-								pos += off;
+								len -= text_range.second;
+								pos += text_range.second;
 							}
 							else
 								break;
@@ -554,8 +568,10 @@ namespace gui
 					}
 				}
 				
-				std::size_t _m_locate(dstream::linecontainer::iterator& i, std::size_t pos)
+				std::pair<std::size_t, std::size_t> _m_locate(dstream::linecontainer::iterator& i, std::size_t pos)
 				{
+					std::pair<std::size_t, std::size_t> r;
+
 					std::size_t n = i->data_ptr->text().length();
 					while(pos >= n)
 					{
@@ -563,7 +579,7 @@ namespace gui
 						n = (++i)->data_ptr->text().length();
 					}
 					
-					return (n - pos);
+					return std::pair<std::size_t, std::size_t>(pos, n - pos);
 				}
 			private:
 				dstream dstream_;

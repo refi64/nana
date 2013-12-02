@@ -540,7 +540,12 @@ namespace gui
 						{
 							dstream::linecontainer::iterator u = block_start;
 
-							const std::size_t off = _m_locate(u, pos);
+							//Text range indicates the position of text where begin to output
+							//The output length is the min between len and the second of text range.
+							std::pair<unsigned, unsigned> text_range = _m_locate(u, pos);
+
+							if (text_range.second > len)
+								text_range.second = static_cast<unsigned>(len);
 							
 							fblock * fblock_ptr = u->fblock_ptr;
 							data * data_ptr = u->data_ptr;
@@ -558,15 +563,25 @@ namespace gui
 							const int y = rs.pos.y + _m_text_top(px, fblock_ptr, data_ptr);
 
 							_m_change_font(graph, fblock_ptr);
-							graph.string(rs.pos.x, y, _m_fgcolor(fblock_ptr), data_ptr->text());
-							_m_inser_if_traceable(rs.pos.x, y, sz, fblock_ptr);
 
+							if (text_range.second == data_ptr->text().length())
+							{
+								graph.string(rs.pos.x, y, _m_fgcolor(fblock_ptr), data_ptr->text());
+							}
+							else
+							{
+								nana::string str = data_ptr->text().substr(text_range.first, text_range.second);
+								graph.string(rs.pos.x, y, _m_fgcolor(fblock_ptr), str);
+								sz = graph.text_extent_size(str);
+							}
+
+							_m_inser_if_traceable(rs.pos.x, y, sz, fblock_ptr);
 							rs.pos.x += static_cast<int>(sz.width);
 
-							if(off < len)
+							if(text_range.second < len)
 							{
-								len -= off;
-								pos += off;
+								len -= text_range.second;
+								pos += text_range.second;
 							}
 							else
 								break;
@@ -574,7 +589,7 @@ namespace gui
 					}
 				}
 				
-				std::size_t _m_locate(dstream::linecontainer::iterator& i, std::size_t pos)
+				std::pair<unsigned, unsigned> _m_locate(dstream::linecontainer::iterator& i, std::size_t pos)
 				{
 					std::size_t n = i->data_ptr->text().length();
 					while(pos >= n)
@@ -583,7 +598,7 @@ namespace gui
 						n = (++i)->data_ptr->text().length();
 					}
 					
-					return (n - pos);
+					return std::pair<unsigned, unsigned>(static_cast<unsigned>(pos), static_cast<unsigned>(n - pos));
 				}
 			private:
 				dstream dstream_;

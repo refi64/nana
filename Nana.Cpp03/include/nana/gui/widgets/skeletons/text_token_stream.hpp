@@ -833,6 +833,8 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 						fp->bold_empty = false;
 					}
 					break;
+				default:
+					throw std::runtime_error("");
 				}
 			}
 		}

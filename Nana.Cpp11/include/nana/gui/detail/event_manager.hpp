@@ -18,7 +18,12 @@
 #include "eventinfo.hpp"
 #include "handle_manager.hpp"
 #include <functional>
-#include <mutex>
+
+#if defined(STD_THREAD_NOT_SUPPORTED)
+	#include <nana/std_mutex.hpp>
+#else
+	#include <mutex>
+#endif
 
 namespace nana
 {

@@ -20,12 +20,12 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		tag_begin, tag_end, format_end,
 		font, bold, size, color, url, target, image, top, center, bottom, baseline,
 		number, string, _true, _false, red, green, blue, white, black, binary, min_limited, max_limited,
-			
+
 		equal, comma, backslash,
 		data, endl,
 		eof
 	};
-	
+
 	class tokenizer
 	{
 	public:
@@ -37,12 +37,12 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				revert_token_(token::eof)
 		{
 		}
-		
+
 		void push(token tk)
 		{
 			revert_token_ = tk;
 		}
-		
+
 		//Read the token.
 		token read()
 		{
@@ -52,17 +52,17 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				revert_token_ = token::eof;
 				return tk;
 			}
-			
+
 			if(iptr_ == endptr_)
 				return token::eof;
-			
+
 			//Check whether it is a format token.
 			if(format_enabled_ && format_state_)
 				return _m_format_token();
-			
+
 			return _m_token();
 		}
-		
+
 		const nana::string& idstr() const
 		{
 			return idstr_;
@@ -82,12 +82,12 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 			ss>>r.first>>r.second;
 			return r;
 		}
-		
+
 		int number() const
 		{
 			std::stringstream ss;
 			ss<<static_cast<std::string>(nana::charset(idstr_));
-			
+
 			//It's a hex number.
 			if(idstr_.size() > 2 && idstr_[0] == '0' && (idstr_[1] == 'x' || idstr_[1] == 'X'))
 				ss>>std::hex;
@@ -136,7 +136,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				++iptr_;
 				return token::endl;
 			}
-			
+
 			if(('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z'))
 			{
 				const nana::char_t * idstr = iptr_;
@@ -150,13 +150,13 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 
 				return token::data;
 			}
-			
+
 			if('0' <= ch && ch <= '9')
 			{
 				_m_read_number();
 				return token::data;
 			}
-			
+
 			if(('<' == ch) && format_enabled_)
 			{
 				//pos keeps the current position, and it used for restring
@@ -173,14 +173,14 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 						return token::format_end;
 					}
 				}
-				
+
 				//Restore the iptr_;
 				iptr_ = pos;
-				
+
 				format_state_ = true;
 				return token::tag_begin;
 			}
-			
+
 			//Escape
 			if(ch == '\\')
 			{
@@ -197,19 +197,19 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 			}
 
 			++iptr_;
-			
+
 			idstr_.clear();
 			idstr_.append(1, ch);
 			return token::data;
 		}
-		
+
 		//Read the format token
 		token _m_format_token()
 		{
 			_m_eat_whitespace();
-			
+
 			nana::char_t ch = *iptr_++;
-			
+
 			switch(ch)
 			{
 			case ',':	return token::comma;
@@ -222,7 +222,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				//Here is a string and all the meta characters will be ignored except "
 				{
 					const nana::char_t * str = iptr_;
-					
+
 					while((iptr_ != endptr_) && (*iptr_ != '"'))
 						++iptr_;
 
@@ -263,13 +263,13 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				}
 				return token::eof;
 			}
-			
+
 			if(('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || '_' == ch)
 			{
 				--iptr_;
 				//Here is a identifier
 				_m_read_idstr();
-				
+
 				if(STR("font") == idstr_)
 					return token::font;
 				else if(STR("bold") == idstr_)
@@ -310,10 +310,10 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 					return token::min_limited;
 				else if(STR("max_limited") == idstr_)
 					return token::max_limited;
-				
+
 				return token::string;
 			}
-			
+
 			if('0' <= ch && ch <= '9')
 			{
 				--iptr_;
@@ -328,12 +328,12 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		{
 			return (('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ('_' == ch) || ('0' <= ch && ch <= '9'));
 		}
-		
+
 		//Read the identifier.
 		void _m_read_idstr()
 		{
 			const nana::char_t * idstr = iptr_;
-	
+
 			nana::char_t ch;
 			do
 			{
@@ -343,16 +343,16 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 
 			idstr_.assign(idstr, iptr_);
 		}
-		
+
 		//Read the number
 		void _m_read_number()
 		{
 			idstr_.clear();
-			
+
 			nana::char_t ch = *iptr_;
-			
+
 			idstr_ += ch;
-				
+
 			//First check the number whether will be a hex number.
 			if('0' == ch)
 			{
@@ -372,11 +372,11 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 					}
 					return;
 				}
-	
+
 				//Here is not a hex number
 				idstr_ += ch;
 			}
-			
+
 			ch = *++iptr_;
 			while('0' <= ch && ch <= '9')
 			{
@@ -384,7 +384,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				ch = *++iptr_;
 			}
 		}
-		
+
 		void _m_eat_whitespace()
 		{
 			while(true)
@@ -405,15 +405,15 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		const nana::char_t * endptr_;
 		const bool	format_enabled_;
 		bool	format_state_;
-		
+
 		nana::string idstr_;
 		std::pair<nana::string, nana::string> binary_;
 
 		std::size_t	whspace_size_;
-		
+
 		token revert_token_;
 	};
-	
+
 	//The fblock states a format, and a format from which it is inherted
 	struct fblock
 	{
@@ -433,20 +433,20 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		aligns::t	text_align;
 		nana::color_t	bgcolor;	//If the color is not specified, it will be ignored, and the system will search for its parent.
 		nana::color_t	fgcolor;	//ditto
-		
+
 		nana::string	target;
-		
+
 		fblock * parent;
 	};
-	
+
 	//The abstruct data class states a data.
 	class data
 	{
 	public:
 		typedef nana::paint::graphics& graph_reference;
-		
+
 		virtual ~data(){}
-		
+
 		virtual bool	is_text() const = 0;
 		virtual bool	is_whitespace() const = 0;
 		virtual const nana::string& text() const = 0;
@@ -455,8 +455,8 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		virtual const nana::size & size() const = 0;
 		virtual std::size_t ascent() const = 0;
 	};
-	
-	
+
+
 	class data_text
 		: public data
 	{
@@ -474,12 +474,12 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		{
 			return false;
 		}
-		
+
 		virtual const nana::string& text() const override
 		{
 			return str_;
 		}
-		
+
 		virtual void measure(graph_reference graph) override
 		{
 			size_ = graph.text_extent_size(str_);
@@ -493,7 +493,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		virtual void nontext_render(graph_reference, int, int) override
 		{
 		}
-		
+
 		virtual const nana::size & size() const override
 		{
 			return size_;
@@ -508,7 +508,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		nana::size	size_;
 		std::size_t ascent_;
 	};
-	
+
 	class data_image
 		: public data
 	{
@@ -535,7 +535,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				{
 					nana::size  res;
 					nana::gui::fit_zoom(size_, sz, res);
-					size_ = res;				
+					size_ = res;
 				}
 				else
 					size_ = sz;
@@ -552,12 +552,12 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		{
 			return false;
 		}
-		
+
 		virtual const nana::string& text() const override
 		{
 			return str_;
 		}
-		
+
 		virtual void measure(graph_reference) override
 		{
 		}
@@ -569,7 +569,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 			else
 				image_.paste(graph, x, y);
 		}
-		
+
 		virtual const nana::size & size() const override
 		{
 			return size_;
@@ -585,7 +585,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		nana::size size_;
 		std::size_t limited_;
 	};
-	
+
 	class dstream
 	{
 		struct value
@@ -601,7 +601,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		{
 			close();
 		}
-		
+
 		void close()
 		{
 			for(auto & values: lines_)
@@ -617,20 +617,20 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 
 			fblocks_.clear();
 		}
-		
+
 		void parse(const nana::string& s, bool format_enabled)
 		{
 			close();
-			
+
 			tokenizer tknizer(s, format_enabled);
 			std::stack<fblock*> fstack;
-			
+
 			fstack.push(_m_create_default_fblock());
-			
+
 			while(true)
 			{
 				token tk = tknizer.read();
-				
+
 				switch(tk)
 				{
 				case token::data:
@@ -646,7 +646,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 					{
 						_m_data_image(fstack.top(), lines_.back());
 						//This fblock just serves the image. So we should restore the pervious fblock
-						fstack.pop();	
+						fstack.pop();
 					}
 
 					break;
@@ -662,24 +662,24 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				}
 			}
 		}
-		
+
 		iterator begin()
 		{
 			return lines_.begin();
 		}
-		
+
 		iterator end()
 		{
 			return lines_.end();
 		}
-		
+
 	private:
 		void _m_parse_format(tokenizer & tknizer, std::stack<fblock*> & fbstack)
 		{
 			fblock * fp = _m_inhert_from(fbstack.top());
 
 			attr_image_.reset();
-			
+
 			while(true)
 			{
 				switch(tknizer.read())
@@ -694,10 +694,10 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				case token::font:
 					if(token::equal != tknizer.read())
 						throw std::runtime_error("");
-						
+
 					if(token::string != tknizer.read())
 						throw std::runtime_error("");
-					
+
 					fp->font = tknizer.idstr();
 					break;
 				case token::size:
@@ -723,7 +723,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				case token::color:
 					if(token::equal != tknizer.read())
 						throw std::runtime_error("");
-					
+
 					switch(tknizer.read())
 					{
 					case token::number:
@@ -746,21 +746,21 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 						break;
 					default:
 						throw std::runtime_error("");
-					}				
+					}
 					break;
-				case token::red:	//support the omitting of color. 
+				case token::red:	//support the omitting of color.
 					fp->fgcolor = 0xFF0000;
 					break;
-				case token::green:	//support the omitting of color. 
+				case token::green:	//support the omitting of color.
 					fp->fgcolor = 0xFF00;
 					break;
-				case token::blue:	//support the omitting of color. 
+				case token::blue:	//support the omitting of color.
 					fp->fgcolor = 0xFF;
 					break;
-				case token::white:	//support the omitting of color. 
+				case token::white:	//support the omitting of color.
 					fp->fgcolor = 0xFFFFFF;
 					break;
-				case token::black:	//support the omitting of color. 
+				case token::black:	//support the omitting of color.
 					fp->fgcolor = 0x0;
 					break;
 				case token::baseline:
@@ -793,10 +793,10 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				case token::target:
 					if(token::equal != tknizer.read())
 						throw std::runtime_error("");
-					
+
 					if(token::string != tknizer.read())
 						throw std::runtime_error("");
-						
+
 					fp->target = tknizer.idstr();
 					break;
 				case token::bold:
@@ -824,10 +824,12 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 						fp->bold_empty = false;
 					}
 					break;
+                default:
+                    throw std::runtime_error("");
 				}
 			}
 		}
-		
+
 		fblock* _m_create_default_fblock()
 		{
 			//Make sure that there is not a fblock is created.
@@ -836,28 +838,28 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 
 			//Create a default fblock.
 			fblock * fbp = new fblock;
-			
+
 			fbp->font_size = 0xFFFFFFFF;
 			fbp->bold = false;
 			fbp->bold_empty = true;
 			fbp->text_align = fblock::aligns::baseline;
-			
+
 			//Refer to the definition for the color specification.
 			fbp->bgcolor = 0xFFFFFFFF;
 			fbp->fgcolor = 0xFFFFFFFF;
-			
+
 			fbp->parent = nullptr;
-					
+
 			fblocks_.push_back(fbp);
 			lines_.emplace_back();
-			
+
 			return fbp;
 		}
-		
+
 		fblock * _m_inhert_from(fblock* fp)
 		{
 			fblock * fbp = new fblock;
-			
+
 			fbp->font = fp->font;
 			fbp->font_size = fp->font_size;
 			fbp->bold = fp->bold;
@@ -866,19 +868,19 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 
 			fbp->bgcolor = fp->bgcolor;
 			fbp->fgcolor = fp->fgcolor;
-			
+
 			fbp->target = fp->target;
-			
+
 			fbp->parent = fp;
 
 			return fbp;
 		}
-		
+
 		void _m_data_factory(token tk, const nana::string& idstr, fblock* fp, std::deque<value>& line)
 		{
 			value v;
 			v.fblock_ptr = fp;
-			
+
 			switch(tk)
 			{
 			case token::data:
@@ -888,7 +890,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				int * debug = 0;	//for debug
 				*debug = 0;
 			}
-			
+
 			line.push_back(v);
 		}
 
@@ -896,12 +898,12 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		{
 			value v;
 			v.fblock_ptr = fp;
-			
+
 			v.data_ptr = new data_image(attr_image_.path, attr_image_.size, attr_image_.limited);
-			
-			line.push_back(v);			
+
+			line.push_back(v);
 		}
-		
+
 	private:
 		bool format_enabled_;
 		std::vector<fblock*> fblocks_;

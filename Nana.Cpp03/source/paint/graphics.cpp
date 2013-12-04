@@ -259,8 +259,6 @@ namespace paint
 		{
 			if(handle_ == 0 || size_ != nana::size(width, height))
 			{
-				nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
-
 				//The object will be delete while dwptr_ is performing a release.
 				drawable_type dw = new nana::detail::drawable_impl_type;
 				//Reuse the old font
@@ -282,7 +280,7 @@ namespace paint
 				bmi.bmiHeader.biWidth = width;
 				bmi.bmiHeader.biHeight = -static_cast<int>(height);
 				bmi.bmiHeader.biPlanes = 1;
-				bmi.bmiHeader.biBitCount = 32;         // four 8-bit components 
+				bmi.bmiHeader.biBitCount = 32;         // four 8-bit components
 				bmi.bmiHeader.biCompression = BI_RGB;
 				bmi.bmiHeader.biSizeImage = (width * height) << 2;
 
@@ -906,7 +904,7 @@ namespace paint
 				pixel_buffer pixbuf(handle_, 0, 0);
 				pixbuf.blur(r, radius);
 				pixbuf.paste(handle_, 0, 0);
-			}		
+			}
 		}
 
 		void graphics::rgb_to_wb()
@@ -1029,7 +1027,7 @@ namespace paint
 #endif
 			}
 		}
-		
+
 		void graphics::paste(const nana::rectangle& r_src, graphics& dst, int x, int y)
 		{
 			if(handle_ && dst.handle_ && handle_ != dst.handle_)

@@ -16,10 +16,12 @@
 #include <deque>
 #include <vector>
 
-#if defined(NANA_MINGW) && defined(STD_THREAD_NOT_SUPPORTED)
+#if defined(STD_THREAD_NOT_SUPPORTED)
     #include <nana/std_condition_variable.hpp>
+    #include <nana/std_mutex.hpp>
 #else
     #include <condition_variable>
+    #include <mutex>
 #endif
 
 #if defined(NANA_WINDOWS)

@@ -41,7 +41,7 @@ namespace gui
 					unsigned allowed_width;
 					align text_align;
 					align_v text_align_v;
-					
+
 					nana::point pos;
 					std::vector<pixel_tag> pixels;
 					std::size_t index;
@@ -60,11 +60,11 @@ namespace gui
 				typedef gui::widgets::skeletons::data data;
 
 				renderer()
-					:	fblock_(nullptr),
-						format_enabled_(false)
+					:	format_enabled_(false),
+                        fblock_(nullptr)
 				{
 				}
-				
+
 				void parse(const nana::string& s)
 				{
 					dstream_.parse(s, format_enabled_);
@@ -79,7 +79,7 @@ namespace gui
 					}
 					return false;
 				}
-				
+
 				void render(graph_reference graph, nana::color_t fgcolor, align th, align_v tv)
 				{
 					traceable_.clear();
@@ -87,13 +87,13 @@ namespace gui
 					nana::paint::font ft = graph.typeface();	//used for restoring the font
 					font_ = ft;
 					fblock_ = nullptr;
-					
+
 					_m_set_default(ft, fgcolor);
 
 					_m_measure(graph);
 
 					render_status rs;
-			
+
 					rs.allowed_width = graph.size().width;
 					rs.text_align = th;
 					rs.text_align_v = tv;
@@ -138,7 +138,7 @@ namespace gui
 						rs.pixels.swap(*pixels_iterator++);
 
 						rs.pos.x = rs.pixels.front().x_base;
-						
+
 						//Stop drawing when it goes out of range.
 						if(false == _m_each_line(graph, line, rs))
 							break;
@@ -172,12 +172,12 @@ namespace gui
 					nana::paint::font ft = graph.typeface();	//used for restoring the font
 					font_ = ft;
 					fblock_ = nullptr;
-					
+
 					_m_set_default(ft, 0);
 					_m_measure(graph);
 
 					render_status rs;
-					
+
 					rs.allowed_width = limited;
 					rs.text_align = th;
 					rs.text_align_v = tv;
@@ -243,7 +243,7 @@ namespace gui
 						if(nullptr == fp)
 							return def_.font_size;
 					}
-					return fp->font_size;			
+					return fp->font_size;
 				}
 
 				bool _m_bold(nana::gui::widgets::skeletons::fblock* fp)
@@ -254,7 +254,7 @@ namespace gui
 						if(nullptr == fp)
 							return def_.font_bold;
 					}
-					return fp->bold;	
+					return fp->bold;
 				}
 
 				const nana::string& _m_fontname(nana::gui::widgets::skeletons::fblock* fp)
@@ -265,7 +265,7 @@ namespace gui
 						if(nullptr == fp)
 							return def_.font_name;
 					}
-					return fp->font;					
+					return fp->font;
 				}
 
 				void _m_change_font(graph_reference graph, nana::gui::widgets::skeletons::fblock* fp)
@@ -317,7 +317,7 @@ namespace gui
 					case align::right:
 						px.x_base = static_cast<int>(rs.allowed_width - w);
 						break;
-					}				
+					}
 				}
 
 				unsigned _m_line_pixels(dstream::linecontainer& line, render_status & rs)
@@ -380,7 +380,7 @@ namespace gui
 								px.values.swap(line_values);
 
 								rs.pixels.push_back(px);
-								
+
 								w = sz.width;
 								max_px = sz.height;
 								max_ascent = as;
@@ -418,7 +418,7 @@ namespace gui
 					rs.pixels.push_back(px);
 					return total_w;
 				}
-				
+
 				bool _m_each_line(graph_reference graph, dstream::linecontainer& line, render_status& rs)
 				{
 					nana::string text;
@@ -427,7 +427,7 @@ namespace gui
 					const int lastpos = static_cast<int>(graph.height()) - 1;
 
 					for(auto i = rs.pixels.begin(), end = rs.pixels.end(); i != end; ++i)
-					{	
+					{
 						for(auto u = i->values.begin(), uend = i->values.end(); u != uend; ++u)
 						{
 							auto & value = *(*u);
@@ -502,13 +502,13 @@ namespace gui
 					}
 					return 0;
 				}
-				
+
 				void _m_draw_block(graph_reference graph, const nana::string& s, dstream::linecontainer::iterator block_start, render_status& rs)
 				{
 					nana::unicode_bidi bidi;
 					std::vector<nana::unicode_bidi::entity> reordered;
 					bidi.linestr(s.data(), s.length(), reordered);
-					
+
 					pixel_tag px = rs.pixels[rs.index];
 
 					for(auto & bidi : reordered)
@@ -567,7 +567,7 @@ namespace gui
 						}
 					}
 				}
-				
+
 				std::pair<std::size_t, std::size_t> _m_locate(dstream::linecontainer::iterator& i, std::size_t pos)
 				{
 					std::pair<std::size_t, std::size_t> r;
@@ -578,7 +578,7 @@ namespace gui
 						pos -= n;
 						n = (++i)->data_ptr->text().length();
 					}
-					
+
 					return std::pair<std::size_t, std::size_t>(pos, n - pos);
 				}
 			private:
@@ -605,7 +605,7 @@ namespace gui
 
 					align	text_align;
 					align_v	text_align_v;
-					
+
 					class renderer renderer;
 
 					nana::string target;	//It indicates which target is tracing.

@@ -39,6 +39,16 @@
 
 #define NANA_UNICODE
 
+#if defined(NANA_UNICODE) && defined(NANA_WINDOWS)
+	#ifndef _UNICODE
+		#define _UNICODE
+	#endif
+
+	#ifndef UNICODE
+		#define UNICODE
+	#endif
+#endif
+
 //Support for PNG
 //	Comment it to disable the feature of support for PNG.
 //#define NANA_ENABLE_PNG

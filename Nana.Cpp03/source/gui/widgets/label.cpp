@@ -71,7 +71,8 @@ namespace gui
 				typedef gui::widgets::skeletons::data data;
 
 				renderer()
-					: fblock_(0), format_enabled_(false)
+					:	format_enabled_(false),
+						fblock_(0)
 				{
 				}
 				

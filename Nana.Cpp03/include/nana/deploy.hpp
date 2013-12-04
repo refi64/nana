@@ -29,9 +29,6 @@
 
 	#define STR(string)	string
 #else
-	#ifndef UNICODE
-		#define UNICODE
-	#endif
 	namespace nana
 	{
 		typedef wchar_t			char_t;

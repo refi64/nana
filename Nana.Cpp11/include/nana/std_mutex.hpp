@@ -2,8 +2,11 @@
 #define NANA_STD_MUTEX_HPP
 #include <nana/config.hpp>
 
-#if defined(NANA_MINGW)
-#include <boost/thread.hpp>
+#if defined(STD_THREAD_NOT_SUPPORTED)
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/locks.hpp>
+
 namespace std
 {
     template<typename Mutex>

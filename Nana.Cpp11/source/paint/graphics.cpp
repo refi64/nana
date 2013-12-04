@@ -259,8 +259,6 @@ namespace paint
 		{
 			if(handle_ == nullptr || size_ != nana::size(width, height))
 			{
-				auto & spec = nana::detail::platform_spec::instance();
-
 				//The object will be delete while dwptr_ is performing a release.
 				drawable_type dw = new nana::detail::drawable_impl_type;
 				//Reuse the old font
@@ -282,7 +280,7 @@ namespace paint
 				bmi.bmiHeader.biWidth = width;
 				bmi.bmiHeader.biHeight = -static_cast<int>(height);
 				bmi.bmiHeader.biPlanes = 1;
-				bmi.bmiHeader.biBitCount = 32;         // four 8-bit components 
+				bmi.bmiHeader.biBitCount = 32;         // four 8-bit components
 				bmi.bmiHeader.biCompression = BI_RGB;
 				bmi.bmiHeader.biSizeImage = (width * height) << 2;
 
@@ -787,7 +785,7 @@ namespace paint
 			const point * end = points + n_of_points;
 			for(const point * i = points + 1; i != end; ++i)
 				::LineTo(handle_->context, i->x, i->y);
-			
+
 			if(*points != *(end - 1))
 				::SetPixel(handle_->context, (end-1)->x, (end-1)->y, NANA_RGB(color));
 #elif defined(NANA_X11)
@@ -805,7 +803,7 @@ namespace paint
 			::XDrawLines(disp, handle_->pixmap, handle_->context, x11points, static_cast<int>(n_of_points), CoordModePrevious);
 			delete [] x11points;
 #endif
-			if(changed_ == false) changed_ = true;		
+			if(changed_ == false) changed_ = true;
 		}
 
 		void graphics::line_begin(int x, int y)
@@ -813,11 +811,11 @@ namespace paint
 			if(!handle_)	return;
 #if defined(NANA_WINDOWS)
 			::MoveToEx(handle_->context, x, y, 0);
-			
+
 #elif defined(NANA_X11)
 			handle_->line_begin_pos.x = x;
 			handle_->line_begin_pos.y = y;
-#endif		
+#endif
 		}
 
 		void graphics::line_to(int x, int y, color_t color)
@@ -835,7 +833,7 @@ namespace paint
 			handle_->line_begin_pos.x = x;
 			handle_->line_begin_pos.y = y;
 #endif
-			if(changed_ == false) changed_ = true;		
+			if(changed_ == false) changed_ = true;
 		}
 
 		void graphics::bitblt(int x, int y, const graphics& src)

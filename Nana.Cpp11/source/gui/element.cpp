@@ -1,8 +1,13 @@
 #include <nana/gui/element.hpp>
 #include <nana/gui/detail/bedrock.hpp>
 #include <map>
-#include <mutex>
 #include <string>
+
+#if defined(STD_THREAD_NOT_SUPPORTED)
+	#include <nana/std_mutex.hpp>
+#else
+	#include <mutex>
+#endif
 
 namespace nana{	namespace gui
 {

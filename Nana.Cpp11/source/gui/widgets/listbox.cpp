@@ -2848,9 +2848,11 @@ namespace nana{ namespace gui{
 			}
 		}
 
-		void listbox::checked(std::vector<std::pair<listbox::size_type, listbox::size_type> >& vec)
+		auto listbox::checked() const -> selection
 		{
-			get_drawer_trigger().essence().lister.item_checked(vec);
+			selection s;
+			get_drawer_trigger().essence().lister.item_checked(s);
+			return std::move(s);
 		}
 
 		void listbox::clear(size_type cat)
@@ -2935,6 +2937,13 @@ namespace nana{ namespace gui{
 			get_drawer_trigger().essence().header.get_item(sub).weak_ordering = std::move(strick_ordering);
 		}
 
+		auto listbox::selected() const -> selection
+		{
+			selection s;
+			get_drawer_trigger().essence().lister.item_selected(s);
+			return std::move(s);
+		}
+
 		void listbox::show_header(bool sh)
 		{
 			auto & ess = get_drawer_trigger().essence();
@@ -2945,11 +2954,6 @@ namespace nana{ namespace gui{
 		bool listbox::visible_header() const
 		{
 			return get_drawer_trigger().essence().header.visible();
-		}
-
-		void listbox::selected(std::vector<std::pair<size_type, size_type> >& vec)
-		{
-			get_drawer_trigger().essence().lister.item_selected(vec);
 		}
 
 		void listbox::move_select(bool upwards)

@@ -41,7 +41,6 @@ namespace nana{ namespace gui{
 				essence_t& essence();
 				essence_t& essence() const;
 				void draw();
-				//void update();
 			private:
 				void _m_draw_border();
 			private:
@@ -158,14 +157,14 @@ namespace nana{ namespace gui{
 				template<typename T>
 				T* value_ptr() const
 				{
-					nana::any * pany = _m_value();
+					auto * pany = _m_value();
 					return (pany ? pany->template get<T>() : nullptr);
 				}
 
 				template<typename T>
 				T & value() const
 				{
-					nana::any * pany = _m_value();
+					auto * pany = _m_value();
 					if(nullptr == pany)
 						throw std::runtime_error("treebox::item_proxy.value<T>() is empty");
 
@@ -317,6 +316,7 @@ namespace nana{ namespace gui{
 		typedef drawerbase::listbox::extra_events ext_event_type;
 		typedef drawerbase::listbox::cat_proxy	cat_proxy;
 		typedef drawerbase::listbox::item_proxy item_proxy;
+		typedef std::vector<index_pair_t> selection;
 
 		/// An interface that performances a translation between the object of T and an item of listbox.
 		template<typename T>
@@ -342,7 +342,7 @@ namespace nana{ namespace gui{
 		void insert(size_type cat, size_type index, const nana::string&);
 
 		void checkable(bool);
-		void checked(std::vector<std::pair<size_type, size_type> >&);
+		selection checked() const;
 
 		void clear(size_type cat);
 		void clear();
@@ -359,9 +359,11 @@ namespace nana{ namespace gui{
 		}
 
 		void set_sort_compare(size_type sub, std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> strick_ordering);
+
+		selection selected() const;
+
 		void show_header(bool);
 		bool visible_header() const;
-		void selected(std::vector<index_pair_t>&);
 		void move_select(bool upwards);
 		void icon(size_type cat, size_type index, const nana::paint::image&);
 		nana::paint::image icon(size_type cat, size_type index) const;

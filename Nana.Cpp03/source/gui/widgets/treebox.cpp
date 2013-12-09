@@ -862,6 +862,21 @@ namespace gui
 					return !(trigger_ && node_);
 				}
 
+				std::size_t item_proxy::level() const
+				{
+					if (0 == trigger_ || 0 == node_)
+						return 0;
+
+					std::size_t n = 0;
+					trigger::node_type* owner = node_->owner;
+					while (owner)
+					{
+						++n;
+						owner = owner->owner;
+					}
+					return n;
+				}
+
 				bool item_proxy::checked() const
 				{
 					return (node_ && (checkstate::checked == node_->value.second.checked));
@@ -1440,57 +1455,67 @@ namespace gui
 
 				void trigger::check(node_type* node, checkstate::t cs)
 				{
+					//The ROOT node is not operational and leave the user-node independent.
+					if(0 == node->owner)
+						return;
+
 					if(checkstate::unchecked != cs)
 						cs = checkstate::checked;
 
-					if(node->value.second.checked != cs)
+					//Return if they are same.
+					if(node->value.second.checked == cs)
+						return;
+					
+					//First, check the children of node, it prevents the use of
+					//unactualized child nodes during "on_checked".
+					node_type * child = node->child;
+					while(child)
 					{
-						impl_->set_checked(node, cs);
-						//First, check the children of node
-						node_type * child = node->child;
+						impl_->check_child(child, cs != checkstate::unchecked);
+						child = child->next;
+					}
+
+					//After that, check self.
+					impl_->set_checked(node, cs);
+
+					//Then, change the parent node check state
+					node_type * owner = node->owner;
+
+					//Make sure that the owner is not the ROOT node.
+					while(owner)
+					{
+						std::size_t len_checked = 0;
+						std::size_t size = 0;
+						checkstate::t cs = checkstate::unchecked;
+						child = owner->child;
 						while(child)
 						{
-							impl_->check_child(child, cs != checkstate::unchecked);
-							child = child->next;
-						}
-
-						//Then, change the parent node check state
-						node_type * owner = node->owner;
-						while(owner)
-						{
-							std::size_t len_checked = 0;
-							std::size_t size = 0;
-							checkstate::t cs = checkstate::unchecked;
-							child = owner->child;
-							while(child)
+							++size;
+							if(checkstate::checked == child->value.second.checked)
 							{
-								++size;
-								if(checkstate::checked == child->value.second.checked)
-								{
-									++len_checked;
-									if(size != len_checked)
-									{
-										cs = checkstate::partial;
-										break;
-									}
-								}
-								else if((checkstate::partial == child->value.second.checked) || (len_checked && (len_checked < size)))
+								++len_checked;
+								if(size != len_checked)
 								{
 									cs = checkstate::partial;
 									break;
 								}
-								child = child->next;
 							}
-
-							if(size && (size == len_checked))
-								cs = checkstate::checked;
-
-							if(cs == owner->value.second.checked)
+							else if((checkstate::partial == child->value.second.checked) || (len_checked && (len_checked < size)))
+							{
+								cs = checkstate::partial;
 								break;
-
-							impl_->set_checked(owner, cs);
-							owner = owner->owner;
+							}
+							child = child->next;
 						}
+
+						if(size && (size == len_checked))
+							cs = checkstate::checked;
+
+						if(cs == owner->value.second.checked)
+							break;
+
+						impl_->set_checked(owner, cs);
+						owner = owner->owner;
 					}
 				}
 

@@ -443,7 +443,7 @@ namespace gui
 								nana::size sz = value.data_ptr->size();
 
 								pixel_tag px = rs.pixels[rs.index];
-								if(rs.allowed_width < rs.pos.x + sz.width)
+								if ((rs.allowed_width < rs.pos.x + sz.width) && (rs.pos.x != px.x_base))
 								{
 									//Change a line.
 									rs.pos.y += static_cast<int>(px.pixels);

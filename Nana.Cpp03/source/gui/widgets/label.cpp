@@ -464,7 +464,7 @@ namespace gui
 								pixel_tag px = rs.pixels[rs.index];
 
 								//if(_m_overline(rs, rs.pos.x + sz.width, false))
-								if(rs.allowed_width < rs.pos.x + sz.width)
+								if((rs.allowed_width < rs.pos.x + sz.width) && (rs.pos.x != px.x_base))
 								{
 									//Change a line.
 									rs.pos.y += static_cast<int>(px.pixels);

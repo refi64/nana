@@ -776,27 +776,18 @@ namespace detail
 				break;
 			case WM_GETMINMAXINFO:
 				{
+					bool take_over = false;
 					MINMAXINFO* mmi = reinterpret_cast<MINMAXINFO*>(lParam);
 
 					if(msgwnd->min_track_size.width && msgwnd->min_track_size.height)
 					{
 						mmi->ptMinTrackSize.x = static_cast<LONG>(msgwnd->min_track_size.width + msgwnd->extra_width);
 						mmi->ptMinTrackSize.y = static_cast<LONG>(msgwnd->min_track_size.height + msgwnd->extra_height);
+						take_over = true;
 					}
 
 					if(false == msgwnd->flags.fullscreen)
 					{
-						HWND ptwd = ::GetParent(root_window);
-						RECT r;
-						if(ptwd)
-							::GetClientRect(ptwd, &r);
-						else
-							::SystemParametersInfo(SPI_GETWORKAREA, 0, &r, 0);
-
-						mmi->ptMaxPosition.x = r.left;
-						mmi->ptMaxPosition.y = r.top;
-						mmi->ptMaxSize.x = r.right - r.left;
-						mmi->ptMaxSize.y = r.bottom - r.top;
 						if(msgwnd->max_track_size.width && msgwnd->max_track_size.height)
 						{
 							mmi->ptMaxTrackSize.x = static_cast<LONG>(msgwnd->max_track_size.width + msgwnd->extra_width);
@@ -805,9 +796,13 @@ namespace detail
 								mmi->ptMaxSize.x = mmi->ptMaxTrackSize.x;
 							if(mmi->ptMaxSize.y > mmi->ptMaxTrackSize.y)
 								mmi->ptMaxSize.y = mmi->ptMaxTrackSize.y;
+
+							take_over = true;
 						}
-						return 0;
 					}
+
+					if(take_over)
+						return 0;
 				}
 				break;
 			case WM_WINDOWPOSCHANGED:

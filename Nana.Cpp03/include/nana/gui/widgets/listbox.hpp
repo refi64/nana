@@ -24,9 +24,9 @@ namespace nana{ namespace gui{
 		{
 			typedef std::size_t size_type;
 
-			///struct essence_t
-			///@brief:	this struct gives many data for listbox,
-			///			the state of the struct does not effect on member funcions, therefore all data members are public.
+			//struct essence_t
+			//@brief:	this struct gives many data for listbox,
+			//			the state of the struct does not effect on member funcions, therefore all data members are public.
 			struct essence_t;
 			class drawer_header_impl;
 			class drawer_lister_impl;
@@ -155,14 +155,14 @@ namespace nana{ namespace gui{
 				template<typename T>
 				T* value_ptr() const
 				{
-					nana::any * pany = _m_value();
+					const nana::any * pany = _m_value();
 					return (pany ? pany->template get<T>() : 0);
 				}
 
 				template<typename T>
 				T & value() const
 				{
-					nana::any * pany = _m_value();
+					const nana::any * pany = _m_value();
 					if(0 == pany)
 						throw std::runtime_error("treebox::item_proxy.value<T>() is empty");
 
@@ -314,6 +314,7 @@ namespace nana{ namespace gui{
 		typedef drawerbase::listbox::extra_events ext_event_type;
 		typedef drawerbase::listbox::cat_proxy cat_proxy;
 		typedef drawerbase::listbox::item_proxy	item_proxy;
+		typedef std::vector<index_pair_t> selection;
 
 		/// An interface that performances a translation between the object of T and an item of listbox.
 		template<typename T>
@@ -340,7 +341,7 @@ namespace nana{ namespace gui{
 		void insert(size_type cat, size_type index, const nana::string&);
 
 		void checkable(bool);
-		void checked(std::vector<std::pair<size_type, size_type> >&);
+		selection checked() const;
 
 		void clear(size_type cat);
 		void clear();
@@ -359,7 +360,7 @@ namespace nana{ namespace gui{
 		void set_sort_compare(size_type sub, nana::functor<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> strick_ordering);
 		void show_header(bool);
 		bool visible_header() const;
-		void selected(std::vector<index_pair_t>&);
+		selection selected() const;
 		void move_select(bool upwards);
 		void icon(size_type cat, size_type index, const nana::paint::image&);
 		nana::paint::image icon(size_type cat, size_type index) const;

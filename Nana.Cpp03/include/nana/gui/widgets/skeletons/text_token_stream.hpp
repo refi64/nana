@@ -439,6 +439,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 		nana::color_t	fgcolor;	//ditto
 		
 		nana::string	target;
+		nana::string	url;
 		
 		fblock * parent;
 	};
@@ -801,12 +802,21 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 					break;
 				case token::target:
 					if(token::equal != tknizer.read())
-						throw std::runtime_error("");
+						throw std::runtime_error("error: a '=' is required behind 'target'");
 					
 					if(token::string != tknizer.read())
-						throw std::runtime_error("");
+						throw std::runtime_error("error: the value of 'target' should be a string");
 						
 					fp->target = tknizer.idstr();
+					break;
+				case token::url:
+					if(token::equal != tknizer.read())
+						throw std::runtime_error("error: a '=' is required behind 'url'");
+					
+					if(token::string != tknizer.read())
+						throw std::runtime_error("error: the value of 'url' should be a string");
+						
+					fp->url = tknizer.idstr();
 					break;
 				case token::bold:
 					{

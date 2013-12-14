@@ -96,6 +96,9 @@ namespace system
 	//open an url through a default browser
 	void open_url(const nana::string& url)
 	{
+		if(url.empty())
+			return;
+
 #if defined(NANA_WINDOWS)
 		if(::ShellExecute(0, STR("open"), url.c_str(), 0, 0, SW_SHOWNORMAL) < reinterpret_cast<HINSTANCE>(32))
 		{

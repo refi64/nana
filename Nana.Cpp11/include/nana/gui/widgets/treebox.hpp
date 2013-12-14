@@ -17,7 +17,6 @@
 #ifndef NANA_GUI_WIDGETS_TREEBOX_HPP
 #define NANA_GUI_WIDGETS_TREEBOX_HPP
 #include "widget.hpp"
-#include "scroll.hpp"
 #include "detail/compset.hpp"
 #include <nana/paint/gadget.hpp>
 #include "detail/tree_cont.hpp"
@@ -191,6 +190,8 @@ namespace gui
 			{
 			public:
 				item_proxy();
+
+				//Undocumented constructor.
 				item_proxy(trigger*, trigger::node_type*);
 
 				/// Append a child.
@@ -251,7 +252,7 @@ namespace gui
 
 				std::size_t size() const;
 
-				/// Return the first chilld of the node.
+				/// Return the first child of the node.
 				item_proxy child() const;
 
 				/// Return the owner of the node.

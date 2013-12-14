@@ -14,6 +14,7 @@
 #include <nana/unicode_bidi.hpp>
 #include <nana/paint/text_renderer.hpp>
 #include <nana/gui/widgets/skeletons/text_token_stream.hpp>
+#include <nana/system/platform.hpp>
 #include <stdexcept>
 #include <sstream>
 #include <numeric>	//accumulate
@@ -53,7 +54,8 @@ namespace gui
 				struct traceable
 				{
 					nana::rectangle r;
-					nana::string id;
+					nana::string target;
+					nana::string url;
 				};
 
 				struct calc_metrics
@@ -167,13 +169,14 @@ namespace gui
 					graph.typeface(ft);
 				}
 
-				bool find(int x, int y, nana::string& id) const
+				bool find(int x, int y, nana::string& target, nana::string& url) const
 				{
 					for(std::deque<traceable>::const_iterator i = traceable_.begin(); i != traceable_.end(); ++i)
 					{
 						if(i->r.is_hit(x, y))
 						{
-							id = i->id;
+							target = i->target;
+							url = i->url;
 							return true;
 						}
 					}
@@ -217,14 +220,15 @@ namespace gui
 				//Manage the fblock for a specified rectangle if it is a traceable fblock.
 				void _m_inser_if_traceable(int x, int y, const nana::size& sz, widgets::skeletons::fblock* fbp)
 				{
-					if(fbp->target.size())
+					if(fbp->target.size() || fbp->url.size())
 					{
 						traceable tr;
 						tr.r.x = x;
 						tr.r.y = y;
 						tr.r.width = sz.width;
 						tr.r.height = sz.height;
-						tr.id = fbp->target;
+						tr.target = fbp->target;
+						tr.url = fbp->url;
 
 						traceable_.push_back(tr);
 					}
@@ -629,39 +633,13 @@ namespace gui
 					class renderer renderer;
 
 					nana::string target;	//It indicates which target is tracing.
+					nana::string url;
 
 					impl_t()
-						:	wd(0), graph(0), text_align(align::left),
-                            format_state_(false)
+						:	wd(0),
+							graph(0),
+							text_align(align::left)
 					{
-						//renderer = new simple_renderer;
-					}
-
-					~impl_t()
-					{
-					}
-
-					bool format(bool enabled)
-					{
-						if((enabled != format_state_) && wd)
-						{
-							/*
-							internal_scope_guard isg;
-							renderer_interface * rnd_if = renderer;
-							if(enabled)
-							{
-								renderer = new format_renderer;
-								renderer->bind_listener(nana::make_fun(*this, &impl_t::_m_call_listener));
-							}
-							else
-								renderer = new simple_renderer;
-							format_state_ = enabled;
-							API::refresh_window(wd->handle());
-							delete rnd_if;
-							return true;
-							*/
-						}
-						return false;
 					}
 
 					void add_listener(const nana::functor<void(command::t, const nana::string&)> & f)
@@ -674,7 +652,6 @@ namespace gui
 						listener_(cmd, tar);
 					}
 				private:
-					bool format_state_;
 					nana::fn_group<void(command::t, const nana::string&)> listener_;
 				};
 
@@ -713,36 +690,60 @@ namespace gui
 
 				void trigger::mouse_move(graph_reference, const eventinfo& ei)
 				{
-					nana::string id;
+					nana::string target, url;
 
-					if(impl_->renderer.find(ei.mouse.x, ei.mouse.y, id))
+					if(impl_->renderer.find(ei.mouse.x, ei.mouse.y, target, url))
 					{
-						if(id != impl_->target)
+						int cur_state = 0;
+						if(target != impl_->target)
 						{
-							int cur_state = 0;
 							if(impl_->target.size())
 							{
 								impl_->call_listener(command::leave, impl_->target);
 								cur_state = 1;	//Set arrow
 							}
 
-							impl_->target = id;
+							impl_->target = target;
 
-							if(id.size())
+							if(target.size())
 							{
 								impl_->call_listener(command::enter, impl_->target);
 								cur_state = 2;	//Set hand
 							}
-
-							if(cur_state)
-								impl_->wd->cursor(1 == cur_state ? gui::cursor::arrow : gui::cursor::hand);
 						}
+
+						if(url != impl_->url)
+						{
+							if(impl_->url.size())
+								cur_state = 1;	//Set arrow
+
+							impl_->url = url;
+
+							if(url.size())
+								cur_state = 2;	//Set hand
+						}
+
+						if(cur_state)
+							impl_->wd->cursor(1 == cur_state ? gui::cursor::arrow : gui::cursor::hand);
 					}
-					else if(impl_->target.size())
+					else
 					{
-						impl_->call_listener(command::leave, impl_->target);
-						impl_->target.clear();
-						impl_->wd->cursor(gui::cursor::arrow);
+						bool restore = false;
+						if(impl_->target.size())
+						{
+							impl_->call_listener(command::leave, impl_->target);
+							impl_->target.clear();
+							restore = true;
+						}
+
+						if(impl_->url.size())
+						{
+							impl_->url.clear();
+							restore = true;
+						}
+
+						if(restore)
+							impl_->wd->cursor(gui::cursor::arrow);
 					}
 				}
 
@@ -758,8 +759,14 @@ namespace gui
 
 				void trigger::click(graph_reference, const eventinfo&)
 				{
+					//make a copy, because the listener may popup a window, and then
+					//user moves the mouse, it will reset the url when the mouse is moving out from the element.
+					nana::string url = impl_->url;
+
 					if(impl_->target.size())
 						impl_->call_listener(command::click, impl_->target);
+
+					system::open_url(url);
 				}
 
 				void trigger::refresh(graph_reference graph)

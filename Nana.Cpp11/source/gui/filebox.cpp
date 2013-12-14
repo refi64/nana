@@ -648,11 +648,11 @@ namespace nana{	namespace gui
 	private:
 		void _m_sel_file(const eventinfo& ei)
 		{
-			std::vector<std::pair<std::size_t, std::size_t> > sel;
-			ls_file_.selected(sel);
-			if(sel.size() == 0)
+			auto sel = ls_file_.selected();
+			if(sel.empty())
 				return;
-			std::pair<std::size_t, std::size_t> index = sel[0];
+			
+			auto index = sel[0];
 			item_fs m;
 			ls_file_.at(index.first, index.second).resolve_to(m);
 

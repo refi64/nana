@@ -668,11 +668,10 @@ namespace nana{	namespace gui
 	private:
 		void _m_sel_file(const eventinfo& ei)
 		{
-			std::vector<std::pair<std::size_t, std::size_t> > sel;
-			ls_file_.selected(sel);
+			listbox::selection sel = ls_file_.selected();
 			if(sel.size() == 0)
 				return;
-			std::pair<std::size_t, std::size_t> index = sel[0];
+			listbox::index_pair_t index = sel[0];
 
 			
 			item_fs m;
@@ -681,9 +680,7 @@ namespace nana{	namespace gui
 			if(events::dbl_click::identifier == ei.identifier)
 			{
 				if(m.directory)
-				{
 					_m_load_cat_path(addr_.filesystem + m.name + STR("/"));
-				}
 				else
 					_m_finish(kind::filesystem, addr_.filesystem + m.name);
 			}

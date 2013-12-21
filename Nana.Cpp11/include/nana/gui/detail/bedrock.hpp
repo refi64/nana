@@ -28,9 +28,9 @@ namespace gui
 
 namespace detail
 {
-	///class bedrock
-	///@brief:	bedrock is a fundamental core component, it provides a abstract to the OS platform
-	///			and some basic functions.
+	//class bedrock
+	//@brief:	bedrock is a fundamental core component, it provides a abstract to the OS platform
+	//			and some basic functions.
 	class bedrock
 	{
 		bedrock();

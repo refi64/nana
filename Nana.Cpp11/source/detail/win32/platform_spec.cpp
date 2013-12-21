@@ -12,7 +12,7 @@
  */
 #include <nana/config.hpp>
 
-#include PLATFORM_SPEC_HPP
+#include <nana/detail/win32/platform_spec.hpp>
 #include <nana/gui/detail/eventinfo.hpp>
 #include <shellapi.h>
 #include <stdexcept>

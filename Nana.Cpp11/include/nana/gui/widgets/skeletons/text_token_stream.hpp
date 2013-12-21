@@ -1,3 +1,14 @@
+/*
+ *	Text Token Stream
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *
+ *	Distributed under the Boost Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
+ *	http://www.boost.org/LICENSE_1_0.txt)
+ *
+ *	@file: nana/gui/widgets/skeletons/text_token_stream.hpp
+ */
 
 #ifndef NANA_GUI_WIDGETS_SKELETONS_TEXT_TOKEN_STREAM
 #define NANA_GUI_WIDGETS_SKELETONS_TEXT_TOKEN_STREAM

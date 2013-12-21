@@ -1,3 +1,15 @@
+/*
+ *	A Message Box Class
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *
+ *	Distributed under the Boost Software License, Version 1.0. 
+ *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	http://www.boost.org/LICENSE_1_0.txt)
+ *
+ *	@file: nana/gui/msgbox.hpp
+ */
+
 #include <nana/gui/msgbox.hpp>
 #include <nana/gui/programming_interface.hpp>
 
@@ -369,6 +381,12 @@ namespace nana
 #else
 			sstream_<<str;
 #endif
+			return *this;
+		}
+
+		msgbox & msgbox::operator<<(const nana::charset& cs)
+		{
+			sstream_ << static_cast<std::string>(cs);
 			return *this;
 		}
 

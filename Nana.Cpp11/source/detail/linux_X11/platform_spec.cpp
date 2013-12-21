@@ -14,7 +14,7 @@
  */
 #include <nana/config.hpp>
 
-#include PLATFORM_SPEC_HPP
+#include <nana/detail/linux_X11/platform_spec.hpp>
 #include <nana/detail/linux_X11/msg_dispatcher.hpp>
 #include <X11/Xlocale.h>
 #include <locale>

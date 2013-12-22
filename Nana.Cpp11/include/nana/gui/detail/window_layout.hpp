@@ -345,6 +345,8 @@ namespace detail
 		//@brief:	Notify the glass windows that are overlapped with the specified vis_rect
 		static void _m_notify_glasses(core_window_t* const sigwd, const nana::rectangle& r_visual)
 		{
+			typedef gui::category::flags cat_flags;
+
 			nana::rectangle r_of_sigwd(sigwd->pos_root, sigwd->dimension);
 			for(auto wd : data_sect.effects_bground_windows)
 			{
@@ -366,6 +368,17 @@ namespace detail
 				{
 					_m_paint_glass_window(wd, true, false, true);
 				}
+				else if (wd->parent && (cat_flags::lite_widget == wd->parent->other.category))
+				{
+					//Test if sigwd is an ancestor of the glass window, and there are lite widgets
+					//between sigwd and glass window.
+					auto ancestor = wd->parent->parent;
+					while (ancestor && (ancestor != sigwd) && (cat_flags::lite_widget == ancestor->other.category))
+						ancestor = ancestor->parent;
+
+					if ((ancestor == sigwd) && (cat_flags::lite_widget != ancestor->other.category))
+						_m_paint_glass_window(wd, true, false, true);
+				}
 				else
 				{
 					//test if sigwnd is a parent of glass window x, or a slibing of the glass window, or a child of the slibing of the glass window.
@@ -373,7 +386,7 @@ namespace detail
 					while(signode->parent && (signode->parent != p))
 						signode = signode->parent;
 
-					if(signode->parent && (signode->index < wd->index))
+					if (signode->parent && (signode->index < wd->index))
 						_m_paint_glass_window(wd, true, false, true);
 				}
 			}

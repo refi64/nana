@@ -72,14 +72,14 @@ namespace gui
 			{
 				super,
 				widget = 0x1,
-				lite_widget_tag = 0x3,
+				lite_widget = 0x3,
 				root = 0x5,
 				frame = 0x9
 			};
 		};
 
 		struct widget_tag{ enum{value = flags::widget}; };
-		struct lite_widget_tag : widget_tag{ enum{ value = flags::lite_widget_tag};};
+		struct lite_widget_tag : widget_tag{ enum{ value = flags::lite_widget};};
 		struct root_tag : widget_tag{ enum { value = flags::root}; };
 		struct frame_tag: widget_tag{ enum { value = flags::frame}; };
 	}// end namespace category

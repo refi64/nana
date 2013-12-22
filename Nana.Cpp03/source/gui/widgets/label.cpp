@@ -99,6 +99,9 @@ namespace gui
 					traceable_.clear();
 
 					nana::paint::font ft = graph.typeface();	//used for restoring the font
+
+					const unsigned def_line_pixels = graph.text_extent_size(STR(" "), 1).height;
+
 					font_ = ft;
 					fblock_ = 0;
 					
@@ -120,7 +123,7 @@ namespace gui
 					for(dstream::iterator i = dstream_.begin(), end = dstream_.end(); i != end; ++i)
 					{
 						rs.pixels.clear();
-						_m_line_pixels(*i, rs);
+						_m_line_pixels(*i, def_line_pixels, rs);
 
 						for(std::vector<pixel_tag>::iterator u = rs.pixels.begin(); u != rs.pixels.end(); ++u)
 							extent_v_pixels += u->pixels;
@@ -152,8 +155,6 @@ namespace gui
 						rs.pixels.clear();
 
 						dstream::linecontainer & line = *i;
-
-						//_m_line_pixels(line, rs);
 						rs.pixels.swap(*pixels_iterator++);
 
 						rs.pos.x = rs.pixels.front().x_base;
@@ -190,6 +191,9 @@ namespace gui
 					nana::size retsize;
 
 					nana::paint::font ft = graph.typeface();	//used for restoring the font
+
+					const unsigned def_line_pixels = graph.text_extent_size(STR(" "), 1).height;
+
 					font_ = ft;
 					fblock_ = 0;
 					
@@ -205,7 +209,7 @@ namespace gui
 					for(dstream::iterator i = dstream_.begin(), end = dstream_.end(); i != end; ++i)
 					{
 						rs.pixels.clear();
-						unsigned w = _m_line_pixels(*i, rs);
+						unsigned w = _m_line_pixels(*i, def_line_pixels, rs);
 						if(limited && (w > limited))
 							w = limited;
 						if(retsize.width < w)
@@ -341,8 +345,20 @@ namespace gui
 					}				
 				}
 
-				unsigned _m_line_pixels(dstream::linecontainer& line, render_status & rs)
+				unsigned _m_line_pixels(dstream::linecontainer& line, unsigned def_line_pixels, render_status & rs)
 				{
+					if(line.empty())
+					{
+						pixel_tag px;
+						px.baseline = 0;
+						px.pixels = def_line_pixels;
+						px.x_base = 0;
+
+						rs.pixels.push_back(px);
+
+						return 0;
+					}
+
 					unsigned total_w = 0;
 					unsigned w = 0;
 					unsigned max_ascent = 0;

@@ -860,8 +860,21 @@ namespace gui
 
 		nana::size label::measure(unsigned limited) const
 		{
-			if(this->empty())	return nana::size();
+			if(empty())
+				return nana::size();
+
 			drawerbase::label::trigger::impl_t * impl = get_drawer_trigger().impl();
+
+			//First Check the graph of label
+			//Then take a substitute for graph when the graph of label is zero-sized.
+			nana::paint::graphics * graph_ptr = impl->graph;
+			nana::paint::graphics substitute;
+			if(graph_ptr->empty())
+			{
+				graph_ptr = &substitute;
+				graph_ptr->make(10, 10);
+			}
+
 			return impl->renderer.measure(*impl->graph, limited, impl->text_align, impl->text_align_v);
 		}
 

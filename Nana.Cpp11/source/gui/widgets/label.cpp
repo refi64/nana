@@ -110,15 +110,12 @@ namespace gui
 
 					for (auto & line : dstream_)
 					{
-						rs.pixels.clear();
 						_m_line_pixels(line, def_line_pixels, rs);
 
-						for(auto i = rs.pixels.begin(); i != rs.pixels.end(); ++i)
-							extent_v_pixels += i->pixels;
+						for (auto & m : rs.pixels)
+							extent_v_pixels += m.pixels;
 
-						std::vector<pixel_tag> tmp;
-						pixel_lines.push_back(tmp);
-						pixel_lines.back().swap(rs.pixels);
+						pixel_lines.emplace_back(std::move(rs.pixels));
 
 						if(extent_v_pixels >= graph.height())
 							break;
@@ -426,19 +423,23 @@ namespace gui
 							}
 						}
 					}
-					pixel_tag px;
 
-					_m_align_x_base(rs, px, w);
+					if (max_px)
+					{
+						pixel_tag px;
 
-					if(max_ascent + max_descent > max_px)
-						max_px = max_descent + max_ascent;
-					else
-						max_ascent = max_px - max_descent;
+						_m_align_x_base(rs, px, w);
 
-					px.pixels = max_px;
-					px.baseline = max_ascent;
-					px.values.swap(line_values);
-					rs.pixels.push_back(px);
+						if (max_ascent + max_descent > max_px)
+							max_px = max_descent + max_ascent;
+						else
+							max_ascent = max_px - max_descent;
+
+						px.pixels = max_px;
+						px.baseline = max_ascent;
+						px.values.swap(line_values);
+						rs.pixels.push_back(px);
+					}
 					return total_w;
 				}
 

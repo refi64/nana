@@ -107,7 +107,6 @@ namespace gui
 					
 					_m_set_default(ft, fgcolor);
 
-
 					_m_measure(graph);
 
 					render_status rs;
@@ -128,9 +127,7 @@ namespace gui
 						for(std::vector<pixel_tag>::iterator u = rs.pixels.begin(); u != rs.pixels.end(); ++u)
 							extent_v_pixels += u->pixels;
 
-						std::vector<pixel_tag> tmp;
-						pixel_lines.push_back(tmp);
-						pixel_lines.back().swap(rs.pixels);
+						pixel_lines.push_back(rs.pixels);
 
 						if(extent_v_pixels >= graph.height())
 							break;
@@ -440,19 +437,23 @@ namespace gui
 							}
 						}
 					}
-					pixel_tag px;
 
-					_m_align_x_base(rs, px, w);
+					if(max_px)
+					{
+						pixel_tag px;
 
-					if(max_ascent + max_descent > max_px)
-						max_px = max_descent + max_ascent;
-					else
-						max_ascent = max_px - max_descent;
+						_m_align_x_base(rs, px, w);
 
-					px.pixels = max_px;
-					px.baseline = max_ascent;
-					px.values.swap(line_values);
-					rs.pixels.push_back(px);
+						if(max_ascent + max_descent > max_px)
+							max_px = max_descent + max_ascent;
+						else
+							max_ascent = max_px - max_descent;
+
+						px.pixels = max_px;
+						px.baseline = max_ascent;
+						px.values.swap(line_values);
+						rs.pixels.push_back(px);
+					}
 					return total_w;
 				}
 				

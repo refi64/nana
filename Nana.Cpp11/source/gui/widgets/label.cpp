@@ -135,6 +135,9 @@ namespace gui
 
 					for (auto & line : dstream_)
 					{
+						if (rs.pos.y >= static_cast<int>(graph.height()))
+							break;
+
 						rs.index = 0;
 						rs.pixels.clear();
 
@@ -147,8 +150,6 @@ namespace gui
 							break;
 
 						rs.pos.y += static_cast<int>(rs.pixels.back().pixels);
-						if(rs.pos.y >= static_cast<int>(graph.height()))
-							break;
 					}
 
 					graph.typeface(ft);

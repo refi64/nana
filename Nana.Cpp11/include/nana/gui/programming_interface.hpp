@@ -60,6 +60,41 @@ namespace API
 			return nullptr;
 		}
 
+#if  defined(_MSC_VER)
+	#if _MSC_VER >= 1800
+		#define NANA_API_MAKE_EVENTS
+	#elif defined(NANA_API_MAKE_EVENTS)
+		#undef NANA_API_MAKE_EVENTS
+	#endif
+#else
+	#define NANA_API_MAKE_EVENTS
+#endif
+
+#ifdef NANA_API_MAKE_EVENTS
+		
+		template<typename ...Events>
+		struct make_drawer_events;
+		
+		template<typename Event, typename ...Events>
+		struct make_drawer_events<Event, Events...>
+		{
+			static void make(window wd)
+			{
+				make_drawer_event<Event>(wd);
+				make_drawer_events<Events...>::make(wd);
+			}
+		};
+
+		template<typename Event>
+		struct make_drawer_events<Event>
+		{
+			static void make(window wd)
+			{
+				make_drawer_event<Event>(wd);
+			}
+		};
+#endif
+
 		void attach_drawer(window, drawer_trigger&);
 		void detach_drawer(window);
 		void umake_drawer_event(window);
@@ -109,14 +144,39 @@ namespace API
 	event_handle make_event(window wd, Function function)
 	{
 		typedef typename std::remove_pointer<typename std::remove_reference<Event>::type>::type event_t;
-		if(std::is_base_of<detail::event_type_tag, event_t>::value)
+		if (std::is_base_of<detail::event_type_tag, event_t>::value)
 		{
 			gui::detail::bedrock & b = gui::detail::bedrock::instance();
 			return b.evt_manager.make(event_t::identifier, wd, b.category(reinterpret_cast<gui::detail::bedrock::core_window_t*>(wd)), function);
 		}
-		return 0;
+		return nullptr;
 	}
 
+#ifdef NANA_API_MAKE_EVENTS
+	template<typename ...Events>
+	struct make_events;
+
+	template<typename Event, typename ...Events>
+	struct make_events<Event, Events...>
+	{
+		template<typename Function>
+		static void make(window wd, Function fn)
+		{
+			make_event<Event, Function>(wd, fn);
+			make_events<Events...>::make<Function>(wd, fn);
+		}
+	};
+
+	template<typename Event>
+	struct make_events<Event>
+	{
+		template<typename Function>
+		static void make(window wd, Function fn)
+		{
+			make_event<Event, Function>(wd, fn);
+		}
+	};
+#endif
 
 	template<typename Event>
 	void raise_event(window wd, eventinfo& ei)

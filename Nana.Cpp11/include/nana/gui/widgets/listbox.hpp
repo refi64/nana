@@ -359,6 +359,10 @@ namespace nana{ namespace gui{
 		}
 
 		void set_sort_compare(size_type sub, std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> strick_ordering);
+		void sort_col(std::size_t col, bool reverse = false);
+		std::size_t sort_col() const;
+		void unsort();
+		bool freeze_sort(bool freeze);
 
 		selection selected() const;
 

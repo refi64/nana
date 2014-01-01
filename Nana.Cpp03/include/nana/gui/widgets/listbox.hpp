@@ -358,9 +358,14 @@ namespace nana{ namespace gui{
 		}
 
 		void set_sort_compare(size_type sub, nana::functor<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> strick_ordering);
+		void sort_col(std::size_t col, bool reverse = false);
+		std::size_t sort_col() const;
+		void unsort();
+		bool freeze_sort(bool freeze);
+
+		selection selected() const;
 		void show_header(bool);
 		bool visible_header() const;
-		selection selected() const;
 		void move_select(bool upwards);
 		void icon(size_type cat, size_type index, const nana::paint::image&);
 		nana::paint::image icon(size_type cat, size_type index) const;

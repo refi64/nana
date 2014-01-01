@@ -360,6 +360,7 @@ namespace nana{ namespace gui{
 					:	ess_(0),
 						widget_(0),
 						sorted_index_(npos),
+						resort_(true),
 						sorted_reverse_(false)
 				{
 					category cg;
@@ -396,51 +397,75 @@ namespace nana{ namespace gui{
 
 				void sort()
 				{
-					if(sorted_index_ != npos)
+					if((sorted_index_ == npos) || (!resort_))
+						return;
+
+					nana::functor<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> comp = fetch_ordering_comparer(sorted_index_);
+					container::iterator i = list_.begin(), end = list_.end();
+					if(comp)
 					{
-						nana::functor<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> comp = fetch_ordering_comparer(sorted_index_);
-						container::iterator i = list_.begin(), end = list_.end();
-						if(comp)
+						for(; i != end; ++i)
 						{
-							for(; i != end; ++i)
-							{
-								container::value_type & cat = *i;
-								std::sort(cat.sorted.begin(), cat.sorted.end(), weak_ordering_udcomp(cat, sorted_reverse_, sorted_index_, comp));
-							}
+							container::value_type & cat = *i;
+							std::sort(cat.sorted.begin(), cat.sorted.end(), weak_ordering_udcomp(cat, sorted_reverse_, sorted_index_, comp));
 						}
-						else
+					}
+					else
+					{
+						for(; i != end; ++i)
 						{
-							for(; i != end; ++i)
-							{
-								container::value_type & cat = *i;
-								std::sort(cat.sorted.begin(), cat.sorted.end(), weak_ordering(cat, sorted_reverse_, sorted_index_));
-							}
+							container::value_type & cat = *i;
+							std::sort(cat.sorted.begin(), cat.sorted.end(), weak_ordering(cat, sorted_reverse_, sorted_index_));
 						}
 					}
 				}
 
 				bool sort_index(std::size_t index)
 				{
-					if(npos != index)
+					if(npos == index)
 					{
-						if(index != sorted_index_)
-						{
-							sorted_index_ = index;
-							sorted_reverse_ = false;
-						}
-						else
-							sorted_reverse_ = !sorted_reverse_;
-
-						sort();
-						return true;
+						sorted_index_ = npos;
+						return false;
 					}
-					sorted_index_ = npos;
-					return false;
+
+					if(index != sorted_index_)
+					{
+						sorted_index_ = index;
+						sorted_reverse_ = false;
+					}
+					else
+						sorted_reverse_ = !sorted_reverse_;
+
+					sort();
+					return true;
+				}
+
+				bool set_sort_index(std::size_t index, bool reverse)
+				{
+					if(npos == index)
+					{
+						sorted_index_ = npos;
+						return false;
+					}
+
+					if( index != sorted_index_ || reverse != sorted_reverse_)
+					{
+						sorted_index_ = index;
+						sorted_reverse_ = reverse;
+						sort();
+					}
+					return true;
 				}
 
 				std::size_t sort_index() const
 				{
 					return sorted_index_;
+				}
+
+				bool active_sort(bool resort)
+				{
+					std::swap(resort, resort_);
+					return resort;
 				}
 
 				bool sort_reverse() const
@@ -1166,6 +1191,7 @@ namespace nana{ namespace gui{
 				essence_t *	ess_;
 				nana::gui::listbox * widget_;
 				std::size_t sorted_index_;	//It stands for the index of header which is used for sorting.
+				bool	resort_;
 				bool	sorted_reverse_;
 				container list_;
 			};//end class es_lister
@@ -2449,7 +2475,7 @@ namespace nana{ namespace gui{
 
 				item_proxy& item_proxy::fgcolor(nana::color_t col)
 				{
-					ess_->lister.at_abs(cat_,pos_).fgcolor = 0;
+					ess_->lister.at_abs(cat_,pos_).fgcolor = col;
 					ess_->update();
 					return *this;
 				}
@@ -2907,6 +2933,26 @@ namespace nana{ namespace gui{
 		void listbox::set_sort_compare(size_type sub, nana::functor<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> strick_ordering)
 		{
 			get_drawer_trigger().essence().header.get_item(sub).weak_ordering = strick_ordering;
+		}
+
+		void listbox::sort_col(std::size_t col, bool reverse)
+		{
+			get_drawer_trigger().essence().lister.set_sort_index(col, reverse);
+		}
+
+		std::size_t listbox::sort_col() const
+		{
+			return get_drawer_trigger().essence().lister.sort_index();
+		}
+
+		void listbox::unsort()
+		{
+			get_drawer_trigger().essence().lister.set_sort_index(npos, false);
+		}
+
+		bool listbox::freeze_sort(bool freeze)
+		{
+			return !get_drawer_trigger().essence().lister.active_sort(!freeze);
 		}
 
 		listbox::selection listbox::selected() const

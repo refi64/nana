@@ -15,15 +15,15 @@ namespace nana{	namespace gui
 		/**	@brief	specify a title for the dialog
 		 *	@param	string	a text for title
 		 */
-		void title(const nana::string&);
+		nana::string title(nana::string);
 
 		/**	@brief	specify a suggestion directory
 		 *	@param	string	a path of initial directory
 		 *	@note	the behavior of init_path is different between Win7 and Win2K/XP/Vista, but its behavior under Linux is conformed with Win7.
 		 */
-		void init_path(const nana::string&);
-		void init_file(const nana::string&);
-		void add_filter(const nana::string& description, const nana::string& filetype);
+		filebox& init_path(const nana::string&);
+		filebox& init_file(const nana::string&);
+		filebox& add_filter(const nana::string& description, const nana::string& filetype);
 
 		nana::string path() const;
 		nana::string file() const;

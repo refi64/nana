@@ -878,34 +878,39 @@ namespace nana{	namespace gui
 			delete impl_;
 		}
 
-		void filebox::title(const nana::string& s)
+		nana::string filebox::title(nana::string s)
 		{
-			impl_->title = s;
+			impl_->title.swap(s);
+			return s;
 		}
 
-		void filebox::init_path(const nana::string& ipstr)
+		filebox& filebox::init_path(const nana::string& ipstr)
 		{
-			if(0 == ipstr.size())
+			if(ipstr.empty())
 			{
 				impl_->path.clear();
-				return;
 			}
-
-			nana::filesystem::attribute attr;
-			if(nana::filesystem::file_attrib(ipstr, attr))
-				if(attr.is_directory)
+			else
+			{
+				nana::filesystem::attribute attr;
+				if (nana::filesystem::file_attrib(ipstr, attr))
+				if (attr.is_directory)
 					impl_->path = ipstr;
+			}
+			return *this;
 		}
 
-		void filebox::init_file(const nana::string& ifstr)
+		filebox& filebox::init_file(const nana::string& ifstr)
 		{
 			impl_->file = ifstr;
+			return *this;
 		}
 
-		void filebox::add_filter(const nana::string& description, const nana::string& filetype)
+		filebox& filebox::add_filter(const nana::string& description, const nana::string& filetype)
 		{
 			implement::filter flt = {description, filetype};
 			impl_->filters.push_back(flt);
+			return *this;
 		}
 
 		nana::string filebox::path() const
@@ -959,7 +964,7 @@ namespace nana{	namespace gui
 			ofn.lpstrFilter = filter;
 			ofn.lpstrTitle = (impl_->title.size() ? impl_->title.c_str() : nullptr);
 			ofn.nFilterIndex = 0;
-			ofn.lpstrFileTitle = NULL;
+			ofn.lpstrFileTitle = nullptr;
 			ofn.nMaxFileTitle = 0;
 			ofn.lpstrInitialDir = (impl_->path.size() ? impl_->path.c_str() : nullptr);
 			if(FALSE == (impl_->open_or_save ? ::GetOpenFileName(&ofn) : ::GetSaveFileName(&ofn)))

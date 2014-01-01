@@ -543,14 +543,15 @@ namespace drawerbase
 				create(wd, r, visible);
 			}
 
-			void button::icon(const nana::paint::image& img)
+			button& button::icon(const nana::paint::image& img)
 			{
 				internal_scope_guard isg;
 				get_drawer_trigger().icon(img);
 				API::refresh_window(handle());
+				return *this;
 			}
 
-			void button::image(const nana::char_t * filename)
+			button& button::image(const nana::char_t * filename)
 			{
 				nana::paint::image img;
 				if(img.open(filename))
@@ -559,24 +560,27 @@ namespace drawerbase
 					get_drawer_trigger().image(img);
 					API::refresh_window(handle());
 				}
+				return *this;
 			}
 
-			void button::image(const nana::paint::image& img)
+			button& button::image(const nana::paint::image& img)
 			{
 				internal_scope_guard isg;
 				get_drawer_trigger().image(img);
 				API::refresh_window(handle());
+				return *this;
 			}
 
-			void button::image_enable(state sta, bool eb)
+			button& button::image_enable(state sta, bool eb)
 			{
 				internal_scope_guard isg;
 				auto p = get_drawer_trigger().ref_bgimage();
 				if(p && p->enable(sta, eb))
 					API::refresh_window(handle());
+				return *this;
 			}
 
-			void button::image_valid_area(nana::arrange arg, const nana::rectangle& r)
+			button& button::image_valid_area(nana::arrange arg, const nana::rectangle& r)
 			{
 				internal_scope_guard isg;
 				auto p = get_drawer_trigger().ref_bgimage();
@@ -586,17 +590,19 @@ namespace drawerbase
 					p->update_blocks();
 					API::refresh_window(handle());
 				}
+				return *this;
 			}
 
-			void button::image_join(state target, state from)
+			button& button::image_join(state target, state from)
 			{
 				internal_scope_guard isg;
 				auto p = get_drawer_trigger().ref_bgimage();
 				if(p && p->join(target, from))
 					API::refresh_window(handle());
+				return *this;
 			}
 
-			void button::image_stretch(nana::arrange arg, int beg, int end)
+			button& button::image_stretch(nana::arrange arg, int beg, int end)
 			{
 				internal_scope_guard isg;
 				auto p = get_drawer_trigger().ref_bgimage();
@@ -605,13 +611,15 @@ namespace drawerbase
 					p->set_stretch(arg, beg, end);
 					API::refresh_window(handle());
 				}
+				return *this;
 			}
 
-			void button::enable_pushed(bool eb)
+			button& button::enable_pushed(bool eb)
 			{
 				internal_scope_guard isg;
 				if(get_drawer_trigger().enable_pushed(eb))
 					API::refresh_window(handle());
+				return *this;
 			}
 
 			bool button::pushed() const
@@ -619,25 +627,28 @@ namespace drawerbase
 				return get_drawer_trigger().pushed();
 			}
 
-			void button::pushed(bool psd)
+			button& button::pushed(bool psd)
 			{
 				internal_scope_guard isg;
 				if(get_drawer_trigger().pushed(psd))
 					API::refresh_window(handle());
+				return *this;
 			}
 
-			void button::omitted(bool om)
+			button& button::omitted(bool om)
 			{
 				internal_scope_guard isg;
 				get_drawer_trigger().omitted(om);
 				API::refresh_window(handle());
+				return *this;
 			}
 
-			void button::enable_focus_color(bool eb)
+			button& button::enable_focus_color(bool eb)
 			{
 				internal_scope_guard isg;
 				if(get_drawer_trigger().focus_color(eb))
 					API::refresh_window(handle());
+				return *this;
 			}
 
 			void button::_m_shortkey()

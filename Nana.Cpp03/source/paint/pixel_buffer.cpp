@@ -7,6 +7,7 @@
  *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/paint/pixel_buffer.cpp
+ *	@note: The format of Xorg 16bits depth is 565
  */
 
 #include <nana/config.hpp>
@@ -82,7 +83,7 @@ namespace nana{	namespace paint
 		{
 #if defined(NANA_X11)
 			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
-			x11.image = ::XCreateImage(spec.open_display(), spec.screen_visual(), spec.screen_depth(), ZPixmap, 0, reinterpret_cast<char*>(raw_pixel_buffer), width, height, 32, 0);
+			x11.image = ::XCreateImage(spec.open_display(), spec.screen_visual(), 32, ZPixmap, 0, reinterpret_cast<char*>(raw_pixel_buffer), width, height, 32, 0);
 			x11.attached = false;
 			if(0 == x11.image)
 			{
@@ -106,32 +107,43 @@ namespace nana{	namespace paint
 				pixel_size(valid_r),
 #if defined(NANA_WINDOWS)
 				raw_pixel_buffer(reinterpret_cast<pixel_rgb_t*>(reinterpret_cast<char*>(drawable->pixbuf_ptr + valid_r.x) + drawable->bytes_per_line * valid_r.y)),
-				bytes_per_line(drawable->bytes_per_line)
+				bytes_per_line(drawable->bytes_per_line),
 #else
-				bytes_per_line(sizeof(pixel_rgb_t) * valid_r.width)
+				raw_pixel_buffer(0),
+				bytes_per_line(sizeof(pixel_rgb_t) * valid_r.width),
 #endif
+				alpha_channel(false)
 		{
 #if defined(NANA_X11)
 			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
+
+			//Ensure that the pixmap is updated before we copy its content.
+			::XFlush(spec.open_display());
+
 			x11.image = ::XGetImage(spec.open_display(), drawable->pixmap, valid_r.x, valid_r.y, valid_r.width, valid_r.height, AllPlanes, ZPixmap);
 			x11.attached = true;
 			if(0 == x11.image)
 				throw std::runtime_error("Nana.pixel_buffer: XGetImage failed");
 
-			if(x11.image->depth == 32 || (x11.image->depth == 24 && x11.image->bitmap_pad == 32))
+			if(32 == x11.image->depth || (24 == x11.image->depth && 32 == x11.image->bitmap_pad))
 			{
+				if(static_cast<int>(bytes_per_line) != x11.image->bytes_per_line)
+				{
+					XDestroyImage(x11.image);
+					throw std::runtime_error("Nana.pixel_buffer: Invalid pixel buffer context.");
+				}
 				raw_pixel_buffer = reinterpret_cast<pixel_rgb_t*>(x11.image->data);
+			}
+			else if(16 == x11.image->depth)
+			{
+				//565 to 32
+				raw_pixel_buffer = new pixel_rgb_t[valid_r.width * valid_r.height];
+				assign(reinterpret_cast<unsigned char*>(x11.image->data), valid_r.width, valid_r.height, 16, x11.image->bytes_per_line, false);
 			}
 			else
 			{
 				XDestroyImage(x11.image);
 				throw std::runtime_error("Nana.pixel_buffer: The color depth is not supported");
-			}
-
-			if(static_cast<int>(bytes_per_line) != x11.image->bytes_per_line)
-			{
-				XDestroyImage(x11.image);
-				throw std::runtime_error("Nana.pixel_buffer: Invalid pixel buffer context.");
 			}
 #endif
 		}
@@ -139,21 +151,180 @@ namespace nana{	namespace paint
 		~pixel_buffer_storage()
 		{
 #if defined(NANA_X11)
-			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
-			
 			if(0 == drawable) //not attached
-			{
 				x11.image->data = 0;	//the image data is allocated by pixel_buffer when it is not attached with a drawable
-				delete [] raw_pixel_buffer;
-			}
-			else if(x11.attached)	//the image should be uploaded when it is attached.
-				::XPutImage(spec.open_display(), drawable->pixmap, drawable->context, x11.image, 0, 0, valid_r.x, valid_r.y, valid_r.width, valid_r.height);
 			
+			else if(x11.attached)	//the image should be uploaded when it is attached.
+				put(drawable->pixmap, drawable->context, 0, 0, valid_r.x, valid_r.y, valid_r.width, valid_r.height);
+			
+			if(x11.image->data != reinterpret_cast<char*>(raw_pixel_buffer))
+				delete [] raw_pixel_buffer;
+
 			XDestroyImage(x11.image);
 #else
 			if(0 == drawable)	//not attached
 				delete [] raw_pixel_buffer;
 #endif
+		}
+
+		void assign(const unsigned char* rawbits, std::size_t width, std::size_t height, std::size_t bits_per_pixel, std::size_t bytes_per_line, bool is_negative)
+		{
+			pixel_rgb_t * rawptr = raw_pixel_buffer;
+			if(rawptr)
+			{
+				if(32 == bits_per_pixel)
+				{
+					if((pixel_size.width == width) && (pixel_size.height == height) && is_negative)
+					{
+						memcpy(rawptr, rawbits, (pixel_size.width * pixel_size.height) * 4);
+					}
+					else
+					{
+						std::size_t line_bytes = (pixel_size.width < width ? pixel_size.width : width) * sizeof(pixel_rgb_t);
+
+						if(pixel_size.height < height)
+							height = pixel_size.height;
+
+						pixel_rgb_t * d = rawptr;
+						if(is_negative)
+						{
+							const unsigned char* s = rawbits;
+							for(std::size_t i = 0; i < height; ++i)
+							{
+								memcpy(d, s, line_bytes);
+								d += pixel_size.width;
+								s += bytes_per_line;
+							}
+						}
+						else
+						{
+							const unsigned char* s = rawbits + bytes_per_line * (height - 1);
+							for(std::size_t i = 0; i < height; ++i)
+							{
+								memcpy(d, s, line_bytes);
+								d += pixel_size.width;
+								s -= bytes_per_line;
+							}
+						}
+					}
+				}
+				else if(24 == bits_per_pixel)
+				{
+					if(pixel_size.width < width)
+						width = pixel_size.width;
+
+					if(pixel_size.height < height)
+						height = pixel_size.height;
+
+					pixel_rgb_t * d = rawptr;
+					if(is_negative)
+					{
+						const unsigned char* s = rawbits;
+						for(std::size_t i = 0; i < height; ++i)
+						{
+							pixel_rgb_t * p = d;
+							pixel_rgb_t * end = p + width;
+							std::size_t s_index = 0;
+							for(; p < end; ++p)
+							{
+								const unsigned char * s_p = s + s_index;
+								p->u.element.blue = s_p[0];
+								p->u.element.green = s_p[1];
+								p->u.element.red = s_p[2];
+								s_index += 3;
+							}
+							d += pixel_size.width;
+							s += bytes_per_line;
+						}
+					}
+					else
+					{
+						const unsigned char* s = rawbits + bytes_per_line * (height - 1);
+						for(std::size_t i = 0; i < height; ++i)
+						{
+							pixel_rgb_t * p = d;
+							pixel_rgb_t * end = p + width;
+							const unsigned char* s_p = s;
+							for(; p < end; ++p)
+							{
+								p->u.element.blue = s_p[0];
+								p->u.element.green = s_p[1];
+								p->u.element.red = s_p[2];
+								s_p += 3;
+							}
+							d += pixel_size.width;
+							s -= bytes_per_line;
+						}
+					}
+				}
+				else if(16 == bits_per_pixel)
+				{
+					if(pixel_size.width < width)
+						width = pixel_size.width;
+
+					if(pixel_size.height < height)
+						height = pixel_size.height;
+
+					pixel_rgb_t * d = rawptr;
+
+					unsigned char * rgb_table = new unsigned char[32];
+
+					for(std::size_t i =0; i < 32; ++i)
+						rgb_table[i] = static_cast<unsigned char>(i * 255 / 31);
+
+					if(is_negative)
+					{
+						//const unsigned short* s = reinterpret_cast<const unsigned short*>(rawbits);
+						for(std::size_t i = 0; i < height; ++i)
+						{
+							pixel_rgb_t * p = d;
+							const pixel_rgb_t * const end = p + width;
+							const unsigned short* s_p = reinterpret_cast<const unsigned short*>(rawbits);
+							for(; p < end; ++p)
+							{
+								p->u.element.red = rgb_table[(*s_p >> 11) & 0x1F];
+#if defined(NANA_X11)
+								p->u.element.green = (*s_p >> 5) & 0x3F;
+								p->u.element.blue = rgb_table[*s_p & 0x1F];
+#else
+								p->u.element.green = rgb_table[(*s_p>> 6) & 0x1F];
+								p->u.element.blue = rgb_table[(*s_p >> 1) & 0x1F];
+#endif
+								++s_p;
+							}
+							d += pixel_size.width;
+							rawbits += bytes_per_line;
+						}
+					}
+					else
+					{
+						//	const unsigned short* s = reinterpret_cast<const unsigned short*>(rawbits + bytes_per_line * (height - 1));
+						rawbits += bytes_per_line * (height - 1);
+						for(std::size_t i = 0; i < height; ++i)
+						{
+							pixel_rgb_t * p = d;
+							const pixel_rgb_t * const end = p + width;
+							const unsigned short* s_p = reinterpret_cast<const unsigned short*>(rawbits);
+							for(; p < end; ++p)
+							{
+								p->u.element.red = rgb_table[(*s_p >> 11) & 0x1F];
+#if defined(NANA_X11)
+								p->u.element.green = ((*s_p >> 5) & 0x3F);
+								p->u.element.blue = rgb_table[*s_p & 0x1F];
+#else
+								p->u.element.green = rgb_table[(*s_p & 0x7C0) >> 6];
+								p->u.element.blue = rgb_table[(*s_p >> 1) & 0x1F];
+#endif
+								++s_p;
+							}
+							d += pixel_size.width;
+							//s -= bytes_per_line;
+							rawbits -= bytes_per_line;
+						}
+					}
+					delete [] rgb_table;
+				}
+			}
 		}
 
 #if defined(NANA_X11)
@@ -162,6 +333,67 @@ namespace nana{	namespace paint
 		void detach()
 		{
 			x11.attached = false;
+		}
+
+		void put(Drawable dw, GC gc, int src_x, int src_y, int x, int y, unsigned width, unsigned height)
+		{		
+			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
+			Display * disp = spec.open_display();
+			const int depth = spec.screen_depth();
+
+			XImage* img = ::XCreateImage(disp, spec.screen_visual(), depth, ZPixmap, 0, 0, pixel_size.width, pixel_size.height, (16 == depth ? 16 : 32), 0);
+			if(sizeof(pixel_rgb_t) * 8 == depth || 24 == depth)
+			{	
+				img->data = reinterpret_cast<char*>(raw_pixel_buffer);
+				::XPutImage(disp, dw, gc,
+							img, src_x, src_y, x, y, width, height);
+			}
+			else if(16 == depth)
+			{
+				//The format of Xorg 16bits depth is 565
+				unsigned short * const fast_table = new unsigned short[256];
+				for(int i = 0; i < 256; ++i)
+					fast_table[i] = i * 31 / 255;
+				
+				std::size_t length = width * height;
+
+				unsigned short * px_holder = (new unsigned short[length]);
+				unsigned short * pixbuf_16bits = px_holder;
+
+				if(length == pixel_size.width * pixel_size.height)
+				{
+					for(pixel_rgb_t* i = raw_pixel_buffer, *end = raw_pixel_buffer + length; i != end; ++i)
+					{
+						*(pixbuf_16bits++) = (fast_table[i->u.element.red] << 11) | ( (i->u.element.green * 63 / 255) << 6) | fast_table[i->u.element.blue];
+					}
+				}
+				else if(height)
+				{
+					unsigned sp_line_len = pixel_size.width;
+					pixel_rgb_t* sp = raw_pixel_buffer + (src_x + sp_line_len * src_y);
+					
+					unsigned top = 0;
+					while(true)
+					{
+						for(pixel_rgb_t* i = sp, *end = sp + width; i != end; ++i)
+						{
+							*(pixbuf_16bits++) = (fast_table[i->u.element.red] << 11) | ((i->u.element.green * 63 / 255) << 6) | fast_table[i->u.element.blue];
+						}
+
+						if(++top < height)
+								sp += sp_line_len;
+					}
+				}
+
+				img->data = reinterpret_cast<char*>(px_holder);
+				::XPutImage(disp, dw, gc,
+					img, src_x, src_y, x, y, width, height);
+
+				delete [] px_holder;
+				delete [] fast_table;			
+			}
+			img->data = 0;	//Set null pointer to avoid XDestroyImage destroyes the buffer.
+			XDestroyImage(img);
 		}
 #endif
 	};
@@ -296,6 +528,7 @@ namespace nana{	namespace paint
 		unsigned width, height;
 		unsigned border, depth;
 		nana::detail::platform_scope_guard psg;
+		::XFlush(spec.open_display());
 		::XGetGeometry(spec.open_display(), drawable->pixmap, &root, &x, &y, &width, &height, &border, &depth);
 
 		XImage * image = ::XGetImage(spec.open_display(), drawable->pixmap, r.x, r.y, r.width, r.height, AllPlanes, ZPixmap);
@@ -317,6 +550,33 @@ namespace nana{	namespace paint
 			}
 			else
 				memcpy(pixbuf, image->data, image->bytes_per_line * image->height);
+		}
+		else if(16 == image->depth)
+		{
+			//The format of Xorg 16bits depth is 565
+			unsigned *  table_holder = (new unsigned[32]);
+			unsigned * const fast_table = table_holder;
+			for(unsigned i = 0; i < 32; ++i)
+				fast_table[i] = (i * 255 / 31);
+
+			pixbuf += (r.x - want_r.x);
+			pixbuf += (r.y - want_r.y) * want_r.width;
+			const char* img_data = image->data;
+			for(int i = 0; i < image->height; ++i)
+			{
+				const unsigned short * const px_data = reinterpret_cast<const unsigned short*>(img_data);
+
+				for(int x = 0; x < image->width; ++x)
+				{
+					pixbuf[x].u.element.red		= fast_table[(px_data[x] >> 11) & 0x1F];
+					pixbuf[x].u.element.green	= (px_data[x] >> 5) & 0x3F;
+					pixbuf[x].u.element.blue	= fast_table[px_data[x] & 0x1F];
+					pixbuf[x].u.element.alpha_channel = 0;
+				}
+				img_data += image->bytes_per_line;
+				pixbuf += want_r.width;
+			}
+			delete [] table_holder;
 		}
 		else
 		{
@@ -403,158 +663,8 @@ namespace nana{	namespace paint
 
 	void pixel_buffer::put(const unsigned char* rawbits, std::size_t width, std::size_t height, std::size_t bits_per_pixel, std::size_t bytes_per_line, bool is_negative)
 	{
-		pixel_buffer_storage * sp = storage_.get();
-		
-		pixel_rgb_t* rawptr = (sp ? sp->raw_pixel_buffer : 0);
-		if(rawptr)
-		{
-			if(32 == bits_per_pixel)
-			{
-				if((sp->pixel_size.width == width) && (sp->pixel_size.height == height) && is_negative)
-				{
-					memcpy(rawptr, rawbits, (sp->pixel_size.width * sp->pixel_size.height) * 4);
-				}
-				else
-				{
-					std::size_t line_bytes = (sp->pixel_size.width < width ? sp->pixel_size.width : width) * sizeof(pixel_rgb_t);
-
-					if(sp->pixel_size.height < height)
-						height = sp->pixel_size.height;
-
-					pixel_rgb_t * d = rawptr;
-					if(is_negative)
-					{
-						const unsigned char* s = rawbits;
-						for(std::size_t i = 0; i < height; ++i)
-						{
-							memcpy(d, s, line_bytes);
-							d += sp->pixel_size.width;
-							s += bytes_per_line;
-						}
-					}
-					else
-					{
-						const unsigned char* s = rawbits + bytes_per_line * (height - 1);
-						for(std::size_t i = 0; i < height; ++i)
-						{
-							memcpy(d, s, line_bytes);
-							d += sp->pixel_size.width;
-							s -= bytes_per_line;
-						}
-					}
-				}
-			}
-			else if(24 == bits_per_pixel)
-			{
-				if(sp->pixel_size.width < width)
-					width = sp->pixel_size.width;
-
-				if(sp->pixel_size.height < height)
-					height = sp->pixel_size.height;
-
-				pixel_rgb_t * d = rawptr;
-				if(is_negative)
-				{
-					const unsigned char* s = rawbits;
-					for(std::size_t i = 0; i < height; ++i)
-					{
-						pixel_rgb_t * p = d;
-						pixel_rgb_t * end = p + width;
-						std::size_t s_index = 0;
-						for(; p < end; ++p)
-						{
-							const unsigned char * s_p = s + s_index;
-							p->u.element.blue = s_p[0];
-							p->u.element.green = s_p[1];
-							p->u.element.red = s_p[2];
-							s_index += 3;
-						}
-						d += sp->pixel_size.width;
-						s += bytes_per_line;
-					}
-				}
-				else
-				{
-					const unsigned char* s = rawbits + bytes_per_line * (height - 1);
-					for(std::size_t i = 0; i < height; ++i)
-					{
-						pixel_rgb_t * p = d;
-						pixel_rgb_t * end = p + width;
-						const unsigned char* s_p = s;
-						for(; p < end; ++p)
-						{
-							p->u.element.blue = s_p[0];
-							p->u.element.green = s_p[1];
-							p->u.element.red = s_p[2];
-							s_p += 3;
-						}
-						d += sp->pixel_size.width;
-						s -= bytes_per_line;
-					}
-				}
-			}
-			else if(16 == bits_per_pixel)
-			{
-				if(sp->pixel_size.width < width)
-					width = sp->pixel_size.width;
-
-				if(sp->pixel_size.height < height)
-					height = sp->pixel_size.height;
-
-				pixel_rgb_t * d = rawptr;
-
-				unsigned char * rgb_table = new unsigned char[32];
-				unsigned char * table_block = rgb_table;
-				for(std::size_t i = 0; i < 8; i += 4)
-				{
-					table_block[0] = static_cast<unsigned char>(i << 3);
-					table_block[1] = static_cast<unsigned char>((i + 1) << 3);
-					table_block[2] = static_cast<unsigned char>((i + 2) << 3);
-					table_block[3] = static_cast<unsigned char>((i + 3) << 3);
-					table_block += 4;
-				}
-
-				if(is_negative)
-				{
-					const unsigned char* s = rawbits;
-					for(std::size_t i = 0; i < height; ++i)
-					{
-						pixel_rgb_t * p = d;
-						const pixel_rgb_t * const end = p + width;
-						const unsigned char* s_p = s;
-						for(; p < end; ++p)
-						{
-							p->u.element.blue = rgb_table[(*s_p && 0xF800) >> 11];
-							p->u.element.green = rgb_table[(*s_p && 0x7C0) >> 6];
-							p->u.element.red = rgb_table[*s_p && 0x1F];
-							++s_p;
-						}
-						d += sp->pixel_size.width;
-						s += bytes_per_line;
-					}
-				}
-				else
-				{
-					const unsigned char* s = rawbits + bytes_per_line * (height - 1);
-					for(std::size_t i = 0; i < height; ++i)
-					{
-						pixel_rgb_t * p = d;
-						const pixel_rgb_t * const end = p + width;
-						const unsigned char* s_p = s;
-						for(; p < end; ++p)
-						{
-							p->u.element.blue = rgb_table[(*s_p && 0xF800) >> 11];
-							p->u.element.green = rgb_table[(*s_p && 0x7C0) >> 6];
-							p->u.element.red = rgb_table[*s_p && 0x1F];
-							++s_p;
-						}
-						d += sp->pixel_size.width;
-						s -= bytes_per_line;
-					}
-				}
-				delete [] rgb_table;
-			}
-		}
+		if(storage_)
+			storage_->assign(rawbits, width, height, bits_per_pixel, bytes_per_line, is_negative);
 	}
 
 	pixel_rgb_t pixel_buffer::pixel(int x, int y) const
@@ -613,13 +723,7 @@ namespace nana{	namespace paint
 				src_r.x, static_cast<int>(sp->pixel_size.height) - src_r.y - src_r.height, 0, sp->pixel_size.height,
 				sp->raw_pixel_buffer, &bi, DIB_RGB_COLORS);
 #elif defined(NANA_X11)
-			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
-			XImage * img = ::XCreateImage(spec.open_display(), spec.screen_visual(), spec.screen_depth(), ZPixmap, 0, 0, sp->pixel_size.width, sp->pixel_size.height, 32, 0);
-			img->data = reinterpret_cast<char*>(sp->raw_pixel_buffer);
-			::XPutImage(spec.open_display(), drawable->pixmap, drawable->context, img, src_r.x, src_r.y, x, y, src_r.width, src_r.height);
-
-			img->data = 0;  //Set null pointer to avoid XDestroyImage destroyes the buffer.
-			XDestroyImage(img);
+			sp->put(drawable->pixmap, drawable->context, src_r.x, src_r.y, x, y, src_r.width, src_r.height);
 #endif
 		}
 	}
@@ -652,16 +756,10 @@ namespace nana{	namespace paint
 			::ReleaseDC(reinterpret_cast<HWND>(wd), handle);
 		}
 #elif defined(NANA_X11)
-			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
-			Display * disp = spec.open_display();
-			XImage * img = ::XCreateImage(disp, spec.screen_visual(), spec.screen_depth(), ZPixmap, 0, 0, sp->pixel_size.width, sp->pixel_size.height, 32, 0);
-			img->data = reinterpret_cast<char*>(sp->raw_pixel_buffer);
-			::XPutImage(disp, reinterpret_cast<Window>(wd), XDefaultGC(disp, XDefaultScreen(disp)), img, 0, 0, x, y, sp->pixel_size.width, sp->pixel_size.height);
-
-			img->data = 0;  //Set null pointer to avoid XDestroyImage destroyes the buffer.
-			XDestroyImage(img);
+		nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
+		Display * disp = spec.open_display();
+		sp->put(reinterpret_cast<Window>(wd), XDefaultGC(disp, XDefaultScreen(disp)), 0, 0, x, y, sp->pixel_size.width, sp->pixel_size.height);
 #endif
-
 	}
 
 	void pixel_buffer::line(const std::string& name)
@@ -708,6 +806,38 @@ namespace nana{	namespace paint
 		int xend = static_cast<int>(r.x + r.width < sp->pixel_size.width ? r.x + r.width : sp->pixel_size.width);
 		int ybeg = (0 <= r.y ? r.y : 0);
 		int yend = static_cast<int>(r.y + r.height < sp->pixel_size.height ? r.y + r.height : sp->pixel_size.height);
+
+		if (solid)
+		{
+			nana::pixel_rgb_t * p_rgb = sp->raw_pixel_buffer + ybeg * sp->pixel_size.width;
+			nana::pixel_rgb_t * lineptr = p_rgb + xbeg;
+			nana::pixel_rgb_t * end = p_rgb + xend;
+			if (fade)
+			{
+				for (int top = ybeg; top < yend; ++top)
+				{
+					for (nana::pixel_rgb_t * i = lineptr; i != end; ++i)
+					{
+						*i = detail::fade_color_by_intermedia(*i, rgb_imd, fade_table);
+					}
+					lineptr += sp->pixel_size.width;
+					end = lineptr + (xend - xbeg);
+				}
+			}
+			else
+			{
+				for (int top = ybeg; top < yend; ++top)
+				{
+					for (nana::pixel_rgb_t * i = lineptr; i != end; ++i)
+					{
+						i->u.color = col;
+					}
+					lineptr += sp->pixel_size.width;
+					end = lineptr + (xend - xbeg);
+				}
+			}
+			return;
+		}
 
 		if((ybeg == r.y) && (r.y + static_cast<int>(r.height) == yend))
 		{

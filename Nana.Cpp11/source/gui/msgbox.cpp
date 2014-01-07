@@ -383,7 +383,8 @@ namespace nana
 
 		msgbox & msgbox::operator<<(const nana::charset& cs)
 		{
-			sstream_ << static_cast<std::string>(cs);
+			std::string str = cs;
+			sstream_ << str;
 			return *this;
 		}
 

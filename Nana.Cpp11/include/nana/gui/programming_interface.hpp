@@ -163,7 +163,7 @@ namespace API
 		static void make(window wd, Function fn)
 		{
 			make_event<Event, Function>(wd, fn);
-			make_events<Events...>::make<Function>(wd, fn);
+			make_events<Events...>::template make<Function>(wd, fn);
 		}
 	};
 

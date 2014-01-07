@@ -270,11 +270,21 @@ namespace detail
 	{
 		if(color != fgcolor_)
 		{
-			Display * disp = nana::detail::platform_spec::instance().open_display();
+			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
 			platform_scope_guard psg;
+
 			fgcolor_ = color;
-			::XSetForeground(disp, context, color);
-			::XSetBackground(disp, context, color);
+			switch(spec.screen_depth())
+			{
+			case 16:
+				color = ((((color >> 16) & 0xFF) * 31 / 255) << 11)	|
+					((((color >> 8) & 0xFF) * 63 / 255) << 5)	|
+					(color & 0xFF) * 31 / 255;
+				break;
+			}
+
+			::XSetForeground(spec.open_display(), context, color);
+			::XSetBackground(spec.open_display(), context, color);
 #if defined(NANA_UNICODE)
 			xft_fgcolor.color.red = ((0xFF0000 & color) >> 16) * 0x101;
 			xft_fgcolor.color.green = ((0xFF00 & color) >> 8) * 0x101;

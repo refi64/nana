@@ -24,9 +24,7 @@
 #include "handle_manager.hpp"
 #include "window_layout.hpp"
 #include "eventinfo.hpp"
-#include <nana/functor.hpp>
 #include <functional>
-#include <mutex>
 
 namespace nana{	namespace gui{
 namespace detail

@@ -24,7 +24,6 @@
 #include "handle_manager.hpp"
 #include "window_layout.hpp"
 #include "eventinfo.hpp"
-#include <nana/functor.hpp>
 
 namespace nana
 {

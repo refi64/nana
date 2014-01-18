@@ -52,7 +52,7 @@ namespace gui
 				{
 					if(bitmap_[i])
 						addr_[i].~pair_type();
-				}	
+				}
 			}
 			
 			bool insert(key_type k, value_type v)
@@ -85,16 +85,6 @@ namespace gui
 					bitmap_[pos] = 1;
 				}
 				return v;
-			}
-			
-			void erase(key_type k)
-			{
-				size_type pos = _m_find_key(k);
-				if(pos != npos)
-				{
-					(addr_+pos)->~pair_type;
-					bitmap_[pos] = 0;	
-				}
 			}
 			
 			value_type * get(key_type k)

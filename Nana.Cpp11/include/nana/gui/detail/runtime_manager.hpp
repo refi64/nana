@@ -14,7 +14,6 @@
 
 #include <map>
 
-
 namespace nana
 {
 namespace gui
@@ -25,57 +24,93 @@ namespace gui
 		class runtime_manager
 		{
 		public:
-			typedef Window	wnd_type;
+			typedef Window	window_handle;
 			
 			template<typename Form>
 			Form* create_form()
 			{
 				widget_placer<Form> * holder = new widget_placer<Form>;
-				holder->create();
-				return _m_manage<Form>(holder);
+				if (holder->create())
+				{
+					holder_[holder->get_handle()] = holder;
+					return holder->get();
+				}
+
+				delete holder;
+				return nullptr;
 			}
 
 			template<typename Form, typename Param>
 			Form* create_form(Param param)
 			{
 				widget_placer<Form> * holder = new widget_placer<Form>;
-				holder->template create<Param>(param);
-				return _m_manage<Form>(holder);
+				if (holder->template create<Param>(param))
+				{
+					holder_[holder->get_handle()] = holder;
+					return holder->get();
+				}
+
+				delete holder;
+				return nullptr;
 			}
 
 			template<typename Form, typename Param1, typename Param2>
 			Form* create_form(Param1 p1, Param2 p2)
 			{
 				widget_placer<Form> * holder = new widget_placer<Form>;
-				holder->template create<Param1, Param2>(p1, p2);
-				return _m_manage<Form>(holder);
+				if (holder->template create<Param1, Param2>(p1, p2))
+				{
+					holder_[holder->get_handle()] = holder;
+					return holder->get();
+				}
+
+				delete holder;
+				return nullptr;
 			}
 
 			template<typename Form, typename Param1, typename Param2, typename Param3>
 			Form* create_form(Param1 p1, Param2 p2, Param3 p3)
 			{
 				widget_placer<Form> * holder = new widget_placer<Form>;
-				holder->template create<Param1, Param2, Param3>(p1, p2, p3);
-				return _m_manage<Form>(holder);
+				if (holder->template create<Param1, Param2, Param3>(p1, p2, p3))
+				{
+					holder_[holder->get_handle()] = holder;
+					return holder->get();
+				}
+
+				delete holder;
+				return nullptr;
 			}
 
 			template<typename Form, typename Param1, typename Param2, typename Param3, typename Param4>
 			Form* create_form(Param1 p1, Param2 p2, Param3 p3, Param4 p4)
 			{
 				widget_placer<Form> * holder = new widget_placer<Form>;
-				holder->template create<Param1, Param2, Param3, Param4>(p1, p2, p3, p4);
-				return _m_manage<Form>(holder);
+				if (holder->template create<Param1, Param2, Param3, Param4>(p1, p2, p3, p4))
+				{
+					holder_[holder->get_handle()] = holder;
+					return holder->get();
+				}
+
+				delete holder;
+				return nullptr;
 			}
 
 			template<typename Form, typename Param1, typename Param2, typename Param3, typename Param4, typename Param5>
 			Form* create_form(Param1 p1, Param2 p2, Param3 p3, Param4 p4, Param5 p5)
 			{
 				widget_placer<Form> * holder = new widget_placer<Form>;
-				holder->template create<Param1, Param2, Param3, Param4, Param5>(p1, p2, p3, p4, p5);
-				return _m_manage<Form>(holder);
+				if (holder->template create<Param1, Param2, Param3, Param4, Param5>(p1, p2, p3, p4, p5))
+				{
+					holder_[holder->get_handle()] = holder;
+					return holder->get();
+				}
+
+				delete holder;
+				return nullptr;
 			}
 
-			void remove_if_exists(wnd_type wd)
+			void remove_if_exists(window_handle wd)
 			{
 				auto i = holder_.find(wd);
 				if(i != holder_.cend())
@@ -89,105 +124,89 @@ namespace gui
 			{
 			public:
 				virtual ~widget_holder(){}
-				virtual void* read() = 0;
+				virtual window_handle get_handle() const = 0;
 			};
 
 			template<typename Form>
-			class widget_placer: public widget_holder
+			class widget_placer : public widget_holder
 			{
 			public:
-				widget_placer():empty_(true){}
+				widget_placer()
+					:	form_(nullptr)
+				{}
+
 				~widget_placer()
 				{
-					if(empty_ == false)
-						reinterpret_cast<Form*>(object_place_)->~Form();	
+					delete form_;
 				}
 
-				void create()
+				bool create()
 				{
-					if(empty_)
-					{
-						empty_ = false;
-						new (object_place_) Form;
-					}
+					if (nullptr == form_)
+						form_ = new Form;
+
+					return (form_ && !form_->empty());
 				}
 
 				template<typename Param>
-				void create(Param param)
+				bool create(Param param)
 				{
-					if(empty_)
-					{
-						empty_ = false;
-						new (object_place_) Form(param);
-					}			
+					if (nullptr == form_)
+						form_ = new Form(param);
+
+					return (form_ && !form_->empty());
 				}
 
 				template<typename Param1, typename Param2>
-				void create(Param1 p1, Param2 p2)
+				bool create(Param1 p1, Param2 p2)
 				{
-					if(empty_)
-					{
-						empty_ = false;
-						new (object_place_) Form(p1, p2);
-					}			
+					if (nullptr == form_)
+						form_ = new Form(p1, p2);
+
+					return (form_ && !form_->empty());
 				}
 
 				template<typename Param1, typename Param2, typename Param3>
-				void create(Param1 p1, Param2 p2, Param3 p3)
+				bool create(Param1 p1, Param2 p2, Param3 p3)
 				{
-					if(empty_)
-					{
-						empty_ = false;
-						new (object_place_) Form(p1, p2, p3);
-					}			
+					if (nullptr == form_)
+						form_ = new Form(p1, p2, p3);
+
+					return (form_ && !form_->empty());
 				}
 
 				template<typename Param1, typename Param2, typename Param3, typename Param4>
-				void create(Param1 p1, Param2 p2, Param3 p3, Param4 p4)
+				bool create(Param1 p1, Param2 p2, Param3 p3, Param4 p4)
 				{
-					if(empty_)
-					{
-						empty_ = false;
-						new (object_place_) Form(p1, p2, p3, p4);
-					}			
+					if (nullptr == form_)
+						form_ = new Form(p1, p2, p3, p4);
+
+					return (form_ && !form_->empty());
 				}
 
 				template<typename Param1, typename Param2, typename Param3, typename Param4, typename Param5>
-				void create(Param1 p1, Param2 p2, Param3 p3, Param4 p4, Param5 p5)
+				bool create(Param1 p1, Param2 p2, Param3 p3, Param4 p4, Param5 p5)
 				{
-					if(empty_)
-					{
-						empty_ = false;
-						new (object_place_) Form(p1, p2, p3, p4, p5);
-					}			
+					if (nullptr == form_)
+						form_ = new Form(p1, p2, p3, p4, p5);
+
+					return (form_ && !form_->empty());
 				}
 
-				void* read()
+				Form* get() const
 				{
-					return object_place_;
+					return form_;
+				}
+
+				window_handle get_handle() const override
+				{
+					return reinterpret_cast<window_handle>(form_ ? form_->handle() : nullptr);
 				}
 			private:
-				bool empty_;
-				char object_place_[sizeof(Form)];
+				Form * form_;
 			};
-
 		private:
-			template<typename Form>
-			Form* _m_manage(widget_holder* entity)
-			{
-				Form * f = reinterpret_cast<Form*>(entity->read());
-				wnd_type handle = reinterpret_cast<wnd_type>(f->handle());
-				if(nullptr == handle)
-				{
-					delete entity;
-					return nullptr;
-				}
-				holder_[handle] = entity;
-				return f;
-			}
-
-		private:
-			std::map<wnd_type, widget_holder*>	holder_;
+			std::map<window_handle, widget_holder*>	holder_;
 		}; //end class runtime_manager
 
 	}//end namespace detail

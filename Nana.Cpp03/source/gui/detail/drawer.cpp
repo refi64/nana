@@ -427,24 +427,24 @@ namespace gui
 			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::shadow_rectangle(x, y, width, height, beg, end, vertical));
 		}
 
-		void drawer::bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& graph, int srcx, int srcy)
+		void drawer::bitblt(int x, int y, unsigned width, unsigned height, const paint::graphics& graph, int srcx, int srcy)
 		{
-			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::bitblt(x, y, width, height, graph, srcx, srcy));
+			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::bitblt<paint::graphics>(x, y, width, height, graph, srcx, srcy));
 		}
 
-		void drawer::bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::image& img, int srcx, int srcy)
+		void drawer::bitblt(int x, int y, unsigned width, unsigned height, const paint::image& img, int srcx, int srcy)
 		{
-			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::bitblt_image(x, y, width, height, img, srcx, srcy));
+			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::bitblt<paint::image>(x, y, width, height, img, srcx, srcy));
 		}
 
-		void drawer::stretch(const nana::rectangle & r_dst, const nana::paint::graphics& graph, const nana::rectangle& r_src)
+		void drawer::stretch(const nana::rectangle & r_dst, const paint::graphics& graph, const nana::rectangle& r_src)
 		{
-			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::stretch(r_dst, graph, r_src));
+			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::stretch<paint::graphics>(r_dst, graph, r_src));
 		}
 
-		void drawer::stretch(const nana::rectangle & r_dst, const nana::paint::image& img, const nana::rectangle& r_src)
+		void drawer::stretch(const nana::rectangle & r_dst, const paint::image& img, const nana::rectangle& r_src)
 		{
-			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::stretch(r_dst, img, r_src));
+			dynamic_drawing_objects_.push_back(new detail::dynamic_drawing::stretch<paint::image>(r_dst, img, r_src));
 		}
 
 		event_handle drawer::make_event(int evtid, window wd)

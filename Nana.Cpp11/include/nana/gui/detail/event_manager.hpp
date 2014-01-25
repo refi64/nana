@@ -33,7 +33,7 @@ namespace detail
 {
 
 	//abstract_handler
-	//@brief: abstract_handler provides a data structure that used in event manager, and it 
+	//abstract_handler provides a data structure that used in event manager, and it 
 	//	provides an interface exec() to fire an event callback. Every event callback
 	//	has to inherit from this abstract and implement the exec().
 	//		This class is implemented inside, hence it's invisible for users.
@@ -49,7 +49,7 @@ namespace detail
 	};
 
 	//struct handler
-	//@brief: an object of this class keeps a functor with a argument (const eventinfo&)
+	//an object of this class keeps a functor with a argument (const eventinfo&)
 	template<typename Functor, bool HasArg>
 	struct handler : public abstract_handler
 	{
@@ -66,7 +66,7 @@ namespace detail
 	};
 
 	//struct handler
-	//@brief: an object of this class keeps a functor without any argument
+	//an object of this class keeps a functor without any argument
 	template<typename Functor>
 	struct handler<Functor, false> : public abstract_handler
 	{

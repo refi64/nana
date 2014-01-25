@@ -5,6 +5,15 @@ namespace nana
 {
 namespace gui
 {
+	class menu_accessor
+	{
+	public:
+		static void popup(menu& m, window wd, int x, int y)
+		{
+			m._m_popup(wd, x, y, true);
+		}
+	};
+
 	namespace drawerbase
 	{
 		namespace menubar
@@ -430,7 +439,7 @@ namespace gui
 						{
 							const item_type &m = items_->at(state_.active);
 							state_.menu->destroy_answer(std::bind(&trigger::_m_unload_menu_window, this));
-							state_.menu->popup(widget_->handle(), m.pos.x, m.pos.y + m.size.height, true);
+							menu_accessor::popup(*state_.menu, widget_->handle(), m.pos.x, m.pos.y + m.size.height);
 							return true;
 						}
 					}

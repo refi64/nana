@@ -1292,10 +1292,9 @@ namespace nana{
 		void native_interface::set_focus(native_window_type wd)
 		{
 #if defined(NANA_WINDOWS)
-			HWND focus = ::GetFocus();
-			if(wd && focus != reinterpret_cast<HWND>(wd))
+			if(wd && (::GetFocus() != reinterpret_cast<HWND>(wd)))
 			{
-				if(::GetWindowThreadProcessId(focus, 0) != ::GetWindowThreadProcessId(reinterpret_cast<HWND>(wd), 0))
+				if(::GetCurrentThreadId() != ::GetWindowThreadProcessId(reinterpret_cast<HWND>(wd), nullptr))
 					::PostMessage(reinterpret_cast<HWND>(wd), nana::detail::messages::async_set_focus, 0, 0);
 				else
 					::SetFocus(reinterpret_cast<HWND>(wd));

@@ -46,6 +46,9 @@ namespace gui
 		bool enabled() const;
 		void enabled(bool);
 
+		void focus();
+		bool focused() const;
+
 		void show();
 		void hide();
 		bool visible() const;
@@ -56,8 +59,6 @@ namespace gui
 		nana::point pos() const;
 		void move(int x, int y);
 		void move(int x, int y, unsigned width, unsigned height);
-
-		bool focused() const;
 
 		void foreground(nana::color_t);
 		nana::color_t foreground() const;
@@ -297,6 +298,11 @@ namespace gui
 		{
 			if(handle_)
 				API::close_window(handle_);
+		}
+
+		void activate()
+		{
+			API::activate_window(handle_);
 		}
 
 		window handle() const

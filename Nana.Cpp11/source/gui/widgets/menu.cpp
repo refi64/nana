@@ -688,10 +688,16 @@ namespace nana{ namespace gui{
 				{
 					get_drawer_trigger().data(menu);
 
-					if (want_focus_)
-						API::focus_window(this->handle());
-					else
+					if (!want_focus_)
+					{
+						API::activate_window(this->parent());
 						API::take_active(this->handle(), false, nullptr);
+					}
+					else
+					{
+						activate();
+						focus();
+					}
 
 					if(submenu_.parent == nullptr)
 					{

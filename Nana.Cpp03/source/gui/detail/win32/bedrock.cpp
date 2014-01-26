@@ -508,7 +508,7 @@ namespace detail
 		bedrock & bedrock = bedrock::instance();
 		switch(msg)
 		{
-		case nana::detail::messages::async_active_owner:
+		case nana::detail::messages::async_activate:
 			::EnableWindow(wd, true);
 			::SetActiveWindow(wd);
 			::SetForegroundWindow(wd);
@@ -1318,7 +1318,7 @@ namespace detail
 					def_window_proc = true;
 					//Activate is owner, refer to the window_manager::close for the explaination
 					if(msgwnd->flags.modal || (msgwnd->owner == 0) || msgwnd->owner->flags.take_active)
-						native_interface::active_owner(msgwnd->root);
+						native_interface::activate_owner(msgwnd->root);
 				}
 				break;
 			case WM_DESTROY:

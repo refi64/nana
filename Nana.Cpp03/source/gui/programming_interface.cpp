@@ -801,6 +801,17 @@ namespace API
 		return false;
 	}
 
+	void activate_window(window wd)
+	{
+		restrict::core_window_t* iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+		internal_scope_guard isg;
+		if(restrict::window_manager.available(iwd))
+		{
+			if(iwd->flags.take_active)
+				restrict::interface_type::activate_window(iwd->root);
+		}
+	}
+
 	window focus_window()
 	{
 		internal_scope_guard isg;

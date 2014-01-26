@@ -274,6 +274,8 @@ namespace gui
 					if((ei.focus.getting == false) && (state_.active != npos))
 					{
 						state_.behavior = state_type::behavior_none;
+						state_.nullify_mouse = true;
+						state_.menu_active = false;
 						_m_close_menu();
 						state_.active = npos;
 						_m_draw();

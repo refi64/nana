@@ -487,7 +487,7 @@ namespace detail
 					//Before close the window, its owner window should be actived, otherwise other window will be
 					//activated due to the owner window is not enabled.
 					if(wd->flags.modal || (wd->owner == 0) || wd->owner->flags.take_active)
-						native_interface::active_owner(wd->root);
+						native_interface::activate_owner(wd->root);
 
 					//Close should detach the drawer and send destroy signal to widget object.
 					//Otherwise, when a widget object is been deleting in other thread by delete operator, the object will be destroyed

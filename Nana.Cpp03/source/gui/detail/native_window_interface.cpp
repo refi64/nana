@@ -521,28 +521,34 @@ namespace nana{
 			return false;
 		}
 
-		void native_interface::active_owner(native_window_type wd)
+		void native_interface::activate_owner(native_window_type wd)
 		{
 #if defined(NANA_WINDOWS)
-			HWND owner = ::GetWindow(reinterpret_cast<HWND>(wd), GW_OWNER);
-			if(owner)
+			activate_window(reinterpret_cast<native_window_type>(
+								::GetWindow(reinterpret_cast<HWND>(wd), GW_OWNER)
+							));
+#endif
+		}
+
+		void native_interface::activate_window(native_window_type wd)
+		{
+#if defined(NANA_WINDOWS)
+			HWND native_wd = reinterpret_cast<HWND>(wd);
+			if (::IsWindow(native_wd))
 			{
-				if(::GetWindowThreadProcessId(owner, 0) == ::GetCurrentThreadId())
+				if (::GetWindowThreadProcessId(native_wd, 0) == ::GetCurrentThreadId())
 				{
-					::EnableWindow(owner, true);
-					::SetActiveWindow(owner);
-					::SetForegroundWindow(owner);
+					::EnableWindow(native_wd, true);
+					::SetActiveWindow(native_wd);
 				}
 				else
-					::PostMessage(owner, nana::detail::messages::async_active_owner, 0, 0);
+					::PostMessage(native_wd, nana::detail::messages::async_activate, 0, 0);
 			}
-#elif defined(NANA_X11)
-
 #endif
 		}
 
 		//close_window
-		//@brief:Destroy a window
+		//Destroy a window
 		void native_interface::close_window(native_window_type wd)
 		{
 #if defined(NANA_WINDOWS)

@@ -1012,7 +1012,7 @@ namespace paint
 				::BitBlt(dst.handle_->context, x, y, size_.width, size_.height, handle_->context, 0, 0, SRCCOPY);
 #elif defined(NANA_X11)
 				Display* display = nana::detail::platform_spec::instance().open_display();
-				::XCopyArea(nana::detail::platform_spec::instance().open_display(),
+				::XCopyArea(display,
 						handle_->pixmap, dst.handle_->pixmap, handle_->context,
 						0, 0, size_.width, size_.height, x, y);
 
@@ -1066,7 +1066,7 @@ namespace paint
 		}
 
 
-		void graphics::paste(const nana::rectangle& r_src, graphics& dst, int x, int y)
+		void graphics::paste(const nana::rectangle& r_src, graphics& dst, int x, int y) const
 		{
 			if(handle_ && dst.handle_ && handle_ != dst.handle_)
 			{
@@ -1074,7 +1074,7 @@ namespace paint
 				::BitBlt(dst.handle_->context, x, y, r_src.width, r_src.height, handle_->context, r_src.x, r_src.y, SRCCOPY);
 #elif defined(NANA_X11)
 				Display* display = nana::detail::platform_spec::instance().open_display();
-				::XCopyArea(nana::detail::platform_spec::instance().open_display(),
+				::XCopyArea(display,
 						handle_->pixmap, dst.handle_->pixmap, handle_->context,
 						r_src.x, r_src.y, r_src.width, r_src.height, x, y);
 

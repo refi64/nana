@@ -244,6 +244,7 @@ namespace API
 	bool tray_make_event(native_window_type, unsigned identifier, const std::function<void(const eventinfo&)>&);
 	void tray_umake_event(native_window_type);
 
+	void activate_window(window);
 	bool is_focus_window(window);
 	window focus_window();
 	void focus_window(window);

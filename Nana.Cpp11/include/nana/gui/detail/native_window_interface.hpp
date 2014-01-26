@@ -45,7 +45,8 @@ namespace detail
 #endif
 		static void enable_window(native_window_type, bool is_enabled);
 		static bool window_icon(native_window_type, const paint::image&);
-		static void active_owner(native_window_type);
+		static void activate_owner(native_window_type);
+		static void activate_window(native_window_type);
 		static void close_window(native_window_type);
 		static void show_window(native_window_type, bool show, bool active);
 		static void restore_window(native_window_type);

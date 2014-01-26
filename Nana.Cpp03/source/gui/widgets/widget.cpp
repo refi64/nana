@@ -71,7 +71,17 @@ namespace gui
 
 		bool widget::empty() const
 		{
-			return (handle() == 0);	
+			return (0 == handle());
+		}
+
+		void widget::focus()
+		{
+			API::focus_window(handle());
+		}
+
+		bool widget::focused() const
+		{
+			return API::is_focus_window(handle());
 		}
 
 		void widget::show()
@@ -112,11 +122,6 @@ namespace gui
 		void widget::move(int x, int y, unsigned width, unsigned height)
 		{
 			_m_move(x, y, width, height);
-		}
-
-		bool widget::focused() const
-		{
-			return API::is_focus_window(handle());
 		}
 
 		void widget::foreground(nana::color_t value)

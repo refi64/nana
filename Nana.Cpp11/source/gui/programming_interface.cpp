@@ -782,12 +782,23 @@ namespace API
 	{
 		if(wd)
 		{
-			restrict::core_window_t * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+			auto * iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 				return (iwd->root_widget->other.attribute.root->focus == iwd);
 		}
 		return false;
+	}
+
+	void activate_window(window wd)
+	{
+		auto iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+		internal_scope_guard isg;
+		if (restrict::window_manager.available(iwd))
+		{
+			if(iwd->flags.take_active)
+				restrict::interface_type::activate_window(iwd->root);
+		}
 	}
 
 	window focus_window()

@@ -55,7 +55,7 @@ namespace detail
 		enum
 		{
 			tray = 0x501,
-			async_active_owner,
+			async_activate,
 			async_set_focus,
 			map_thread_root_buffer,
 			remote_thread_destroy_window,

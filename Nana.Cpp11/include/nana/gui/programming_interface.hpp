@@ -211,6 +211,7 @@ namespace API
 		move_window(wd, r.x, r.y, r.width, r.height);
 	}
 
+	void bring_to_top(window);
 	bool set_window_z_order(window wd, window wd_after, z_order_action action_if_no_wd_after);
 
 	nana::size window_size(window);

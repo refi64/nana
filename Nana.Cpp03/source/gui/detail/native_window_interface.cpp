@@ -913,6 +913,26 @@ namespace nana{
 #endif
 		}
 
+		void native_interface::bring_to_top(native_window_type wd)
+		{
+#if defined(NANA_WINDOWS)
+			HWND native_wd = reinterpret_cast<HWND>(wd);
+
+			if (FALSE == ::IsWindow(native_wd))
+				return;
+
+			HWND fg_wd = ::GetForegroundWindow();
+			DWORD fg_tid = ::GetWindowThreadProcessId(fg_wd, 0);
+			::AttachThreadInput(::GetCurrentThreadId(), fg_tid, TRUE);
+			::ShowWindow(native_wd, SW_SHOWNORMAL);
+			::SetWindowPos(native_wd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+			::SetWindowPos(native_wd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+			::AttachThreadInput(::GetCurrentThreadId(), fg_tid, FALSE);
+#else
+			set_window_z_order(wd, nullptr, z_order_action::top);
+#endif		
+		}
+
 		void native_interface::set_window_z_order(native_window_type wd, native_window_type wd_after, z_order_action::t action_if_no_wd_after)
 		{
 #if defined(NANA_WINDOWS)

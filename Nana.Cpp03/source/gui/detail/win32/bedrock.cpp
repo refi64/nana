@@ -511,7 +511,6 @@ namespace detail
 		case nana::detail::messages::async_activate:
 			::EnableWindow(wd, true);
 			::SetActiveWindow(wd);
-			::SetForegroundWindow(wd);
 			return true;
 		case nana::detail::messages::async_set_focus:
 			::SetFocus(wd);

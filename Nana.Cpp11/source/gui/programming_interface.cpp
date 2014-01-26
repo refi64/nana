@@ -552,6 +552,11 @@ namespace API
 		}
 	}
 
+	void bring_to_top(window wd)
+	{
+		restrict::interface_type::bring_to_top(root(wd));
+	}
+
 	bool set_window_z_order(window wd, window wd_after, z_order_action action_if_no_wd_after)
 	{
 		auto iwd = reinterpret_cast<restrict::core_window_t*>(wd);

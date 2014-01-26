@@ -59,6 +59,7 @@ namespace detail
 		static nana::point	window_position(native_window_type);
 		static void	move_window(native_window_type, int x, int y);
 		static void	move_window(native_window_type, int x, int y, unsigned width, unsigned height);
+		static void bring_to_top(native_window_type);
 		static void	set_window_z_order(native_window_type, native_window_type wd_after, z_order_action action_if_no_wd_after);
 
 		static void	window_size(native_window_type, unsigned width, unsigned height);

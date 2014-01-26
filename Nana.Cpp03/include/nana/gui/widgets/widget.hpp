@@ -305,9 +305,19 @@ namespace gui
 			API::activate_window(handle_);
 		}
 
+		void bring_to_top()
+		{
+			API::bring_to_top(handle_);
+		}
+
 		window handle() const
 		{
 			return handle_;
+		}
+
+		native_window_type native_handle() const
+		{
+			return API::root(handle_);
 		}
 
 		window owner() const

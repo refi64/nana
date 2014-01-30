@@ -116,7 +116,7 @@ namespace gui
 			void bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::image& img, int srcx, int srcy);
 			void stretch(const nana::rectangle& r_dst, const nana::paint::graphics& graph, const nana::rectangle& r_src);
 			void stretch(const nana::rectangle& r_dst, const nana::paint::image& img, const nana::rectangle& r_src);
-			event_handle make_event(int evtid, window trigger);
+			event_handle make_event(event_code, window trigger);
 		private:
 			void _m_bground_pre();
 			void _m_bground_end();

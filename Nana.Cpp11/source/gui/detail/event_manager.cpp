@@ -87,7 +87,7 @@ namespace detail
 	{
 		typedef std::map<window, std::pair<std::vector<abstract_handler*>, std::vector<abstract_handler*> > > event_table_type;
 
-		event_table_type table[event_tag::count];
+		event_table_type table[static_cast<int>(event_code::end)];
 	};
 
 	namespace nana_runtime
@@ -97,9 +97,7 @@ namespace detail
 
 	abstract_handler::~abstract_handler(){}
 
-	std::recursive_mutex event_manager::mutex_;
-
-	category::flags event_tag::event_category[event_tag::count] = {
+	category::flags check::event_category[static_cast<int>(event_code::end)] = {
 		category::flags::widget,	//click
 		category::flags::widget,	//dbl_click
 		category::flags::widget,	//mouse_enter
@@ -143,12 +141,12 @@ namespace detail
 				if(i != v->cend())
 				{
 					v->erase(i);
-					if(0 == v->size())
+					if(v->empty())
 					{
-						auto & evt = nana_runtime::callbacks.table[abs_handler->event_identifier];
+						auto & evt = nana_runtime::callbacks.table[static_cast<int>(abs_handler->event_identifier)];
 						auto i_evt = evt.find(abs_handler->window);
 						auto & pair_v  = i_evt->second;
-						if((0 == pair_v.first.size()) && (0 == pair_v.second.size()))
+						if(pair_v.first.empty() && pair_v.second.empty())
 							evt.erase(i_evt);
 					}
 				}
@@ -161,15 +159,13 @@ namespace detail
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-			auto *end = nana_runtime::callbacks.table + event_tag::count;
-
 			auto deleter_wrapper = [this](abstract_handler * handler)
 			{
 				this->write_off_bind(reinterpret_cast<event_handle>(handler));
 				this->handle_manager_(handler);
 			};
 
-			for(auto* i = nana_runtime::callbacks.table; i != end; ++i)
+			for (auto i = std::begin(nana_runtime::callbacks.table), end = std::end(nana_runtime::callbacks.table); i != end; ++i)
 			{
 				auto element = i->find(wd);
 				if(element != i->end())
@@ -204,11 +200,11 @@ namespace detail
 			}
 		}
 
-		bool event_manager::answer(unsigned eventid, window wd, eventinfo& ei, event_kind evtkind)
+		bool event_manager::answer(event_code eventid, window wd, eventinfo& ei, event_kind evtkind)
 		{
-			if(eventid >= event_tag::count)	return false;
+			if(eventid >= event_code::end)	return false;
 
-			auto * evtobj = nana_runtime::callbacks.table + eventid;
+			auto * const evtobj = nana_runtime::callbacks.table + static_cast<int>(eventid);
 			handle_queue queue;
 			{
 				//Thread-Safe Required!
@@ -265,11 +261,11 @@ namespace detail
 			return handle_manager_.size();
 		}
 
-		std::size_t event_manager::the_number_of_handles(window wd, unsigned eventid, bool is_for_drawer)
+		std::size_t event_manager::the_number_of_handles(window wd, event_code eventid, bool is_for_drawer)
 		{
-			if(eventid < event_tag::count)
+			if (eventid < event_code::end)
 			{
-				auto* evtobj = nana_runtime::callbacks.table + eventid;
+				auto* const evtobj = nana_runtime::callbacks.table + static_cast<int>(eventid);
 
 				//Thread-Safe Required!
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
@@ -287,7 +283,7 @@ namespace detail
 		//@param:abs_handler, the handle of event object handler
 		//@param:drawer_handler, whether the event is installing for drawer or user callback
 		//@param:listener, a listener for the event, it is ignored when drawer_handler is true
-		event_handle event_manager::_m_make(unsigned eventid, window wd, abstract_handler* abs_handler, bool drawer_handler, window listener)
+		event_handle event_manager::_m_make(event_code eventid, window wd, abstract_handler* abs_handler, bool drawer_handler, window listener)
 		{
 			if(nullptr == abs_handler)	return nullptr;
 
@@ -303,8 +299,8 @@ namespace detail
 				//Thread-Safe Required!
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
 				abs_handler->container = (drawer_handler ?
-												&(nana_runtime::callbacks.table[eventid][wd].first) :
-												&(nana_runtime::callbacks.table[eventid][wd].second));
+												&(nana_runtime::callbacks.table[static_cast<int>(eventid)][wd].first) :
+												&(nana_runtime::callbacks.table[static_cast<int>(eventid)][wd].second));
 
 				abs_handler->container->push_back(abs_handler);
 				handle_manager_.insert(abs_handler, 0);

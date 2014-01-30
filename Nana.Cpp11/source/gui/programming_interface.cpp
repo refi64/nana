@@ -773,16 +773,6 @@ namespace API
 		restrict::interface_type::notify_icon(wd, icon);
 	}
 
-	bool tray_make_event(native_window_type wd, unsigned identifier, const std::function<void(const eventinfo&)> & f)
-	{
-		return restrict::window_manager.tray_make_event(wd, identifier, f);
-	}
-
-	void tray_umake_event(native_window_type wd)
-	{
-		restrict::window_manager.tray_umake_event(wd);
-	}
-
 	bool is_focus_window(window wd)
 	{
 		if(wd)

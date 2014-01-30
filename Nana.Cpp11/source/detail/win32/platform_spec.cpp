@@ -230,11 +230,11 @@ namespace detail
 
 	//event_register
 	//@brief: some event is needed to register for system.
-	void platform_spec::event_register_filter(gui::native_window_type wd, unsigned eventid)
+	void platform_spec::event_register_filter(native_window_type wd, event_code eventid)
 	{
 		switch(eventid)
 		{
-		case gui::detail::event_tag::mouse_drop:
+		case event_code::mouse_drop:
 			::DragAcceptFiles(reinterpret_cast<HWND>(wd), true);
 			break;
 		}

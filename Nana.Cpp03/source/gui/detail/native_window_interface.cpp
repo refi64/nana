@@ -929,7 +929,7 @@ namespace nana{
 			::SetWindowPos(native_wd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 			::AttachThreadInput(::GetCurrentThreadId(), fg_tid, FALSE);
 #else
-			set_window_z_order(wd, nullptr, z_order_action::top);
+			set_window_z_order(wd, 0, z_order_action::top);
 #endif		
 		}
 

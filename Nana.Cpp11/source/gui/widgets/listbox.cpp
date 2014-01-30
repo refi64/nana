@@ -124,16 +124,6 @@ namespace nana{ namespace gui{
 					throw std::out_of_range("Nana.GUI.Listbox: invalid header index.");
 				}
 
-				const item_t& get_item(size_type index) const
-				{
-					for(auto & m : cont_)
-					{
-						if(m.index == index)
-							return m;
-					}
-					throw std::out_of_range("Nana.GUI.Listbox: invalid header index.");
-				}
-
 				size_type item_by_x(int x) const
 				{
 					for(auto & m : cont_)

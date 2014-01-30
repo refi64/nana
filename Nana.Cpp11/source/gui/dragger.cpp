@@ -121,6 +121,8 @@ namespace nana{ namespace gui{
 				API::capture_window(ei.window, false);
 				dragging_ = false;
 				break;
+			default:
+				break;
 			}
 		}
 

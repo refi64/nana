@@ -104,7 +104,7 @@ namespace detail
 			eventinfo ei;
 			ei.elapse.timer = object;
 			bedrock::instance().evt_manager.answer(
-				detail::event_tag::elapse,
+				event_code::elapse,
 				reinterpret_cast<window>(object), ei,
 				event_manager::event_kind::user);
 		}

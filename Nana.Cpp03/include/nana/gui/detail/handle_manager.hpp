@@ -25,7 +25,7 @@ namespace gui
 {
 	namespace detail
 	{
-		template<typename Key, typename Value, unsigned CacheSize>
+		template<typename Key, typename Value, std::size_t CacheSize>
 		class cache
 			: noncopyable
 		{
@@ -38,7 +38,7 @@ namespace gui
 			cache()
 				:addr_(reinterpret_cast<pair_type*>(::operator new(sizeof(pair_type) * CacheSize)))
 			{
-				for(int i = 0; i < CacheSize; ++i)
+				for(std::size_t i = 0; i < CacheSize; ++i)
 				{
 					bitmap_[i] = 0;
 					seq_[i] = nana::npos;
@@ -47,7 +47,7 @@ namespace gui
 			
 			~cache()
 			{
-				for(int i = 0; i < CacheSize; ++i)
+				for(std::size_t i = 0; i < CacheSize; ++i)
 				{
 					if(bitmap_[i])
 						addr_[i].~pair_type();
@@ -76,7 +76,7 @@ namespace gui
 					
 					if(seq_[0] != nana::npos)
 					{//Need to move
-						for(int i = CacheSize - 1; i > 0; --i)
+						for(std::size_t i = CacheSize - 1; i > 0; --i)
 							seq_[i] = seq_[i - 1];
 					}
 					
@@ -98,7 +98,7 @@ namespace gui
 		private:
 			size_type _m_find_key(key_type k) const
 			{
-				for(int i = 0; i < CacheSize; ++i)
+				for(std::size_t i = 0; i < CacheSize; ++i)
 				{
 					if(bitmap_[i] && (addr_[i].first == k))
 						return i;
@@ -108,7 +108,7 @@ namespace gui
 			
 			size_type _m_find_pos() const
 			{
-				for(int i = 0; i < CacheSize; ++i)
+				for(std::size_t i = 0; i < CacheSize; ++i)
 				{
 					if(bitmap_[i] == 0)
 						return i;	

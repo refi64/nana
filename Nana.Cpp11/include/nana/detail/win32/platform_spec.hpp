@@ -18,6 +18,8 @@
 #include <nana/deploy.hpp>
 #include <nana/gui/basis.hpp>
 #include <nana/paint/image.hpp>
+#include <nana/gui/detail/eventinfo.hpp>
+
 #include <windows.h>
 #include <map>
 #include <memory>
@@ -143,6 +145,8 @@ namespace detail
 	{
 	public:
 		typedef drawable_impl_type::font_ptr_t	font_ptr_t;
+		typedef ::nana::gui::event_code event_code;
+		typedef ::nana::gui::native_window_type	native_window_type;
 
 		class co_initializer
 		{
@@ -161,14 +165,14 @@ namespace detail
 		unsigned font_height_to_size(unsigned) const;
 		font_ptr_t make_native_font(const nana::char_t* name, unsigned height, unsigned weight, bool italic, bool underline, bool strike_out);
 
-		void event_register_filter(nana::gui::native_window_type, unsigned eventid);
+		void event_register_filter(native_window_type, event_code);
 		static platform_spec& instance();
 
-		void keep_window_icon(nana::gui::native_window_type, const nana::paint::image&);
-		void release_window_icon(nana::gui::native_window_type);
+		void keep_window_icon(native_window_type, const nana::paint::image&);
+		void release_window_icon(native_window_type);
 	private:
 		font_ptr_t	def_font_ptr_;
-		std::map<nana::gui::native_window_type, nana::paint::image> iconbase_;
+		std::map<native_window_type, nana::paint::image> iconbase_;
 	};
 
 }//end namespace detail

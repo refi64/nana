@@ -109,7 +109,7 @@ namespace detail
 
 
 	//class tray_event_manager
-		void tray_event_manager::fire(native_window_type wd, unsigned identifier, const eventinfo& ei)
+		void tray_event_manager::fire(native_window_type wd, event_code identifier, const eventinfo& ei)
 		{
 			auto i = maptable_.find(wd);
 			if(i == maptable_.end()) return;
@@ -121,11 +121,11 @@ namespace detail
 				fn(ei);
 		}
 
-		bool tray_event_manager::make(native_window_type wd, unsigned identifier, const function_type & f)
+		bool tray_event_manager::make(native_window_type wd, event_code code, const function_type & f)
 		{
 			if(wd)
 			{
-				maptable_[wd][identifier].push_back(f);
+				maptable_[wd][code].push_back(f);
 				return true;
 			}
 			return false;
@@ -140,11 +140,14 @@ namespace detail
 	//class root_window_runtime
 		//struct condition_tag
 			root_window_runtime::condition_tag::condition_tag()
-				: mouse_window(nullptr), mousemove_window(nullptr), tabstop_focus_changed(false)
+				:	mouse_window(nullptr),
+					mousemove_window(nullptr),
+					tabstop_focus_changed(false)
 			{}
 		//end struct condition_tag
 		root_window_runtime::root_window_runtime(core_window_t * wd, unsigned width, unsigned height)
-			: window(wd), root_graph_object(width, height)
+			:	window(wd),
+				root_graph_object(width, height)
 		{}
 	//end class root_window_runtime
 
@@ -270,12 +273,14 @@ namespace detail
 			return str;
 		}
 
-		void window_manager::event_filter(core_window_t* wd, bool is_make, unsigned evtid)
+		void window_manager::event_filter(core_window_t* wd, bool is_make, event_code evtid)
 		{
 			switch(evtid)
 			{
 			case events::mouse_drop::identifier:
 				wd->flags.dropable = (is_make ? true : (bedrock::instance().evt_manager.the_number_of_handles(reinterpret_cast<window>(wd), evtid, false) != 0));
+				break;
+			default:
 				break;
 			}
 		}
@@ -430,7 +435,7 @@ namespace detail
 			{
 				eventinfo ei;
 				ei.unload.cancel = false;
-				bedrock::raise_event(gui::detail::event_tag::unload, wd, ei, true);
+				bedrock::raise_event(event_code::unload, wd, ei, true);
 				if(false == ei.unload.cancel)
 				{
 					//Before close the window, its owner window should be actived, otherwise other window will be
@@ -594,11 +599,11 @@ namespace detail
 								wd->together.caret->update();
 
 							gui::eventinfo ei;
-							ei.identifier = event_tag::move;
+							ei.identifier = event_code::move;
 							ei.window = reinterpret_cast<window>(wd);
 							ei.move.x = x;
 							ei.move.y = y;
-							bedrock::raise_event(event_tag::move, wd, ei, true);
+							bedrock::raise_event(event_code::move, wd, ei, true);
 							return true;
 						}
 					}
@@ -635,11 +640,11 @@ namespace detail
 								wd->together.caret->update();
 
 							eventinfo ei;
-							ei.identifier = event_tag::move;
+							ei.identifier = event_code::move;
 							ei.window = reinterpret_cast<window>(wd);
 							ei.move.x = x;
 							ei.move.y = y;
-							bedrock::raise_event(event_tag::move, wd, ei, true);
+							bedrock::raise_event(event_code::move, wd, ei, true);
 						}
 
 						if(size_changed)
@@ -656,11 +661,11 @@ namespace detail
 							native_interface::move_window(wd->root, x, y, width, height);
 
 							eventinfo ei;
-							ei.identifier = event_tag::size;
+							ei.identifier = event_code::size;
 							ei.window = reinterpret_cast<window>(wd);
 							ei.size.width = width;
 							ei.size.height = height;
-							bedrock::raise_event(event_tag::size, wd, ei, true);
+							bedrock::raise_event(event_code::size, wd, ei, true);
 						}
 						else
 							native_interface::move_window(wd->root, x, y);
@@ -690,12 +695,12 @@ namespace detail
 				if(wd->dimension.width != width || wd->dimension.height != height)
 				{
 					eventinfo ei;
-					ei.identifier = event_tag::sizing;
+					ei.identifier = event_code::sizing;
 					ei.window = reinterpret_cast<window>(wd);
 					ei.sizing.width = width;
 					ei.sizing.height = height;
 					ei.sizing.border = window_border::none;
-					bedrock::raise_event(event_tag::sizing, wd, ei, false);
+					bedrock::raise_event(event_code::sizing, wd, ei, false);
 
 					width = ei.sizing.width;
 					height = ei.sizing.height;
@@ -759,12 +764,12 @@ namespace detail
 					}
 
 					eventinfo ei;
-					ei.identifier = event_tag::size;
+					ei.identifier = event_code::size;
 					ei.window = reinterpret_cast<window>(wd);
 					ei.size.width = width;
 					ei.size.height = height;
 
-					bedrock::raise_event(event_tag::size, wd, ei, ask_update);
+					bedrock::raise_event(event_code::size, wd, ei, ask_update);
 					return true;
 				}
 			}
@@ -954,13 +959,13 @@ namespace detail
 			return false;
 		}
 
-		bool window_manager::tray_make_event(native_window_type wd, unsigned identifier, const event_fn_t& f)
+		bool window_manager::tray_make_event(native_window_type wd, event_code code, const event_fn_t& f)
 		{
 			if(native_interface::is_window(wd))
 			{
 				//Thread-Safe Required!
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
-				return tray_event_manager_.make(wd, identifier, f);
+				return tray_event_manager_.make(wd, code, f);
 			}
 			return false;
 		}
@@ -972,7 +977,7 @@ namespace detail
 			tray_event_manager_.umake(wd);
 		}
 
-		void window_manager::tray_fire(native_window_type wd, unsigned identifier, const eventinfo& ei)
+		void window_manager::tray_fire(native_window_type wd, event_code identifier, const eventinfo& ei)
 		{
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
@@ -1007,7 +1012,7 @@ namespace detail
 							prev_focus->together.caret->set_active(false);
 
 						ei.focus.receiver = wd->root;
-						bedrock::raise_event(event_tag::focus, prev_focus, ei, true);
+						bedrock::raise_event(event_code::focus, prev_focus, ei, true);
 					}
 				}
 				else if(wd->root == native_interface::get_focus_window())
@@ -1021,7 +1026,7 @@ namespace detail
 					ei.focus.getting = true;
 					ei.focus.receiver = wd->root;
 
-					bedrock::raise_event(event_tag::focus, wd, ei, true);
+					bedrock::raise_event(event_code::focus, wd, ei, true);
 					native_interface::set_focus(root_wd->root);
 
 					bedrock::instance().set_menubar_taken(wd);
@@ -1316,9 +1321,9 @@ namespace detail
 			wd->children.clear();
 
 			eventinfo ei;
-			ei.identifier = event_tag::destroy;
+			ei.identifier = event_code::destroy;
 			ei.window = reinterpret_cast<window>(wd);
-			bedrock::raise_event(event_tag::destroy, wd, ei, true);
+			bedrock::raise_event(event_code::destroy, wd, ei, true);
 
 			auto * root_attr = wd->root_widget->other.attribute.root;
 			if(root_attr->focus == wd)

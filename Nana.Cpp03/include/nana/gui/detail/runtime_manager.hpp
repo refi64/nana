@@ -112,7 +112,7 @@ namespace gui
 
 			void remove_if_exists(window_handle wd)
 			{
-				std::map<window_handle, widget_holder*>::iterator i = holder_.find(wd);
+				typename std::map<window_handle, widget_holder*>::iterator i = holder_.find(wd);
 				if(i != holder_.end())
 				{
 					delete i->second;
@@ -198,7 +198,7 @@ namespace gui
 					return form_;
 				}
 
-				window_handle get_handle() const override
+				window_handle get_handle() const
 				{
 					return reinterpret_cast<window_handle>(form_ ? form_->handle() : 0);
 				}

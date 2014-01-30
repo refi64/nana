@@ -242,8 +242,6 @@ namespace API
 	bool tray_delete(native_window_type);
 	void tray_tip(native_window_type, const char_t* text);
 	void tray_icon(native_window_type, const char_t* icon);
-	bool tray_make_event(native_window_type, unsigned identifier, const std::function<void(const eventinfo&)>&);
-	void tray_umake_event(native_window_type);
 
 	void activate_window(window);
 	bool is_focus_window(window);

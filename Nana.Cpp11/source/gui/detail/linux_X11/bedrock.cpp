@@ -170,7 +170,7 @@ namespace detail
 
 	void bedrock::map_thread_root_buffer(bedrock::core_window_t* wnd)
 	{
-	//	::PostMessage(reinterpret_cast<HWND>(wnd->root), gui::messages::map_thread_root_buffer, reinterpret_cast<WPARAM>(wnd), 0);
+		//GUI in X11 is not thread-dependent, so no implementation.
 	}
 
 	//inc_window
@@ -473,7 +473,7 @@ namespace detail
 					ei.dropinfo = & di;
 					ei.window = reinterpret_cast<window>(msgwd);
 					
-					bedrock.fire_event(event_tag::mouse_drop, msgwd, ei);
+					bedrock.fire_event(event_code::mouse_drop, msgwd, ei);
 					bedrock.wd_manager.do_lazy_refresh(msgwd, false);
 				}
 				break;
@@ -519,8 +519,8 @@ namespace detail
 					
 					root_runtime->condition.mousemove_window = msgwnd;
 					mousemove_window = msgwnd;
-					bedrock.raise_event(event_tag::mouse_enter, msgwnd, ei, true);
-					bedrock.raise_event(event_tag::mouse_move, msgwnd, ei, true);
+					bedrock.raise_event(event_code::mouse_enter, msgwnd, ei, true);
+					bedrock.raise_event(event_code::mouse_move, msgwnd, ei, true);
 					if(false == bedrock.wd_manager.available(mousemove_window))
 						mousemove_window = nullptr;
 				}
@@ -531,7 +531,7 @@ namespace detail
 					ei.mouse.x = ei.mouse.y = 0;
 					mousemove_window->flags.action = mouse_action::normal;
 					ei.window = reinterpret_cast<window>(mousemove_window);
-					bedrock.raise_event(event_tag::mouse_leave, mousemove_window, ei, true);
+					bedrock.raise_event(event_code::mouse_leave, mousemove_window, ei, true);
 				}
 				mousemove_window = 0;
 				break;
@@ -544,7 +544,7 @@ namespace detail
 					msgwnd->root_widget->other.attribute.root->context.focus_changed = true;
 					ei.focus.getting = true;
 					ei.focus.receiver = native_window;
-					if(false == bedrock.raise_event(event_tag::focus, focus, ei, true))
+					if(false == bedrock.raise_event(event_code::focus, focus, ei, true))
 						bedrock.wd_manager.set_focus(msgwnd);
 				}
 				break;
@@ -557,7 +557,7 @@ namespace detail
 					auto focus = msgwnd->other.attribute.root->focus;
 					ei.focus.getting = false;
 					ei.focus.receiver = recv;
-					if(bedrock.raise_event(event_tag::focus, focus, ei, true))
+					if(bedrock.raise_event(event_code::focus, focus, ei, true))
 					{
 						if(focus->together.caret)
 							focus->together.caret->set_active(false);
@@ -614,7 +614,7 @@ namespace detail
 
 					make_eventinfo(ei, msgwnd, message, xevent);
 					msgwnd->flags.action = mouse_action::pressed;
-					if(bedrock.raise_event(dbl_click ? event_tag::dbl_click : event_tag::mouse_down, msgwnd, ei, true))
+					if(bedrock.raise_event(dbl_click ? event_code::dbl_click : event_code::mouse_down, msgwnd, ei, true))
 					{
 						if(bedrock.wd_manager.available(mouse_window))
 						{
@@ -623,7 +623,7 @@ namespace detail
 							{
 								//call the drawer mouse up event for restoring the surface graphics
 								msgwnd->flags.action = mouse_action::normal;
-								bedrock.fire_event_for_drawer(event_tag::mouse_up, msgwnd, ei, &context);
+								bedrock.fire_event_for_drawer(event_code::mouse_up, msgwnd, ei, &context);
 								bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
 							}
 						}
@@ -641,7 +641,7 @@ namespace detail
 					if(msgwnd && msgwnd->flags.enabled)
 					{
 						make_eventinfo(ei, msgwnd, message, xevent);
-						bedrock.raise_event(event_tag::mouse_wheel, msgwnd, ei, true);
+						bedrock.raise_event(event_code::mouse_wheel, msgwnd, ei, true);
 					}
 				}
 				else
@@ -661,7 +661,7 @@ namespace detail
 							if(msgwnd->flags.enabled && hit)
 							{
 								msgwnd->flags.action = mouse_action::over;
-								bedrock.fire_event_for_drawer(event_tag::click, msgwnd, ei, &context);
+								bedrock.fire_event_for_drawer(event_code::click, msgwnd, ei, &context);
 								fire_click = true;
 							}
 						}
@@ -672,17 +672,17 @@ namespace detail
 							if(hit)
 								msgwnd->flags.action = mouse_action::over;
 
-							bedrock.fire_event_for_drawer(event_tag::mouse_up, msgwnd, ei, &context);
+							bedrock.fire_event_for_drawer(event_code::mouse_up, msgwnd, ei, &context);
 															
 							if(fire_click)
-								bedrock.fire_event(event_tag::click, msgwnd, ei);
+								bedrock.fire_event(event_code::click, msgwnd, ei);
 
-							bedrock.fire_event(event_tag::mouse_up, msgwnd, ei);
+							bedrock.fire_event(event_code::mouse_up, msgwnd, ei);
 							bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
 						}
 						else if(fire_click)
 						{
-							bedrock.fire_event(event_tag::click, msgwnd, ei);
+							bedrock.fire_event(event_code::click, msgwnd, ei);
 							bedrock.wd_manager.do_lazy_refresh(msgwnd, false);							
 						}
 					}
@@ -731,7 +731,7 @@ namespace detail
 					//if current window is not the previous mouse event window.
 					make_eventinfo(ei, leave_wd, message, xevent);
 					leave_wd->flags.action = mouse_action::normal;
-					bedrock.raise_event(event_tag::mouse_leave, leave_wd, ei, true);
+					bedrock.raise_event(event_code::mouse_leave, leave_wd, ei, true);
 
 					//if msgwnd is neither a captured window nor a child of captured window,
 					//redirect the msgwnd to the captured window.
@@ -745,15 +745,15 @@ namespace detail
 					bool prev_captured_inside;
 					if(bedrock.wd_manager.capture_window_entered(xevent.xmotion.x, xevent.xmotion.y, prev_captured_inside))
 					{
-						unsigned eid;
+						event_code eid;
 						if(prev_captured_inside)
 						{
-							eid = event_tag::mouse_leave;
+							eid = event_code::mouse_leave;
 							msgwnd->flags.action = mouse_action::normal;
 						}
 						else
 						{
-							eid = event_tag::mouse_enter;
+							eid = event_code::mouse_enter;
 							msgwnd->flags.action = mouse_action::over;
 						}
 						bedrock.raise_event(eid, msgwnd, ei, true);
@@ -768,9 +768,9 @@ namespace detail
 					{
 						root_runtime->condition.mousemove_window = msgwnd;
 						mousemove_window = msgwnd;
-						bedrock.raise_event(event_tag::mouse_enter, msgwnd, ei, true);
+						bedrock.raise_event(event_code::mouse_enter, msgwnd, ei, true);
 					}
-					bedrock.raise_event(event_tag::mouse_move, msgwnd, ei, true);
+					bedrock.raise_event(event_code::mouse_move, msgwnd, ei, true);
 				}
 				if(false == bedrock.wd_manager.available(mousemove_window))
 					mousemove_window = nullptr;
@@ -880,7 +880,7 @@ namespace detail
 							{
 								ei.keyboard.key = keychar;
 								bedrock.get_key_state(ei.keyboard);
-								bedrock.raise_event(event_tag::key_down, msgwnd, ei, true);
+								bedrock.raise_event(event_code::key_down, msgwnd, ei, true);
 							}
 
 							if(XLookupKeySym == status)
@@ -905,12 +905,12 @@ namespace detail
 									bedrock.get_key_state(ei.keyboard);
 									ei.keyboard.ignore = false;
 
-									ei.identifier = event_tag::key_char;
+									ei.identifier = event_code::key_char;
 									ei.window = reinterpret_cast<window>(msgwnd);
 
-									bedrock.evt_manager.answer(event_tag::key_char, reinterpret_cast<window>(msgwnd), ei, event_manager::event_kind::user);
+									bedrock.evt_manager.answer(event_code::key_char, reinterpret_cast<window>(msgwnd), ei, event_manager::event_kind::user);
 									if(ei.keyboard.ignore == false && bedrock.wd_manager.available(msgwnd))
-										bedrock.fire_event_for_drawer(event_tag::key_char, msgwnd, ei, &context);
+										bedrock.fire_event_for_drawer(event_code::key_char, msgwnd, ei, &context);
 								}
 							}
 							break;
@@ -930,7 +930,7 @@ namespace detail
 					{
 						ei.keyboard.key = static_cast<nana::char_t>(context.platform.keychar);
 						bedrock.get_key_state(ei.keyboard);
-						bedrock.raise_event(event_tag::key_up, msgwnd, ei, true);
+						bedrock.raise_event(event_code::key_up, msgwnd, ei, true);
 					}
 				}
 				else
@@ -945,7 +945,7 @@ namespace detail
 						if(msgwnd->flags.enabled && (atoms.wm_delete_window == static_cast<Atom>(xevent.xclient.data.l[0])))
 						{
 							ei.unload.cancel = false;
-							bedrock.raise_event(event_tag::unload, msgwnd, ei, true);
+							bedrock.raise_event(event_code::unload, msgwnd, ei, true);
 							if(false == ei.unload.cancel)
 								native_interface::close_window(native_window);
 						}
@@ -1030,7 +1030,7 @@ namespace detail
 	}
 
 
-	bool bedrock::fire_event_for_drawer(unsigned event_id, core_window_t* wd, eventinfo& ei, thread_context* thrd)
+	bool bedrock::fire_event_for_drawer(event_code event_id, core_window_t* wd, eventinfo& ei, thread_context* thrd)
 	{
 		if(bedrock_object.wd_manager.available(wd) == false)
 			return false;
@@ -1051,7 +1051,7 @@ namespace detail
 		return ret;
 	}
 	
-	bool bedrock::fire_event(unsigned event_id, core_window_t* wd, eventinfo& ei)
+	bool bedrock::fire_event(event_code event_id, core_window_t* wd, eventinfo& ei)
 	{
 		if(bedrock_object.wd_manager.available(wd) == false)
 			return false;
@@ -1059,7 +1059,7 @@ namespace detail
 		return bedrock_object.evt_manager.answer(event_id, reinterpret_cast<window>(wd), ei, event_manager::event_kind::user);
 	}
 
-	bool bedrock::raise_event(unsigned eid, core_window_t* wd, eventinfo& ei, bool ask_update)
+	bool bedrock::raise_event(event_code eid, core_window_t* wd, eventinfo& ei, bool ask_update)
 	{
 		if(bedrock_object.wd_manager.available(wd) == false)
 			return false;
@@ -1094,7 +1094,7 @@ namespace detail
 			eventinfo ei;
 			ei.exposed = exposed;
 			wd->visible = exposed;
-			if(raise_event(event_tag::expose, wd, ei, false))
+			if(raise_event(event_code::expose, wd, ei, false))
 			{
 				if(false == exposed)
 				{
@@ -1122,7 +1122,7 @@ namespace detail
 			eventinfo ei;
 			ei.move.x = x;
 			ei.move.y = y;
-			if(raise_event(event_tag::move, wd, ei, false))
+			if(raise_event(event_code::move, wd, ei, false))
 				wd_manager.update(wd, true, true);
 		}
 	}
@@ -1176,7 +1176,7 @@ namespace detail
 
 				auto pos = native_interface::cursor_position();
 				auto native_handle = native_interface::find_window(pos.x, pos.y);
-				if(0 == native_handle)
+				if(nullptr == native_handle)
 					return;
 				
 				native_interface::calc_window_point(native_handle, pos);
@@ -1204,7 +1204,7 @@ namespace detail
 		}
 	}
 
-	void bedrock::_m_event_filter(unsigned event_id, core_window_t * wd, thread_context * thrd)
+	void bedrock::_m_event_filter(event_code event_id, core_window_t * wd, thread_context * thrd)
 	{
 		auto & spec = nana::detail::platform_spec::instance();
 		Display * disp = spec.open_display();
@@ -1237,6 +1237,8 @@ namespace detail
 				thrd->cursor.predef_cursor = cursor::arrow;
 				thrd->cursor.window = 0;
 			}
+			break;
+		default:
 			break;
 		}
 	}

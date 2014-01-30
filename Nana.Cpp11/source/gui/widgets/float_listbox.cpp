@@ -391,6 +391,8 @@ namespace nana{ namespace gui{
 							API::update_window(*widget_);
 						}
 						break;
+					default:
+						break;
 					}
 				}
 			private:

@@ -194,11 +194,11 @@ namespace detail
 	{
 		typedef std::function<void(const eventinfo&)> function_type;
 		typedef std::vector<function_type> fvec_t;
-		typedef std::map<unsigned, fvec_t> event_maptable_type;
+		typedef std::map<event_code, fvec_t> event_maptable_type;
 		typedef std::map<native_window_type, event_maptable_type> maptable_type;
 	public:
-		void fire(native_window_type, unsigned identifier, const eventinfo&);
-		bool make(native_window_type, unsigned identifier, const function_type&);
+		void fire(native_window_type, event_code, const eventinfo&);
+		bool make(native_window_type, event_code, const function_type&);
 		void umake(native_window_type);
 	private:
 		maptable_type maptable_;
@@ -280,7 +280,7 @@ namespace detail
 		void detach_signal(core_window_t*);
 		void signal_fire_caption(core_window_t*, const nana::char_t*);
 		nana::string signal_fire_caption(core_window_t*);
-		void event_filter(core_window_t*, bool is_make, unsigned eventid);
+		void event_filter(core_window_t*, bool is_make, event_code);
 		void default_icon(const nana::paint::image&);
 
 		bool available(core_window_t*);
@@ -332,9 +332,9 @@ namespace detail
 		bool get_graphics(core_window_t*, nana::paint::graphics&);
 		bool get_visual_rectangle(core_window_t*, nana::rectangle&);
 
-		bool tray_make_event(native_window_type, unsigned identifier, const event_fn_t& f);
+		bool tray_make_event(native_window_type, event_code, const event_fn_t& f);
 		void tray_umake_event(native_window_type);
-		void tray_fire(native_window_type, unsigned identifier, const eventinfo&);
+		void tray_fire(native_window_type, event_code, const eventinfo&);
 
 		core_window_t* set_focus(core_window_t*);
 

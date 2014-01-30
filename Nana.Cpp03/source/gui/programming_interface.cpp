@@ -622,8 +622,7 @@ namespace API
 		if(false == restrict::window_manager.available(iwd))
 			return false;
 		
-		r = iwd->pos_owner;
-		r = iwd->dimension;
+		r = rectangle(iwd->pos_owner, iwd->dimension);
 		return true;
 	}
 

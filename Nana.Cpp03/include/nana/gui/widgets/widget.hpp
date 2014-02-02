@@ -111,6 +111,8 @@ namespace gui
 		}
 
 		void umake_event(event_handle eh) const;
+		widget&	tooltip(const nana::string&);
+
 		operator dummy_bool_type() const;
 		operator nana::gui::window() const;
 	protected:

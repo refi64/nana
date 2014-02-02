@@ -97,6 +97,8 @@ namespace gui
 		}
 
 		void umake_event(event_handle eh) const;
+		widget& tooltip(const nana::string&);
+
 		operator dummy_bool_type() const;
 		operator window() const;
 	protected:
@@ -263,13 +265,13 @@ namespace gui
 	public:
 
 		widget_object()
-			:handle_(API::dev::create_window(0, false, API::make_center(300, 150), appearance()))
+			:handle_(API::dev::create_window(nullptr, false, API::make_center(300, 150), appearance()))
 		{
 			_m_bind_and_attach();
 		}
 
 		widget_object(const rectangle& r, const appearance& apr = appearance())
-			: handle_(API::dev::create_window(0, false, r, apr))
+			: handle_(API::dev::create_window(nullptr, false, r, apr))
 		{
 			_m_bind_and_attach();
 		}
@@ -410,7 +412,7 @@ namespace gui
 	private:
 		virtual drawer_trigger* get_drawer_trigger()
 		{
-			return 0;
+			return nullptr;
 		}
 
 		void signal(int message, const detail::signals& sig)
@@ -424,7 +426,7 @@ namespace gui
 				*sig.info.str = this->_m_caption();
 				break;
 			case detail::signals::destroy:
-				handle_ = 0; break;
+				handle_ = nullptr; break;
 			}
 		}
 	private:

@@ -88,8 +88,6 @@ namespace detail
 			bool rendered;
 		};
 
-		typedef std::vector<edge_nimbus_action>	edge_nimbus_container;
-
 		//basic_window
 		//@brief: constructor for the root window
 		basic_window(basic_window* owner, gui::category::root_tag**);

@@ -35,9 +35,8 @@ namespace detail
 	{
 		bedrock();
 	public:
-		typedef window_manager window_manager_t;
-
 		typedef native_interface	interface_type;
+		typedef window_manager window_manager_t;
 		typedef window_manager_t::core_window_t core_window_t;
 
 		struct thread_context;
@@ -76,8 +75,8 @@ namespace detail
 		void thread_context_lazy_refresh();
 		void update_cursor(core_window_t *);
 	public:
-		window_manager_t wd_manager;
-		event_manager	evt_manager;
+		window_manager_t	wd_manager;
+		event_manager		evt_manager;
 		runtime_manager<core_window_t*, bedrock>	rt_manager;
 		static bool fire_event_for_drawer(event_code, core_window_t*, eventinfo&, thread_context*);
 		static bool fire_event(event_code, core_window_t*, eventinfo&);

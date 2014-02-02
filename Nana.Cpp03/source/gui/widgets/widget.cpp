@@ -10,6 +10,7 @@
  */
 
 #include <nana/gui/widgets/widget.hpp>
+#include <nana/gui/tooltip.hpp>
 
 namespace nana
 {
@@ -147,6 +148,12 @@ namespace gui
 		void widget::umake_event(event_handle eh) const
 		{
 			API::umake_event(eh);
+		}
+
+		widget& widget::tooltip(const nana::string& text)
+		{
+			nana::gui::tooltip::set(*this, text);
+			return *this;
 		}
 
 		widget::operator widget::dummy_bool_type() const

@@ -62,13 +62,13 @@ namespace nana{ namespace gui{
 		label(window, const nana::string& text, bool visible = true);
 		label(window, const nana::char_t* text, bool visible = true);
 		label(window, const rectangle& = rectangle(), bool visible = true);
-		void transparent(bool);
+		label& transparent(bool);
 		bool transparent() const;
-		void format(bool);
-		void add_format_listener(const std::function<void(command, const nana::string&)> &);
-		void add_format_listener(std::function<void(command, const nana::string&)> &&);
+		label& format(bool);
+		label& add_format_listener(const std::function<void(command, const nana::string&)> &);
+		label& add_format_listener(std::function<void(command, const nana::string&)> &&);
 		nana::size measure(unsigned limited) const;
-		void text_align(align, align_v = align_v::top);
+		label& text_align(align, align_v = align_v::top);
 	private:
 		void _m_caption(const nana::string&);
 	};

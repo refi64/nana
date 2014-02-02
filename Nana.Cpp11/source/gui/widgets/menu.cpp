@@ -803,7 +803,7 @@ namespace nana{ namespace gui{
 					while(root->submenu_.parent)
 						root = root->submenu_.parent;
 
-					//Avoid generating a focus event when the menu is destorying and a focus event.
+					//Avoid generating a focus event when the menu is destroying and a focus event.
 					if (event_focus_)
 						umake_event(event_focus_);
 

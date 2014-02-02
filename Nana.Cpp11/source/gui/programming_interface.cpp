@@ -52,10 +52,10 @@ namespace API
 				auto & cont = iwd->root_widget->other.attribute.root->effects_edge_nimbus;
 				if(effects::edge_nimbus::none != en)
 				{
-					if(iwd->effect.edge_nimbus == effects::edge_nimbus::none)
+					if (iwd->effect.edge_nimbus == effects::edge_nimbus::none)
 					{
-						restrict::core_window_t::edge_nimbus_action act = {iwd};
-						cont.push_back(act);
+						restrict::core_window_t::edge_nimbus_action ena = { iwd };
+						cont.push_back(ena);
 					}
 					iwd->effect.edge_nimbus = static_cast<effects::edge_nimbus>(static_cast<unsigned>(en) | static_cast<unsigned>(iwd->effect.edge_nimbus));
 				}

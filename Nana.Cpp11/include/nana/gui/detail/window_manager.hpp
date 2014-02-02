@@ -189,7 +189,7 @@ namespace detail
 		mutable mutex_type mutex_;
 
 		struct wdm_private_impl;
-		wdm_private_impl * impl_;
+		wdm_private_impl * const impl_;
 
 		signals	signals_;
 

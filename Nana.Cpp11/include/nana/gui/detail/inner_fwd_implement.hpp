@@ -116,54 +116,6 @@ namespace nana{namespace gui{
 			{}
 		};//end struct root_misc
 
-		/*
-		template<typename Key, typename Value>
-		class cached_map
-		{
-		public:
-			typedef Key key_type;
-			typedef Value value_type;
-			typedef std::map<key_type, value_type> std_map_type;
-
-			cached_map()
-				: key_(key_type()), value_addr_(nullptr)
-			{}
-
-			value_type* insert(key_type key, const value_type& value)
-			{
-				key_ = key;
-				std::pair<typename std_map_type::iterator, bool> ret = map_holder_.insert(std::pair<key_type, value_type>(key, value));
-				value_addr_ = &(ret.first->second);
-				return value_addr_;
-			}
-
-			value_type * find(key_type key) const
-			{
-				if (key_ == key) return value_addr_;
-
-				key_ = key;
-				typename std_map_type::const_iterator i = map_holder_.find(key);
-				if (i != map_holder_.end())
-					value_addr_ = const_cast<value_type*>(&(i->second));
-				else
-					value_addr_ = 0;
-
-				return value_addr_;
-			}
-
-			void erase(key_type key)
-			{
-				map_holder_.erase(key);
-				key_ = key;
-				value_addr_ = 0;
-			}
-		private:
-			mutable key_type key_;
-			mutable value_type* value_addr_;
-			std_map_type map_holder_;
-		};
-		*/
-
 		class root_register
 		{
 		public:

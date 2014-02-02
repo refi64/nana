@@ -32,17 +32,10 @@ namespace API
 	namespace dev
 	{
 		template<typename Object, typename Concept>
-		bool attach_signal(window wd, Object& object, void (Concept::*f)(int, const gui::detail::signals&))
+		void attach_signal(window wd, Object& object, void (Concept::*f)(detail::signals::code, const gui::detail::signals&))
 		{
 			using namespace gui::detail;
-			return bedrock::instance().wd_manager.attach_signal(reinterpret_cast<bedrock::core_window_t*>(wd), object, f);
-		}
-
-		template<typename Function>
-		bool attach_signal(window wd, Function f)
-		{
-			using namespace gui::detail;
-			return bedrock::instance().wd_manager.attach_signal(reinterpret_cast<bedrock::core_window_t*>(wd), f);
+			bedrock::instance().wd_manager.attach_signal(reinterpret_cast<bedrock::core_window_t*>(wd), object, f);
 		}
 
 		template<typename Event>

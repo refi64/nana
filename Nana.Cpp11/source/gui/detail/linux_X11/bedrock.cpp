@@ -14,6 +14,7 @@
 #include GUI_BEDROCK_HPP
 #include <nana/gui/detail/eventinfo.hpp>
 #include <nana/system/platform.hpp>
+#include <nana/gui/detail/inner_fwd_implement.hpp>
 #include <errno.h>
 
 namespace nana

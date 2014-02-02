@@ -391,11 +391,7 @@ namespace detail
 				//create Root graphics Buffer and manage it
 				typename root_table_type::value_type rt_window_data(wd, result.width, result.height);
 				typename root_table_type::value_type* value = root_table_.insert(result.handle, rt_window_data);
-				if(value)
-				{
-					value->root_graph_object = rt_window_data.root_graph_object;
-					value->window = rt_window_data.window;
-				}
+
 
 				wd->bind_native_window(result.handle, result.width, result.height, result.extra_width, result.extra_height, value->root_graph_object);
 

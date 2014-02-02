@@ -181,18 +181,22 @@ namespace gui
 			return trigger_;
 		}
 	private:
-		void signal(int message, const detail::signals& sig)
+		void signal(detail::signals::code code, const detail::signals& sig)
 		{
-			switch(message)
+			typedef detail::signals::code codes;
+			switch(code)
 			{
-			case detail::signals::caption:
+			case codes::caption:
 				this->_m_caption(sig.info.caption);
 				break;
-			case detail::signals::read_caption:
+			case codes::read_caption:
 				*sig.info.str = this->_m_caption();
 				break;
-			case detail::signals::destroy:
-				handle_ = nullptr; break;
+			case codes::destroy:
+				handle_ = nullptr;
+				break;
+			default:
+				break;
 			}
 		}
 	private:
@@ -239,18 +243,22 @@ namespace gui
 			return handle_;
 		}
 	private:
-		void signal(int message, const detail::signals& sig)
+		void signal(detail::signals::code code, const detail::signals& sig)
 		{
-			switch(message)
+			typedef detail::signals::code codes;
+			switch(code)
 			{
-			case detail::signals::caption:
+			case codes::caption:
 				this->_m_caption(sig.info.caption);
 				break;
-			case detail::signals::read_caption:
+			case codes::read_caption:
 				*sig.info.str = this->_m_caption();
 				break;
-			case detail::signals::destroy:
-				handle_ = nullptr; break;
+			case codes::destroy:
+				handle_ = nullptr;
+				break;
+			default:
+				break;
 			}
 		}
 	private:
@@ -343,18 +351,22 @@ namespace gui
 			return trigger_;
 		}
 	private:
-		void signal(int message, const detail::signals& sig)
+		void signal(detail::signals::code code, const detail::signals& sig)
 		{
-			switch(message)
+			typedef detail::signals::code codes;
+			switch(code)
 			{
-			case detail::signals::caption:
+			case codes::caption:
 				this->_m_caption(sig.info.caption);
 				break;
-			case detail::signals::read_caption:
+			case codes::read_caption:
 				*sig.info.str = this->_m_caption();
 				break;
-			case detail::signals::destroy:
-				handle_ = nullptr; break;
+			case codes::destroy:
+				handle_ = nullptr;
+				break;
+			default:
+				break;
 			}
 		}
 
@@ -415,18 +427,22 @@ namespace gui
 			return nullptr;
 		}
 
-		void signal(int message, const detail::signals& sig)
+		void signal(detail::signals::code code, const detail::signals& sig)
 		{
-			switch(message)
+			typedef detail::signals::code codes;
+			switch(code)
 			{
-			case detail::signals::caption:
+			case codes::caption:
 				this->_m_caption(sig.info.caption);
 				break;
-			case detail::signals::read_caption:
+			case codes::read_caption:
 				*sig.info.str = this->_m_caption();
 				break;
-			case detail::signals::destroy:
-				handle_ = nullptr; break;
+			case codes::destroy:
+				handle_ = nullptr;
+				break;
+			default:
+				break;
 			}
 		}
 	private:

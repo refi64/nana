@@ -18,6 +18,7 @@
 #include <deque>
 #include <stdexcept>
 #include <sstream>
+#include <algorithm>
 
 namespace nana{ namespace gui{
 	namespace drawerbase

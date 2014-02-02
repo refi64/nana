@@ -13,6 +13,7 @@
 #include <nana/paint/gadget.hpp>
 #include <nana/paint/text_renderer.hpp>
 #include <nana/gui/element.hpp>
+#include <algorithm>
 
 namespace nana{ namespace gui{ namespace drawerbase
 {

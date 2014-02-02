@@ -16,214 +16,39 @@
 
 #ifndef NANA_GUI_DETAIL_WINDOW_MANAGER_HPP
 #define NANA_GUI_DETAIL_WINDOW_MANAGER_HPP
-#include <map>
+
 #include <vector>
-#include <algorithm>
-#include <nana/paint/image.hpp>
 #include "basic_window.hpp"
-#include "handle_manager.hpp"
 #include "window_layout.hpp"
 #include "eventinfo.hpp"
+#include "inner_fwd.hpp"
 #include <functional>
+#include <mutex>
 
 namespace nana{	namespace gui{
 namespace detail
 {
-	template<typename Key, typename Value>
-	class cached_map
+	template<typename T>
+	class signal_invoker_mf
+		: public signal_invoker_interface
 	{
 	public:
-		typedef Key key_type;
-		typedef Value value_type;
-		typedef std::map<key_type, value_type> std_map_type;
-
-		cached_map()
-			: key_(key_type()), value_addr_(nullptr)
+		signal_invoker_mf(T& obj, void(T::*mf)(signals::code, const signals&))
+			:	obj_(obj),
+				mf_(mf)
 		{}
 
-		value_type* insert(key_type key, const value_type& value)
+		void call_signal(signals::code code, const signals& s) override
 		{
-			key_ = key;
-			std::pair<typename std_map_type::iterator, bool> ret = map_holder_.insert(std::pair<key_type, value_type>(key, value));
-			value_addr_ = &(ret.first->second);
-			return value_addr_;
-		}
-
-		value_type * find(key_type key) const
-		{
-			if(key_ == key) return value_addr_;
-
-			key_ = key;
-			typename std_map_type::const_iterator i = map_holder_.find(key);
-			if(i != map_holder_.end())
-				value_addr_ = const_cast<value_type*>(&(i->second));
-			else
-				value_addr_ = 0;
-
-			return value_addr_;
-		}
-
-		void erase(key_type key)
-		{
-			map_holder_.erase(key);
-			key_ = key;
-			value_addr_ = 0;
+			(obj_.*mf_)(code, s);
 		}
 	private:
-		mutable key_type key_;
-		mutable value_type* value_addr_;
-		std_map_type map_holder_;
+		T& obj_;
+		void(T::*mf_)(signals::code, const signals&);
 	};
 
-	struct signals
-	{
-		enum{caption, read_caption, destroy, size, count};
+	struct root_misc;
 
-		union
-		{
-			const nana::char_t* caption;
-			nana::string * str;
-			struct
-			{
-				unsigned width;
-				unsigned height;
-			}size;
-		}info;
-	};
-
-	//signal_manager
-	class signal_manager
-	{
-	public:
-        typedef void* identifier;
-
-		~signal_manager();
-
-		template<typename Class>
-		bool make(identifier id, Class& object, void (Class::* f)(int, const signals&))
-		{
-			if(id)
-			{
-				inner_invoker * & invk = manager_[id];
-				end_ = manager_.end();
-				if(invk == 0)
-				{
-					invk = new (std::nothrow) extend_memfun<Class>(object, f);
-					if(invk)	return true;
-				}
-			}
-			return false;
-		}
-
-		template<typename Function>
-		bool make(identifier id, Function f)
-		{
-			if(id)
-			{
-				inner_invoker * & invk = manager_[id];
-				end_ = manager_.end();
-				if(invk == 0)
-				{
-					invk = new (std::nothrow) extend<Function>(f);
-					if(invk)	return true;
-				}
-			}
-			return false;
-		}
-
-		void umake(identifier);
-
-		void fireaway(identifier, int message, const signals&);
-	private:
-		struct inner_invoker
-		{
-			virtual ~inner_invoker();
-			virtual void fireaway(int, const signals&) = 0;
-		};
-
-		template<typename Class>
-		struct extend_memfun: inner_invoker
-		{
-			extend_memfun(Class& object, void(Class::*f)(int, const signals&))
-				:obj_(object), f_(f)
-			{}
-
-			void fireaway(int message, const signals& info)
-			{
-				(obj_.*f_)(message, info);
-			}
-		private:
-			Class& obj_;
-			void(Class::*f_)(int, const signals&);
-		};
-
-		template<typename Function>
-		struct extend: inner_invoker
-		{
-			extend(Function f):fun_(f){}
-
-			void fireaway(int m, const signals& info)
-			{
-				fun_(m, info);
-			}
-		private:
-			Function fun_;
-		};
-	private:
-		std::map<identifier, inner_invoker*>	manager_;
-		std::map<identifier, inner_invoker*>::iterator end_;
-	};
-
-	class shortkey_container
-	{
-		struct item_type
-		{
-			window handle;
-			std::vector<unsigned long> keys;
-		};
-	public:
-		void clear();
-		bool make(window, unsigned long key);
-		void umake(window);
-		window find(unsigned long key) const;
-	private:
-		std::vector<item_type> keybase_;
-	};
-
-	class tray_event_manager
-	{
-		typedef std::function<void(const eventinfo&)> function_type;
-		typedef std::vector<function_type> fvec_t;
-		typedef std::map<event_code, fvec_t> event_maptable_type;
-		typedef std::map<native_window_type, event_maptable_type> maptable_type;
-	public:
-		void fire(native_window_type, event_code, const eventinfo&);
-		bool make(native_window_type, event_code, const function_type&);
-		void umake(native_window_type);
-	private:
-		maptable_type maptable_;
-	};
-
-	struct root_window_runtime
-	{
-		typedef basic_window core_window_t;
-
-		core_window_t*			window;
-		nana::paint::graphics	root_graph_object;
-		shortkey_container		shortkeys;
-
-		struct condition_tag
-		{
-			core_window_t*	mouse_window;		//the latest window that mouse pressed
-			core_window_t*	mousemove_window;	//the latest window that mouse moved
-			bool		tabstop_focus_changed;	//KeyDown may set it true, if it is true KeyChar will ignore the message
-			condition_tag();
-		}condition;
-
-		root_window_runtime(core_window_t* wd, unsigned width, unsigned height);
-	};
-	
-	//class window_manager
 	class window_manager
 	{
 		class revertible_mutex
@@ -255,26 +80,20 @@ namespace detail
 		typedef std::vector<core_window_t*> cont_type;
 
 		typedef window_layout<core_window_t>	wndlayout_type;
-		typedef cached_map<native_window, root_window_runtime> root_table_type;
 		typedef std::function<void(const eventinfo&)> event_fn_t;
 
 		window_manager();
+		~window_manager();
 
 		static bool is_queue(core_window_t*);
 		std::size_t number_of_core_window() const;
 		mutex_type & internal_lock() const;
-		void all_handles(std::vector<core_window_t*> &v) const;
+		void all_handles(std::vector<core_window_t*>&) const;
 
-		template<typename Class>
-		bool attach_signal(core_window_t* wd, Class& object, void (Class::*answer)(int, const detail::signals&))
+		template<typename T, typename Concept>
+		void attach_signal(core_window_t* wd, T& obj, void(Concept::*mf)(signals::code, const signals&))
 		{
-			return signal_manager_.make(wd, object, answer);
-		}
-
-		template<typename Function>
-		bool attach_signal(core_window_t* wd, Function function)
-		{
-			return signal_manager_.template make<Function>(wd, function);
+			return _m_attach_signal(wd, new signal_invoker_mf<Concept>(obj, mf));
 		}
 
 		void detach_signal(core_window_t*);
@@ -352,26 +171,27 @@ namespace detail
 
 		bool enable_effects_bground(core_window_t*, bool);
 
-		bool calc_window_point(core_window_t*, nana::point& pos);
+		bool calc_window_point(core_window_t*, nana::point&);
 
-		root_table_type::value_type* root_runtime(native_window_type root) const;
+		root_misc* root_runtime(native_window_type) const;
 
 		bool register_shortkey(core_window_t*, unsigned long key);
 		void unregister_shortkey(core_window_t*);
 
 		core_window_t* find_shortkey(native_window_type, unsigned long key);
 	private:
+		void _m_attach_signal(core_window_t*, signal_invoker_interface*);
 		void _m_destroy(core_window_t*);
 		void _m_move_core(core_window_t*, int delta_x, int delta_y);
 		core_window_t* _m_find(core_window_t*, int x, int y);
 		static bool _m_effective(core_window_t*, int root_x, int root_y);
 	private:
 		mutable mutex_type mutex_;
-		handle_manager<core_window_t*, window_manager>	handle_manager_;
-		root_table_type			root_table_;
-		signals					signals_;
-		signal_manager	signal_manager_;
-		tray_event_manager	tray_event_manager_;
+
+		struct wdm_private_impl;
+		wdm_private_impl * impl_;
+
+		signals	signals_;
 
 		paint::image default_icon_;
 

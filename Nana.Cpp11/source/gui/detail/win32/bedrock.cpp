@@ -17,6 +17,7 @@
 #include <nana/system/platform.hpp>
 #include <sstream>
 #include <nana/system/timepiece.hpp>
+#include <nana/gui/detail/inner_fwd_implement.hpp>
 
 #ifndef WM_MOUSEWHEEL
 #define WM_MOUSEWHEEL	0x020A

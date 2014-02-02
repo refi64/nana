@@ -13,6 +13,7 @@
 #include <nana/gui/animation.hpp>
 #include <nana/gui/drawing.hpp>
 #include <nana/system/timepiece.hpp>
+#include <nana/system/platform.hpp>
 
 #include <vector>
 #include <list>

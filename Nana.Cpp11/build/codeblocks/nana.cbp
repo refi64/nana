@@ -55,6 +55,7 @@
 		<Unit filename="../../source/gui/detail/event_manager.cpp" />
 		<Unit filename="../../source/gui/detail/native_window_interface.cpp" />
 		<Unit filename="../../source/gui/detail/timer_trigger.cpp" />
+		<Unit filename="../../source/gui/detail/window_layout.cpp" />
 		<Unit filename="../../source/gui/detail/window_manager.cpp" />
 		<Unit filename="../../source/gui/dragger.cpp" />
 		<Unit filename="../../source/gui/drawing.cpp" />

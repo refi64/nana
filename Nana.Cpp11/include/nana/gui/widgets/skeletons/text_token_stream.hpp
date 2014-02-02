@@ -13,6 +13,8 @@
 #ifndef NANA_GUI_WIDGETS_SKELETONS_TEXT_TOKEN_STREAM
 #define NANA_GUI_WIDGETS_SKELETONS_TEXT_TOKEN_STREAM
 
+#include <nana/gui/layout_utility.hpp>
+
 #include <sstream>
 #include <deque>
 #include <vector>

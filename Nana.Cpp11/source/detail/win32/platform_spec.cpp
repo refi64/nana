@@ -237,6 +237,8 @@ namespace detail
 		case event_code::mouse_drop:
 			::DragAcceptFiles(reinterpret_cast<HWND>(wd), true);
 			break;
+        default:
+            break;
 		}
 	}
 

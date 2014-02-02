@@ -18,12 +18,24 @@
 #define NANA_GUI_DETAIL_WINDOW_MANAGER_HPP
 
 #include <vector>
-#include "basic_window.hpp"
 #include "window_layout.hpp"
 #include "eventinfo.hpp"
 #include "inner_fwd.hpp"
 #include <functional>
-#include <mutex>
+
+#if defined(STD_THREAD_NOT_SUPPORTED)
+	#include <nana/std_mutex.hpp>
+#else
+	#include <mutex>
+#endif
+
+namespace nana
+{
+	namespace paint
+	{
+		class image;
+	}
+}
 
 namespace nana{	namespace gui{
 namespace detail
@@ -79,7 +91,7 @@ namespace detail
 		typedef basic_window core_window_t;
 		typedef std::vector<core_window_t*> cont_type;
 
-		typedef window_layout<core_window_t>	wndlayout_type;
+		typedef window_layout	wndlayout_type;
 		typedef std::function<void(const eventinfo&)> event_fn_t;
 
 		window_manager();
@@ -109,8 +121,8 @@ namespace detail
 		core_window_t* create_root(core_window_t* owner, bool nested, rectangle, const appearance&);
 		core_window_t* create_widget(core_window_t* parent, const rectangle&, bool is_lite);
 		core_window_t* create_frame(core_window_t* parent, const rectangle&);
-		bool insert_frame(core_window_t* frame, native_window wd);
-		bool insert_frame(core_window_t* frame, core_window_t* wd);
+		bool insert_frame(core_window_t* frame, native_window);
+		bool insert_frame(core_window_t* frame, core_window_t*);
 		void close(core_window_t*);
 
 		//destroy
@@ -192,8 +204,6 @@ namespace detail
 		wdm_private_impl * const impl_;
 
 		signals	signals_;
-
-		paint::image default_icon_;
 
 		struct attribute
 		{

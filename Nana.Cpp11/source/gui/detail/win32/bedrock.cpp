@@ -18,6 +18,8 @@
 #include <sstream>
 #include <nana/system/timepiece.hpp>
 #include <nana/gui/detail/inner_fwd_implement.hpp>
+#include <nana/gui/detail/native_window_interface.hpp>
+#include <nana/gui/layout_utility.hpp>
 
 #ifndef WM_MOUSEWHEEL
 #define WM_MOUSEWHEEL	0x020A
@@ -940,7 +942,7 @@ namespace detail
 							fire_click = true;
 						}
 					}
-				
+
 					//Do mouse_up, this handle may be closed by click handler.
 					if(bedrock.wd_manager.available(msgwnd) && msgwnd->flags.enabled)
 					{
@@ -958,7 +960,7 @@ namespace detail
 					else if(fire_click)
 					{
 						bedrock.fire_event(event_code::click, msgwnd, ei);
-						bedrock.wd_manager.do_lazy_refresh(msgwnd, false);					
+						bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
 					}
 				}
 				mouse_window = nullptr;
@@ -1569,7 +1571,7 @@ namespace detail
 			ei.move.y = y;
 			if (raise_event(event_code::move, wd, ei, false))
 				wd_manager.update(wd, true, true);
-		}	
+		}
 	}
 
 	void bedrock::thread_context_destroy(core_window_t * wd)
@@ -1643,7 +1645,7 @@ namespace detail
 			auto * thrd = get_thread_context(wd->thread_id);
 			if(nullptr == thrd)
 				return;
-			
+
 			if((wd->predef_cursor == cursor::arrow) && (thrd->cursor.window == wd))
 			{
 				if(thrd->cursor.predef_cursor != cursor::arrow)
@@ -1704,6 +1706,8 @@ namespace detail
 				thrd->cursor.window = nullptr;
 			}
 			break;
+        default:
+            break;
 		}
 	}
 }//end namespace detail

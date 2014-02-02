@@ -15,6 +15,7 @@
 #include <nana/gui/detail/window_manager.hpp>
 #include <nana/gui/detail/native_window_interface.hpp>
 #include <nana/gui/detail/inner_fwd_implement.hpp>
+#include <nana/gui/layout_utility.hpp>
 #include <stdexcept>
 #include <algorithm>
 
@@ -76,6 +77,8 @@ namespace detail
 				handle_manager<core_window_t*, window_manager>	wd_register;
 				signal_manager	signal;
 				tray_event_manager	tray_event;
+
+				paint::image default_icon;
 			};
 		//end struct wdm_private_impl
 
@@ -220,7 +223,7 @@ namespace detail
 
 		void window_manager::default_icon(const paint::image& img)
 		{
-			default_icon_ = img;
+			impl_->default_icon = img;
 		}
 
 		bool window_manager::available(core_window_t* wd)
@@ -283,7 +286,7 @@ namespace detail
 					insert_frame(owner, wd);
 
 				bedrock::inc_window(wd->thread_id);
-				this->icon(wd, default_icon_);
+				this->icon(wd, impl_->default_icon);
 				return wd;
 			}
 			return nullptr;

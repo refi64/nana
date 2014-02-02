@@ -11,6 +11,7 @@
 
 #include <nana/gui/drawing.hpp>
 #include <nana/gui/programming_interface.hpp>
+#include <nana/gui/detail/basic_window.hpp>
 
 namespace nana
 {

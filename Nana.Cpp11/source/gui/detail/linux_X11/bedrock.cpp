@@ -15,6 +15,8 @@
 #include <nana/gui/detail/eventinfo.hpp>
 #include <nana/system/platform.hpp>
 #include <nana/gui/detail/inner_fwd_implement.hpp>
+#include <nana/gui/detail/native_window_interface.hpp>
+#include <nana/gui/layout_utility.hpp>
 #include <errno.h>
 
 namespace nana

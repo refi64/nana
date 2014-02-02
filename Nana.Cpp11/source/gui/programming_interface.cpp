@@ -10,7 +10,9 @@
  */
 
 #include <nana/gui/programming_interface.hpp>
+#include <nana/gui/detail/basic_window.hpp>
 #include <nana/system/platform.hpp>
+#include <nana/gui/detail/native_window_interface.hpp>
 
 namespace nana{	namespace gui{
 
@@ -161,6 +163,17 @@ namespace API
 				if(restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)))
 					reinterpret_cast<restrict::core_window_t*>(wd)->drawer.detached();
 			}
+		}
+
+		event_handle make_drawer_event(event_code code, window wd)
+		{
+			using namespace gui::detail;
+
+			auto & wd_manager = bedrock::instance().wd_manager;
+			internal_scope_guard isg;
+			if (wd_manager.available(reinterpret_cast<bedrock::core_window_t*>(wd)))
+				return reinterpret_cast<bedrock::core_window_t*>(wd)->drawer.make_event(code, wd);
+			return nullptr;
 		}
 
 		void umake_drawer_event(window wd)

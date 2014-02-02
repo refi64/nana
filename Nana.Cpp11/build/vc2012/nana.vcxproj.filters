@@ -285,5 +285,8 @@
     <ClCompile Include="..\..\source\gui\element.cpp">
       <Filter>Source Files\gui</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\gui\detail\window_layout.cpp">
+      <Filter>Source Files\gui\detail</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

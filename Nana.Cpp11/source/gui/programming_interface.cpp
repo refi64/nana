@@ -13,6 +13,7 @@
 #include <nana/gui/detail/basic_window.hpp>
 #include <nana/system/platform.hpp>
 #include <nana/gui/detail/native_window_interface.hpp>
+#include <algorithm>
 
 namespace nana{	namespace gui{
 

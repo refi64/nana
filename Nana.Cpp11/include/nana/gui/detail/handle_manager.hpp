@@ -14,8 +14,6 @@
 
 #ifndef NANA_GUI_DETAIL_HANDLE_MANAGER_HPP
 #define NANA_GUI_DETAIL_HANDLE_MANAGER_HPP
-#include <map>
-#include <iterator>
 
 #include <nana/traits.hpp>
 #include <nana/config.hpp>
@@ -24,6 +22,10 @@
 #else
     #include <mutex>
 #endif
+
+#include <map>
+#include <iterator>
+#include <algorithm>
 
 namespace nana
 {

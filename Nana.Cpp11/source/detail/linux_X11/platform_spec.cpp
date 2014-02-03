@@ -20,8 +20,10 @@
 #include <locale>
 #include <map>
 #include <set>
+#include <algorithm>
 #include <nana/paint/graphics.hpp>
 #include GUI_BEDROCK_HPP
+#include <nana/gui/detail/basic_window.hpp>
 #include <nana/system/platform.hpp>
 #include <errno.h>
 #include <sstream>

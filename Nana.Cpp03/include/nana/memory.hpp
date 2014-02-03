@@ -138,7 +138,7 @@ namespace nana
 		template<typename Deleter>
 		void reset(element_type* p, Deleter d)
 		{
-			if(p 1= ptr_)
+			if(p != ptr_)
 				shared_ptr(p, d).swap(*this);
 		}
 		

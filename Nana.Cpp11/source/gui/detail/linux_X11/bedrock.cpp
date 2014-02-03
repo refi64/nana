@@ -490,7 +490,6 @@ namespace detail
 	void window_proc_for_xevent(Display* display, XEvent& xevent)
 	{
 		typedef detail::bedrock::core_window_t core_window_t;
-		typedef detail::bedrock::window_manager_t::root_table_type::value_type wm_root_runtime_type;
 
 		static auto& bedrock = detail::bedrock::instance();
 		static unsigned long	last_mouse_down_time;

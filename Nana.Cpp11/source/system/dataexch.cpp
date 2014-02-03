@@ -17,6 +17,7 @@
 #elif defined(NANA_X11)
 	#include PLATFORM_SPEC_HPP
 	#include GUI_BEDROCK_HPP
+	#include <nana/gui/detail/basic_window.hpp>
 #endif
 
 namespace nana{ namespace system{
@@ -87,7 +88,7 @@ namespace nana{ namespace system{
 			gui::native_window_type owner = 0;
 			{
 				gui::internal_scope_guard isg;
-				gui::detail::bedrock::core_window_t * wd = gui::detail::bedrock::instance().focus();
+				auto wd = gui::detail::bedrock::instance().focus();
 				if(wd)	owner = wd->root;
 			}
 

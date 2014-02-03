@@ -17,6 +17,7 @@
 
 #include <vector>
 #include <list>
+#include <algorithm>
 
 #if defined(NANA_MINGW) && defined(STD_THREAD_NOT_SUPPORTED)
     #include <nana/std_thread.hpp>

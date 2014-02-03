@@ -20,6 +20,8 @@
 	#include <nana/detail/linux_X11/platform_spec.hpp>
 #endif
 
+#include <algorithm>
+
 namespace nana
 {
 namespace gui

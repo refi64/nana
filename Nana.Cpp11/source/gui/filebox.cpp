@@ -15,6 +15,7 @@
 	#include <nana/gui/place.hpp>
 	#include <nana/gui/functional.hpp>
 	#include <stdexcept>
+	#include <algorithm>
 #endif
 
 namespace nana{	namespace gui

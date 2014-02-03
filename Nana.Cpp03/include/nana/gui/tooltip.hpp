@@ -41,12 +41,12 @@ namespace nana{ namespace gui{
 		class factory
 			: public factory_interface
 		{
-			tooltip_interface * create() override
+			tooltip_interface * create() //override
 			{
 				return new TooltipWindow;
 			}
 
-			void destroy(tooltip_interface* p) override
+			void destroy(tooltip_interface* p) //override
 			{
 				delete p;
 			}
@@ -54,7 +54,7 @@ namespace nana{ namespace gui{
 	public:
 		typedef factory_interface factory_if_type;
 
-		template<typename ToolTipWindow>
+		template<typename TooltipWindow>
 		static void make_factory()
 		{
 			_m_hold_factory(new factory<TooltipWindow>);

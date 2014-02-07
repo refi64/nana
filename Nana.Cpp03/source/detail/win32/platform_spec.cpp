@@ -171,7 +171,7 @@ namespace detail
 		::GetVersionEx(&osvi);
 		if (osvi.dwMajorVersion < 6)
 			metrics.cbSize -= sizeof(metrics.iPaddedBorderWidth);
-#endif 
+#endif
 		::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof metrics, &metrics, 0);
 		def_font_ptr_ = make_native_font(metrics.lfMessageFont.lfFaceName, font_size_to_height(9), 400, false, false, false);
 	}
@@ -252,6 +252,8 @@ namespace detail
 		case event_code::mouse_drop:
 			::DragAcceptFiles(reinterpret_cast<HWND>(wd), true);
 			break;
+        default:
+            break;
 		}
 	}
 

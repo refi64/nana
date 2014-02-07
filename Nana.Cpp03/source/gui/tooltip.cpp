@@ -146,10 +146,9 @@ namespace nana{ namespace gui{
 				static nana::shared_ptr<gui::tooltip::factory_if_type>& factory()
 				{
 					static nana::shared_ptr<gui::tooltip::factory_if_type> fp;
-					if (0 == fp)
-					{
+					if (!fp)
 						fp.reset(new tip_form_factory());
-					}
+
 					return fp;
 				}
 
@@ -179,10 +178,8 @@ namespace nana{ namespace gui{
 
 				void show(const nana::string& text)
 				{
-					if (0 == window_)
-					{
+					if (!window_)
 						window_ = nana::shared_ptr<tooltip_interface>(factory()->create(), deleter(factory()));
-					}
 
 					window_->tooltip_text(text);
 					window_->tooltip_move(API::cursor_position(), true);
@@ -190,10 +187,8 @@ namespace nana{ namespace gui{
 
 				void show(point pos, const nana::string& text)
 				{
-					if (0 == window_)
-					{
+					if (!window_)
 						window_ = nana::shared_ptr<tooltip_interface>(factory()->create(), deleter(factory()));
-					}
 
 					window_->tooltip_text(text);
 					nana::size sz = window_->tooltip_size();

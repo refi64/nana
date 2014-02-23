@@ -30,6 +30,25 @@ namespace nana{ namespace gui{
 				}
 			};	//end class drawer
 
+			nana::point pos_by_screen(nana::point pos, const nana::size& sz)
+			{
+				const nana::rectangle scr_area = API::screen_area_from_point(pos);
+				if (pos.x + sz.width > scr_area.x + scr_area.width)
+					pos.x = static_cast<int>(scr_area.x + scr_area.width - sz.width);
+				if (pos.x < scr_area.x)
+					pos.x = scr_area.x;
+
+				if (pos.y + sz.height >= scr_area.y + scr_area.height)
+					pos.y = static_cast<int>(scr_area.y + scr_area.height - sz.height);
+				else
+					pos.y += 20;
+
+				if (pos.y < scr_area.y)
+					pos.y = scr_area.y;
+
+				return pos;
+			}
+
 			class tip_form
 				:	public widget_object<category::root_tag, drawer>,
 					public tooltip_interface
@@ -70,9 +89,10 @@ namespace nana{ namespace gui{
 			private:
 				void _m_tick()
 				{
+					nana::point pos;
 					if (ignore_pos_)
 					{
-						nana::point pos = API::cursor_position();
+						pos = API::cursor_position();
 						
 						//The cursor must be stay here for half second.
 						if (pos != pos_)
@@ -81,24 +101,13 @@ namespace nana{ namespace gui{
 							return;
 						}
 
-						nana::size sz = size();
-						nana::size screen_size = API::screen_size();
-						if (pos.x + sz.width >= screen_size.width)
-							pos.x = static_cast<int>(screen_size.width) - static_cast<int>(sz.width);
-
-						if (pos.y + sz.height >= screen_size.height)
-							pos.y = static_cast<int>(screen_size.height) - static_cast<int>(sz.height);
-						else
-							pos.y += 20;
-
-						if (pos.x < 0) pos.x = 0;
-						if (pos.y < 0) pos.y = 0;
-
-						pos_ = pos;
+						pos = pos_by_screen(pos, size());
 					}
+					else
+						pos = pos_;
 
 					timer_.enable(false);
-					move(pos_.x, pos_.y);
+					move(pos.x, pos.y);
 					show();
 				}
 
@@ -191,17 +200,7 @@ namespace nana{ namespace gui{
 						window_ = nana::shared_ptr<tooltip_interface>(factory()->create(), deleter(factory()));
 
 					window_->tooltip_text(text);
-					nana::size sz = window_->tooltip_size();
-					nana::size screen_size = API::screen_size();
-					if(pos.x + sz.width >= screen_size.width)
-						pos.x = static_cast<int>(screen_size.width) - static_cast<int>(sz.width);
-
-					if (pos.y + sz.height >= screen_size.height)
-						pos.y = static_cast<int>(screen_size.height) - static_cast<int>(sz.height);
-
-					if (pos.x < 0) pos.x = 0;
-					if (pos.y < 0) pos.y = 0;
-
+					pos = pos_by_screen(pos, window_->tooltip_size());
 					window_->tooltip_move(pos, false);
 				}
 

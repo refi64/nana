@@ -24,6 +24,58 @@ namespace nana{ namespace gui{
 		{
 			typedef std::size_t size_type;
 
+			struct index_pair
+			{
+				size_type cat;	//The pos of category
+				size_type item;	//the pos of item in a category.
+
+				index_pair()
+					:	cat(0), item(0)
+				{}
+
+				index_pair(size_type cat_pos, size_type item_pos)
+					:	cat(cat_pos),
+						item(item_pos)
+				{}
+
+				bool empty() const
+				{
+					return (npos == cat);
+				}
+
+				void set_both(size_type n)
+				{
+					cat = item = n;
+				}
+
+				bool is_category() const
+				{
+					return (npos != cat && npos == item);
+				}
+
+				bool is_item() const
+				{
+					return (npos != cat && npos != item);
+				}
+
+				bool operator==(const index_pair& r) const
+				{
+					return (r.cat == cat && r.item == item);
+				}
+
+				bool operator!=(const index_pair& r) const
+				{
+					return !this->operator==(r);
+				}
+
+				bool operator>(const index_pair& r) const
+				{
+					return (cat > r.cat) || (cat == r.cat && item > r.item);
+				}
+			};
+
+			typedef std::vector<index_pair> selection;
+
 			//struct essence_t
 			//@brief:	this struct gives many data for listbox,
 			//			the state of the struct does not effect on member funcions, therefore all data members are public.
@@ -34,8 +86,6 @@ namespace nana{ namespace gui{
 			class trigger: public drawer_trigger
 			{
 			public:
-				typedef std::size_t size_type;
-
 				trigger();
 				~trigger();
 				essence_t& essence();
@@ -58,6 +108,7 @@ namespace nana{ namespace gui{
 				void dbl_click(graph_reference, const eventinfo&);
 				void resize(graph_reference, const eventinfo&);
 				void key_down(graph_reference, const eventinfo&);
+				void key_char(graph_reference, const eventinfo&);	//Deal with whitespace
 			private:
 				essence_t * essence_;
 				drawer_header_impl *drawer_header_;
@@ -75,8 +126,8 @@ namespace nana{ namespace gui{
 				/// The destructor
 				virtual ~resolver_interface(){}
 
-				virtual nana::string decode(std::size_t, const target&) const = 0;
-				virtual void encode(target&, std::size_t, const nana::string&) const = 0;
+				virtual nana::string decode(size_type, const target&) const = 0;
+				virtual void encode(target&, size_type, const nana::string&) const = 0;
 			};
 
 			template<typename T>
@@ -102,7 +153,7 @@ namespace nana{ namespace gui{
 			{
 			public:
 				item_proxy();
-				item_proxy(essence_t* ess, std::size_t cat, std::size_t pos);
+				item_proxy(essence_t*, const index_pair&);
 
 				bool empty() const;
 
@@ -118,12 +169,12 @@ namespace nana{ namespace gui{
 				item_proxy& fgcolor(nana::color_t);
 				nana::color_t fgcolor() const;
 
-				std::pair<std::size_t, std::size_t> pos() const;
+				index_pair pos() const;
 
-				std::size_t columns() const;
-				item_proxy & text(std::size_t pos, const nana::string&);
-				item_proxy & text(std::size_t pos, nana::string&&);
-				nana::string text(std::size_t pos) const;
+				size_type columns() const;
+				item_proxy & text(size_type col, const nana::string&);
+				item_proxy & text(size_type col, nana::string&&);
+				nana::string text(size_type col) const;
 
 				template<typename T>
 				item_proxy & resolve_from(const T& t)
@@ -133,9 +184,9 @@ namespace nana{ namespace gui{
 						throw std::invalid_argument("Nana.Listbox.ItemProxy: the type passed to value() does not match the resolver.");
 					
 					auto * res = proxy->res.get();
-					const std::size_t headers = columns();
+					auto headers = columns();
 
-					for(std::size_t i = 0; i < headers; ++i)
+					for(size_type i = 0; i < headers; ++i)
 						text(i, res->decode(i, t));
 					
 					return *this;
@@ -149,8 +200,8 @@ namespace nana{ namespace gui{
 						throw std::invalid_argument("Nana.Listbox.ItemProxy: the type passed to value() does not match the resolver.");
 					
 					auto * res = proxy->res.get();
-					const std::size_t headers = columns();
-					for(std::size_t i = 0; i < headers; ++i)
+					auto headers = columns();
+					for(size_type i = 0; i < headers; ++i)
 						res->encode(t, i, text(i));
 				}
 
@@ -221,8 +272,7 @@ namespace nana{ namespace gui{
 				const nana::any * _m_value() const;
 			private:
 				essence_t * ess_;
-				std::size_t cat_;
-				std::size_t pos_;
+				index_pair	pos_;
 			};
 
 			class cat_proxy
@@ -230,7 +280,7 @@ namespace nana{ namespace gui{
 			{
 			public:
 				cat_proxy();
-				cat_proxy(essence_t * ess, std::size_t pos);
+				cat_proxy(essence_t * ess, size_type pos);
 
 				/// Append an item at end of the category
 				template<typename T>
@@ -240,18 +290,18 @@ namespace nana{ namespace gui{
 					if(proxy)
 					{
 						auto & res = proxy->res;
-						std::size_t pos = size();
 						push_back(res->decode(0, t));
-						item_proxy ip(ess_, pos_, pos);
-						const std::size_t headers = columns();
-						for(std::size_t i = 1; i < headers; ++i)
+
+						item_proxy ip(ess_, index_pair(pos_, size() - 1));
+						auto headers = columns();
+						for(size_type i = 1; i < headers; ++i)
 							ip.text(i, res->decode(i, t));
 						return ip;
 					}
 					return item_proxy();
 				}
 
-				std::size_t columns() const;
+				size_type columns() const;
 
 				/// Behavior of a container
 				void push_back(const nana::string&);
@@ -262,10 +312,10 @@ namespace nana{ namespace gui{
 				item_proxy cbegin() const;
 				item_proxy cend() const;
 
-				item_proxy at(std::size_t pos) const;
+				item_proxy at(size_type pos) const;
 				item_proxy back() const;
 
-				std::size_t size() const;
+				size_type size() const;
 
 				/// Behavior of Iterator
 				cat_proxy& operator=(const cat_proxy&);
@@ -296,8 +346,8 @@ namespace nana{ namespace gui{
 			private:
 				const nana::any & _m_resolver() const;
 			private:
-				essence_t * ess_;
-				std::size_t pos_;
+				essence_t*	ess_;
+				size_type	pos_;
 			};
 
 			struct extra_events
@@ -313,12 +363,12 @@ namespace nana{ namespace gui{
 			public concepts::any_objective<drawerbase::listbox::size_type, 2>
 	{
 	public:
-		typedef drawerbase::listbox::size_type size_type;
-		typedef std::pair<size_type, size_type>	index_pair_t;
-		typedef drawerbase::listbox::extra_events ext_event_type;
+		typedef drawerbase::listbox::size_type	size_type;
+		typedef drawerbase::listbox::index_pair	index_pair;
+		typedef drawerbase::listbox::extra_events	ext_event_type;
 		typedef drawerbase::listbox::cat_proxy	cat_proxy;
-		typedef drawerbase::listbox::item_proxy item_proxy;
-		typedef std::vector<index_pair_t> selection;
+		typedef drawerbase::listbox::item_proxy	item_proxy;
+		typedef drawerbase::listbox::selection	selection;
 
 		/// An interface that performances a translation between the object of T and an item of listbox.
 		template<typename T>
@@ -338,10 +388,11 @@ namespace nana{ namespace gui{
 		void append_header(const nana::string&, unsigned width = 120);
 
 		cat_proxy append(const nana::string& text);
-		cat_proxy at(std::size_t pos) const;
-		item_proxy at(std::size_t pos, std::size_t index) const;
+		cat_proxy at(size_type pos) const;
+		item_proxy at(const index_pair&) const;
 
-		void insert(size_type cat, size_type index, const nana::string&);
+		void insert(const index_pair&, const nana::string&);
+		void insert(const index_pair&, nana::string&&);
 
 		void checkable(bool);
 		selection checked() const;
@@ -360,9 +411,11 @@ namespace nana{ namespace gui{
 			_m_resolver(nana::any(proxy));
 		}
 
-		void set_sort_compare(size_type sub, std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> strick_ordering);
-		void sort_col(std::size_t col, bool reverse = false);
-		std::size_t sort_col() const;
+		void set_sort_compare(size_type col, std::function<bool(const nana::string&, nana::any*,
+															const nana::string&, nana::any*, bool reverse)> strick_ordering);
+
+		void sort_col(size_type col, bool reverse = false);
+		size_type sort_col() const;
 		void unsort();
 		bool freeze_sort(bool freeze);
 
@@ -371,8 +424,8 @@ namespace nana{ namespace gui{
 		void show_header(bool);
 		bool visible_header() const;
 		void move_select(bool upwards);
-		void icon(size_type cat, size_type index, const nana::paint::image&);
-		nana::paint::image icon(size_type cat, size_type index) const;
+		void icon(const index_pair&, const nana::paint::image&);
+		nana::paint::image icon(const index_pair&) const;
 		size_type size_categ() const;
 		size_type size_item() const;
 		size_type size_item(size_type cat) const;

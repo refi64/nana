@@ -671,7 +671,7 @@ namespace nana{	namespace gui
 			listbox::selection sel = ls_file_.selected();
 			if(sel.size() == 0)
 				return;
-			listbox::index_pair_t index = sel[0];
+			listbox::index_pair index = sel[0];
 
 			
 			item_fs m;

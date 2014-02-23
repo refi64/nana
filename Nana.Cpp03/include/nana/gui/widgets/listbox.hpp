@@ -181,7 +181,7 @@ namespace nana{ namespace gui{
 					if(0 == proxy)
 						throw std::invalid_argument("Nana.Listbox.ItemProxy: the type passed to value() does not match the resolver.");
 					
-					resolver_proxy<T> * res = proxy->res.get();
+					resolver_interface<T> * res = proxy->res.get();
 					const size_type headers = columns();
 
 					for(size_type i = 0; i < headers; ++i)

@@ -158,13 +158,9 @@ namespace drawerbase
 			delete bgimage_;
 		}
 
-		void trigger::bind_window(nana::gui::widget& wdg)
+		void trigger::attached(widget_reference widget, graph_reference graph)
 		{
-			widget_ = &wdg;
-		}
-
-		void trigger::attached(graph_reference graph)
-		{
+			widget_ = &widget;
 			window wd = widget_->handle();
 
 			using namespace API::dev;
@@ -181,11 +177,6 @@ namespace drawerbase
 			API::effects_edge_nimbus(wd, effects::edge_nimbus::over);
 
 			graph_ = &graph;
-		}
-
-		void trigger::detached()
-		{
-			API::dev::umake_drawer_event(widget_->handle());
 		}
 
 		bool trigger::enable_pushed(bool eb)

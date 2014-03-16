@@ -85,13 +85,13 @@ namespace nana{ namespace gui{
 
 				void item_width(size_type index, unsigned width)
 				{
-					if(index < cont_.size())
+					if (index >= cont_.size())
+						return;
+
+					for(auto & m : cont_)
 					{
-						for(auto & m : cont_)
-						{
-							if(m.index == index)
-								m.pixels = width;
-						}
+						if(m.index == index)
+							m.pixels = width;
 					}
 				}
 
@@ -251,34 +251,46 @@ namespace nana{ namespace gui{
 					mutable nana::any * anyobj;
 
 					item_t()
-						:bkcolor(0xFF000000), fgcolor(0xFF000000), anyobj(nullptr)
+						:   bkcolor(0xFF000000),
+                            fgcolor(0xFF000000),
+                            anyobj(nullptr)
 					{
 						flags.selected = flags.checked = false;
 					}
 
 					item_t(const item_t& r)
-						:	texts(r.texts), bkcolor(r.bkcolor), fgcolor(r.fgcolor), img(r.img),
-							flags(r.flags), anyobj(r.anyobj ? new nana::any(*r.anyobj) : nullptr)
+						:	texts(r.texts),
+                            bkcolor(r.bkcolor),
+                            fgcolor(r.fgcolor),
+                            img(r.img),
+							flags(r.flags),
+							anyobj(r.anyobj ? new nana::any(*r.anyobj) : nullptr)
 					{}
 
 					item_t(item_t&& r)
 						:	texts(std::move(r.texts)),
 							bkcolor(r.bkcolor), fgcolor(r.fgcolor),
 							img(std::move(r.img)),
-							flags(r.flags),	anyobj(r.anyobj)
+							flags(r.flags),
+							anyobj(r.anyobj)
 					{
 						r.anyobj = nullptr;
 					}
 
 					item_t(nana::string&& s)
-						:bkcolor(0xFF000000), fgcolor(0xFF000000), anyobj(nullptr)
+						:   bkcolor(0xFF000000),
+                            fgcolor(0xFF000000),
+                            anyobj(nullptr)
 					{
 						flags.selected = flags.checked = false;
 						texts.emplace_back(std::move(s));
 					}
 
 					item_t(container&& texts)
-						:bkcolor(0xFF000000), fgcolor(0xFF000000), anyobj(nullptr), texts(std::move(texts))
+						:   texts(std::move(texts)),
+                            bkcolor(0xFF000000),
+                            fgcolor(0xFF000000),
+                            anyobj(nullptr)
 					{
 						flags.selected = flags.checked = false;
 					}
@@ -538,7 +550,7 @@ namespace nana{ namespace gui{
 				category::container::value_type& at(const index_pair& pos)
 				{
 					auto index = pos.item;
-					
+
 					if (sorted_index_ != npos)
 						index = absolute(pos);
 
@@ -548,7 +560,7 @@ namespace nana{ namespace gui{
 				const category::container::value_type& at(const index_pair& pos) const
 				{
 					auto index = pos.item;
-					
+
 					if (sorted_index_ != npos)
 						index = absolute(pos);
 
@@ -948,7 +960,7 @@ namespace nana{ namespace gui{
 								{
 									++next_selected.item;
 								}
-								else 
+								else
 								{
 									next_selected.item = 0;
 									if (size_categ() > next_selected.cat + 1)
@@ -1412,7 +1424,7 @@ namespace nana{ namespace gui{
 				//Keep the LAST(first) selected item in the display area
 				void trace_last_selected_item()
 				{
-				
+
 				}
 
 				void update()
@@ -2224,16 +2236,13 @@ namespace nana{ namespace gui{
 						graph.rectangle(size.width - 1 - essence_->scroll.scale, size.height - 1 - essence_->scroll.scale, essence_->scroll.scale, essence_->scroll.scale, nana::gui::color::button_face, true);
 				}
 
-				void trigger::bind_window(widget_reference wd)
-				{
-					essence_->lister.bind(essence_, wd);
-					wd.background(0xFFFFFF);
-				}
-
-				void trigger::attached(graph_reference graph)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
 					essence_->graph = &graph;
 					typeface_changed(graph);
+
+					essence_->lister.bind(essence_, widget);
+					widget.background(0xFFFFFF);
 
 					window wd = essence_->lister.wd_ptr()->handle();
 					using namespace API::dev;
@@ -2249,8 +2258,7 @@ namespace nana{ namespace gui{
 
 				void trigger::detached()
 				{
-					essence_->graph = 0;
-					API::dev::umake_drawer_event(essence_->lister.wd_ptr()->handle());
+					essence_->graph = nullptr;
 				}
 
 				void trigger::typeface_changed(graph_reference graph)
@@ -2478,7 +2486,7 @@ namespace nana{ namespace gui{
 
 						bool do_expand = (lister.expand(item_pos.cat) == false);
 						lister.expand(item_pos.cat, do_expand);
-								
+
 						if(false == do_expand)
 						{
 							auto last = lister.last();
@@ -2501,7 +2509,7 @@ namespace nana{ namespace gui{
 
 				void trigger::key_down(graph_reference graph, const eventinfo& ei)
 				{
-					bool up = false, clear_old = false, select_range = false;
+					bool up = false;
 
 					switch(ei.keyboard.key)
 					{
@@ -2528,7 +2536,7 @@ namespace nana{ namespace gui{
 
 				void trigger::key_char(graph_reference graph, const eventinfo& ei)
 				{
-					
+
 				}
 			//end class trigger
 
@@ -2624,12 +2632,12 @@ namespace nana{ namespace gui{
 				{
 					ess_->lister.text(pos_, col, std::move(str), ess_->header.cont().size());
 					ess_->update();
-					return *this;				
+					return *this;
 				}
 
 				nana::string item_proxy::text(size_type col) const
 				{
-					return ess_->lister.text(pos_, col); 
+					return ess_->lister.text(pos_, col);
 				}
 
 
@@ -2649,7 +2657,7 @@ namespace nana{ namespace gui{
 					return (ess_->lister.text(pos_, 0) == nana::string(nana::charset(s)));
 				}
 
-				
+
 				item_proxy & item_proxy::operator=(const item_proxy& rhs)
 				{
 					if(this != &rhs)
@@ -2831,7 +2839,7 @@ namespace nana{ namespace gui{
 					auto n = ess_->lister.size_item(pos_);
 					if (0 == n)
 						throw std::runtime_error("listbox.back() no element in the container.");
-					
+
 					return item_proxy(ess_, index_pair(pos_, n - 1));
 				}
 
@@ -2857,7 +2865,7 @@ namespace nana{ namespace gui{
 					++pos_;
 					if(pos_ >= ess_->lister.size_categ())
 						ess_ = nullptr;
-					
+
 					return *this;
 				}
 

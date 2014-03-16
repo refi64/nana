@@ -75,12 +75,11 @@ namespace gui
 
 				bool format(bool fm)
 				{
-					if(fm != format_enabled_)
-					{
-						format_enabled_ = fm;
-						return true;
-					}
-					return false;
+					if (fm == format_enabled_)
+						return false;
+					
+					format_enabled_ = fm;
+					return true;
 				}
 
 				void render(graph_reference graph, nana::color_t fgcolor, align th, align_v tv)
@@ -670,28 +669,19 @@ namespace gui
 					delete impl_;
 				}
 
-				void trigger::bind_window(widget_reference w)
-				{
-					impl_->wd = &w;
-				}
-
 				trigger::impl_t * trigger::impl() const
 				{
 					return impl_;
 				}
 
-				void trigger::attached(graph_reference graph)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
 					impl_->graph = &graph;
+					impl_->wd = &widget;
 					window wd = impl_->wd->handle();
 					API::dev::make_drawer_event<events::mouse_move>(wd);
 					API::dev::make_drawer_event<events::mouse_leave>(wd);
 					API::dev::make_drawer_event<events::click>(wd);
-				}
-
-				void trigger::detached()
-				{
-					API::dev::umake_drawer_event(impl_->wd->handle());
 				}
 
 				void trigger::mouse_move(graph_reference, const eventinfo& ei)
@@ -832,7 +822,7 @@ namespace gui
 
 		label& label::format(bool f)
 		{
-			drawerbase::label::trigger::impl_t * impl = get_drawer_trigger().impl();
+			auto impl = get_drawer_trigger().impl();
 
 			if(impl->renderer.format(f))
 			{
@@ -860,7 +850,7 @@ namespace gui
 			if(empty())
 				return nana::size();
 
-			drawerbase::label::trigger::impl_t * impl = get_drawer_trigger().impl();
+			auto impl = get_drawer_trigger().impl();
 			
 			//First Check the graph of label
 			//Then take a substitute for graph when the graph of label is zero-sized.
@@ -878,7 +868,7 @@ namespace gui
 		label& label::text_align(align th, align_v tv)
 		{
 			internal_scope_guard isg;
-			drawerbase::label::trigger::impl_t* impl = get_drawer_trigger().impl();
+			auto impl = get_drawer_trigger().impl();
 
 			bool to_update = false;
 			if(impl->text_align != th)

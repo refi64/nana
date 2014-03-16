@@ -23,9 +23,7 @@ namespace nana{namespace gui{
 			{
 			public:
 				trigger();
-				void bind_window(widget_reference);
-				void attached(graph_reference);
-				void detached();
+				void attached(widget_reference, graph_reference);
 				void refresh(graph_reference);
 				void resize(graph_reference, const eventinfo&);
 			private:

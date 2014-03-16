@@ -683,28 +683,19 @@ namespace gui
 					delete impl_;
 				}
 
-				void trigger::bind_window(widget_reference w)
-				{
-					impl_->wd = &w;
-				}
-
 				trigger::impl_t * trigger::impl() const
 				{
 					return impl_;
 				}
 
-				void trigger::attached(graph_reference graph)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
+					impl_->wd = &widget;
 					impl_->graph = &graph;
 					window wd = impl_->wd->handle();
 					API::dev::make_drawer_event<events::mouse_move>(wd);
 					API::dev::make_drawer_event<events::mouse_leave>(wd);
 					API::dev::make_drawer_event<events::click>(wd);
-				}
-
-				void trigger::detached()
-				{
-					API::dev::umake_drawer_event(impl_->wd->handle());
 				}
 
 				void trigger::mouse_move(graph_reference, const eventinfo& ei)

@@ -63,12 +63,11 @@ namespace nana{ namespace gui{
 				drawer_impl& get_drawer_impl();
 				const drawer_impl& get_drawer_impl() const;
 			private:
-				void bind_window(widget_reference);
-				void attached(graph_reference graph);
-				void detached();
-				void refresh(graph_reference);
-				void mouse_move(graph_reference, const eventinfo&);
-				void mouse_up(graph_reference, const eventinfo&);
+				void attached(widget_reference, graph_reference graph)	override;
+				void detached()	override;
+				void refresh(graph_reference)	override;
+				void mouse_move(graph_reference, const eventinfo&)	override;
+				void mouse_up(graph_reference, const eventinfo&)	override;
 			private:
 				class drawer_impl *drawer_;
 			};

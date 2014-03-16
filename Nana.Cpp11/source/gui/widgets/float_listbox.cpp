@@ -443,14 +443,9 @@ namespace nana{ namespace gui{
 					return *drawer_;
 				}
 
-				void trigger::bind_window(widget_reference widget)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
-					drawer_->attach(&widget, nullptr);
-				}
-
-				void trigger::attached(graph_reference graph)
-				{
-					drawer_->attach(0, &graph);
+					drawer_->attach(&widget, &graph);
 					window wd = *drawer_->widget_ptr();
 					API::dev::make_drawer_event<events::mouse_move>(wd);
 					API::dev::make_drawer_event<events::mouse_down>(wd);
@@ -460,7 +455,6 @@ namespace nana{ namespace gui{
 				void trigger::detached()
 				{
 					drawer_->detach();
-					API::dev::umake_drawer_event(*drawer_->widget_ptr());
 				}
 
 				void trigger::refresh(graph_reference)

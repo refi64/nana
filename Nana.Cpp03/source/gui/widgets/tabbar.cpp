@@ -375,11 +375,6 @@ namespace nana{ namespace gui{
 					return it->value;
 				}
 
-				void bind(nana::gui::window wd)
-				{
-					basis_.wd = wd;
-				}
-
 				toolbox & toolbox_object()
 				{
 					return toolbox_;
@@ -390,8 +385,9 @@ namespace nana{ namespace gui{
 					return basis_.wd;
 				}
 
-				void attach(nana::paint::graphics& graph)
+				void attach(nana::gui::window wd, nana::paint::graphics& graph)
 				{
+					basis_.wd = wd;
 					basis_.graph = &graph;
 				}
 
@@ -1255,14 +1251,9 @@ namespace nana{ namespace gui{
 					return (tb != toolbox::ButtonSize ? tbobj.enable(tb, enable) : false);
 				}
 			//private:
-				void trigger::bind_window(trigger::widget_reference wd)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
-					layouter_->bind(wd);
-				}
-
-				void trigger::attached(graph_reference graph)
-				{
-					layouter_->attach(graph);
+					layouter_->attach(widget, graph);
 					window wd = layouter_->widget();
 					using namespace API::dev;
 					make_drawer_event<events::mouse_down>(wd);
@@ -1274,7 +1265,6 @@ namespace nana{ namespace gui{
 				void trigger::detached()
 				{
 					layouter_->detach();
-					API::dev::umake_drawer_event(layouter_->widget());
 				}
 
 				void trigger::refresh(graph_reference)

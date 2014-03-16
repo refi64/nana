@@ -32,8 +32,7 @@ namespace gui
 		typedef paint::graphics&	graph_reference;
 
 		virtual ~drawer_trigger();
-		virtual void bind_window(widget_reference);
-		virtual void attached(graph_reference);	//none-const
+		virtual void attached(widget_reference, graph_reference);	//none-const
 		virtual void detached();	//none-const
 
 		virtual void typeface_changed(graph_reference);
@@ -79,7 +78,7 @@ namespace gui
 			drawer();
 			~drawer();
 
-			void attached(basic_window*);
+			void bind(basic_window*);
 
 			void typeface_changed();
 			void click(const eventinfo&);
@@ -102,7 +101,7 @@ namespace gui
 			void map(window);	//Copy the root buffer to screen
 			void refresh();
 			drawer_trigger* realizer() const;
-			void attached(drawer_trigger&);
+			void attached(widget&, drawer_trigger&);
 			drawer_trigger* detached();
 		public:
 			void clear();

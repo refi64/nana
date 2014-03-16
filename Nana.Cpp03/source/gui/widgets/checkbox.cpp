@@ -40,13 +40,9 @@ namespace checkbox
 				delete impl_;
 			}
 
-			void drawer::bind_window(widget_reference w)
+			void drawer::attached(widget_reference widget, graph_reference)
 			{
-				widget_ = &w;
-			}
-
-			void drawer::attached(graph_reference)
-			{
+				widget_ = &widget;
 				window wd = *widget_;
 				using namespace API::dev;
 				make_drawer_event<events::mouse_down>(wd);
@@ -54,11 +50,6 @@ namespace checkbox
 
 				make_drawer_event<events::mouse_enter>(wd);
 				make_drawer_event<events::mouse_leave>(wd);
-			}
-
-			void drawer::detached()
-			{
-				API::dev::umake_drawer_event(*widget_);
 			}
 
 			void drawer::refresh(graph_reference graph)

@@ -37,24 +37,15 @@ namespace checkbox
 				impl_->radio = false;
 			}
 
-			void drawer::bind_window(widget_reference w)
+			void drawer::attached(widget_reference widget, graph_reference)
 			{
-				widget_ = &w;
-			}
-
-			void drawer::attached(graph_reference)
-			{
-				window wd = *widget_;
+				widget_ = &widget;
+				window wd = widget;
 				using namespace API::dev;
 				make_drawer_event<events::mouse_down>(wd);
 				make_drawer_event<events::mouse_up>(wd);
 				make_drawer_event<events::mouse_enter>(wd);
 				make_drawer_event<events::mouse_leave>(wd);
-			}
-
-			void drawer::detached()
-			{
-				API::dev::umake_drawer_event(*widget_);
 			}
 
 			void drawer::refresh(graph_reference graph)

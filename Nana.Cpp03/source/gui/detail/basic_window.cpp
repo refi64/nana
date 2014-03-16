@@ -230,7 +230,7 @@ namespace nana{	namespace gui{
 			basic_window::basic_window(basic_window* owner, gui::category::root_tag**)
 				: other(static_cast<category::flags::t>(category::root_tag::value))
 			{
-				drawer.attached(this);
+				drawer.bind(this);
 				_m_init_pos_and_size(0, rectangle());
 
 				this->other.category = static_cast<gui::category::flags::t>(category::root_tag::value);

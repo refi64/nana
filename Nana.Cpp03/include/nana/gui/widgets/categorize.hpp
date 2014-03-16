@@ -133,8 +133,7 @@ namespace nana{	namespace gui
 			private:
 				void _m_attach_adapter_to_drawer() const;
 			private:
-				void bind_window(widget_reference);
-				void attached(graph_reference);
+				void attached(widget_reference, graph_reference);
 				void detached();
 				void refresh(graph_reference);
 				void mouse_down(graph_reference, const eventinfo&);

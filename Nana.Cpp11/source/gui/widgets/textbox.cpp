@@ -43,14 +43,10 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		{
 			return editor_;
 		}
-	//private:
-		void drawer::bind_window(widget_reference wd)
-		{
-			widget_ = &wd;
-		}
 
-		void drawer::attached(graph_reference graph)
+		void drawer::attached(widget_reference widget, graph_reference graph)
 		{
+			widget_ = &widget;
 			window wd = widget_->handle();
 
 			editor_ = new text_editor(wd, graph);
@@ -80,7 +76,6 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		{
 			delete editor_;
 			editor_ = nullptr;
-			API::dev::umake_drawer_event(*widget_);
 		}
 
 		void drawer::refresh(graph_reference graph)

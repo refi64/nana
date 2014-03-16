@@ -13,6 +13,7 @@
 #include <nana/gui/detail/basic_window.hpp>
 #include <nana/system/platform.hpp>
 #include <nana/gui/detail/native_window_interface.hpp>
+#include <nana/gui/widgets/widget.hpp>
 #include <algorithm>
 
 namespace nana{	namespace gui{
@@ -139,30 +140,17 @@ namespace API
 
 	namespace dev
 	{
-		void attach_drawer(window wd, drawer_trigger& dr)
+		void attach_drawer(widget& wd, drawer_trigger& dr)
 		{
-			if(wd)
+			const auto iwd = reinterpret_cast<restrict::core_window_t*>(wd.handle());
+			internal_scope_guard isg;
+			if(restrict::window_manager.available(iwd))
 			{
-				const auto iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-				internal_scope_guard isg;
-				if(restrict::window_manager.available(iwd))
-				{
-					iwd->drawer.graphics.make(iwd->dimension.width, iwd->dimension.height);
-					iwd->drawer.graphics.rectangle(iwd->color.background, true);
-					iwd->drawer.attached(dr);
-					make_drawer_event<events::size>(wd);
-					iwd->drawer.refresh();	//Always redrawe no matter it is visible or invisible. This can make the graphics data correctly.
-				}
-			}
-		}
-
-		void detach_drawer(window wd)
-		{
-			if(wd)
-			{
-				internal_scope_guard isg;
-				if(restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)))
-					reinterpret_cast<restrict::core_window_t*>(wd)->drawer.detached();
+				iwd->drawer.graphics.make(iwd->dimension.width, iwd->dimension.height);
+				iwd->drawer.graphics.rectangle(iwd->color.background, true);
+				iwd->drawer.attached(wd, dr);
+				make_drawer_event<events::size>(wd);
+				iwd->drawer.refresh();	//Always redrawe no matter it is visible or invisible. This can make the graphics data correctly.
 			}
 		}
 
@@ -170,16 +158,10 @@ namespace API
 		{
 			using namespace gui::detail;
 
-			auto & wd_manager = bedrock::instance().wd_manager;
 			internal_scope_guard isg;
-			if (wd_manager.available(reinterpret_cast<bedrock::core_window_t*>(wd)))
+			if (bedrock::instance().wd_manager.available(reinterpret_cast<bedrock::core_window_t*>(wd)))
 				return reinterpret_cast<bedrock::core_window_t*>(wd)->drawer.make_event(code, wd);
 			return nullptr;
-		}
-
-		void umake_drawer_event(window wd)
-		{
-			restrict::bedrock.evt_manager.umake(wd, true);
 		}
 
 		nana::string window_caption(window wd)

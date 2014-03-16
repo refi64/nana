@@ -230,7 +230,7 @@ namespace nana{	namespace gui{
 			basic_window::basic_window(basic_window* owner, gui::category::root_tag**)
 				: other(category::root_tag::value)
 			{
-				drawer.attached(this);
+				drawer.bind(this);
 				_m_init_pos_and_size(0, rectangle());
 				//wait for constexpr
 				this->other.category = category::root_tag::value;

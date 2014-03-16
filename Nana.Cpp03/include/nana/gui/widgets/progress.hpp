@@ -25,8 +25,7 @@ namespace gui
 			{
 			public:
 				trigger();
-				void bind_window(nana::gui::widget&);
-				void attached(graph_reference);
+				void attached(widget_reference, graph_reference);
 				unsigned value() const;
 				unsigned value(unsigned);
 				unsigned inc();

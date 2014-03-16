@@ -94,9 +94,7 @@ namespace nana{ namespace gui{
 			private:
 				void _m_draw_border();
 			private:
-				void bind_window(widget_reference);
-
-				void attached(graph_reference);
+				void attached(widget_reference, graph_reference);
 				void detached();
 				void typeface_changed(graph_reference);
 				void refresh(graph_reference);

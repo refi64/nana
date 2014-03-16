@@ -266,15 +266,11 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			other_.login_object = &obj;
 		}
 
-		void attached(nana::paint::graphics& graph)
+		void attach(nana::gui::widget& wd, nana::paint::graphics& graph)
 		{
-			other_.graph = &graph;
-		}
-
-		void bind(nana::gui::widget& wd)
-		{
-			other_.wd  = &wd;
+			other_.wd = &wd;
 			_m_init_widgets(wd);
+			other_.graph = &graph;
 		}
 
 		nana::gui::widget* widget() const
@@ -288,7 +284,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			btn_login_.enabled(true);
 		}
 
-		void detached()
+		void detach()
 		{
 			other_.graph = 0;
 		}
@@ -862,14 +858,9 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 		return impl_;
 	}
 
-	void trigger::bind_window(widget_reference wd)
+	void trigger::attached(widget_reference widget, graph_reference graph)
 	{
-		impl_->bind(wd);
-	}
-
-	void trigger::attached(graph_reference graph)
-	{
-		impl_->attached(graph);
+		impl_->attach(widget, graph);
 		window wd = impl_->widget()->handle();
 		using namespace API::dev;
 		make_drawer_event<events::mouse_move>(wd);
@@ -879,8 +870,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 
 	void trigger::detached()
 	{
-		API::dev::umake_drawer_event(impl_->widget()->handle());
-		impl_->detached();
+		impl_->detach();
 	}
 
 	void trigger::refresh(graph_reference)

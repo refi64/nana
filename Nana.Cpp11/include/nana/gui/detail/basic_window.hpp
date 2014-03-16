@@ -96,7 +96,7 @@ namespace detail
 		basic_window(basic_window* parent, const rectangle& r, Category**)
 			: other(Category::value)
 		{
-			drawer.attached(this);
+			drawer.bind(this);
 			if(parent)
 			{
 				_m_init_pos_and_size(parent, r);

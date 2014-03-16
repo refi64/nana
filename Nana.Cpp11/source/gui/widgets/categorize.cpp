@@ -355,15 +355,17 @@ namespace nana{	namespace gui{
 					style_.listbox = nullptr;
 				}
 
-				void attach(nana::paint::graphics* graph)
-				{
-					graph_ = graph;
-				}
-
-				void bind(window wd)
+				void attach(window wd, nana::paint::graphics* graph)
 				{
 					window_ = wd;
 					API::background(wd, 0xFFFFFF);
+					graph_ = graph;
+				}
+
+				void detach()
+				{
+					window_ = nullptr;
+					graph_ = nullptr;
 				}
 
 				window window_handle() const
@@ -859,14 +861,9 @@ namespace nana{	namespace gui{
 					}
 				}
 
-				void trigger::bind_window(widget_reference wd)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
-					scheme_->bind(wd);
-				}
-
-				void trigger::attached(graph_reference graph)
-				{
-					scheme_->attach(&graph);
+					scheme_->attach(widget, &graph);
 					window wd = scheme_->window_handle();
 					using namespace API::dev;
 					make_drawer_event<events::mouse_down>(wd);
@@ -877,8 +874,7 @@ namespace nana{	namespace gui{
 
 				void trigger::detached()
 				{
-					scheme_->attach(0);
-					API::dev::umake_drawer_event(scheme_->window_handle());
+					scheme_->detach();
 				}
 
 				void trigger::refresh(graph_reference)

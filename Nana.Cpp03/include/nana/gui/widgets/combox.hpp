@@ -41,8 +41,7 @@ namespace nana{ namespace gui
 				drawer_impl& get_drawer_impl();
 				const drawer_impl& get_drawer_impl() const;
 			private:
-				void bind_window(widget_reference);
-				void attached(graph_reference);
+				void attached(widget_reference, graph_reference);
 				void detached();
 				void refresh(graph_reference);
 				void focus(graph_reference, const nana::gui::eventinfo&);

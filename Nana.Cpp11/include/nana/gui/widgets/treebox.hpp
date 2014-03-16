@@ -165,9 +165,7 @@ namespace gui
 				ext_event_type& ext_event() const;
 			private:
 				//Overrides drawer_trigger methods
-				void bind_window(widget_reference)	override;
-				void attached(graph_reference)		override;
-				void detached()	override;
+				void attached(widget_reference, graph_reference)		override;
 				void refresh(graph_reference)	override;
 				void dbl_click(graph_reference, const eventinfo&)	override;
 				void mouse_down(graph_reference, const eventinfo&)	override;

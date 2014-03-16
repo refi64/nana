@@ -27,8 +27,7 @@ namespace gui
 
 	//class drawer_trigger
 		drawer_trigger::~drawer_trigger(){}
-		void drawer_trigger::bind_window(widget_reference){}
-		void drawer_trigger::attached(graph_reference){}	//none-const
+		void drawer_trigger::attached(widget_reference, graph_reference){}	//none-const
 		void drawer_trigger::detached(){}	//none-const
 		void drawer_trigger::typeface_changed(graph_reference){}
 		void drawer_trigger::refresh(graph_reference){}
@@ -93,7 +92,7 @@ namespace gui
 			}
 		}
 
-		void drawer::attached(basic_window* cw)
+		void drawer::bind(basic_window* cw)
 		{
 			core_window_ = cw;
 		}
@@ -349,10 +348,10 @@ namespace gui
 			return realizer_;
 		}
 
-		void drawer::attached(drawer_trigger& realizer)
+		void drawer::attached(widget& wd, drawer_trigger& realizer)
 		{
 			realizer_ = &realizer;
-			realizer.attached(graphics);
+			realizer.attached(wd, graphics);
 		}
 
 		drawer_trigger* drawer::detached()

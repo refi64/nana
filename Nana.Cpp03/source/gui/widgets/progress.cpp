@@ -21,17 +21,17 @@ namespace gui
 		{
 			//class trigger
 			trigger::trigger()
-				:   graph_(0), draw_width_(static_cast<unsigned>(-1)), has_value_(true),
-                    unknown_(false), max_(100), value_(0)
+				:   graph_(0),
+					draw_width_(static_cast<unsigned>(-1)),
+					has_value_(true),
+                    unknown_(false),
+					max_(100),
+					value_(0)
 			{}
 
-			void trigger::bind_window(trigger::widget_reference wd)
+			void trigger::attached(widget_reference wd, graph_reference graph)
 			{
 				widget_ = &wd;
-			}
-
-			void trigger::attached(graph_reference graph)
-			{
 				graph_ = &graph;
 			}
 

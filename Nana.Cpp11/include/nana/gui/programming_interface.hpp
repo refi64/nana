@@ -18,6 +18,7 @@
 
 namespace nana{	namespace gui{
 	class drawer_trigger;
+	class widget;
 
 namespace API
 {
@@ -86,9 +87,7 @@ namespace API
 		};
 #endif
 
-		void attach_drawer(window, drawer_trigger&);
-		void detach_drawer(window);
-		void umake_drawer_event(window);
+		void attach_drawer(widget&, drawer_trigger&);
 		nana::string window_caption(window);
 		void window_caption(window, const nana::string& str);
 

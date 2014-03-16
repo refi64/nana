@@ -101,21 +101,18 @@ namespace nana{ namespace gui{
 					attr_.skdir = sd;
 				}
 
-				void bind(nana::gui::slider& wd)
-				{
-					other_.wd = wd.handle();
-					other_.widget = &wd;
-				}
-
 				window handle() const
 				{
 					return other_.wd;
 				}
 
-				void attached(graph_reference graph)
+				void attached(nana::gui::slider& wd, graph_reference graph)
 				{
+					other_.wd = wd.handle();
+					other_.widget = &wd;
+
 					other_.graph = &graph;
-					this->_m_mk_slider_pos_by_value();
+					_m_mk_slider_pos_by_value();
 				}
 
 				void detached()
@@ -599,14 +596,9 @@ namespace nana{ namespace gui{
 					return impl_;
 				}
 
-				void trigger::bind_window(trigger::widget_reference wd)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
-					impl_->bind(static_cast<nana::gui::slider&>(wd));
-				}
-
-				void trigger::attached(graph_reference graph)
-				{
-					impl_->attached(graph);
+					impl_->attached(static_cast<nana::gui::slider&>(widget), graph);
 					window wd = impl_->handle();
 					using namespace API::dev;
 					make_drawer_event<events::mouse_down>(wd);
@@ -618,7 +610,6 @@ namespace nana{ namespace gui{
 
 				void trigger::detached()
 				{
-					API::dev::umake_drawer_event(impl_->handle());
 					impl_->detached();
 				}
 

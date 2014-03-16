@@ -24,13 +24,12 @@ namespace gui
 		{
 		public:
 			picture_drawer();
-			void bind_window(nana::gui::widget&);
-			void attached(graph_reference);
 			void load(const nana::char_t* file);
 			void load(const nana::paint::image&);
 			void set_shadow_background(unsigned begin_color, unsigned end_color, bool horizontal);
 			bool bgstyle(bool is_stretch, nana::arrange, int beg, int end);
 		private:
+			void attached(widget_reference, graph_reference);
 			void refresh(graph_reference);
 			void _m_draw_background();
 		private:

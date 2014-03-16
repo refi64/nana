@@ -50,14 +50,13 @@ namespace nana{ namespace gui{
 				bool enable(size_type, bool);
 				void scale(unsigned);
 			private:
-				void bind_window(widget_reference);
-				void refresh(graph_reference);
-				void attached(graph_reference);
-				void detached();
-				void mouse_move(graph_reference, const eventinfo&);
-				void mouse_leave(graph_reference, const eventinfo&);
-				void mouse_down(graph_reference, const eventinfo&);
-				void mouse_up(graph_reference, const eventinfo&);
+				void refresh(graph_reference)	override;
+				void attached(widget_reference, graph_reference)	override;
+				void detached()	override;
+				void mouse_move(graph_reference, const eventinfo&)	override;
+				void mouse_leave(graph_reference, const eventinfo&)	override;
+				void mouse_down(graph_reference, const eventinfo&)	override;
+				void mouse_up(graph_reference, const eventinfo&)	override;
 			private:
 				size_type _m_which(int x, int y, bool want_if_disabled) const;
 				void _m_draw_background(nana::color_t color);

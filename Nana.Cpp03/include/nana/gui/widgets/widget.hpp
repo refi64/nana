@@ -172,8 +172,7 @@ namespace gui
 				
 				API::dev::attach_signal(handle_, *this, &widget_object::signal);
 
-				static_cast<drawer_trigger&>(trigger_).bind_window(*this);
-				API::dev::attach_drawer(handle_, trigger_);
+				API::dev::attach_drawer(*this, trigger_);
 				if(visible)
 					API::show_window(handle_, true);
 				
@@ -375,8 +374,7 @@ namespace gui
 		void _m_bind_and_attach()
 		{
 			API::dev::attach_signal(handle_, *this, &widget_object::signal);
-			static_cast<drawer_trigger&>(trigger_).bind_window(*this);
-			API::dev::attach_drawer(handle_, trigger_);	
+			API::dev::attach_drawer(*this, trigger_);	
 		}
 	private:
 		window handle_;

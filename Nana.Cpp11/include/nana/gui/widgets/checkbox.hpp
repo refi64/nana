@@ -27,14 +27,12 @@ namespace drawerbase
 			struct implement;
 		public:
 			drawer();
-			void bind_window(widget_reference);
-			void attached(graph_reference);
-			void detached();
-			void refresh(graph_reference);
-			void mouse_enter(graph_reference, const eventinfo&);
-			void mouse_leave(graph_reference, const eventinfo&);
-			void mouse_down(graph_reference, const eventinfo&);
-			void mouse_up(graph_reference, const eventinfo&);
+			void attached(widget_reference, graph_reference)	override;
+			void refresh(graph_reference)	override;
+			void mouse_enter(graph_reference, const eventinfo&)	override;
+			void mouse_leave(graph_reference, const eventinfo&)	override;
+			void mouse_down(graph_reference, const eventinfo&)	override;
+			void mouse_up(graph_reference, const eventinfo&)	override;
 		public:
 			implement * impl() const;
 		private:

@@ -494,6 +494,7 @@ namespace detail
 					//Otherwise, when a widget object is been deleting in other thread by delete operator, the object will be destroyed
 					//before the window_manager destroyes the window, and then, window_manager detaches the
 					//non-existing drawer_trigger which is destroyed by destruction of widget. Crash!
+					bedrock_type::instance().evt_manager.umake(reinterpret_cast<window>(wd), true);
 					wd->drawer.detached();
 					signal_manager_.fireaway(wd, signals::destroy, signals_);
 					detach_signal(wd);
@@ -1449,6 +1450,7 @@ namespace detail
 			}
 
 			bedrock.evt_manager.umake(reinterpret_cast<nana::gui::window>(wd), false);
+			bedrock.evt_manager.umake(reinterpret_cast<nana::gui::window>(wd), true);
 			wd->drawer.detached();
 			signal_manager_.fireaway(wd, signals::destroy, signals_);
 			detach_signal(wd);

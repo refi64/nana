@@ -19,20 +19,10 @@ namespace nana{ namespace gui{
 		//class trigger
 			trigger::trigger():wd_(nullptr){}
 
-			void trigger::bind_window(widget_reference wd)
+			void trigger::attached(widget_reference widget, graph_reference graph)
 			{
-				wd_ = & wd;
-			}
-
-			void trigger::attached(graph_reference graph)
-			{
-				event_size_ = API::dev::make_drawer_event<events::size>(*wd_);
-			}
-
-			void trigger::detached()
-			{
-				API::umake_event(event_size_);
-				event_size_ = nullptr;
+				wd_ = &widget;
+				API::dev::make_drawer_event<events::size>(*wd_);
 			}
 
 			void trigger::refresh(graph_reference graph)

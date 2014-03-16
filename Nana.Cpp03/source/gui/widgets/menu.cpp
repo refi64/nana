@@ -281,13 +281,9 @@ namespace nana{ namespace gui{
 					detail_.border.x = detail_.border.y = 2;
 				}
 
-				void bind_window(widget_reference widget)
+				void attached(widget_reference widget, graph_reference graph)
 				{
 					widget_ = &widget;
-				}
-
-				void attached(graph_reference graph)
-				{
 					graph_ = &graph;
 					window wd = widget_->handle();
 					using namespace API::dev;
@@ -297,11 +293,6 @@ namespace nana{ namespace gui{
 
 					//Get the current cursor pos to determinate the monitor
 					detail_.monitor_pos = API::cursor_position();
-				}
-
-				void detached()
-				{
-					API::dev::umake_drawer_event(widget_->handle());
 				}
 
 				void mouse_move(graph_reference, const eventinfo& ei)

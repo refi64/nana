@@ -36,18 +36,16 @@ namespace gui
 				nana::gui::menu* at(size_t) const;
 				std::size_t size() const;
 			private:
-				void bind_window(widget_reference widget);
-				void attached(graph_reference graph);
-				void detached();
+				void attached(widget_reference, graph_reference);
 				void refresh(graph_reference);
 				void mouse_move(graph_reference, const nana::gui::eventinfo&);
 				void mouse_leave(graph_reference, const nana::gui::eventinfo&);
 				void mouse_down(graph_reference, const nana::gui::eventinfo&);
-				void mouse_up(graph_reference graph, const nana::gui::eventinfo& ei);
-				void focus(graph_reference, const nana::gui::eventinfo& ei);
-				void key_down(graph_reference, const nana::gui::eventinfo& ei);
-				void key_up(graph_reference, const nana::gui::eventinfo& ei);
-				void shortkey(graph_reference graph, const nana::gui::eventinfo& ei);
+				void mouse_up(graph_reference, const nana::gui::eventinfo&);
+				void focus(graph_reference, const nana::gui::eventinfo&);
+				void key_down(graph_reference, const nana::gui::eventinfo&);
+				void key_up(graph_reference, const nana::gui::eventinfo&);
+				void shortkey(graph_reference, const nana::gui::eventinfo&);
 			private:
 				void _m_move(bool to_left);
 				bool _m_popup_menu();

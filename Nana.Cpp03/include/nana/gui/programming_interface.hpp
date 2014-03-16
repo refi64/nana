@@ -17,6 +17,7 @@
 #include <nana/paint/image.hpp>
 
 namespace nana{	namespace gui{
+	class widget;
 
 namespace API
 {
@@ -45,23 +46,21 @@ namespace API
 			return bedrock::instance().wd_manager.attach_signal(reinterpret_cast<bedrock::core_window_t*>(wd), f);
 		}
 
+		event_handle make_drawer_event(event_code::t, window);
+
 		template<typename Event>
 		event_handle make_drawer_event(window wd)
 		{
 			using namespace gui::detail;
+
 			if(nana::traits::is_derived<Event, nana::gui::detail::event_type_tag>::value)
-			{
-				bedrock::window_manager_t & wd_manager = bedrock::instance().wd_manager;
-				nana::gui::internal_scope_guard isg;
-				if(wd_manager.available(reinterpret_cast<bedrock::core_window_t*>(wd)))
-					return reinterpret_cast<bedrock::core_window_t*>(wd)->drawer.make_event(Event::identifier, wd);
-			}
+				return make_drawer_event(Event::identifier, wd);
+
 			return 0;
 		}
 
-		void attach_drawer(window, nana::gui::drawer_trigger&);
-		void detach_drawer(window);
-		void umake_drawer_event(window);
+		void attach_drawer(widget&, drawer_trigger&);
+
 		nana::string window_caption(window);
 		void window_caption(window, const nana::string& str);
 

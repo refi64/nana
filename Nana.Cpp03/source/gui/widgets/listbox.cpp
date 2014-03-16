@@ -2187,14 +2187,11 @@ namespace nana{ namespace gui{
 						graph->rectangle(graph->width() - 1 - essence_->scroll.scale, graph->height() - 1 - essence_->scroll.scale, essence_->scroll.scale, essence_->scroll.scale, nana::gui::color::button_face, true);
 				}
 
-				void trigger::bind_window(widget_reference wd)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
-					essence_->lister.bind(essence_, wd);
-					wd.background(0xFFFFFF);
-				}
+					essence_->lister.bind(essence_, widget);
+					widget.background(0xFFFFFF);
 
-				void trigger::attached(graph_reference graph)
-				{
 					essence_->graph = &graph;
 					typeface_changed(graph);
 
@@ -2220,7 +2217,6 @@ namespace nana{ namespace gui{
 				void trigger::detached()
 				{
 					essence_->graph = 0;
-					API::dev::umake_drawer_event(essence_->lister.wd_ptr()->handle());
 				}
 
 				void trigger::refresh(graph_reference)

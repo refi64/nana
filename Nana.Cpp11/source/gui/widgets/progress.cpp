@@ -25,14 +25,10 @@ namespace gui
                     unknown_(false), max_(100), value_(0)
 			{}
 
-			void trigger::bind_window(widget_reference wd)
+			void trigger::attached(widget_reference wd, graph_reference graph)
 			{
-				widget_ = &wd;
-			}
-
-			void trigger::attached(graph_reference graph)
-			{
-				graph_ = &graph;
+				widget_	= &wd;
+				graph_	= &graph;
 			}
 
 			unsigned trigger::value() const

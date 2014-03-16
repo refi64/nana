@@ -50,10 +50,8 @@ namespace nana{ namespace gui{
 				bool enable(size_type, bool);
 				void scale(unsigned);
 			private:
-				void bind_window(widget_reference);
 				void refresh(graph_reference);
-				void attached(graph_reference);
-				void detached();
+				void attached(widget_reference, graph_reference);
 				void mouse_move(graph_reference, const nana::gui::eventinfo&);
 				void mouse_leave(graph_reference, const nana::gui::eventinfo&);
 				void mouse_down(graph_reference, const nana::gui::eventinfo&);

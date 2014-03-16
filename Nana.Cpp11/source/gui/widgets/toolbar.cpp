@@ -200,6 +200,7 @@ namespace nana{ namespace gui{
 
 			struct drawer::drawer_impl_type
 			{
+				event_handle event_size;
 				unsigned scale;
 				bool textout;
 				size_type which;
@@ -208,9 +209,12 @@ namespace nana{ namespace gui{
 				container cont;
 				gui::tooltip tooltip;
 
-
 				drawer_impl_type()
-					:scale(16), textout(false), which(npos), state(item_renderer::state_t::normal)
+					:	event_size(nullptr),
+						scale(16),
+						textout(false),
+						which(npos),
+						state(item_renderer::state_t::normal)
 				{}
 			};
 
@@ -268,21 +272,19 @@ namespace nana{ namespace gui{
 						_m_fill_pixels(m, true);
 				}
 
-				void drawer::bind_window(widget_reference widget)
-				{
-					widget_ = & widget;
-					widget.caption(STR("Nana Toolbar"));
-					API::make_event<events::size>(widget.parent(), std::bind(&drawer::_m_owner_sized, this, std::placeholders::_1));
-				}
-
 				void drawer::refresh(graph_reference)
 				{
 					_m_draw();
 				}
 
-				void drawer::attached(graph_reference graph)
+				void drawer::attached(widget_reference widget, graph_reference graph)
 				{
 					graph_ = &graph;
+
+					widget_ = &widget;
+					widget.caption(STR("Nana Toolbar"));
+					impl_->event_size = API::make_event<events::size>(widget.parent(), std::bind(&drawer::_m_owner_sized, this, std::placeholders::_1));
+
 					using namespace API::dev;
 					auto wd = widget_->handle();
 					make_drawer_event<events::mouse_move>(wd);
@@ -293,7 +295,8 @@ namespace nana{ namespace gui{
 
 				void drawer::detached()
 				{
-					API::dev::umake_drawer_event(widget_->handle());
+					API::umake_event(impl_->event_size);
+					impl_->event_size = nullptr;
 				}
 
 				void drawer::mouse_move(graph_reference graph, const eventinfo& ei)

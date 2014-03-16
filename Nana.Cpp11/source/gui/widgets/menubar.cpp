@@ -161,14 +161,17 @@ namespace gui
 					return items_->cont().size();
 				}
 
-				void trigger::bind_window(widget_reference widget)
+				/*
+				void trigger::bind_window(widget_reference widget)	//deperecated
 				{
 					widget_ = &widget;
 				}
+				*/
 
-				void trigger::attached(graph_reference graph)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
 					graph_ = &graph;
+					widget_ = &widget;
 					window wd = widget_->handle();
 					using namespace API::dev;
 					make_drawer_event<events::mouse_move>(wd);
@@ -179,11 +182,6 @@ namespace gui
 					make_drawer_event<events::shortkey>(wd);
 					make_drawer_event<events::key_down>(wd);
 					make_drawer_event<events::key_up>(wd);
-				}
-
-				void trigger::detached()
-				{
-					API::dev::umake_drawer_event(widget_->handle());
 				}
 
 				void trigger::refresh(graph_reference)

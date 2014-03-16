@@ -34,11 +34,9 @@ namespace nana{ namespace gui{
 
 				trigger();
 				~trigger();
-				void bind_window(widget_reference);
 				impl_t * impl() const;
 			private:
-				void attached(graph_reference);
-				void detached();
+				void attached(widget_reference, graph_reference);
 				void refresh(graph_reference);
 				void mouse_move(graph_reference, const eventinfo&);
 				void mouse_leave(graph_reference, const eventinfo&);

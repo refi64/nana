@@ -25,8 +25,6 @@ namespace gui
 			{
 			public:
 				trigger();
-				void bind_window(widget_reference);
-				void attached(graph_reference);
 				unsigned value() const;
 				unsigned value(unsigned);
 				unsigned inc();
@@ -35,7 +33,8 @@ namespace gui
 				void unknown(bool);
 				bool unknown() const;
 			private:
-				void refresh(graph_reference);
+				void attached(widget_reference, graph_reference)	override;
+				void refresh(graph_reference)	override;
 			private:
 				void _m_draw();
 				void _m_draw_box(graph_reference);

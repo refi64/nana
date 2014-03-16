@@ -46,8 +46,7 @@ namespace nana{ namespace gui{
 				text_editor * editor();
 				const text_editor * editor() const;
 			private:
-				void bind_window(widget_reference);
-				void attached(graph_reference);
+				void attached(widget_reference, graph_reference);
 				void detached();
 				void refresh(graph_reference);
 				void focus(graph_reference, const nana::gui::eventinfo&);

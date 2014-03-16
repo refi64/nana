@@ -1355,13 +1355,10 @@ namespace gui
 				}
 			private:
 				// Implementation of drawer_trigger
-				void bind_window(widget_reference wd) override
+				void attached(widget_reference wd, graph_reference graph) override
 				{
 					widget_ = &wd;
-				}
 
-				void attached(graph_reference graph) override
-				{
 					graph_ = &graph;
 					graph.typeface(widget_->typeface());
 				}
@@ -1755,16 +1752,13 @@ namespace gui
 					return impl_->attr.ext_event;
 				}
 
-				void trigger::bind_window(widget_reference widget)
-				{
-					impl_->data.widget_ptr = & widget;
-					widget.background(0xFFFFFF);
-					widget.caption(STR("Nana Treebox"));
-				}
-
-				void trigger::attached(graph_reference graph)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
 					impl_->data.graph = &graph;
+
+					widget.background(0xFFFFFF);
+					impl_->data.widget_ptr = &widget;
+					widget.caption(STR("Nana Treebox"));
 					window wd = impl_->data.widget_ptr->handle();
 					using namespace API::dev;
 					make_drawer_event<events::dbl_click>(wd);
@@ -1775,11 +1769,6 @@ namespace gui
 					make_drawer_event<events::size>(wd);
 					make_drawer_event<events::key_down>(wd);
 					make_drawer_event<events::key_char>(wd);
-				}
-
-				void trigger::detached()
-				{
-					API::dev::umake_drawer_event(impl_->data.widget_ptr->handle());
 				}
 
 				void trigger::refresh(graph_reference)

@@ -26,8 +26,8 @@ namespace nana{	namespace gui
 			public:
 				drawer();
 			private:
-				void bind_window(widget_reference widget);
-				void refresh(graph_reference graph);
+				void attached(widget_reference, graph_reference)	override;
+				void refresh(graph_reference)	override;
 			private:
 				window window_;
 			};

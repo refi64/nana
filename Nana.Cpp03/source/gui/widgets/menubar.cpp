@@ -160,13 +160,9 @@ namespace gui
 					return items_->cont().size();
 				}
 
-				void trigger::bind_window(widget_reference widget)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
 					widget_ = &widget;
-				}
-
-				void trigger::attached(graph_reference graph)
-				{
 					graph_ = &graph;
 					window wd = widget_->handle();
 					using namespace API::dev;
@@ -178,11 +174,6 @@ namespace gui
 					make_drawer_event<events::shortkey>(wd);
 					make_drawer_event<events::key_down>(wd);
 					make_drawer_event<events::key_up>(wd);
-				}
-
-				void trigger::detached()
-				{
-					API::dev::umake_drawer_event(widget_->handle());
 				}
 
 				void trigger::refresh(graph_reference)

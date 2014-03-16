@@ -157,14 +157,12 @@ namespace drawerbase
 			delete bgimage_;
 		}
 
-		void trigger::bind_window(widget_reference wd)
+		void trigger::attached(widget_reference widget, graph_reference graph)
 		{
-			widget_ = &wd;
-		}
+			graph_ = &graph;
 
-		void trigger::attached(graph_reference graph)
-		{
-			window wd = widget_->handle();
+			widget_ = &widget;
+			window wd = widget;
 
 			using namespace API::dev;
 			make_drawer_event<events::mouse_enter>(wd);
@@ -178,13 +176,6 @@ namespace drawerbase
 			API::tabstop(wd);
 			API::effects_edge_nimbus(wd, effects::edge_nimbus::active);
 			API::effects_edge_nimbus(wd, effects::edge_nimbus::over);
-
-			graph_ = &graph;
-		}
-
-		void trigger::detached()
-		{
-			API::dev::umake_drawer_event(widget_->handle());
 		}
 
 		bool trigger::enable_pushed(bool eb)

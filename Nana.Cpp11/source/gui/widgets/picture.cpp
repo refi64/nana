@@ -32,14 +32,10 @@ namespace gui
 				:background_shadow_start(0), background_shadow_end(0), horizontal(true)
 			{}
 
-			void picture_drawer::bind_window(widget& widget)
+			void picture_drawer::attached(widget_reference& widget, graph_reference graph)
 			{
 				widget_ = &widget;
-			}
-
-			void picture_drawer::attached(nana::paint::graphics& ghc)
-			{
-				graph_ = &ghc;
+				graph_ = &graph;
 			}
 
 			void picture_drawer::load(const nana::char_t* file)

@@ -169,8 +169,9 @@ namespace nana{ namespace gui{
 					return false;
 				}
 			private:
-				void bind_window(widget_reference widget)
+				void attached(widget_reference widget, graph_reference graph)
 				{
+					graph_ = &graph;
 					widget_ = &widget;
 					widget.caption(STR("Nana Scroll"));
 
@@ -188,14 +189,8 @@ namespace nana{ namespace gui{
 					timer_.enable(false);
 				}
 
-				void attached(graph_reference graph)
-				{
-					graph_ = &graph;
-				}
-
 				void detached()
 				{
-					API::dev::umake_drawer_event(widget_->handle());
 					graph_ = nullptr;
 				}
 

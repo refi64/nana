@@ -71,9 +71,7 @@ namespace nana{ namespace gui{
 				void _m_perf_transform(transform_action::t tfid, graph_reference, graph_reference dirtybuf, graph_reference newbuf, const nana::point& refpos);
 			private:
 				void refresh(graph_reference);
-				void bind_window(widget_reference);
-				void attached(graph_reference);
-				void detached();
+				void attached(widget_reference, graph_reference);
 				void mouse_move(graph_reference, const eventinfo&);
 				void mouse_leave(graph_reference, const eventinfo&);
 				void mouse_up(graph_reference, const eventinfo&);

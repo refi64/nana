@@ -24,7 +24,7 @@ namespace nana{	namespace gui
 				:window_(0)
 			{}
 
-			void drawer::bind_window(widget_reference widget)
+			void drawer::attached(widget_reference widget, graph_reference)
 			{
 				widget.caption(STR("Nana Panel"));
 				window_ = widget.handle();

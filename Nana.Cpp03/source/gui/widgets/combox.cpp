@@ -54,13 +54,9 @@ namespace nana{ namespace gui{
 					item_renderer_ = ir;
 				}
 
-				void bind(widget_reference wd)
+				void attach(widget_reference wd, graph_reference graph)
 				{
 					widget_ = &wd;
-				}
-
-				void attached(graph_reference graph)
-				{
 					editor_ = new widgets::skeletons::text_editor(widget_->handle(), graph);
 					editor_->border_renderer(nana::make_fun(*this, &drawer_impl::draw_border));
 					editor_->multi_lines(false);
@@ -485,15 +481,10 @@ namespace nana{ namespace gui{
 					return *drawer_;
 				}
 
-				void trigger::bind_window(widget_reference wd)
+				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
-					drawer_->bind(wd);
-					wd.background(0xFFFFFF);
-				}
-
-				void trigger::attached(graph_reference graph)
-				{
-					drawer_->attached(graph);
+					drawer_->attach(widget, graph);
+					widget.background(0xFFFFFF);
 
 					window wd = drawer_->widget_ptr()->handle();
 					using namespace API::dev;
@@ -514,7 +505,6 @@ namespace nana{ namespace gui{
 				void trigger::detached()
 				{
 					drawer_->detached();
-					API::dev::umake_drawer_event(drawer_->widget_ptr()->handle());
 				}
 
 				void trigger::refresh(graph_reference)

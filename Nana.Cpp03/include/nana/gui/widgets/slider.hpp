@@ -76,8 +76,7 @@ namespace nana{ namespace gui{
 				~trigger();
 				controller_t* ctrl() const;
 			private:
-				void bind_window(widget_reference);
-				void attached(graph_reference);
+				void attached(widget_reference, graph_reference);
 				void detached();
 				void refresh(graph_reference);
 				void mouse_down(graph_reference, const eventinfo&);

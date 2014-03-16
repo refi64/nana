@@ -1,5 +1,6 @@
 /*
  *	A Button Implementation
+ *	Nana C++ Library(http://www.nanapro.org)
  *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0. 
@@ -41,17 +42,15 @@ namespace nana{namespace gui{
 				void omitted(bool);
 				bool focus_color(bool);
 			private:
-				void bind_window(widget_reference);
-				void attached(graph_reference);
-				void detached();
-				void refresh(graph_reference);
-				void mouse_enter(graph_reference, const eventinfo&);
-				void mouse_leave(graph_reference, const eventinfo&);
-				void mouse_down(graph_reference, const eventinfo&);
-				void mouse_up(graph_reference, const eventinfo&);
-				void key_char(graph_reference, const eventinfo&);
-				void key_down(graph_reference, const eventinfo&);
-				void focus(graph_reference, const eventinfo&);
+				void attached(widget_reference, graph_reference) override;
+				void refresh(graph_reference)	override;
+				void mouse_enter(graph_reference, const eventinfo&)	override;
+				void mouse_leave(graph_reference, const eventinfo&)	override;
+				void mouse_down(graph_reference, const eventinfo&)	override;
+				void mouse_up(graph_reference, const eventinfo&)	override;
+				void key_char(graph_reference, const eventinfo&)	override;
+				void key_down(graph_reference, const eventinfo&)	override;
+				void focus(graph_reference, const eventinfo&)	override;
 			private:
 				void _m_draw(graph_reference);
 				void _m_draw_title(graph_reference, bool enabled);

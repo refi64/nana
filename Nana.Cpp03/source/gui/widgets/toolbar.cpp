@@ -272,31 +272,23 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void drawer::bind_window(drawer::widget_reference widget)
-				{
-					widget_ = & widget;
-					widget.caption(STR("Nana Toolbar"));
-					nana::gui::API::make_event<nana::gui::events::size>(widget.parent(), nana::functor<void(const nana::gui::eventinfo&)>(*this, &drawer::_m_owner_sized));
-				}
-
 				void drawer::refresh(drawer::graph_reference)
 				{
 					_m_draw();
 				}
 
-				void drawer::attached(drawer::graph_reference graph)
+				void drawer::attached(widget_reference widget, graph_reference graph)
 				{
+					widget_ = & widget;
+					widget.caption(STR("Nana Toolbar"));
+					API::make_event<events::size>(widget.parent(), nana::functor<void(const eventinfo&)>(*this, &drawer::_m_owner_sized));
+
 					graph_ = &graph;
 					using namespace API::dev;
 					make_drawer_event<nana::gui::events::mouse_move>(widget_->handle());
 					make_drawer_event<nana::gui::events::mouse_leave>(widget_->handle());
 					make_drawer_event<nana::gui::events::mouse_down>(widget_->handle());
 					make_drawer_event<nana::gui::events::mouse_up>(widget_->handle());
-				}
-
-				void drawer::detached()
-				{
-					API::dev::umake_drawer_event(widget_->handle());
 				}
 
 				void drawer::mouse_move(drawer::graph_reference graph, const nana::gui::eventinfo& ei)

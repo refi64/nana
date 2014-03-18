@@ -59,9 +59,6 @@ namespace nana
 								const int png_height = ::png_get_image_height(png_ptr, info_ptr);
 								png_byte color_type = ::png_get_color_type(png_ptr, info_ptr);
 
-								//unused
-								//png_byte depth = ::png_get_bit_depth(png_ptr, info_ptr);
-
 								int number_of_passes = ::png_set_interlace_handling(png_ptr);
 								::png_read_update_info(png_ptr, info_ptr);
 
@@ -79,6 +76,17 @@ namespace nana
 
 									::png_read_image(png_ptr, row_ptrs);
 									::png_destroy_read_struct(&png_ptr, &info_ptr, 0);
+
+									for (int i = 0; i < png_height; ++i)
+									{
+										nana::pixel_rgb_t * p = pixbuf_.raw_ptr(i);
+										for (int u = 0; u < png_width; ++u)
+										{
+											unsigned t = p[u].u.element.red;
+											p[u].u.element.red = p[u].u.element.blue;
+											p[u].u.element.blue = t;
+										}
+									}
 								}
 								else
 								{

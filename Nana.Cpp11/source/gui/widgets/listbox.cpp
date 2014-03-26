@@ -231,111 +231,114 @@ namespace nana{ namespace gui{
 
 			struct essence_t;
 
+			struct item_t
+			{
+				typedef std::vector<nana::string> container;
+
+				container texts;
+				color_t bgcolor;
+				color_t fgcolor;
+				nana::paint::image img;
+
+				struct flags_tag
+				{
+					bool selected : 1;
+					bool checked : 1;
+				}flags;
+				mutable nana::any * anyobj;
+
+				item_t()
+					:	bgcolor(0xFF000000),
+						fgcolor(0xFF000000),
+						anyobj(nullptr)
+				{
+					flags.selected = flags.checked = false;
+				}
+
+				item_t(const item_t& r)
+					:	texts(r.texts),
+						bgcolor(r.bgcolor),
+						fgcolor(r.fgcolor),
+						img(r.img),
+						flags(r.flags),
+						anyobj(r.anyobj ? new nana::any(*r.anyobj) : nullptr)
+				{}
+
+				item_t(item_t&& r)
+					:	texts(std::move(r.texts)),
+						bgcolor(r.bgcolor), fgcolor(r.fgcolor),
+						img(std::move(r.img)),
+						flags(r.flags),
+						anyobj(r.anyobj)
+				{
+					r.anyobj = nullptr;
+				}
+
+				item_t(nana::string&& s)
+					:	bgcolor(0xFF000000),
+						fgcolor(0xFF000000),
+						anyobj(nullptr)
+				{
+					flags.selected = flags.checked = false;
+					texts.emplace_back(std::move(s));
+				}
+
+				item_t(container&& texts)
+					:	texts(std::move(texts)),
+						bgcolor(0xFF000000),
+						fgcolor(0xFF000000),
+						anyobj(nullptr)
+				{
+					flags.selected = flags.checked = false;
+				}
+
+				~item_t()
+				{
+					delete anyobj;
+				}
+
+				item_t& operator=(const item_t& r)
+				{
+					if (this != &r)
+					{
+						texts = r.texts;
+						flags = r.flags;
+						anyobj = (r.anyobj ? new nana::any(*r.anyobj) : nullptr);
+						bgcolor = r.bgcolor;
+						fgcolor = r.fgcolor;
+						img = r.img;
+					}
+					return *this;
+				}
+
+			};
+
+			struct category_t
+			{
+				typedef std::deque<item_t> container;
+
+				nana::string text;
+				std::vector<std::size_t> sorted;
+				container items;
+				bool expand;
+
+				//A cat may have a catkey object
+				std::shared_ptr<catkey_interface> catkey_ptr;
+
+				bool selected() const
+				{
+					for (auto & m : items)
+					{
+						if (m.flags.selected == false) return false;
+					}
+					return (items.size() != 0);
+				}
+			};
+
 			class es_lister
 			{
 			public:
-				struct item_t
-				{
-					typedef std::vector<nana::string> container;
-
-					container texts;
-					color_t bkcolor;
-					color_t fgcolor;
-					nana::paint::image img;
-
-					struct flags_tag
-					{
-						bool selected:1;
-						bool checked:1;
-					}flags;
-					mutable nana::any * anyobj;
-
-					item_t()
-						:   bkcolor(0xFF000000),
-                            fgcolor(0xFF000000),
-                            anyobj(nullptr)
-					{
-						flags.selected = flags.checked = false;
-					}
-
-					item_t(const item_t& r)
-						:	texts(r.texts),
-                            bkcolor(r.bkcolor),
-                            fgcolor(r.fgcolor),
-                            img(r.img),
-							flags(r.flags),
-							anyobj(r.anyobj ? new nana::any(*r.anyobj) : nullptr)
-					{}
-
-					item_t(item_t&& r)
-						:	texts(std::move(r.texts)),
-							bkcolor(r.bkcolor), fgcolor(r.fgcolor),
-							img(std::move(r.img)),
-							flags(r.flags),
-							anyobj(r.anyobj)
-					{
-						r.anyobj = nullptr;
-					}
-
-					item_t(nana::string&& s)
-						:   bkcolor(0xFF000000),
-                            fgcolor(0xFF000000),
-                            anyobj(nullptr)
-					{
-						flags.selected = flags.checked = false;
-						texts.emplace_back(std::move(s));
-					}
-
-					item_t(container&& texts)
-						:   texts(std::move(texts)),
-                            bkcolor(0xFF000000),
-                            fgcolor(0xFF000000),
-                            anyobj(nullptr)
-					{
-						flags.selected = flags.checked = false;
-					}
-
-					~item_t()
-					{
-						delete anyobj;
-					}
-
-					item_t& operator=(const item_t& r)
-					{
-						if(this != &r)
-						{
-							texts = r.texts;
-							flags = r.flags;
-							anyobj = (r.anyobj? new nana::any(*r.anyobj) : nullptr);
-							bkcolor = r.bkcolor;
-							fgcolor = r.fgcolor;
-							img = r.img;
-						}
-						return *this;
-					}
-
-				};
-
-				struct category
-				{
-					typedef std::deque<item_t> container;
-
-					nana::string text;
-					std::vector<std::size_t> sorted;
-					container items;
-					bool expand;
-
-					bool selected() const
-					{
-						for(auto & m : items)
-						{
-							if(m.flags.selected == false) return false;
-						}
-						return (items.size() != 0);
-					}
-				};
-			public:
-				typedef std::list<category> container;
+				typedef std::list<category_t> container;
 				mutable extra_events ext_event;
 
 				std::function<std::function<bool(const nana::string&, nana::any*,
@@ -346,9 +349,10 @@ namespace nana{ namespace gui{
 						widget_(nullptr),
 						sorted_index_(npos),
 						resort_(true),
-						sorted_reverse_(false)
+						sorted_reverse_(false),
+						ordered_categories_(false)
 				{
-					category cg;
+					category_t cg;
 					cg.expand = true;
 					list_.push_back(cg);
 				}
@@ -421,7 +425,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				bool sort_index(std::size_t index)
+				bool sort_index(size_type index)
 				{
 					if (npos == index)
 					{
@@ -475,35 +479,37 @@ namespace nana{ namespace gui{
 				}
 
 				//Append a new category with a specified name.
-				void create(const nana::string& text)
+				category_t* create_cat(const nana::string& text)
 				{
-					category cg;
+					category_t cg;
 					cg.expand = true;
 					cg.text = text;
 					list_.push_back(cg);
+					return &list_.back();
 				}
 
-				//Append to category "cat" a new item with "text" in column 0.
-				void push_back(size_type cat, const nana::string& text)
+				category_t* create_cat(std::shared_ptr<catkey_interface> ptr)
 				{
-					item_t item;
-					item.texts.push_back(text);
-					auto & catobj = *_m_at(cat);
+					category_t cg;
+					cg.expand = true;
+					for (auto i = list_.begin(); i != list_.end(); ++i)
+					{
+						if (i->catkey_ptr && i->catkey_ptr->same_type(ptr.get()))
+						{
+							if (ptr->less(i->catkey_ptr.get()))
+							{
+								i = list_.insert(i, cg);
+								i->catkey_ptr = ptr;
+								return &(*i);
+							}
+						}
+					}
 
-					auto n = catobj.items.size();
-					catobj.items.emplace_back(std::move(item));
-					catobj.sorted.push_back(n);		//Why not catobj.sorted.push_back(catobj.items.size() - 1) ?
-													//I think it is a compiler bug(VC2012) that catobj.sorted.push_back(catobj.items.size() - 1)
-													//generates a size_t-to-unsigned conversion.
+					list_.push_back(cg);
+					list_.back().catkey_ptr = ptr;
+					return &list_.back();
 				}
 
-				//Append to category "cat" a new item with "text" in column 0.
-				void push_back(size_type cat, nana::string&& text)
-				{
-					auto & catobj = *_m_at(cat);
-					catobj.items.emplace_back(std::move(text));
-					catobj.sorted.push_back(catobj.items.size() - 1);
-				}
 
 				bool insert(const index_pair& pos, const nana::string& text)
 				{
@@ -547,7 +553,8 @@ namespace nana{ namespace gui{
 					return true;
 				}
 
-				category::container::value_type& at(const index_pair& pos)
+
+				category_t::container::value_type& at(const index_pair& pos)
 				{
 					auto index = pos.item;
 
@@ -557,7 +564,7 @@ namespace nana{ namespace gui{
 					return _m_at(pos.cat)->items.at(index);
 				}
 
-				const category::container::value_type& at(const index_pair& pos) const
+				const category_t::container::value_type& at(const index_pair& pos) const
 				{
 					auto index = pos.item;
 
@@ -565,11 +572,6 @@ namespace nana{ namespace gui{
 						index = absolute(pos);
 
 					return _m_at(pos.cat)->items.at(index);
-				}
-
-				category::container::value_type& at_abs(const index_pair& pos)
-				{
-					return _m_at(pos.cat)->items.at(pos.item);
 				}
 
 				void clear(size_type cat)
@@ -687,24 +689,19 @@ namespace nana{ namespace gui{
 					return n;
 				}
 
-				nana::string text(const index_pair& pos, size_type col) const
+				nana::string text(category_t* cat, size_type pos, size_type col) const
 				{
-					if (pos.cat < list_.size())
-					{
-						auto i = list_.cbegin();
-						std::advance(i, pos.cat);
-						if (pos.item < i->items.size() && (col < i->items[pos.item].texts.size()))
-							return i->items[pos.item].texts[col];
-					}
+					if (pos < cat->items.size() && (col < cat->items[pos].texts.size()))
+						return cat->items[pos].texts[col];
 					return nana::string();
 				}
 
-				void text(const index_pair& pos, size_type col, const nana::string& str, size_type header_size)
+				void text(category_t* cat, size_type pos, size_type col, const nana::string& str, size_type header_size)
 				{
-					auto & catobj = *_m_at(pos.cat);
-					if ((col < header_size) && (pos.item < catobj.items.size()))
+
+					if ((col < header_size) && (pos < cat->items.size()))
 					{
-						auto & cont = catobj.items[pos.item].texts;
+						auto & cont = cat->items[pos].texts;
 						if (col < cont.size())
 						{
 							cont[col] = str;
@@ -720,13 +717,11 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void text(const index_pair& pos, size_type col, nana::string&& str, size_type header_size)
+				void text(category_t* cat, size_type pos, size_type col, nana::string&& str, size_type header_size)
 				{
-					auto & catobj = *_m_at(pos.cat);
-
-					if ((col < header_size) && (pos.item < catobj.items.size()))
+					if ((col < header_size) && (pos < cat->items.size()))
 					{
-						auto & cont = catobj.items[pos.item].texts;
+						auto & cont = cat->items[pos].texts;
 						if (col < cont.size())
 						{
 							cont[col] = std::move(str);
@@ -796,9 +791,29 @@ namespace nana{ namespace gui{
 					return (good(cat) ? _m_at(cat)->expand : false);
 				}
 
-				const std::list<category>& cat_container() const
+				std::list<category_t>& cat_container()
 				{
 					return list_;
+				}
+
+				const std::list<category_t>& cat_container() const
+				{
+					return list_;
+				}
+
+				//Enable/Disable the ordered categories
+				bool enable_ordered(bool enb)
+				{
+					if (ordered_categories_ == enb)
+						return false;
+
+					ordered_categories_ = enb;
+					return true;
+				}
+
+				bool enable_ordered() const
+				{
+					return ordered_categories_;
 				}
 
 				size_type the_number_of_expanded() const
@@ -1299,8 +1314,10 @@ namespace nana{ namespace gui{
 				essence_t * ess_;
 				nana::gui::listbox * widget_;
 				std::size_t sorted_index_;		//It stands for the index of header which is used for sorting.
-				bool		resort_;
-				bool		sorted_reverse_;
+				bool	resort_;
+				bool	sorted_reverse_;
+				bool	ordered_categories_;	//A switch indicates whether the categories are ordered.
+												//The ordered categories always creates a new category at a proper position(before the first one which is larger than it).
 				container list_;
 			};//end class es_lister
 
@@ -1873,18 +1890,18 @@ namespace nana{ namespace gui{
 				template<typename Item>
 				void _m_draw_item(graph_reference graph, int x, int y, unsigned height, int txtop, nana::color_t txtcolor, const Item& item, essence_t::state_t state)
 				{
-					nana::color_t bkcolor;
+					nana::color_t bgcolor;
 					typedef essence_t::state_t state_t;
 					switch(state)
 					{
-					case state_t::normal:		bkcolor = 0xF1F2F4; break;
-					case state_t::highlighted:	bkcolor = 0xFFFFFF; break;
+					case state_t::normal:		bgcolor = 0xF1F2F4; break;
+					case state_t::highlighted:	bgcolor = 0xFFFFFF; break;
 					case state_t::pressed:
-					case state_t::grabed:		bkcolor = 0x8BD6F6; break;
-					case state_t::floated:		bkcolor = 0xBABBBC;	break;
+					case state_t::grabed:		bgcolor = 0x8BD6F6; break;
+					case state_t::floated:		bgcolor = 0xBABBBC;	break;
 					}
 
-					graph.rectangle(x, y, item.pixels, height, bkcolor, true);
+					graph.rectangle(x, y, item.pixels, height, bgcolor, true);
 					graph.string(x + 5, txtop, txtcolor, item.text);
 
 					if(item.index == essence_->lister.sort_index())
@@ -1934,12 +1951,12 @@ namespace nana{ namespace gui{
 					size_type n = essence_->number_of_lister_items(true);
 					if(0 == n)return;
 					widget * wdptr = essence_->lister.wd_ptr();
-					nana::color_t bkcolor = wdptr->background();
+					nana::color_t bgcolor = wdptr->background();
 					nana::color_t txtcolor = wdptr->foreground();
 
 					unsigned header_w = essence_->header.pixels();
 					if(header_w - essence_->scroll.offset_x < rect.width)
-						essence_->graph->rectangle(rect.x + header_w - essence_->scroll.offset_x, rect.y, rect.width - (header_w - essence_->scroll.offset_x), rect.height, bkcolor, true);
+						essence_->graph->rectangle(rect.x + header_w - essence_->scroll.offset_x, rect.y, rect.width - (header_w - essence_->scroll.offset_x), rect.height, bgcolor, true);
 
 					es_lister & lister = essence_->lister;
 					//The Tracker indicates the item where mouse placed.
@@ -1982,7 +1999,7 @@ namespace nana{ namespace gui{
 								if(n-- == 0)	break;
 								state = (tracker == idx	? essence_t::state_t::highlighted : essence_t::state_t::normal);
 
-								_m_draw_item(i_categ->items[lister.absolute(index_pair(idx.cat, offs))], x, y, txtoff, header_w, rect, subitems, bkcolor, txtcolor, state);
+								_m_draw_item(i_categ->items[lister.absolute(index_pair(idx.cat, offs))], x, y, txtoff, header_w, rect, subitems, bgcolor, txtcolor, state);
 								y += essence_->item_size;
 							}
 						}
@@ -1993,7 +2010,7 @@ namespace nana{ namespace gui{
 								if(n-- == 0)	break;
 								state = (tracker == idx ? essence_t::state_t::highlighted : essence_t::state_t::normal);
 
-								_m_draw_item(*i, x, y, txtoff, header_w, rect, subitems, bkcolor, txtcolor, state);
+								_m_draw_item(*i, x, y, txtoff, header_w, rect, subitems, bgcolor, txtcolor, state);
 								y += essence_->item_size;
 							}
 						}
@@ -2008,7 +2025,7 @@ namespace nana{ namespace gui{
 
 						state = ((npos == tracker.item) && (idx.cat == tracker.cat) ? essence_t::state_t::highlighted : essence_t::state_t::normal);
 
-						_m_draw_categ(*i_categ, rect.x - essence_->scroll.offset_x, y, txtoff, header_w, rect, bkcolor, state);
+						_m_draw_categ(*i_categ, rect.x - essence_->scroll.offset_x, y, txtoff, header_w, rect, bgcolor, state);
 						y += essence_->item_size;
 
 						if(false == i_categ->expand) continue;
@@ -2016,13 +2033,13 @@ namespace nana{ namespace gui{
 						//Test whether the sort is enabled.
 						if(essence_->lister.sort_index() != npos)
 						{
-							std::size_t size = i_categ->items.size();
-							for(std::size_t pos = 0; pos < size; ++pos)
+							auto size = i_categ->items.size();
+							for(decltype(size) pos = 0; pos < size; ++pos)
 							{
 								if(n-- == 0)	break;
 								state = (idx == tracker ? essence_t::state_t::highlighted : essence_t::state_t::normal);
 
-								_m_draw_item(i_categ->items[lister.absolute(index_pair(idx.cat, pos))], x, y, txtoff, header_w, rect, subitems, bkcolor, txtcolor, state);
+								_m_draw_item(i_categ->items[lister.absolute(index_pair(idx.cat, pos))], x, y, txtoff, header_w, rect, subitems, bgcolor, txtcolor, state);
 								y += essence_->item_size;
 								++idx.item;
 							}
@@ -2035,7 +2052,7 @@ namespace nana{ namespace gui{
 
 								state = (idx == tracker ? essence_t::state_t::highlighted : essence_t::state_t::normal);
 
-								_m_draw_item(m, x, y, txtoff, header_w, rect, subitems, bkcolor, txtcolor, state);
+								_m_draw_item(m, x, y, txtoff, header_w, rect, subitems, bgcolor, txtcolor, state);
 								y += essence_->item_size;
 
 								++idx.item;
@@ -2044,20 +2061,20 @@ namespace nana{ namespace gui{
 					}
 
 					if(y < rect.y + static_cast<int>(rect.height))
-						essence_->graph->rectangle(rect.x, y, rect.width, rect.y + rect.height - y, bkcolor, true);
+						essence_->graph->rectangle(rect.x, y, rect.width, rect.y + rect.height - y, bgcolor, true);
 				}
 			private:
-				void _m_draw_categ(const es_lister::category& categ, int x, int y, int txtoff, unsigned width, const nana::rectangle& r, nana::color_t bkcolor, essence_t::state_t state) const
+				void _m_draw_categ(const category_t& categ, int x, int y, int txtoff, unsigned width, const nana::rectangle& r, nana::color_t bgcolor, essence_t::state_t state) const
 				{
 					bool sel = categ.selected();
 					if(sel && (categ.expand == false))
-						bkcolor = 0xD5EFFC;
+						bgcolor = 0xD5EFFC;
 
 					if(state == essence_t::state_t::highlighted)
-						bkcolor = essence_->graph->mix(bkcolor, 0x99DEFD, 0.8);
+						bgcolor = essence_->graph->mix(bgcolor, 0x99DEFD, 0.8);
 
 					auto graph = essence_->graph;
-					graph->rectangle(x, y, width, essence_->item_size, bkcolor, true);
+					graph->rectangle(x, y, width, essence_->item_size, bgcolor, true);
 
 					nana::paint::gadget::arrow_16_pixels(*graph, x + 5, y + (essence_->item_size - 16) /2, 0x3399, 2, (categ.expand ? nana::paint::gadget::directions::to_north : nana::paint::gadget::directions::to_south));
 					nana::size text_s = graph->text_extent_size(categ.text);
@@ -2082,25 +2099,25 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void _m_draw_item(const es_lister::item_t& item, int x, int y, int txtoff, unsigned width, const nana::rectangle& r, const std::vector<size_type>& seqs, nana::color_t bkcolor, nana::color_t txtcolor, essence_t::state_t state) const
+				void _m_draw_item(const item_t& item, int x, int y, int txtoff, unsigned width, const nana::rectangle& r, const std::vector<size_type>& seqs, nana::color_t bgcolor, nana::color_t txtcolor, essence_t::state_t state) const
 				{
 					if(item.flags.selected)
-						bkcolor = 0xD5EFFC;
-					else if((item.bkcolor & 0xFF000000) == 0)
-						bkcolor = item.bkcolor;
+						bgcolor = 0xD5EFFC;
+					else if ((item.bgcolor & 0xFF000000) == 0)
+						bgcolor = item.bgcolor;
 
 					if((item.fgcolor & 0xFF000000) == 0)
 						txtcolor = item.fgcolor;
 
 					auto graph = essence_->graph;
 					if(state == essence_t::state_t::highlighted)
-						bkcolor = graph->mix(bkcolor, 0x99DEFD, 0.8);
+						bgcolor = graph->mix(bgcolor, 0x99DEFD, 0.8);
 
 					unsigned show_w = width - essence_->scroll.offset_x;
 					if(show_w >= r.width) show_w = r.width;
 
 					//draw the background
-					graph->rectangle(r.x, y, show_w, essence_->item_size, bkcolor, true);
+					graph->rectangle(r.x, y, show_w, essence_->item_size, bgcolor, true);
 
 					int img_off = (essence_->if_image ? (essence_->item_size - 16) / 2 : 0);
 
@@ -2137,7 +2154,7 @@ namespace nana{ namespace gui{
 								typedef object<decltype(crook_renderer_)>::type::state state;
 
 								crook_renderer_.check(item.flags.checked ?  state::checked : state::unchecked);
-								crook_renderer_.draw(*graph, bkcolor, txtcolor, chkarea, estate);
+								crook_renderer_.draw(*graph, bgcolor, txtcolor, chkarea, estate);
 							}
 							nana::size ts = graph->text_extent_size(item.texts[index]);
 
@@ -2152,11 +2169,11 @@ namespace nana{ namespace gui{
 							{
 								//The text is painted over the next subitem
 								int xpos = item_xpos + header.pixels - essence_->suspension_width;
-								graph->rectangle(xpos, y + 2, essence_->suspension_width, essence_->item_size - 4, bkcolor, true);
+								graph->rectangle(xpos, y + 2, essence_->suspension_width, essence_->item_size - 4, bgcolor, true);
 								graph->string(xpos, y + 2, txtcolor, STR("..."));
 
 								//Erase the part that over the next subitem.
-								graph->rectangle(item_xpos + header.pixels, y + 2, ts.width + 5 + ext_w - header.pixels, essence_->item_size - 4, item.bkcolor, true);
+								graph->rectangle(item_xpos + header.pixels, y + 2, ts.width + 5 + ext_w - header.pixels, essence_->item_size - 4, item.bgcolor, true);
 							}
 						}
 
@@ -2190,7 +2207,7 @@ namespace nana{ namespace gui{
 
 			//class trigger: public drawer_trigger
 				trigger::trigger()
-					: essence_(new essence_t),
+					:	essence_(new essence_t),
 						drawer_header_(new drawer_header_impl(essence_)),
 						drawer_lister_(new drawer_lister_impl(essence_))
 				{}
@@ -2542,13 +2559,18 @@ namespace nana{ namespace gui{
 
 			//class item_proxy
 				item_proxy::item_proxy()
-					:	ess_(nullptr)
+					:	ess_(nullptr),
+						cat_(nullptr)
 				{}
 
 				item_proxy::item_proxy(essence_t * ess, const index_pair& pos)
 					:	ess_(ess),
 						pos_(pos)
-				{}
+				{
+					auto i = ess_->lister.cat_container().begin();
+					std::advance(i, pos.cat);
+					cat_ = &(*i);
+				}
 
 				bool item_proxy::empty() const
 				{
@@ -2557,7 +2579,7 @@ namespace nana{ namespace gui{
 
 				item_proxy & item_proxy::check(bool ck)
 				{
-					auto & m = ess_->lister.at_abs(pos_);
+					auto & m = cat_->items.at(pos_.item);
 					if(m.flags.checked != ck)
 					{
 						m.flags.checked = ck;
@@ -2568,12 +2590,12 @@ namespace nana{ namespace gui{
 
 				bool item_proxy::checked() const
 				{
-					return ess_->lister.at_abs(pos_).flags.checked;
+					return cat_->items.at(pos_.item).flags.checked;
 				}
 
 				item_proxy & item_proxy::select(bool s)
 				{
-					auto & m = ess_->lister.at_abs(pos_);
+					auto & m = cat_->items.at(pos_.item);
 					if(m.flags.selected != s)
 					{
 						m.flags.selected = s;
@@ -2589,31 +2611,31 @@ namespace nana{ namespace gui{
 
 				bool item_proxy::selected() const
 				{
-					return ess_->lister.at_abs(pos_).flags.selected;
+					return cat_->items.at(pos_.item).flags.selected;
 				}
 
 				item_proxy & item_proxy::bgcolor(nana::color_t col)
 				{
-					ess_->lister.at_abs(pos_).bkcolor = col;
+					cat_->items.at(pos_.item).flags.selected;
 					ess_->update();
 					return *this;
 				}
 
 				nana::color_t item_proxy::bgcolor() const
 				{
-					return ess_->lister.at_abs(pos_).bkcolor;
+					return cat_->items.at(pos_.item).bgcolor;
 				}
 
 				item_proxy& item_proxy::fgcolor(nana::color_t col)
 				{
-					ess_->lister.at_abs(pos_).fgcolor = col;
+					cat_->items.at(pos_.item).fgcolor = col;
 					ess_->update();
 					return *this;
 				}
 
 				nana::color_t item_proxy::fgcolor() const
 				{
-					return ess_->lister.at_abs(pos_).fgcolor;
+					return cat_->items.at(pos_.item).fgcolor;
 				}
 
 				std::size_t item_proxy::columns() const
@@ -2623,38 +2645,38 @@ namespace nana{ namespace gui{
 
 				item_proxy & item_proxy::text(size_type col, const nana::string& str)
 				{
-					ess_->lister.text(pos_, col, str, ess_->header.cont().size());
+					ess_->lister.text(cat_, pos_.item, col, str, ess_->header.cont().size());
 					ess_->update();
 					return *this;
 				}
 
 				item_proxy & item_proxy::text(size_type col, nana::string&& str)
 				{
-					ess_->lister.text(pos_, col, std::move(str), ess_->header.cont().size());
+					ess_->lister.text(cat_, pos_.item, col, std::move(str), ess_->header.cont().size());
 					ess_->update();
 					return *this;
 				}
 
 				nana::string item_proxy::text(size_type col) const
 				{
-					return ess_->lister.text(pos_, col);
+					return ess_->lister.text(cat_, pos_.item, col);
 				}
 
 
 				//Behavior of Iterator's value_type
 				bool item_proxy::operator==(const nana::string& s) const
 				{
-					return (ess_->lister.text(pos_, 0) == s);
+					return (ess_->lister.text(cat_, pos_.item, 0) == s);
 				}
 
 				bool item_proxy::operator==(const char * s) const
 				{
-					return (ess_->lister.text(pos_, 0) == nana::string(nana::charset(s)));
+					return (ess_->lister.text(cat_, pos_.item, 0) == nana::string(nana::charset(s)));
 				}
 
 				bool item_proxy::operator==(const wchar_t * s) const
 				{
-					return (ess_->lister.text(pos_, 0) == nana::string(nana::charset(s)));
+					return (ess_->lister.text(cat_, pos_.item, 0) == nana::string(nana::charset(s)));
 				}
 
 
@@ -2663,6 +2685,7 @@ namespace nana{ namespace gui{
 					if(this != &rhs)
 					{
 						ess_ = rhs.ess_;
+						cat_ = rhs.cat_;
 						pos_ = rhs.pos_;
 					}
 					return *this;
@@ -2672,7 +2695,8 @@ namespace nana{ namespace gui{
 				item_proxy & item_proxy::operator++()
 				{
 					++pos_.item;
-					if(pos_.item < ess_->lister.size_item(pos_.cat))
+
+					if (pos_.item < cat_->items.size())
 						return *this;
 
 					ess_ = nullptr;
@@ -2684,7 +2708,8 @@ namespace nana{ namespace gui{
 				{
 					item_proxy ip(*this);
 					++pos_.item;
-					if(pos_.item >= ess_->lister.size_item(pos_.cat))
+
+					if (pos_.item >= cat_->items.size())
 						ess_ = nullptr;
 					return ip;
 				}
@@ -2716,7 +2741,7 @@ namespace nana{ namespace gui{
 				// Behavior of Iterator
 				bool item_proxy::operator==(const item_proxy& rhs) const
 				{
-					if(ess_ != rhs.ess_)
+					if((ess_ != rhs.ess_) || (cat_ != rhs.cat_))
 						return false;
 
 					if (ess_)	//Not empty
@@ -2759,30 +2784,67 @@ namespace nana{ namespace gui{
 			//end class item_proxy
 
 			//class cat_proxy
+			//the member cat_ is used for fast accessing to the category
 				cat_proxy::cat_proxy()
-					:	ess_(nullptr), pos_(0)
+					:	ess_(nullptr),
+						cat_(nullptr),
+						pos_(0)
 				{}
 
-				cat_proxy::cat_proxy(essence_t * ess, std::size_t pos)
+				cat_proxy::cat_proxy(essence_t * ess, size_type pos)
 					:	ess_(ess),
 						pos_(pos)
-				{}
+				{
+					_m_cat_by_pos();
+				}
 
-				std::size_t cat_proxy::columns() const
+				cat_proxy::cat_proxy(essence_t* ess, category_t* cat)
+					:	ess_(ess),
+						cat_(cat)
+				{
+					for (auto & m : ess->lister.cat_container())
+					{
+						if (&m == cat)
+							break;
+						++pos_;
+					}
+				}
+
+				auto cat_proxy::columns() const -> size_type
 				{
 					return ess_->header.cont().size();
+				}
+
+				cat_proxy& cat_proxy::text(const nana::string& s)
+				{
+					internal_scope_guard lock;
+
+					cat_->text = s;
+					ess_->update();
+					return *this;
+				}
+
+				nana::string cat_proxy::text() const
+				{
+					internal_scope_guard lock;
+					return cat_->text;
 				}
 
 				void cat_proxy::push_back(const nana::string& s)
 				{
 					internal_scope_guard lock;
-					ess_->lister.push_back(pos_, s);
+
+					item_t item;
+					item.texts.push_back(s);
+
+					cat_->sorted.push_back(cat_->items.size());
+					cat_->items.push_back(item);
 
 					auto wd = ess_->lister.wd_ptr();
 					if(wd && !(API::empty_window(wd->handle())))
 					{
-						auto & m = ess_->lister.at(index_pair(pos_, ess_->lister.size_item(pos_) - 1));
-						m.bkcolor = wd->background();
+						auto & m = cat_->items.back();
+						m.bgcolor = wd->background();
 						m.fgcolor = wd->foreground();
 						ess_->update();
 					}
@@ -2792,12 +2854,14 @@ namespace nana{ namespace gui{
 				{
 					internal_scope_guard lock;
 
-					ess_->lister.push_back(pos_, std::move(s));
+					cat_->sorted.push_back(cat_->items.size());
+					cat_->items.emplace_back(std::move(s));
+
 					auto wd = ess_->lister.wd_ptr();
 					if(wd && !(API::empty_window(wd->handle())))
 					{
-						auto & m = ess_->lister.at(index_pair(pos_, ess_->lister.size_item(pos_) - 1));
-						m.bkcolor = wd->background();
+						auto & m = cat_->items.back();
+						m.bgcolor = wd->background();
 						m.fgcolor = wd->foreground();
 						ess_->update();
 					}
@@ -2854,6 +2918,7 @@ namespace nana{ namespace gui{
 					if(this != &r)
 					{
 						ess_ = r.ess_;
+						cat_ = r.cat_;
 						pos_ = r.pos_;
 					}
 					return *this;
@@ -2863,8 +2928,7 @@ namespace nana{ namespace gui{
 				cat_proxy & cat_proxy::operator++()
 				{
 					++pos_;
-					if(pos_ >= ess_->lister.size_categ())
-						ess_ = nullptr;
+					_m_cat_by_pos();
 
 					return *this;
 				}
@@ -2874,8 +2938,8 @@ namespace nana{ namespace gui{
 				{
 					cat_proxy ip(*this);
 					++pos_;
-					if(pos_ >= ess_->lister.size_categ())
-						ess_ = nullptr;
+					_m_cat_by_pos();
+
 					return ip;
 				}
 
@@ -2925,6 +2989,20 @@ namespace nana{ namespace gui{
 				{
 					return ess_->resolver;
 				}
+
+				void cat_proxy::_m_cat_by_pos()
+				{
+					if (pos_ >= ess_->lister.size_categ())
+					{
+						ess_ = nullptr;
+						cat_ = nullptr;
+						return;
+					}
+
+					auto i = ess_->lister.cat_container().begin();
+					std::advance(i, pos_);
+					cat_ = &(*i);
+				}
 			//class cat_proxy
 
 			//end class cat_proxy
@@ -2965,7 +3043,7 @@ namespace nana{ namespace gui{
 		{
 			internal_scope_guard lock;
 			auto & ess = get_drawer_trigger().essence();
-			ess.lister.create(s);
+			ess.lister.create_cat(s);
 			ess.update();
 
 			return cat_proxy(&ess, ess.lister.size_categ() - 1);
@@ -2978,6 +3056,17 @@ namespace nana{ namespace gui{
 				throw std::out_of_range("Nana.Listbox.at(): invalid position");
 
 			return cat_proxy(&ess, pos);
+		}
+
+		listbox& listbox::ordered_categories(bool enable_ordered)
+		{
+			internal_scope_guard lock;
+
+			auto & ess = get_drawer_trigger().essence();
+			if (ess.lister.enable_ordered(enable_ordered))
+				ess.update();
+
+			return *this;
 		}
 
 		listbox::item_proxy listbox::at(const index_pair& pos) const
@@ -2995,7 +3084,7 @@ namespace nana{ namespace gui{
 				if(false == API::empty_window(wd))
 				{
 					auto & item = ess.lister.at(pos);
-					item.bkcolor = API::background(wd);
+					item.bgcolor = API::background(wd);
 					item.fgcolor = API::foreground(wd);
 					ess.update();
 				}
@@ -3012,7 +3101,7 @@ namespace nana{ namespace gui{
 				if (false == API::empty_window(wd))
 				{
 					auto & item = ess.lister.at(pos);
-					item.bkcolor = API::background(wd);
+					item.bgcolor = API::background(wd);
 					item.fgcolor = API::foreground(wd);
 					ess.update();
 				}
@@ -3210,9 +3299,51 @@ namespace nana{ namespace gui{
 			return get_drawer_trigger().essence().resolver;
 		}
 
-		std::size_t listbox::_m_headers() const
+		auto listbox::_m_headers() const -> size_type
 		{
 			return get_drawer_trigger().essence().header.cont().size();
+		}
+
+		drawerbase::listbox::category_t* listbox::_m_at_key(std::shared_ptr<drawerbase::listbox::catkey_interface> ptr)
+		{
+			auto & ess = get_drawer_trigger().essence();
+
+			internal_scope_guard lock;
+
+			for (auto & m : ess.lister.cat_container())
+			{
+				if (m.catkey_ptr && ptr->equal(m.catkey_ptr.get()))
+					return &m;
+			}
+
+			drawerbase::listbox::category_t* cat;
+
+			if (ess.lister.enable_ordered())
+			{
+				cat = ess.lister.create_cat(ptr);
+			}
+			else
+			{
+				cat = ess.lister.create_cat(STR(""));
+				cat->catkey_ptr = ptr;
+			}
+			ess.update();
+			return cat;
+		}
+
+		void listbox::_m_ease_key(drawerbase::listbox::catkey_interface* p)
+		{
+			auto & cont = get_drawer_trigger().essence().lister.cat_container();
+
+			internal_scope_guard lock;
+			for (auto i = cont.begin(); i != cont.end(); ++i)
+			{
+				if (i->catkey_ptr && p->equal(i->catkey_ptr.get()))
+				{
+					cont.erase(i);
+					return;
+				}
+			}
 		}
 	//end class listbox
 }//end namespace gui

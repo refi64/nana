@@ -22,6 +22,51 @@ namespace nana{ namespace gui{
 	{
 		namespace listbox
 		{
+			//A catkey is a type which represents a key that used for refering a category.
+			class catkey_interface
+			{
+			public:
+				virtual ~catkey_interface()
+				{}
+
+				virtual bool same_type(const catkey_interface * p) const = 0;
+				virtual bool equal(const catkey_interface*) const = 0;
+				virtual bool less(const catkey_interface*) const = 0;
+			};
+
+			template<typename CatKey>
+			class catkey
+				: public catkey_interface
+			{
+			public:
+				catkey(const CatKey& ck)
+					:	catkey_(ck)
+				{}
+
+				catkey(CatKey&& ck)
+					:	catkey_(std::move(ck))
+				{}
+
+				bool same_type(const catkey_interface * p) const override
+				{
+					return (nullptr != dynamic_cast<const catkey*>(p));
+				}
+
+				bool equal(const catkey_interface* p) const override
+				{
+					auto catp = dynamic_cast<const catkey*>(p);
+					return catp && (catp->catkey_ == catkey_);
+				}
+
+				bool less(const catkey_interface* p) const override
+				{
+					auto catp = dynamic_cast<const catkey*>(p);
+					return catp && (catkey_ < catp->catkey_);
+				}
+			private:
+				CatKey catkey_;
+			};
+
 			typedef std::size_t size_type;
 
 			struct index_pair
@@ -80,6 +125,8 @@ namespace nana{ namespace gui{
 			//@brief:	this struct gives many data for listbox,
 			//			the state of the struct does not effect on member funcions, therefore all data members are public.
 			struct essence_t;
+
+			struct category_t;
 			class drawer_header_impl;
 			class drawer_lister_impl;
 
@@ -270,6 +317,7 @@ namespace nana{ namespace gui{
 				const nana::any * _m_value() const;
 			private:
 				essence_t * ess_;
+				category_t*	cat_;
 				index_pair	pos_;
 			};
 
@@ -278,7 +326,8 @@ namespace nana{ namespace gui{
 			{
 			public:
 				cat_proxy();
-				cat_proxy(essence_t * ess, size_type pos);
+				cat_proxy(essence_t*, size_type pos);
+				cat_proxy(essence_t*, category_t*);
 
 				/// Append an item at end of the category
 				template<typename T>
@@ -300,6 +349,9 @@ namespace nana{ namespace gui{
 				}
 
 				size_type columns() const;
+
+				cat_proxy& text(const nana::string&);
+				nana::string text() const;
 
 				/// Behavior of a container
 				void push_back(const nana::string&);
@@ -343,8 +395,10 @@ namespace nana{ namespace gui{
 				bool operator!=(const cat_proxy&) const;
 			private:
 				const nana::any & _m_resolver() const;
+				void _m_cat_by_pos();
 			private:
 				essence_t*	ess_;
+				category_t*	cat_;
 				size_type	pos_;
 			};
 
@@ -386,7 +440,34 @@ namespace nana{ namespace gui{
 		void append_header(const nana::string&, unsigned width = 120);
 
 		cat_proxy append(const nana::string& text);
+		cat_proxy insert(cat_proxy, const nana::string&);
 		cat_proxy at(size_type pos) const;
+		listbox& ordered_categories(bool);
+
+		template<typename CatKey>
+		cat_proxy operator[](const CatKey & ck)
+		{
+			using namespace drawerbase::listbox;
+			std::shared_ptr<catkey_interface> p(new catkey<CatKey>(ck), [](catkey_interface* p)
+			{
+				delete p;
+			});
+
+			return cat_proxy(get_drawer_trigger().essence(), _m_at_key(p));
+		}
+
+		template<typename CatKey>
+		cat_proxy operator[](CatKey && ck)
+		{
+			using namespace drawerbase::listbox;
+			std::shared_ptr<catkey_interface> p(new catkey<CatKey>(std::move(ck)), [](catkey_interface* p)
+			{
+				delete p;
+			});
+
+			return cat_proxy(&get_drawer_trigger().essence(), _m_at_key(p));
+		}
+
 		item_proxy at(const index_pair&) const;
 
 		void insert(const index_pair&, const nana::string&);
@@ -400,6 +481,13 @@ namespace nana{ namespace gui{
 		void erase(size_type cat);
 		void erase();
 		item_proxy erase(item_proxy);
+
+		template<typename CatKey>
+		void erase_key(const CatKey& key)
+		{
+			std::unique<drawerbase::listbox::catkey_interface> p(new new catkey<CatKey>(key));
+			_m_ease_key(p.get());
+		}
 
 		template<typename Resolver>
 		void resolver(const Resolver & res)
@@ -431,7 +519,9 @@ namespace nana{ namespace gui{
 		nana::any* _m_anyobj(size_type cat, size_type index, bool allocate_if_empty) const;
 		void _m_resolver(const nana::any&);
 		const nana::any & _m_resolver() const;
-		std::size_t _m_headers() const;
+		size_type _m_headers() const;
+		drawerbase::listbox::category_t* _m_at_key(std::shared_ptr<drawerbase::listbox::catkey_interface>);
+		void _m_ease_key(drawerbase::listbox::catkey_interface*);
 	};
 }//end namespace gui
 }//end namespace nana

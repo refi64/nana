@@ -81,6 +81,7 @@ namespace drawerbase
 		~radio_group();
 		void add(checkbox&);
 		std::size_t checked() const;
+		std::size_t size() const;
 	private:
 		void _m_checked(const eventinfo&);
 		void _m_destroy(const eventinfo&);

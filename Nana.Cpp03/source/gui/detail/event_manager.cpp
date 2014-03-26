@@ -335,7 +335,7 @@ namespace detail
 		//@param:wd, the triggering window
 		//@param:abs_handler, the handle of event object handler
 		//@param:drawer_handler, whether the event is installing for drawer or user callback
-		event_handle event_manager::_m_make(event_code::t eventid, window wd, abstract_handler* abs_handler, bool drawer_handler, window listener)
+		event_handle event_manager::_m_make(event_code::t eventid, window wd, abstract_handler* abs_handler, bool drawer_handler, window listener, bool at_first)
 		{
 			if(abs_handler == 0)	return 0;
 
@@ -355,7 +355,11 @@ namespace detail
 												&(nana_runtime::callbacks.table[eventid][wd].first) :
 												&(nana_runtime::callbacks.table[eventid][wd].second));
 
-				abs_handler->container->push_back(abs_handler);
+				if(at_first)
+					abs_handler->container->insert(abs_handler->container->begin(), abs_handler);
+				else
+					abs_handler->container->push_back(abs_handler);
+
 				handle_manager_.insert(abs_handler, 0);
 
 				if(listener)

@@ -211,7 +211,7 @@ namespace checkbox
 			element_tag el;
 
 			el.uiobj = &uiobj;
-			el.eh_checked = uiobj.make_event<events::click>(*this, &radio_group::_m_checked);
+			el.eh_checked = API::dev::make_event(events::click::identifier, uiobj, nana::make_fun(*this, &radio_group::_m_checked), true);
 			el.eh_destroy = uiobj.make_event<events::destroy>(*this, &radio_group::_m_destroy);
 			ui_container_.push_back(el);
 		}
@@ -223,6 +223,11 @@ namespace checkbox
 					return (x.uiobj->checked());
 				});
 			return static_cast<std::size_t>(i - ui_container_.cbegin());
+		}
+
+		std::size_t radio_group::size() const
+		{
+			return ui_container_.size();
 		}
 
 		void radio_group::_m_checked(const eventinfo& ei)

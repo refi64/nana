@@ -283,7 +283,7 @@ namespace detail
 		//@param:abs_handler, the handle of event object handler
 		//@param:drawer_handler, whether the event is installing for drawer or user callback
 		//@param:listener, a listener for the event, it is ignored when drawer_handler is true
-		event_handle event_manager::_m_make(event_code eventid, window wd, abstract_handler* abs_handler, bool drawer_handler, window listener)
+		event_handle event_manager::_m_make(event_code eventid, window wd, abstract_handler* abs_handler, bool drawer_handler, window listener, bool at_first)
 		{
 			if(nullptr == abs_handler)	return nullptr;
 
@@ -302,7 +302,11 @@ namespace detail
 												&(nana_runtime::callbacks.table[static_cast<int>(eventid)][wd].first) :
 												&(nana_runtime::callbacks.table[static_cast<int>(eventid)][wd].second));
 
-				abs_handler->container->push_back(abs_handler);
+				if (at_first)
+					abs_handler->container->insert(abs_handler->container->begin(), abs_handler);
+				else
+					abs_handler->container->push_back(abs_handler);
+
 				handle_manager_.insert(abs_handler, 0);
 
 				if(listener)

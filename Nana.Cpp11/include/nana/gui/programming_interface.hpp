@@ -40,6 +40,13 @@ namespace API
 			bedrock::instance().wd_manager.attach_signal(reinterpret_cast<bedrock::core_window_t*>(wd), object, f);
 		}
 
+		template<typename Fn>
+		event_handle make_event(event_code evt_code, window wd, Fn fn, bool at_first)
+		{
+			auto & b = gui::detail::bedrock::instance();
+			return b.evt_manager.make(evt_code, wd, b.category(reinterpret_cast<gui::detail::bedrock::core_window_t*>(wd)), fn, at_first);
+		}
+
 		event_handle make_drawer_event(event_code, window);
 
 		template<typename Event>
@@ -137,7 +144,7 @@ namespace API
 		if (std::is_base_of<detail::event_type_tag, event_t>::value)
 		{
 			gui::detail::bedrock & b = gui::detail::bedrock::instance();
-			return b.evt_manager.make(event_t::identifier, wd, b.category(reinterpret_cast<gui::detail::bedrock::core_window_t*>(wd)), function);
+			return b.evt_manager.make(event_t::identifier, wd, b.category(reinterpret_cast<gui::detail::bedrock::core_window_t*>(wd)), function, false);
 		}
 		return nullptr;
 	}

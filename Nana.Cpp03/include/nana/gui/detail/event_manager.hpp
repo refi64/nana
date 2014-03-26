@@ -90,21 +90,21 @@ namespace detail
 		event_handle make_for_drawer(event_code::t evtid, window wd, unsigned category, Function function)
 		{
 			return (check::accept(evtid, category) ?
-				_m_make(evtid, wd, handler_factory<Function>::build(function), true, 0) : 0);
+				_m_make(evtid, wd, handler_factory<Function>::build(function), true, 0, false) : 0);
 		}
 
 		template<typename Function>
-		event_handle make(event_code::t evtid, window wd, unsigned category, Function function)
+		event_handle make(event_code::t evtid, window wd, unsigned category, Function function, bool at_first)
 		{
 			return  (check::accept(evtid, category) ?
-				_m_make(evtid, wd, handler_factory<Function>::build(function), false, 0) : 0);
+				_m_make(evtid, wd, handler_factory<Function>::build(function), false, 0, at_first) : 0);
 		}
 
 		template<typename Function>
 		event_handle bind(event_code::t evtid, window trig_wnd, window listener, unsigned category, Function function)
 		{
 			return (check::accept(evtid, category) ?
-				_m_make(evtid, trig_wnd, handler_factory<Function>::build(function), false, listener) : 0);
+				_m_make(evtid, trig_wnd, handler_factory<Function>::build(function), false, listener, false) : 0);
 		}
 
 		//delete a handler
@@ -187,7 +187,7 @@ namespace detail
 		// @window, the triggering window
 		// @abs_handler, the handle of event object handler
 		// @drawer_handler, whether the event is installing for drawer or user callback
-		event_handle _m_make(event_code::t, window, abstract_handler*, bool drawer_handler, window listener = 0);
+		event_handle _m_make(event_code::t, window, abstract_handler*, bool drawer_handler, window listener, bool at_first);
 	private:
 		mutable nana::threads::recursive_mutex mutex_;
 		handle_manager_type handle_manager_;

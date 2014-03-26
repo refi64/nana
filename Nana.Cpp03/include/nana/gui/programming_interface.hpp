@@ -46,6 +46,13 @@ namespace API
 			return bedrock::instance().wd_manager.attach_signal(reinterpret_cast<bedrock::core_window_t*>(wd), f);
 		}
 
+		template<typename Fn>
+		event_handle make_event(event_code::t evt_code, window wd, Fn fn, bool at_first)
+		{
+			gui::detail::bedrock & b = gui::detail::bedrock::instance();
+			return b.evt_manager.make(evt_code, wd, b.category(reinterpret_cast<gui::detail::bedrock::core_window_t*>(wd)), fn, at_first);
+		}
+
 		event_handle make_drawer_event(event_code::t, window);
 
 		template<typename Event>
@@ -111,7 +118,7 @@ namespace API
 		if(nana::traits::is_derived<Event, nana::gui::detail::event_type_tag>::value)
 		{
 			bedrock & b = bedrock::instance();
-			return b.evt_manager.make(Event::identifier, wd, b.category(reinterpret_cast<bedrock::core_window_t*>(wd)), function);
+			return b.evt_manager.make(Event::identifier, wd, b.category(reinterpret_cast<bedrock::core_window_t*>(wd)), function, false);
 		}
 		return 0;
 	}

@@ -1890,7 +1890,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void _m_make_float(const nana::rectangle& rect, const nana::point& pos)
+				void _m_make_float(const nana::rectangle& r, const nana::point& pos)
 				{
 					const es_header::column_t & item = essence_->header.column(essence_->pointer_where.second);
 
@@ -1901,7 +1901,7 @@ namespace nana{ namespace gui{
 					_m_draw_item(ext_graph, 0, 0, essence_->header_size, txtop, 0xFFFFFF, item, essence_t::state::floated);
 
 					int xpos = essence_->header.xpos(item.index) + pos.x - ref_xpos_;
-					ext_graph.blend(ext_graph.size(), *(essence_->graph), nana::point(xpos - essence_->scroll.offset_x + rect.x, rect.y), 0.5);
+					ext_graph.blend(ext_graph.size(), *(essence_->graph), nana::point(xpos - essence_->scroll.offset_x + r.x, r.y), 0.5);
 				}
 			private:
 				int			ref_xpos_;

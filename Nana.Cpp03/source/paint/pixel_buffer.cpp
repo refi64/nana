@@ -1111,7 +1111,7 @@ namespace nana{	namespace paint
 		{
 			pixel_buffer d_pixbuf;
 			d_pixbuf.attach(dw_dst, d_good_r);
-			(*(sp->img_pro.blend))->process(*this, s_good_r, d_pixbuf, nana::point(d_good_r.x, d_good_r.y), fade_rate);
+			(*(sp->img_pro.blend))->process(*this, s_good_r, d_pixbuf, nana::point(), fade_rate);
 		}
 	}
 

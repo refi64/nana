@@ -453,7 +453,7 @@ namespace nana{ namespace gui{
 				delete p;
 			});
 
-			return cat_proxy(get_drawer_trigger().essence(), _m_at_key(p));
+			return cat_proxy(&get_drawer_trigger().essence(), _m_at_key(p));
 		}
 
 		template<typename CatKey>

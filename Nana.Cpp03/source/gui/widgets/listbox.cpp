@@ -366,7 +366,8 @@ namespace nana{ namespace gui{
 						widget_(0),
 						sorted_index_(npos),
 						resort_(true),
-						sorted_reverse_(false)
+						sorted_reverse_(false),
+						ordered_categories_(false)
 				{
 					category_t cg;
 					cg.expand = true;
@@ -2785,9 +2786,11 @@ namespace nana{ namespace gui{
 				cat_proxy& cat_proxy::text(const nana::string& s)
 				{
 					internal_scope_guard lock;
-
-					cat_->text = s;
-					ess_->update();
+					if(s != cat_->text)
+					{
+						cat_->text = s;
+						ess_->update();
+					}
 					return *this;
 				}
 

@@ -47,18 +47,18 @@ namespace nana{ namespace gui{
 
 				bool same_type(const catkey_interface * p) const
 				{
-					return (nullptr != dynamic_cast<const catkey*>(p));
+					return (0 != dynamic_cast<const catkey*>(p));
 				}
 
 				bool equal(const catkey_interface* p) const
 				{
-					auto catp = dynamic_cast<const catkey*>(p);
+					const catkey* catp = dynamic_cast<const catkey*>(p);
 					return catp && (catp->catkey_ == catkey_);
 				}
 
 				bool less(const catkey_interface* p) const
 				{
-					auto catp = dynamic_cast<const catkey*>(p);
+					const catkey* catp = dynamic_cast<const catkey*>(p);
 					return catp && (catkey_ < catp->catkey_);
 				}
 			private:
@@ -443,9 +443,9 @@ namespace nana{ namespace gui{
 		cat_proxy operator[](const CatKey & ck)
 		{
 			using namespace drawerbase::listbox;
-			std::shared_ptr<catkey_interface> p(new catkey<CatKey>(ck));
+			nana::shared_ptr<catkey_interface> p(new catkey<CatKey>(ck));
 
-			return cat_proxy(get_drawer_trigger().essence(), _m_at_key(p));
+			return cat_proxy(&get_drawer_trigger().essence(), _m_at_key(p));
 		}
 
 		item_proxy	at(const index_pair&) const;

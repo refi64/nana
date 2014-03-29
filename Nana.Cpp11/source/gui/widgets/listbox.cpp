@@ -2819,9 +2819,11 @@ namespace nana{ namespace gui{
 				cat_proxy& cat_proxy::text(const nana::string& s)
 				{
 					internal_scope_guard lock;
-
-					cat_->text = s;
-					ess_->update();
+					if (s != cat_->text)
+					{
+						cat_->text = s;
+						ess_->update();
+					}
 					return *this;
 				}
 

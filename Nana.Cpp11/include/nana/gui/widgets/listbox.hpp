@@ -30,7 +30,6 @@ namespace nana{ namespace gui{
 				{}
 
 				virtual bool same_type(const catkey_interface * p) const = 0;
-				virtual bool equal(const catkey_interface*) const = 0;
 				virtual bool less(const catkey_interface*) const = 0;
 			};
 
@@ -50,12 +49,6 @@ namespace nana{ namespace gui{
 				bool same_type(const catkey_interface * p) const override
 				{
 					return (nullptr != dynamic_cast<const catkey*>(p));
-				}
-
-				bool equal(const catkey_interface* p) const override
-				{
-					auto catp = dynamic_cast<const catkey*>(p);
-					return catp && (catp->catkey_ == catkey_);
 				}
 
 				bool less(const catkey_interface* p) const override
@@ -485,7 +478,7 @@ namespace nana{ namespace gui{
 		template<typename CatKey>
 		void erase_key(const CatKey& key)
 		{
-			std::unique<drawerbase::listbox::catkey_interface> p(new new catkey<CatKey>(key));
+			std::unique_ptr<drawerbase::listbox::catkey_interface> p(new drawerbase::listbox::catkey<CatKey>(key));
 			_m_ease_key(p.get());
 		}
 

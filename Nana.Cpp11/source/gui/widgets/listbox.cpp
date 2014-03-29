@@ -3307,6 +3307,11 @@ namespace nana{ namespace gui{
 			return get_drawer_trigger().essence().header.cont().size();
 		}
 
+		bool pred_equal(const drawerbase::listbox::catkey_interface * left, const drawerbase::listbox::catkey_interface* right)
+		{
+			return (left->less(right) == false) && (right->less(left) == false);
+		}
+
 		drawerbase::listbox::category_t* listbox::_m_at_key(std::shared_ptr<drawerbase::listbox::catkey_interface> ptr)
 		{
 			auto & ess = get_drawer_trigger().essence();
@@ -3315,7 +3320,7 @@ namespace nana{ namespace gui{
 
 			for (auto & m : ess.lister.cat_container())
 			{
-				if (m.catkey_ptr && ptr->equal(m.catkey_ptr.get()))
+				if (m.catkey_ptr && pred_equal(ptr.get(), m.catkey_ptr.get()))
 					return &m;
 			}
 
@@ -3341,7 +3346,7 @@ namespace nana{ namespace gui{
 			internal_scope_guard lock;
 			for (auto i = cont.begin(); i != cont.end(); ++i)
 			{
-				if (i->catkey_ptr && p->equal(i->catkey_ptr.get()))
+				if (i->catkey_ptr && pred_equal(p, i->catkey_ptr.get()))
 				{
 					cont.erase(i);
 					return;

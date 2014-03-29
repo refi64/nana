@@ -2097,8 +2097,6 @@ namespace nana{ namespace gui{
 					//draw the background
 					graph->rectangle(r.x, y, show_w, essence_->item_size, bgcolor, true);
 
-					int img_off = (essence_->if_image ? (essence_->item_size - 16) / 2 : 0);
-
 					int item_xpos = x;
 					bool first = true;
 					for(std::vector<size_type>::const_iterator i = seqs.begin(); i != seqs.end(); ++i)
@@ -2109,10 +2107,10 @@ namespace nana{ namespace gui{
 
 						if((item.texts.size() > index) && (header.pixels > 5))
 						{
-							int ext_w = 0;
+							int ext_w = 5;	//5 pixels for the blank
 							if(first && essence_->checkable)
 							{
-								ext_w = 18;
+								ext_w += 18;
 								nana::rectangle chkarea = essence_->checkarea(item_xpos, y);
 
                                 element_state::t estate = element_state::normal;
@@ -2142,11 +2140,14 @@ namespace nana{ namespace gui{
 							{
 								ext_w += 18;
 								if(item.img)
+								{
+									const int img_off = (essence_->if_image ? (essence_->item_size - 16) / 2 : 0);
 									item.img.stretch(nana::rectangle(), *graph, nana::rectangle(item_xpos + 5, y + img_off, 16, 16));
+								}
 							}
-							graph->string(item_xpos + 5 + ext_w, y + txtoff, txtcolor, item.texts[index]);
+							graph->string(item_xpos + ext_w, y + txtoff, txtcolor, item.texts[index]);
 
-							if(ts.width + 5 + ext_w > header.pixels)
+							if(ts.width + ext_w > header.pixels)
 							{
 								//The text is painted over the next subitem
 								int xpos = item_xpos + header.pixels - essence_->suspension_width;
@@ -2154,7 +2155,8 @@ namespace nana{ namespace gui{
 								graph->string(xpos, y + 2, txtcolor, STR("..."));
 
 								//Erase the part that over the next subitem.
-								graph->rectangle(item_xpos + header.pixels, y + 2, ts.width + 5 + ext_w - header.pixels, essence_->item_size - 4, item.bgcolor, true);
+								nana::color_t erase_bgcolor = index + 1 < seqs.size() ? bgcolor : item.bgcolor;
+								graph->rectangle(item_xpos + header.pixels, y + 2, ts.width + ext_w - header.pixels, essence_->item_size - 4, erase_bgcolor, true);
 							}
 						}
 						graph->line(item_xpos - 1, y, item_xpos - 1, y + essence_->item_size - 1, 0xEBF4F9);

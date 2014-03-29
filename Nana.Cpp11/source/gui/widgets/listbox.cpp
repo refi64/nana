@@ -1206,8 +1206,6 @@ namespace nana{ namespace gui{
 
 					auto icat = _m_at(from.cat);
 
-					if(icat->items.size() <= from.item) return false;
-
 					if(icat->expand)
 					{
 						std::size_t item_size = icat->items.size() - from.item;

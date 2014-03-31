@@ -2853,16 +2853,15 @@ namespace nana{ namespace gui{
 
 				item_proxy cat_proxy::back() const
 				{
-					size_type n = ess_->lister.size_item(pos_);
-					if (0 == n)
+					if (cat_->items.empty())
 						throw std::runtime_error("listbox.back() no element in the container.");
 					
-					return item_proxy(ess_, index_pair(pos_, n - 1));
+					return item_proxy(ess_, index_pair(pos_, cat_->items.size() - 1));
 				}
 
 				size_type cat_proxy::size() const
 				{
-					return ess_->lister.size_item(pos_);
+					return cat_->items.size();
 				}
 
 				// Behavior of Iterator

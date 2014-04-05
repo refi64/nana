@@ -84,7 +84,7 @@ namespace nana{	namespace gui
 		{
 			div_start, div_end,
 			identifier, vertical, grid, number, array,
-			weight, gap,
+			weight, gap, margin,
 			equal,
 			eof, error
 		};
@@ -205,9 +205,15 @@ namespace nana{	namespace gui
 				}
 				else if(idstr_ == "vertical")
 					return token::vertical;
-				else if(idstr_ == "grid")
+				else if (idstr_ == "grid")
 					return token::grid;
+				else if (idstr_ == "margin")
+				{
+					if (token::equal != read())
+						_m_throw_error("an equal sign is required after \'" + idstr_ + "\'");
 
+					return token::margin;
+				}
 				return token::identifier;
 			}
 
@@ -650,7 +656,8 @@ namespace nana{	namespace gui
 		enum class kind{arrange, vertical_arrange, grid};
 
 		division(kind k, std::string&& n)
-			: kind_of_division(k), name(std::move(n)), field(nullptr)
+			:	kind_of_division(k), name(std::move(n)), field(nullptr),
+				margin_for_all(true)
 		{}
 
 		virtual ~division()
@@ -695,15 +702,146 @@ namespace nana{	namespace gui
 			return pair;
 		}
 
+		nana::rectangle margin_area() const
+		{
+			auto r = field_area;
+			if (margin.size())
+			{
+				if (margin_for_all)
+				{
+					if (margin.back().kind_of() == number_t::kind::percent)
+					{
+						double proportion = margin.back().real();
+						auto px = static_cast<int>(proportion * r.width);
+						r.x += px;
+						if (r.width < static_cast<unsigned>(px << 1))
+							r.width = 0;
+						else
+							r.width -= static_cast<unsigned>(px << 1);
+
+						px = static_cast<int>(proportion * r.height);
+						r.y += px;
+						if (r.height < static_cast<unsigned>(px << 1))
+							r.height = 0;
+						else
+							r.height -= static_cast<unsigned>(px << 1);
+
+					}
+					else
+					{
+						auto px = margin.back().integer();
+						r.x += px;
+						if (r.width < static_cast<unsigned>(px << 1))
+							r.width = 0;
+						else
+							r.width -= static_cast<unsigned>(px << 1);
+
+						r.y += px;
+						if (r.height < static_cast<unsigned>(px << 1))
+							r.height = 0;
+						else
+							r.height -= static_cast<unsigned>(px << 1);
+					}
+				}
+				else if (margin.size() == 2)	//these two value indicate top bottom margins and left right margins.
+				{
+					int px = 0;
+					if (margin.front().kind_of() == number_t::kind::percent)
+						px = static_cast<int>(field_area.height * margin.front().real());
+					else
+						px = margin.front().integer();
+
+					if (r.height > static_cast<unsigned>(px << 1))
+					{
+						r.y += px;
+						r.height -= static_cast<unsigned>(px << 1);
+					}
+					else
+						r.height = 0;
+
+					if (margin.back().kind_of() == number_t::kind::percent)
+						px = static_cast<int>(field_area.width * margin.back().real());
+					else
+						px = margin.back().integer();
+
+					if (r.width > static_cast<unsigned>(px << 1))
+					{
+						r.x += px;
+						r.width -= static_cast<unsigned>(px << 1);
+					}
+					else
+						r.width = 0;
+				}
+				else
+				{
+					//top
+					int px = 0;
+					if (margin.front().kind_of() == number_t::kind::percent)
+						px = static_cast<int>(field_area.height * margin.front().real());
+					else
+						px = margin.front().integer();
+					r.y += px;
+					if (r.height > static_cast<unsigned>(px))
+						r.height -= static_cast<unsigned>(px);
+					else
+						r.height = 0;
+
+
+					if (margin.size() > 1)	//right
+					{
+						if (margin[1].kind_of() == number_t::kind::percent)
+							px = static_cast<int>(field_area.width * margin[1].real());
+						else
+							px = margin[1].integer();
+						if (r.width > static_cast<unsigned>(px))
+							r.width -= static_cast<unsigned>(px);
+						else
+							r.width = 0;
+					}
+
+					if (margin.size() > 2)	//bottom
+					{
+						if (margin[2].kind_of() == number_t::kind::percent)
+							px = static_cast<int>(field_area.height * margin[2].real());
+						else
+							px = margin[2].integer();
+
+						if (r.height > static_cast<unsigned>(px))
+							r.height -= static_cast<unsigned>(px);
+						else
+							r.height = 0;
+					}
+
+					if (margin.size() > 3)	//left
+					{
+						if (margin[3].kind_of() == number_t::kind::percent)
+							px = static_cast<int>(field_area.width * margin[3].real());
+						else
+							px = margin[3].integer();
+
+						r.x += px;
+						if (r.width > static_cast<unsigned>(px))
+							r.width -= static_cast<unsigned>(px);
+						else
+							r.width = 0;
+					}
+				}
+			}
+			return r;
+		}
+
 		virtual void collocate() = 0;
 
 	public:
 		kind kind_of_division;
 		const std::string name;
 		std::vector<division*> children;
-		nana::rectangle area;
+		nana::rectangle field_area;
 		number_t weight;
 		number_t gap;
+
+		bool margin_for_all;	//the first element stands for all edge if margin_for_all is true.
+		std::vector<number_t> margin;
 		field_impl * field;
 	};
 
@@ -719,6 +857,8 @@ namespace nana{	namespace gui
 
 		virtual void collocate()
 		{
+			const nana::rectangle area = margin_area();
+
 			auto pair = fixed_pixels(kind::arrange);				/// Calcule in first the summe of all fixed fields in this div and in all child div. In second count unproseced fields
 			if(field)												/// Have this div fields? (A pointer to fields in this div)
 				pair.first += field->percent_pixels(area.width);	/// Yes: Calcule summe of width ocupated by each percent-field in this div
@@ -738,9 +878,9 @@ namespace nana{	namespace gui
 			double left = area.x;
 			for(auto child : children)					/// First collocate child div's !!!
 			{
-				child->area.x = static_cast<int>(left);	/// begening from the left, assing left x
-				child->area.y = area.y;
-				child->area.height = area.height;
+				child->field_area.x = static_cast<int>(left);	/// begening from the left, assing left x
+				child->field_area.y = area.y;
+				child->field_area.height = area.height;
 
 				double adj_px;							/// and calcule width of this div.
 
@@ -756,39 +896,41 @@ namespace nana{	namespace gui
 				}
 
 				left += adj_px;
-				child->area.width = static_cast<unsigned>(adj_px) - (static_cast<unsigned>(adj_px) > gap_size ? gap_size : 0);
+				child->field_area.width = static_cast<unsigned>(adj_px)-(static_cast<unsigned>(adj_px) > gap_size ? gap_size : 0);
 				child->collocate();	/// The child div have full position. Now we can collocate  inside it the child fields and child-div. 
 			}
 
 			if(field)
 			{
 				unsigned adj_px = static_cast<unsigned>(adjustable_pixels) - (static_cast<unsigned>(adjustable_pixels) > gap_size ? gap_size : 0);
-				nana::rectangle r = area;
+
+				unsigned width = area.width;
 				for(auto & el : field->elements)
 				{
-					r.x = static_cast<int>(left);
 					typedef field_impl::element_t::kind ekind;
+
+					int x = static_cast<int>(left);
 					switch(el.kind_of_element)
 					{
 					case ekind::fixed:
-						r.width = el.u.fixed_ptr->second;
-						API::move_window(el.u.fixed_ptr->first, r.x, r.y, r.width, r.height);
-						left += r.width;
+						width = el.u.fixed_ptr->second;
+						API::move_window(el.u.fixed_ptr->first, x, area.y, width, area.height);
+						left += width;
 						break;
 					case ekind::gap:
 						left += el.u.gap_value;
 						break;
 					case ekind::percent:
-						r.width = area.width * el.u.percent_ptr->second / 100;
-						API::move_window(el.u.percent_ptr->first, r.x, r.y, r.width, r.height);
-						left += r.width;
+						width = area.width * el.u.percent_ptr->second / 100;
+						API::move_window(el.u.percent_ptr->first, x, area.y, width, area.height);
+						left += width;
 						break;
 					case ekind::window:
-						API::move_window(el.u.handle, r.x, r.y, adj_px, r.height);
+						API::move_window(el.u.handle, x, area.y, adj_px, area.height);
 						left += adjustable_pixels;
 						break;
 					case ekind::room:
-						API::move_window(el.u.room_ptr->first, r.x, r.y, adj_px, r.height);
+						API::move_window(el.u.room_ptr->first, x, area.y, adj_px, area.height);
 						left += adjustable_pixels;
 						break;
 					}
@@ -812,6 +954,7 @@ namespace nana{	namespace gui
 
 		virtual void collocate()
 		{
+			nana::rectangle area = margin_area();
 			auto pair = fixed_pixels(kind::vertical_arrange);		/// Calcule in first the summe of all fixed fields in this div and in all child div. In second count unproseced fields
 			if(field)												/// Have this div fields? (A pointer to fields in this div) 
 				pair.first += field->percent_pixels(area.height);	/// Yes: Calcule summe of height ocupated by each percent-field in this div
@@ -832,9 +975,9 @@ namespace nana{	namespace gui
 			double top = area.y;
 			for(auto child : children)
 			{
-				child->area.x = area.x;
-				child->area.y = static_cast<int>(top);
-				child->area.width = area.width;
+				child->field_area.x = area.x;
+				child->field_area.y = static_cast<int>(top);
+				child->field_area.width = area.width;
 
 				double adj_px;
 				if(false == child->is_fixed()) //the child is adjustable
@@ -852,14 +995,16 @@ namespace nana{	namespace gui
 					adj_px = child->weight.integer();
 
 				top += adj_px;
-				child->area.height = static_cast<unsigned>(adj_px) - (static_cast<unsigned>(adj_px) > gap_size ? gap_size : 0);
+				child->field_area.height = static_cast<unsigned>(adj_px)-(static_cast<unsigned>(adj_px) > gap_size ? gap_size : 0);
 				child->collocate();
 			}
 
 			if(field)
 			{
 				unsigned adj_px = static_cast<unsigned>(adjustable_pixels) - (static_cast<unsigned>(adjustable_pixels) > gap_size ? gap_size : 0);
+
 				nana::rectangle r = area;
+
 				for(auto & el : field->elements)
 				{
 					r.y = static_cast<int>(top);
@@ -890,6 +1035,7 @@ namespace nana{	namespace gui
 					}
 				}
 
+				area = margin_area();
 				for(auto & fsn: field->fastened)
 				{
 					API::move_window(fsn, area.x, area.y, area.width, area.height);
@@ -912,6 +1058,8 @@ namespace nana{	namespace gui
 		{
 			if(nullptr == field)
 				return;
+
+			auto area = field_area;
 
 			unsigned gap_size = (gap.kind_of() == number_t::kind::percent ?
 				static_cast<unsigned>(area.width * gap.real()) : static_cast<unsigned>(gap.integer()));
@@ -1146,6 +1294,8 @@ namespace nana{	namespace gui
 
 		number_t weight;
 		number_t gap;
+		bool margin_for_all = true;
+		std::vector<number_t> margin;
 		std::vector<number_t> array;
 
 		std::vector<division*> children;
@@ -1177,6 +1327,22 @@ namespace nana{	namespace gui
 				//the integer and percent are allowed for gap.
 				if(gap.kind_of() == number_t::kind::real)
 					gap.assign(static_cast<int>(gap.real()));
+				break;
+			case token::margin:
+				margin.clear();
+				margin_for_all = true;
+				switch (tknizer.read())
+				{
+				case token::number:
+					margin_for_all = true;
+					margin.clear();
+					margin.push_back(tknizer.number());
+					break;
+				case token::array:
+					margin_for_all = false;
+					tknizer.array().swap(margin);
+					break;
+				}
 				break;
 			case token::div_end:
 				exit_for = true;
@@ -1250,6 +1416,8 @@ namespace nana{	namespace gui
 		div->gap = gap;
 		div->field = field;		//attach the field to the division
 		div->children.swap(children);
+		div->margin_for_all = margin_for_all;
+		div->margin.swap(margin);
 		return div;
 	}
 
@@ -1281,7 +1449,7 @@ namespace nana{	namespace gui
 				{
 					if(impl_->root_division)
 					{
-						impl_->root_division->area = API::window_size(ei.window);
+						impl_->root_division->field_area = API::window_size(ei.window);
 						impl_->root_division->collocate();
 					}
 				});
@@ -1342,7 +1510,7 @@ namespace nana{	namespace gui
 		{
 			if(impl_->root_division && impl_->window_handle)
 			{
-				impl_->root_division->area = API::window_size(impl_->window_handle);
+				impl_->root_division->field_area = API::window_size(impl_->window_handle);
 				impl_->root_division->collocate();
 
 				for(auto & field : impl_->fields)

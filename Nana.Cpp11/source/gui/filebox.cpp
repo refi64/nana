@@ -655,7 +655,7 @@ namespace nana{	namespace gui
 			
 			auto index = sel[0];
 			item_fs m;
-			ls_file_.at(index.first, index.second).resolve_to(m);
+			ls_file_.at(index).resolve_to(m);
 
 			if(events::dbl_click::identifier == ei.identifier)
 			{

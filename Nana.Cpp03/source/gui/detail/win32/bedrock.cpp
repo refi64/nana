@@ -1710,6 +1710,8 @@ namespace detail
 				thrd->cursor.window = 0;
 			}
 			break;
+		default:
+			break;
 		}
 	}
 }//end namespace detail

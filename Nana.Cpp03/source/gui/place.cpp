@@ -659,8 +659,8 @@ namespace nana{	namespace gui
 
 		division(kind::t k, std::string& n)
 			:	kind_of_division(k),
-				field(0),
-				margin_for_all(true)
+				margin_for_all(true),
+				field(0)
 		{
 			name.swap(n);
 		}
@@ -1350,6 +1350,8 @@ namespace nana{	namespace gui
 				case token::array:
 					margin_for_all = false;
 					tknizer.array().swap(margin);
+					break;
+				default:
 					break;
 				}
 				break;

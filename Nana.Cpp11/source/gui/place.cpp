@@ -656,8 +656,10 @@ namespace nana{	namespace gui
 		enum class kind{arrange, vertical_arrange, grid};
 
 		division(kind k, std::string&& n)
-			:	kind_of_division(k), name(std::move(n)), field(nullptr),
-				margin_for_all(true)
+			:	kind_of_division(k),
+				name(std::move(n)),
+				margin_for_all(true),
+				field(nullptr)
 		{}
 
 		virtual ~division()
@@ -1341,6 +1343,8 @@ namespace nana{	namespace gui
 				case token::array:
 					margin_for_all = false;
 					tknizer.array().swap(margin);
+					break;
+				default:
 					break;
 				}
 				break;

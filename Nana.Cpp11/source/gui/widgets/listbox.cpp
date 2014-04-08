@@ -2551,11 +2551,6 @@ namespace nana{ namespace gui{
 						return;
 					}
 				}
-
-				void trigger::key_char(graph_reference graph, const eventinfo& ei)
-				{
-
-				}
 			//end class trigger
 
 			//class item_proxy

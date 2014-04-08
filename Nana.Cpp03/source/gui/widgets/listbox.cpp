@@ -2505,7 +2505,7 @@ namespace nana{ namespace gui{
 
 				void trigger::key_down(graph_reference graph, const eventinfo& ei)
 				{
-					bool up = false, clear_old = false, select_ranage = false;
+					bool up = false;
 					switch(ei.keyboard.key)
 					{
 					case keyboard::os_arrow_up:
@@ -2527,11 +2527,6 @@ namespace nana{ namespace gui{
 					default:
 						break;
 					}
-				}
-
-				void trigger::key_char(graph_reference, const eventinfo&)
-				{
-				
 				}
 			//end class trigger
 

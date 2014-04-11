@@ -248,6 +248,7 @@ namespace nana{ namespace gui{
 				color_t bgcolor;
 				color_t fgcolor;
 				nana::paint::image img;
+				nana::size img_show_size;
 
 				struct flags_tag
 				{
@@ -2139,8 +2140,10 @@ namespace nana{ namespace gui{
 								ext_w += 18;
 								if(item.img)
 								{
-									const int img_off = (essence_->if_image ? (essence_->item_size - 16) / 2 : 0);
-									item.img.stretch(nana::rectangle(), *graph, nana::rectangle(item_xpos + 5, y + img_off, 16, 16));
+									nana::rectangle img_r(item.img_show_size);
+									img_r.x = item_xpos + 5 + static_cast<int>(16 - item.img_show_size.width) / 2;
+									img_r.y = y + static_cast<int>(essence_->item_size - item.img_show_size.height) / 2;
+									item.img.stretch(item.img.size(), *graph, img_r);
 								}
 							}
 							graph->string(item_xpos + ext_w, y + txtoff, txtcolor, item.texts[index]);
@@ -3186,7 +3189,10 @@ namespace nana{ namespace gui{
 			if(img)
 			{
 				essence_t & ess = get_drawer_trigger().essence();
-				ess.lister.at(pos).img = img;
+				nana::gui::drawerbase::listbox::item_t & item = ess.lister.at(pos);
+				item.img = img;
+				nana::gui::fit_zoom(img.size(), nana::size(16, 16), item.img_show_size);
+
 				ess.if_image = true;
 				ess.update();
 			}

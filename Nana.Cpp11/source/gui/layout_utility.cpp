@@ -52,11 +52,11 @@ namespace gui
 
 	bool overlap(const rectangle& ir, const size& valid_input_area, const rectangle & dr, const size& valid_dst_area, rectangle& op_ir, rectangle& op_dr)
 	{
-		if(overlap(ir, rectangle(0, 0, valid_input_area.width, valid_input_area.height), op_ir) == false)
+		if(overlap(ir, valid_input_area, op_ir) == false)
 			return false;
 
 		rectangle good_dr;
-		if(overlap(dr, rectangle(0, 0, valid_dst_area.width, valid_dst_area.height), good_dr) == false)
+		if(overlap(dr, valid_dst_area, good_dr) == false)
 			return false;
 
 		zoom(ir, op_ir, dr, op_dr);

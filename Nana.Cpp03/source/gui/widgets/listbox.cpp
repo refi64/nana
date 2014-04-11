@@ -2137,14 +2137,14 @@ namespace nana{ namespace gui{
 
 							if((0 == index) && essence_->if_image)
 							{
-								ext_w += 18;
 								if(item.img)
 								{
 									nana::rectangle img_r(item.img_show_size);
-									img_r.x = item_xpos + 5 + static_cast<int>(16 - item.img_show_size.width) / 2;
+									img_r.x = static_cast<int>(ext_w) + item_xpos + static_cast<int>(16 - item.img_show_size.width) / 2;
 									img_r.y = y + static_cast<int>(essence_->item_size - item.img_show_size.height) / 2;
 									item.img.stretch(item.img.size(), *graph, img_r);
 								}
+								ext_w += 18;
 							}
 							graph->string(item_xpos + ext_w, y + txtoff, txtcolor, item.texts[index]);
 

@@ -208,6 +208,7 @@ namespace nana{ namespace gui{
 
 				item_proxy & text(size_type col, const nana::string&);
 				nana::string text(size_type col) const;
+				void icon(const nana::paint::image&);
 
 				template<typename T>
 				item_proxy & resolve_from(const T& t)
@@ -480,8 +481,6 @@ namespace nana{ namespace gui{
 		void show_header(bool);
 		bool visible_header() const;
 		void move_select(bool upwards);
-		void icon(const index_pair&, const nana::paint::image&);
-		nana::paint::image icon(const index_pair&) const;
 		size_type size_categ() const;
 		size_type size_item() const;
 		size_type size_item(size_type cat) const;

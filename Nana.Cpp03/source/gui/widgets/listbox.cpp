@@ -2632,6 +2632,19 @@ namespace nana{ namespace gui{
 					return ess_->lister.text(cat_, pos_.item, col);
 				}
 
+				void item_proxy::icon(const nana::paint::image& img)
+				{
+					if (img)
+					{
+						drawerbase::listbox::item_t & item = cat_->items.at(pos_.item);
+						item.img = img;
+						nana::gui::fit_zoom(img.size(), nana::size(16, 16), item.img_show_size);
+
+						ess_->if_image = true;
+						ess_->update();
+					}
+				}
+
 				//Behavior of Iterator's value_type
 				bool item_proxy::operator==(const nana::string& s) const
 				{
@@ -2766,7 +2779,8 @@ namespace nana{ namespace gui{
 
 				cat_proxy::cat_proxy(essence_t* ess, category_t* cat)
 					:	ess_(ess),
-						cat_(cat)
+						cat_(cat),
+						pos_(0)
 				{
 					for(std::list<category_t>::iterator i = ess->lister.cat_container().begin(), end = ess->lister.cat_container().end(); i != end; ++i)
 					{
@@ -3182,25 +3196,6 @@ namespace nana{ namespace gui{
 			essence_t & ess = get_drawer_trigger().essence();
 			ess.lister.move_select(upwards);
 			ess.update();
-		}
-
-		void listbox::icon(const index_pair& pos, const nana::paint::image& img)
-		{
-			if(img)
-			{
-				essence_t & ess = get_drawer_trigger().essence();
-				nana::gui::drawerbase::listbox::item_t & item = ess.lister.at(pos);
-				item.img = img;
-				nana::gui::fit_zoom(img.size(), nana::size(16, 16), item.img_show_size);
-
-				ess.if_image = true;
-				ess.update();
-			}
-		}
-
-		nana::paint::image listbox::icon(const index_pair& pos) const
-		{
-			return get_drawer_trigger().essence().lister.at(pos).img;
 		}
 
 		listbox::size_type listbox::size_categ() const

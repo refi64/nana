@@ -302,6 +302,12 @@ namespace nana{ namespace gui{
 					return module_.items.at(i);
 				}
 
+				void erase(std::size_t pos)
+				{
+					if (pos < module_.items.size())
+						module_.items.erase(module_.items.begin() + pos);
+				}
+
 				void text(const nana::string& str)
 				{
 					if(editor_)
@@ -757,6 +763,11 @@ namespace nana{ namespace gui{
 		nana::string combox::text(std::size_t i) const
 		{
 			return get_drawer_trigger().get_drawer_impl().at(i).text;
+		}
+
+		void combox::erase(std::size_t pos)
+		{
+			get_drawer_trigger().get_drawer_impl().erase(pos);
 		}
 
 		combox::ext_event_type& combox::ext_event() const

@@ -1,6 +1,7 @@
 /*
  *	A List Box Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
@@ -16,6 +17,8 @@
 #include <nana/pat/cloneable.hpp>
 #include <nana/concepts.hpp>
 #include <nana/memory.hpp>
+#include <nana/key_type.hpp>
+#include <functional>
 
 namespace nana{ namespace gui{
 	class listbox;
@@ -23,41 +26,6 @@ namespace nana{ namespace gui{
 	{
 		namespace listbox
 		{
-			//A catkey is a type which represents a key that used for
-			//refering to a category.
-			class catkey_interface
-			{
-			public:
-				virtual ~catkey_interface()
-				{}
-
-				virtual bool same_type(const catkey_interface * p) const = 0;
-				virtual bool less(const catkey_interface*) const = 0;
-			};
-
-			template<typename CatKey>
-			class catkey
-				: public catkey_interface
-			{
-			public:
-				catkey(const CatKey& ck)
-					:	catkey_(ck)
-				{}
-
-				bool same_type(const catkey_interface * p) const
-				{
-					return (0 != dynamic_cast<const catkey*>(p));
-				}
-
-				bool less(const catkey_interface* p) const
-				{
-					const catkey* catp = dynamic_cast<const catkey*>(p);
-					return catp && (catkey_ < catp->catkey_);
-				}
-			private:
-				CatKey catkey_;
-			};
-
 			typedef std::size_t size_type;
 
 			struct index_pair
@@ -432,12 +400,12 @@ namespace nana{ namespace gui{
 		cat_proxy	at(size_type pos) const;
 		listbox&	ordered_categories(bool);
 
-		template<typename CatKey>
-		cat_proxy operator[](const CatKey & ck)
+		template<typename Key>
+		cat_proxy operator[](const Key & kv)
 		{
-			using namespace drawerbase::listbox;
-			nana::shared_ptr<catkey_interface> p(new catkey<CatKey>(ck));
+			typedef typename nana::detail::type_escape<Key>::type key_t;
 
+			nana::shared_ptr<nana::detail::key_interface> p(new nana::key<key_t, std::less<key_t> >(kv));
 			return cat_proxy(&get_drawer_trigger().essence(), _m_at_key(p));
 		}
 
@@ -454,10 +422,11 @@ namespace nana{ namespace gui{
 		void erase();
 		item_proxy erase(item_proxy);
 
-		template<typename CatKey>
-		void erase_key(const CatKey& key)
+		template<typename Key>
+		void erase_key(const Key& key)
 		{
-			nana::shared_ptr<drawerbase::listbox::catkey_interface> p(new drawerbase::listbox::catkey<CatKey>(key));
+			typedef typename nana::detail::type_escape<Key>::type key_t;
+			nana::shared_ptr<nana::detail::key_interface> p(new nana::key<key_t, std::less<key_t> >(key));
 			_m_ease_key(p.get());
 		}
 
@@ -489,8 +458,8 @@ namespace nana{ namespace gui{
 		void _m_resolver(const nana::any&);
 		const nana::any & _m_resolver() const;
 		size_type _m_headers() const;
-		drawerbase::listbox::category_t* _m_at_key(nana::shared_ptr<drawerbase::listbox::catkey_interface>);
-		void _m_ease_key(drawerbase::listbox::catkey_interface*);
+		drawerbase::listbox::category_t* _m_at_key(nana::shared_ptr<nana::detail::key_interface>);
+		void _m_ease_key(nana::detail::key_interface*);
 	};
 }//end namespace gui
 }//end namespace nana

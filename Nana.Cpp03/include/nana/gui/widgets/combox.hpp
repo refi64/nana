@@ -81,6 +81,7 @@ namespace nana{ namespace gui
 		std::size_t option() const;
 		void option(std::size_t);
 		nana::string text(std::size_t) const;
+		void erase(std::size_t pos);
 
 		ext_event_type& ext_event() const;
 		void renderer(item_renderer*);

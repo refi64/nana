@@ -423,11 +423,11 @@ namespace nana{ namespace gui{
 		item_proxy erase(item_proxy);
 
 		template<typename Key>
-		void erase_key(const Key& key)
+		void erase_key(const Key& kv)
 		{
 			typedef typename nana::detail::type_escape<Key>::type key_t;
-			nana::shared_ptr<nana::detail::key_interface> p(new nana::key<key_t, std::less<key_t> >(key));
-			_m_ease_key(p.get());
+			nana::key<key_t, std::less<key_t> > key(kv);
+			_m_ease_key(&key);
 		}
 
 		template<typename Resolver>

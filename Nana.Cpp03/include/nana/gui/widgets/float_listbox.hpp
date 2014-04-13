@@ -14,24 +14,26 @@
 
 #include "widget.hpp"
 #include <vector>
+#include <nana/memory.hpp>
 
 namespace nana{ namespace gui{
 	namespace drawerbase{
 		namespace float_listbox
 		{
+			class item_interface
+			{
+			public:
+				virtual ~item_interface(){}
+
+				virtual const nana::paint::image & image() const = 0;
+				virtual const nana::char_t*	text() const = 0;
+			};
+
 			//struct module_def
 			//@brief: This defines a data structure used for float_listbox
 			struct module_def
 			{
-				struct item_type
-				{
-					nana::paint::image img;
-					nana::string text;
-
-					item_type(const nana::string&);
-				};
-
-				std::vector<item_type> items;
+				std::vector<nana::shared_ptr<item_interface> > items;
 				std::size_t max_items;	//the number of items display.
 				mutable std::size_t index;		//the result of the selection.
 				mutable bool have_selected;
@@ -48,7 +50,7 @@ namespace nana{ namespace gui{
 
 				virtual ~item_renderer() = 0;
 				virtual void image(bool enabled, unsigned pixels) = 0;
-				virtual void render(widget_reference, graph_reference, const nana::rectangle&, const module_def::item_type&, state_t state) = 0;
+				virtual void render(widget_reference, graph_reference, const nana::rectangle&, const item_interface*, state_t state) = 0;
 				virtual unsigned item_pixels(graph_reference) const = 0;
 			};
 
@@ -81,6 +83,7 @@ namespace nana{ namespace gui{
 	public:
 		typedef drawerbase::float_listbox::item_renderer item_renderer;
 		typedef drawerbase::float_listbox::module_def module_type;
+		typedef drawerbase::float_listbox::item_interface item_interface;
 
 		/** @brief Constructor
 		 *	@param window	A handle to a window which is a owner of float_listbox

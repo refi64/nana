@@ -1,6 +1,7 @@
 /*
  *	A List Box Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
@@ -513,17 +514,7 @@ namespace nana{ namespace gui{
 					list_.back().key_ptr = ptr;
 					return &list_.back();
 				}
-/*
-				void push_back(size_type pos, const nana::string& text)	//deprecated
-				{
-					item_t item;
-					item.texts.push_back(text);
-					container::iterator i = _m_at(pos);
 
-					i->sorted.push_back(i->items.size());
-					i->items.push_back(item);
-				}
-*/
 				bool insert(const index_pair& pos, const nana::string& text)
 				{
 					container::iterator i = _m_at(pos.cat);
@@ -559,13 +550,6 @@ namespace nana{ namespace gui{
 						index = absolute(pos);
 					return _m_at(pos.cat)->items.at(index);
 				}
-
-				/*
-				category_t::container::value_type& at_abs(const index_pair& pos)	//deprecated
-				{
-					return _m_at(pos.cat)->items.at(pos.item);
-				}
-				*/
 
 				void clear(size_type cat)
 				{
@@ -1104,14 +1088,7 @@ namespace nana{ namespace gui{
 				{
 					return (cat < list_.size());
 				}
-/*
-				bool good(size_type cat, size_type index) const	//deprecated
-				{
-					if(cat < list_.size())
-						return (index < size_item(cat));
-					return false;
-				}
-*/
+
 				bool good(const index_pair& pos) const
 				{
 					return (pos.cat < list_.size() ? pos.item < size_item(pos.cat) : false);

@@ -1,6 +1,7 @@
 /*
  *	A float_listbox Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
@@ -32,7 +33,7 @@ namespace nana{ namespace gui{
 					image_pixels_ = px;
 				}
 
-				void render(widget_reference, graph_reference graph, const nana::rectangle& r, const module_def::item_type& item, state_t state)
+				void render(widget_reference, graph_reference graph, const nana::rectangle& r, const item_interface* item, state_t state)
 				{
 					if(state == StateHighlighted)
 					{
@@ -59,9 +60,9 @@ namespace nana{ namespace gui{
 					if(image_enabled_)
 					{
 						unsigned vpix = (r.height - 4);
-						if(item.img)
+						if(item->image())
 						{
-							nana::size imgsz = item.img.size();
+							nana::size imgsz = item->image().size();
 							if(imgsz.width > image_pixels_)
 							{
 								unsigned new_h = image_pixels_ * imgsz.height / imgsz.width;
@@ -94,11 +95,11 @@ namespace nana{ namespace gui{
 							nana::point to_pos(x, r.y + 2);
 							to_pos.x += (image_pixels_ - imgsz.width) / 2;
 							to_pos.y += (vpix - imgsz.height) / 2;
-							item.img.stretch(item.img.size(), graph, nana::rectangle(to_pos, imgsz));
+							item->image().stretch(item->image().size(), graph, nana::rectangle(to_pos, imgsz));
 						}
 						x += (image_pixels_ + 2);
 					}
-					graph.string(x, r.y + 2, 0x0, item.text);
+					graph.string(x, r.y + 2, 0x0, item->text());
 				}
 
 				unsigned item_pixels(graph_reference graph) const
@@ -108,10 +109,6 @@ namespace nana{ namespace gui{
 			};//end class item_renderer
 
 			//struct module_def
-				module_def::item_type::item_type(const nana::string& s)
-					: text(s)
-				{}
-
 				module_def::module_def()
 					:max_items(10), index(npos)
 				{}
@@ -332,7 +329,7 @@ namespace nana{ namespace gui{
 								item_renderer::state_t state = item_renderer::StateNone;
 								if(i == state_.index) state = item_renderer::StateHighlighted;
 
-								state_.renderer->render(*widget_, *graph_, item_r, module_->items[i], state);
+								state_.renderer->render(*widget_, *graph_, item_r, module_->items[i].get(), state);
 								item_r.y += item_pixels;
 							}
 						}	
@@ -350,7 +347,7 @@ namespace nana{ namespace gui{
 				{
 					for(auto & i : module_->items)
 					{
-						if(false == i.img.empty())
+						if(false == i->image().empty())
 							return true;
 					}
 					return false;

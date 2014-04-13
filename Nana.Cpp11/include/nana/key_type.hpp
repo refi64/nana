@@ -25,6 +25,12 @@ namespace nana
 			virtual bool compare(const key_interface*) const = 0;
 		};	//end class key_interface
 
+		//Use less compare for equal compare
+		inline bool pred_equal_by_less(const key_interface * left, const key_interface* right)
+		{
+			return (left->compare(right) == false) && (right->compare(left) == false);
+		}
+
 		template<typename T>
 		struct type_escape
 		{

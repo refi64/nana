@@ -433,7 +433,6 @@ namespace gui
 						{
 							const item_type &m = items_->at(state_.active);
 							state_.menu->destroy_answer(nana::functor<void()>(*this, &trigger::_m_unload_menu_window));
-							//state_.menu->popup(widget_->handle(), m.pos.x, m.pos.y + m.size.height, true);	//deprecated
 							menu_accessor::popup(*state_.menu, widget_->handle(), m.pos.x, m.pos.y + m.size.height);
 							return true;
 						}

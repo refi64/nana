@@ -1,6 +1,7 @@
 /*
  *	A Categorize Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
@@ -28,6 +29,28 @@ namespace nana{	namespace gui{
 
 			ext_event_adapter_if::~ext_event_adapter_if()
 			{}
+
+			struct item
+				: public float_listbox::item_interface
+			{
+				nana::paint::image	item_image;
+				nana::string		item_text;
+			public:
+				item(const nana::string& s)
+					: item_text(s)
+				{}
+			public:
+				//Implement item_interface methods
+				const nana::paint::image& image() const
+				{
+					return item_image;
+				}
+
+				const nana::char_t * text() const
+				{
+					return item_text.data();
+				}
+			};
 
 			struct item_tag
 			{
@@ -548,7 +571,10 @@ namespace nana{	namespace gui{
 						if(i)
 						{
 							for(node_handle child = i->child; child; child = child->next)
-								style_.module.items.push_back(child->value.first);
+							{
+								nana::shared_ptr<float_listbox::item_interface> p(new item(child->value.first));
+								style_.module.items.push_back(p);
+							}
 						}
 						r = style_.active_item_rectangle;
 					}
@@ -559,7 +585,10 @@ namespace nana{	namespace gui{
 						{
 							std::vector<node_handle>::iterator end = v.begin() + head_;
 							for(std::vector<node_handle>::iterator i = v.begin(); i != end; ++i)
-								style_.module.items.push_back((*i)->value.first);
+							{
+								nana::shared_ptr<float_listbox::item_interface> p(new item((*i)->value.first));
+								style_.module.items.push_back(p);
+							}
 						}
 						r = style_.active_item_rectangle;
 					}
@@ -584,7 +613,7 @@ namespace nana{	namespace gui{
 						case ui_element::item_arrow:
 							{
 								treebase_.tail(style_.active);
-								nana::string name = style_.module.items[style_.module.index].text;
+								nana::string name = style_.module.items[style_.module.index]->text();
 								nana::any value;
 								node_handle node = treebase_.find_child(name);
 								if(node)

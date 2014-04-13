@@ -1,6 +1,7 @@
 /*
  *	A List Box Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
@@ -3299,11 +3300,6 @@ namespace nana{ namespace gui{
 			return get_drawer_trigger().essence().header.cont().size();
 		}
 
-		bool pred_equal(const nana::detail::key_interface * left, const nana::detail::key_interface* right)
-		{
-			return (left->compare(right) == false) && (right->compare(left) == false);
-		}
-
 		drawerbase::listbox::category_t* listbox::_m_at_key(std::shared_ptr<nana::detail::key_interface> ptr)
 		{
 			auto & ess = get_drawer_trigger().essence();
@@ -3312,7 +3308,7 @@ namespace nana{ namespace gui{
 
 			for (auto & m : ess.lister.cat_container())
 			{
-				if (m.key_ptr && pred_equal(ptr.get(), m.key_ptr.get()))
+				if (m.key_ptr && nana::detail::pred_equal_by_less(ptr.get(), m.key_ptr.get()))
 					return &m;
 			}
 
@@ -3338,7 +3334,7 @@ namespace nana{ namespace gui{
 			internal_scope_guard lock;
 			for (auto i = cont.begin(); i != cont.end(); ++i)
 			{
-				if (i->key_ptr && pred_equal(p, i->key_ptr.get()))
+				if (i->key_ptr && nana::detail::pred_equal_by_less(p, i->key_ptr.get()))
 				{
 					cont.erase(i);
 					return;

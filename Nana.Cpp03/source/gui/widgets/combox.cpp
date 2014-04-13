@@ -1,6 +1,7 @@
 /*
  *	A Combox Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
@@ -15,18 +16,49 @@
 #include <nana/system/dataexch.hpp>
 #include <nana/gui/widgets/float_listbox.hpp>
 #include <nana/gui/widgets/skeletons/text_editor.hpp>
+#include <nana/memory.hpp>
 
 namespace nana{ namespace gui{
 	namespace drawerbase
 	{
 		namespace combox
 		{
+			struct item
+				: public float_listbox::item_interface
+			{
+			public:
+				nana::shared_ptr<nana::detail::key_interface> key;
+
+				nana::paint::image	item_image;
+				nana::string		item_text;
+				mutable nana::shared_ptr<nana::any>	any_ptr;
+
+				item(nana::shared_ptr<nana::detail::key_interface> & kv)
+					: key(kv)
+				{
+				}
+
+				item(const nana::string& s)
+					: item_text(s)
+				{}
+			private:
+				//implement item_interface methods
+				const nana::paint::image & image() const
+				{
+					return item_image;
+				}
+
+				const nana::char_t* text() const
+				{
+					return item_text.data();
+				}
+			};
+
 			class drawer_impl
 			{
 			public:
 				typedef nana::paint::graphics & graph_reference;
 				typedef nana::gui::widget	& widget_reference;
-				typedef drawerbase::float_listbox::module_def::item_type item_type;
 
 				enum{WhereUnknown, WhereText, WherePushButton};
 				enum{StateNone, StateMouseOver, StatePress};
@@ -74,8 +106,8 @@ namespace nana{ namespace gui{
 
 				void insert(const nana::string& text)
 				{
-					module_.items.push_back(text);
-					anyobj_.push_back(0);
+					nana::shared_ptr<item> p(new item(text));
+					items_.push_back(p);
 				}
 
 				int get_where() const
@@ -85,13 +117,13 @@ namespace nana{ namespace gui{
 
 				nana::any * anyobj(std::size_t pos, bool allocate_if_empty) const
 				{
-					if(anyobj_.size() <= pos)
+					if(pos >= items_.size())
 						return 0;
-					
-					nana::any * p = anyobj_[pos];
-					if(allocate_if_empty && (0 == p))
-						anyobj_[pos] = p = new nana::any;
-					return p;
+
+					nana::shared_ptr<nana::any> & any_ptr = items_[pos]->any_ptr;
+					if(allocate_if_empty && (0 == any_ptr))
+						any_ptr.reset(new nana::any);
+					return any_ptr.get();
 				}
 
 				void text_area(const nana::size& s)
@@ -118,9 +150,7 @@ namespace nana{ namespace gui{
 
 				void clear()
 				{
-					for(std::vector<nana::any*>::iterator i = anyobj_.begin(); i != anyobj_.end(); ++i)
-						delete (*i);
-					anyobj_.clear();
+					items_.clear();
 					module_.items.clear();
 					module_.index = npos;
 				}
@@ -195,8 +225,11 @@ namespace nana{ namespace gui{
 
 				void open_lister()
 				{
-					if(state_.lister == 0)
+					if(0 == state_.lister)
 					{
+						module_.items.clear();
+						std::copy(items_.begin(), items_.end(), std::back_inserter(module_.items));
+
 						state_.lister = & nana::gui::form_loader<nana::gui::float_listbox>()(widget_->handle(), rectangle(0, widget_->size().height, widget_->size().width, 10), true);
 						state_.lister->renderer(item_renderer_);
 						state_.lister->set_module(module_, image_pixels_);
@@ -221,14 +254,14 @@ namespace nana{ namespace gui{
 						std::size_t orig_i = module_.index;
 						if(upwards)
 						{
-							if(module_.index && (module_.index < module_.items.size()))
+							if(module_.index && (module_.index < items_.size()))
 								-- module_.index;
 							else if(circle)
-								module_.index = static_cast<unsigned>(module_.items.size() - 1);
+								module_.index = items_.size() - 1;
 						}
 						else
 						{
-							if((module_.index + 1) < module_.items.size())
+							if((module_.index + 1) < items_.size())
 								++ module_.index;
 							else if(circle)
 								module_.index = 0;
@@ -261,17 +294,17 @@ namespace nana{ namespace gui{
 
 				std::size_t the_number_of_options() const
 				{
-					return module_.items.size();
+					return items_.size();
 				}
 
 				std::size_t option() const
 				{
-					return (module_.index < module_.items.size() ? module_.index : npos);
+					return (module_.index < items_.size() ? module_.index : npos);
 				}
 
 				void option(std::size_t index, bool ignore_condition)
 				{
-					if(module_.items.size() <= index)
+					if(items_.size() <= index)
 						return;
 
 					std::size_t old_index = module_.index;
@@ -280,14 +313,14 @@ namespace nana{ namespace gui{
 						return;
 
 					//Test if the current item or text is different from selected.
-					if(ignore_condition || (old_index != index) || (module_.items[index].text != widget_->caption()))
+					if(ignore_condition || (old_index != index) || (items_[index]->item_text != widget_->caption()))
 					{
 						nana::point pos = API::cursor_position();
 						API::calc_window_point(widget_->handle(), pos);
 						if(this->calc_where(*graph_, pos.x, pos.y))
 							state_.state = StateNone;
 
-						editor_->text(module_.items[index].text);
+						editor_->text(items_[index]->item_text);
 						bool enb = widget_->enabled();
 						_m_draw_push_button(enb);
 						_m_draw_image();
@@ -297,15 +330,60 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				const item_type& at(std::size_t i) const
+				std::size_t at_key(nana::shared_ptr<nana::detail::key_interface>& kv)
 				{
-					return module_.items.at(i);
+					std::size_t pos = 0;
+					for(std::vector<nana::shared_ptr<item> >::iterator i = items_.begin(); i != items_.end(); ++i)
+					{
+						if ((*i)->key && nana::detail::pred_equal_by_less((*i)->key.get(), kv.get()))
+							return pos;
+
+						++pos;
+					}
+
+					pos = items_.size();
+					nana::shared_ptr<item> p(new item(kv));
+					items_.push_back(p);
+					return pos;
+				}
+
+				void erase(nana::detail::key_interface * kv)
+				{
+					for (std::vector<nana::shared_ptr<item> >::iterator i = items_.begin(); i != items_.end(); ++i)
+					{
+						if ((*i)->key && nana::detail::pred_equal_by_less((*i)->key.get(), kv))
+						{
+							std::size_t pos = i - items_.begin();
+							this->erase(pos);
+							return;
+						}
+					}
+				}
+
+				item& at(std::size_t pos)
+				{
+					return *items_.at(pos);
+				}
+
+				const item& at(std::size_t pos) const
+				{
+					return *items_.at(pos);
 				}
 
 				void erase(std::size_t pos)
 				{
-					if (pos < module_.items.size())
-						module_.items.erase(module_.items.begin() + pos);
+					if (pos < items_.size())
+					{
+						if (pos == module_.index)
+						{
+							module_.index = nana::npos;
+							this->widget_->caption(L"");
+						}
+						else if ((nana::npos != module_.index) && (pos < module_.index))
+							--module_.index;
+
+						items_.erase(items_.begin() + pos);
+					}
 				}
 
 				void text(const nana::string& str)
@@ -314,12 +392,12 @@ namespace nana{ namespace gui{
 						editor_->text(str);
 				}
 
-				void image(std::size_t i, const nana::paint::image& img)
+				void image(std::size_t pos, const nana::paint::image& img)
 				{
-					if(i < module_.items.size())
+					if (pos < items_.size())
 					{
-						module_.items[i].img = img;
-						if((false == image_enabled_) && img)
+						items_[pos]->item_image = img;
+						if ((false == image_enabled_) && img)
 						{
 							image_enabled_ = true;
 							draw();
@@ -398,10 +476,10 @@ namespace nana{ namespace gui{
 
 				void _m_draw_image()
 				{
-					if(module_.items.size() <= module_.index)
+					if(items_.size() <= module_.index)
 						return;
 					
-					nana::paint::image img = module_.items[module_.index].img;
+					nana::paint::image & img = items_[module_.index]->item_image;
 					if(img.empty())
 						return;
 					
@@ -443,8 +521,8 @@ namespace nana{ namespace gui{
 					img.stretch(img.size(), *graph_, nana::rectangle(pos, imgsz));
 				}
 			private:
+				std::vector<nana::shared_ptr<item> > items_;
 				nana::gui::float_listbox::module_type module_;
-				mutable std::vector<nana::any*> anyobj_;
 				nana::gui::widget * widget_;
 				nana::paint::graphics * graph_;
 
@@ -694,6 +772,130 @@ namespace nana{ namespace gui{
 					}
 				}
 			//end class trigger
+
+			//class item_proxy
+				item_proxy::item_proxy(drawer_impl* impl, std::size_t pos)
+					:	impl_(impl),
+						pos_(pos)
+				{}
+
+				item_proxy& item_proxy::text(const nana::string& s)
+				{
+					impl_->at(pos_).item_text = s;
+					return *this;
+				}
+
+				nana::string item_proxy::text() const
+				{
+					return impl_->at(pos_).item_text;
+				}
+
+				bool item_proxy::selected() const
+				{
+					return pos_ == impl_->option();
+				}
+
+				item_proxy&	item_proxy::select()
+				{
+					impl_->option(pos_, false);
+					return *this;
+				}
+
+				/// Behavior of Iterator's value_type
+				bool item_proxy::operator == (const nana::string& s) const
+				{
+					if (pos_ == nana::npos)
+						return false;
+					return (impl_->at(pos_).item_text ==s);
+				}
+
+				bool item_proxy::operator == (const char * s) const
+				{
+					if (pos_ == nana::npos)
+						return false;
+					return (impl_->at(pos_).item_text == static_cast<nana::string>(nana::charset(s)));
+				}
+
+				bool item_proxy::operator == (const wchar_t * s) const
+				{
+					if (pos_ == nana::npos)
+						return false;
+					
+					return (impl_->at(pos_).item_text == s);
+				}
+
+				/// Behavior of Iterator
+				item_proxy & item_proxy::operator=(const item_proxy& r)
+				{
+					if (this != &r)
+					{
+						impl_ = r.impl_;
+						pos_ = r.pos_;
+					}
+					return *this;
+				}
+
+				/// Behavior of Iterator
+				item_proxy & item_proxy::operator++()
+				{
+					if (nana::npos == pos_)
+						return *this;
+
+					if (++pos_ == impl_->the_number_of_options())
+						pos_ = nana::npos;
+
+					return *this;
+				}
+
+				/// Behavior of Iterator
+				item_proxy	item_proxy::operator++(int)
+				{
+					if (pos_ == nana::npos)
+						return *this;
+
+					item_proxy tmp = *this;
+					if (++pos_ == impl_->the_number_of_options())
+						pos_ = nana::npos;
+
+					return tmp;
+				}
+
+				/// Behavior of Iterator
+				item_proxy& item_proxy::operator*()
+				{
+					return *this;
+				}
+
+				/// Behavior of Iterator
+				const item_proxy& item_proxy::operator*() const
+				{
+					return *this;
+				}
+
+				/// Behavior of Iterator
+				item_proxy* item_proxy::operator->()
+				{
+					return this;
+				}
+
+				/// Behavior of Iterator
+				const item_proxy* item_proxy::operator->() const
+				{
+					return this;
+				}
+
+				/// Behavior of Iterator
+				bool item_proxy::operator==(const item_proxy& r) const
+				{
+					return (impl_ == r.impl_ && pos_ == r.pos_);
+				}
+
+				/// Behavior of Iterator
+				bool item_proxy::operator!=(const item_proxy& r) const
+				{
+					return ! this->operator==(r);
+				}
+			//end class item_proxy
 		}
 	}//end namespace drawerbase
 
@@ -755,14 +957,14 @@ namespace nana{ namespace gui{
 			return get_drawer_trigger().get_drawer_impl().option();
 		}
 
-		void combox::option(std::size_t i)
+		void combox::option(std::size_t pos)
 		{
-			get_drawer_trigger().get_drawer_impl().option(i, false);
+			get_drawer_trigger().get_drawer_impl().option(pos, false);
 		}
 
-		nana::string combox::text(std::size_t i) const
+		nana::string combox::text(std::size_t pos) const
 		{
-			return get_drawer_trigger().get_drawer_impl().at(i).text;
+			return get_drawer_trigger().get_drawer_impl().at(pos).item_text;
 		}
 
 		void combox::erase(std::size_t pos)
@@ -790,9 +992,9 @@ namespace nana{ namespace gui{
 				API::refresh_window(*this);
 		}
 
-		nana::paint::image combox::image(std::size_t i) const
+		nana::paint::image combox::image(std::size_t pos) const
 		{
-			return get_drawer_trigger().get_drawer_impl().at(i).img;
+			return get_drawer_trigger().get_drawer_impl().at(pos).item_image;
 		}
 
 		void combox::image_pixels(unsigned px)
@@ -818,6 +1020,18 @@ namespace nana{ namespace gui{
 		nana::any * combox::_m_anyobj(std::size_t i, bool allocate_if_empty) const
 		{
 			return get_drawer_trigger().get_drawer_impl().anyobj(i, allocate_if_empty);
+		}
+
+
+		combox::item_proxy combox::_m_at_key(nana::shared_ptr<nana::detail::key_interface>& p)
+		{
+			drawerbase::combox::drawer_impl & impl = get_drawer_trigger().get_drawer_impl();
+			return item_proxy(&impl, impl.at_key(p));
+		}
+
+		void combox::_m_erase(nana::detail::key_interface* p)
+		{
+			get_drawer_trigger().get_drawer_impl().erase(p);
 		}
 	//end class combox
 }//end namespace gui

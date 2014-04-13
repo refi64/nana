@@ -1,6 +1,7 @@
 /*
  *	A List Box Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
@@ -443,16 +444,16 @@ namespace nana{ namespace gui{
 		void erase_key(const Key& kv)
 		{
 			typedef typename nana::detail::type_escape<Key>::type key_t;
-			std::unique_ptr<nana::detail::key_interface> p(new nana::key<key_t, std::less<key_t> >(kv));
-			_m_ease_key(p.get());
+			nana::key<key_t, std::less<key_t> > key(kv);
+			_m_ease_key(&key);
 		}
 
 		template<typename Key>
 		void erase_key(Key&& kv)
 		{
 			typedef typename nana::detail::type_escape<Key>::type key_t;
-			std::unique_ptr<nana::detail::key_interface> p(new nana::key<key_t, std::less<key_t> >(std::move(kv)));
-			_m_ease_key(p.get());
+			nana::key<key_t, std::less<key_t> > key(std::move(kv));
+			_m_ease_key(&key);
 		}
 
 		template<typename Resolver>

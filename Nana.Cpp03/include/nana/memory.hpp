@@ -107,6 +107,12 @@ namespace nana
 			: ptr_(r.ptr_), block_(r.block_)
 		{
 		}
+
+		template<typename U>
+		shared_ptr(const shared_ptr<U>& r)
+			: ptr_(r.ptr_), block_(r.block_)
+		{
+		}
 		
 		shared_ptr& operator=(const shared_ptr& r)
 		{
@@ -169,6 +175,8 @@ namespace nana
 	private:
 		element_type *	ptr_;
 		detail::shared_block	block_;
+
+		template<typename> friend class shared_ptr;
 	};
 }// end namespace nana
 

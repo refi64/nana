@@ -1,6 +1,7 @@
 /*
  *	A Combox Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
@@ -14,6 +15,9 @@
 #include "widget.hpp"
 #include "float_listbox.hpp"
 #include <nana/concepts.hpp>
+#include <nana/key_type.hpp>
+#include <nana/memory.hpp>
+#include <functional>
 
 namespace nana{ namespace gui
 {
@@ -56,6 +60,53 @@ namespace nana{ namespace gui
 			private:
 				drawer_impl * drawer_;
 			};
+
+			class item_proxy
+				: public std::iterator<std::input_iterator_tag, item_proxy>
+			{
+			public:
+				item_proxy(drawer_impl*, std::size_t pos);
+				item_proxy&		text(const nana::string&);
+				nana::string	text() const;
+				item_proxy&	select();
+				bool		selected() const;
+
+			public:
+				/// Behavior of Iterator's value_type
+				bool operator==(const nana::string& s) const;
+				bool operator==(const char * s) const;
+				bool operator==(const wchar_t * s) const;
+
+				/// Behavior of Iterator
+				item_proxy & operator=(const item_proxy&);
+
+				/// Behavior of Iterator
+				item_proxy & operator++();
+
+				/// Behavior of Iterator
+				item_proxy	operator++(int);
+
+				/// Behavior of Iterator
+				item_proxy& operator*();
+
+				/// Behavior of Iterator
+				const item_proxy& operator*() const;
+
+				/// Behavior of Iterator
+				item_proxy* operator->();
+
+				/// Behavior of Iterator
+				const item_proxy* operator->() const;
+
+				/// Behavior of Iterator
+				bool operator==(const item_proxy&) const;
+
+				/// Behavior of Iterator
+				bool operator!=(const item_proxy&) const;
+			private:
+				drawer_impl * impl_;
+				std::size_t pos_;
+			};//end class item_proxy
 		}
 	}//end namespace drawerbase
 
@@ -66,6 +117,7 @@ namespace nana{ namespace gui
 	public:
 		typedef float_listbox::item_renderer item_renderer;
 		typedef drawerbase::combox::extra_events ext_event_type;
+		typedef drawerbase::combox::item_proxy item_proxy;
 
 		combox();
 		combox(window, bool visible);
@@ -83,6 +135,29 @@ namespace nana{ namespace gui
 		nana::string text(std::size_t) const;
 		void erase(std::size_t pos);
 
+		template<typename Key>
+		item_proxy operator[](const Key& kv)
+		{
+			struct deleter
+			{
+				void operator()(nana::detail::key_interface * p)
+				{
+					delete p;
+				}
+			};
+			typedef typename nana::detail::type_escape<Key>::type key_t;
+			nana::shared_ptr<nana::detail::key_interface> p(new nana::key<key_t, std::less<key_t> >(kv), deleter());
+			return _m_at_key(p);
+		}
+
+		template<typename Key>
+		void erase_key(const Key& kv)
+		{
+			typedef typename nana::detail::type_escape<Key>::type key_t;
+			nana::key<key_t, std::less<key_t> > key(kv);
+			_m_erase(&key);
+		}
+
 		ext_event_type& ext_event() const;
 		void renderer(item_renderer*);
 
@@ -94,6 +169,8 @@ namespace nana{ namespace gui
 		nana::string _m_caption() const;
 		void _m_caption(const nana::string&);
 		nana::any* _m_anyobj(std::size_t, bool allocate_if_empty) const;
+		item_proxy _m_at_key(nana::shared_ptr<nana::detail::key_interface>&);
+		void _m_erase(nana::detail::key_interface*);
 	};
 }//end namespace gui
 }

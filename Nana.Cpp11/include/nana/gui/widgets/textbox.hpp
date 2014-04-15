@@ -33,6 +33,7 @@ namespace nana{ namespace gui{
 				bool border(bool);
 				text_editor * editor();
 				const text_editor * editor() const;
+				void set_accept(std::function<bool(nana::char_t)> &&);
 			private:
 				void attached(widget_reference, graph_reference)	override;
 				void detached()	override;
@@ -58,6 +59,7 @@ namespace nana{ namespace gui{
 					bool has_focus;		//Indicates whether it has the keyboard focus
 				}status_;
 
+				std::function<bool(nana::char_t)> pred_acceptive_;
 				widgets::skeletons::text_editor * editor_;
 			};
 		}//end namespace textbox
@@ -118,6 +120,8 @@ namespace nana{ namespace gui{
 		textbox& multi_lines(bool);
 		bool editable() const;
 		textbox& editable(bool);
+		void set_accept(std::function<bool(nana::char_t)>);
+
 		textbox& tip_string(const nana::string&);
 		textbox& mask(nana::char_t);
 		bool selected() const;

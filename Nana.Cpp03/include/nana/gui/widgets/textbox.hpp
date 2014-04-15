@@ -12,7 +12,7 @@
 #ifndef NANA_GUI_WIDGET_TEXTBOX_HPP
 #define NANA_GUI_WIDGET_TEXTBOX_HPP
 
-#include <nana/gui/widgets/widget.hpp>
+#include "widget.hpp"
 #include "skeletons/textbase_extra_evtbase.hpp"
 
 namespace nana{ namespace gui{
@@ -45,6 +45,7 @@ namespace nana{ namespace gui{
 				bool border(bool);
 				text_editor * editor();
 				const text_editor * editor() const;
+				void set_accept(nana::functor<bool(nana::char_t)>&);
 			private:
 				void attached(widget_reference, graph_reference);
 				void detached();
@@ -70,6 +71,7 @@ namespace nana{ namespace gui{
 					bool has_focus;		//Indicates whether it has the keyboard focus
 				}status_;
 
+				nana::functor<bool(nana::char_t)> pred_acceptive_;
 				nana::gui::widgets::skeletons::text_editor * editor_;
 			};
 		}//end namespace textbox
@@ -111,6 +113,7 @@ namespace nana{ namespace gui{
 		textbox& multi_lines(bool);
 		bool editable() const;
 		textbox& editable(bool);
+		void set_accept(nana::functor<bool(nana::char_t)>);
 		textbox& tip_string(const nana::string&);
 		textbox& mask(nana::char_t);
 		bool selected() const;

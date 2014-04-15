@@ -555,6 +555,11 @@ namespace nana{ namespace gui{
 					drawer_ = 0;
 				}
 
+				void trigger::set_accept(nana::functor<bool(nana::char_t)>& pred)
+				{
+					pred_acceptive_ = pred;
+				}
+
 				drawer_impl& trigger::get_drawer_impl()
 				{
 					return *drawer_;
@@ -732,6 +737,9 @@ namespace nana{ namespace gui{
 					widgets::skeletons::text_editor * editor = drawer_->editor();
 					if(drawer_->widget_ptr()->enabled() && editor->attr().editable)
 					{
+						if (pred_acceptive_ && !pred_acceptive_(ei.keyboard.key))
+							return;
+
 						switch(ei.keyboard.key)
 						{
 						case '\b':
@@ -939,6 +947,12 @@ namespace nana{ namespace gui{
 		bool combox::editable() const
 		{
 			return get_drawer_trigger().get_drawer_impl().editable();
+		}
+
+		void combox::set_accept(nana::functor<bool(nana::char_t)> pred)
+		{
+			internal_scope_guard lock;
+			get_drawer_trigger().set_accept(pred);
 		}
 
 		combox& combox::push_back(const nana::string& text)

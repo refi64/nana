@@ -44,6 +44,11 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			return editor_;
 		}
 
+		void drawer::set_accept(std::function<bool(nana::char_t)> && fn)
+		{
+			pred_acceptive_ = std::move(fn);
+		}
+
 		void drawer::attached(widget_reference widget, graph_reference graph)
 		{
 			widget_ = &widget;
@@ -145,6 +150,9 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		{
 			if(editor_->attr().editable)
 			{
+				if (pred_acceptive_ && !pred_acceptive_(ei.keyboard.key))
+					return;
+
 				switch(ei.keyboard.key)
 				{
 				case '\b':
@@ -349,6 +357,12 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			if(editor)
 				editor->editable(able);
 			return *this;
+		}
+
+		void textbox::set_accept(std::function<bool(nana::char_t)> fn)
+		{
+			internal_scope_guard lock;
+			get_drawer_trigger().set_accept(std::move(fn));
 		}
 
 		textbox& textbox::tip_string(const nana::string& str)

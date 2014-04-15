@@ -42,6 +42,8 @@ namespace nana{ namespace gui
 				trigger();
 				~trigger();
 
+				void set_accept(nana::functor<bool(nana::char_t)> &);
+
 				drawer_impl& get_drawer_impl();
 				const drawer_impl& get_drawer_impl() const;
 			private:
@@ -58,6 +60,7 @@ namespace nana{ namespace gui
 				void key_down(graph_reference, const nana::gui::eventinfo&);
 				void key_char(graph_reference, const nana::gui::eventinfo&);
 			private:
+				nana::functor<bool(nana::char_t)> pred_acceptive_;
 				drawer_impl * drawer_;
 			};
 
@@ -128,6 +131,7 @@ namespace nana{ namespace gui
 		void clear();
 		void editable(bool);
 		bool editable() const;
+		void set_accept(nana::functor<bool(nana::char_t)>);
 		combox& push_back(const nana::string&);
 		std::size_t the_number_of_options() const;
 		std::size_t option() const;

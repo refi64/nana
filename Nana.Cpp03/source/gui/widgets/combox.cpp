@@ -809,6 +809,19 @@ namespace nana{ namespace gui{
 					return *this;
 				}
 
+				item_proxy& item_proxy::icon(const nana::paint::image& img)
+				{
+					impl_->image(pos_, img);
+					if (pos_ == impl_->option())
+						API::refresh_window(impl_->widget_ptr()->handle());
+					return *this;				
+				}
+
+				nana::paint::image item_proxy::icon() const
+				{
+					return impl_->at(pos_).item_image;
+				}
+
 				/// Behavior of Iterator's value_type
 				bool item_proxy::operator == (const nana::string& s) const
 				{

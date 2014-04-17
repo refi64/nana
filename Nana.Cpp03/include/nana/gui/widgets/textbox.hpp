@@ -122,6 +122,11 @@ namespace nana{ namespace gui{
 		void copy() const;
 		void paste();
 		void del();
+
+		int to_int() const;
+		double to_double() const;
+		textbox& from(int);
+		textbox& from(double);
 	protected:
 		//Override _m_caption for caption()
 		nana::string _m_caption() const;

@@ -73,7 +73,8 @@ namespace nana{ namespace gui
 				nana::string	text() const;
 				item_proxy&	select();
 				bool		selected() const;
-
+				item_proxy& icon(const nana::paint::image&);
+				nana::paint::image icon() const;
 			public:
 				/// Behavior of Iterator's value_type
 				bool operator==(const nana::string& s) const;

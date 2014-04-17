@@ -468,8 +468,17 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::redraw(bool has_focus)
 		{
-			nana::color_t bgcolor = API::background(window_);
+			nana::color_t bgcolor;
 			nana::color_t fgcolor = API::foreground(window_);
+
+			if (!API::window_enabled(window_))
+			{
+				bgcolor = 0xE0E0E0;
+				fgcolor = nana::paint::graphics::mix(bgcolor, fgcolor, 0.5);
+			}
+			else
+				bgcolor = API::background(window_);
+
 			//Draw background
 			if(attributes_.enable_background)
 				graph_.rectangle(text_area_.area, bgcolor, true);

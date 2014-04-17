@@ -12,6 +12,7 @@
 #include <nana/gui/widgets/textbox.hpp>
 #include <nana/gui/widgets/skeletons/text_editor.hpp>
 #include <stdexcept>
+#include <sstream>
 
 namespace nana{ namespace gui{ namespace drawerbase {
 	namespace textbox
@@ -425,6 +426,58 @@ namespace nana{ namespace gui{ namespace drawerbase {
 				editor->del();
 				API::refresh_window(*this);
 			}
+		}
+
+		int textbox::to_int() const
+		{
+			nana::string s = _m_caption();
+			if (s.empty()) return 0;
+
+#ifdef NANA_UNICODE
+			std::wstringstream ss;
+#else
+			std::stringstream ss;
+#endif
+			int value;
+			ss << s;
+			ss >> value;
+			return value;
+		}
+
+		double textbox::to_double() const
+		{
+			nana::string s = _m_caption();
+			if (s.empty()) return 0;
+
+#ifdef NANA_UNICODE
+			std::wstringstream ss;
+#else
+			std::stringstream ss;
+#endif
+			double value;
+			ss << s;
+			ss >> value;
+			return value;
+		}
+
+		textbox& textbox::from(int n)
+		{
+#ifdef NANA_UNICODE
+			_m_caption(std::to_wstring(n));
+#else
+			_m_caption(std::to_string(n));
+#endif
+			return *this;
+		}
+
+		textbox& textbox::from(double d)
+		{
+#ifdef NANA_UNICODE
+			_m_caption(std::to_wstring(d));
+#else
+			_m_caption(std::to_string(d));
+#endif
+			return *this;
 		}
 
 		//Override _m_caption for caption()

@@ -644,6 +644,14 @@ namespace nana{	namespace paint
 		return (storage_ ? storage_->pixel_size : nana::size());
 	}
 
+	pixel_rgb_t * pixel_buffer::at(const point& pos) const
+	{
+		pixel_buffer_storage * sp = storage_.get();
+		if (sp && (pos.y < sp->pixel_size.height + sp->valid_r.y))
+			return reinterpret_cast<pixel_rgb_t*>(reinterpret_cast<char*>(sp->raw_pixel_buffer) + sp->bytes_per_line * (pos.y - sp->valid_r.y)) + (pos.x - sp->valid_r.x);
+		return 0;
+	}
+
 	pixel_rgb_t * pixel_buffer::raw_ptr(std::size_t row) const
 	{
 		pixel_buffer_storage * sp = storage_.get();

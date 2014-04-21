@@ -27,6 +27,11 @@ namespace gui
 
 		timer::~timer()
 		{
+			umake_events();
+		}
+
+		void timer::umake_events()
+		{
 			_m_kill_timer();
 			_m_umake_event();
 		}

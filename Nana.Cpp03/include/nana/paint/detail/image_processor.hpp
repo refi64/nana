@@ -263,7 +263,7 @@ namespace detail
 			//process
 			virtual void process(const paint::pixel_buffer& s_pixbuf, const nana::rectangle& s_r, paint::pixel_buffer& d_pixbuf, const nana::point& d_pos) const
 			{
-				nana::pixel_rgb_t * d_rgb = d_pixbuf.raw_ptr(d_pos.y) + d_pos.x;
+				nana::pixel_rgb_t * d_rgb = d_pixbuf.at(d_pos);
 				nana::pixel_rgb_t * s_rgb = s_pixbuf.raw_ptr(s_r.y) + s_r.x;
 				if(d_rgb && s_rgb)
 				{

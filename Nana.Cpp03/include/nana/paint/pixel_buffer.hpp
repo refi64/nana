@@ -60,6 +60,7 @@ namespace nana{	namespace paint
 		std::size_t bytes_per_line() const;
 		nana::size size() const;
 		
+		pixel_rgb_t * at(const point& pos) const;
 		pixel_rgb_t * raw_ptr(std::size_t row) const;
 		pixel_rgb_t * operator[](std::size_t row) const;
 

@@ -421,7 +421,7 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			{
 				trace_ = comp;
 				if(comp.which == comp.item && comp.is_close)
-					tooltip_.show(other_.wd->handle(), x, y + 16, lbstrings_.remove);
+					tooltip_.show(other_.wd->handle(), point(x, y + 16), lbstrings_.remove, 3000);
 				else
 					tooltip_.close();
 				return true;
@@ -671,13 +671,13 @@ namespace nana{ namespace gui{ namespace drawerbase{ namespace login
 			{
 				API::focus_window(m->user.handle());
 				nana::point pos = m->user.pos();
-				tooltip_.show(other_.wd->handle(), pos.x, pos.y + m->user.size().height, lbstrings_.require_user);
+				tooltip_.show(other_.wd->handle(), point(pos.x, pos.y + m->user.size().height), lbstrings_.require_user, 3000);
 			}
 			else if(pass.size() == 0)
 			{
 				API::focus_window(m->password.handle());
 				nana::point pos = m->password.pos();
-				tooltip_.show(other_.wd->handle(), pos.x, pos.y + m->password.size().height, lbstrings_.require_password);
+				tooltip_.show(other_.wd->handle(), point(pos.x, pos.y + m->password.size().height), lbstrings_.require_password, 3000);
 			}
 
 			if(other_.login_object && (ext_event.verify.empty() == false) && user.size() && pass.size())

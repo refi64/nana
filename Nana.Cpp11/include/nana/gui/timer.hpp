@@ -39,6 +39,9 @@ namespace gui
 			this->_m_set_timer();
 		}
 
+		//Clear all installed event handler.
+		void umake_events();
+
 		void interval(unsigned value);
 		unsigned interval() const;
 	private:

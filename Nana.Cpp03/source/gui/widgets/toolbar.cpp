@@ -315,7 +315,7 @@ namespace nana{ namespace gui{
 							}
 
 							if(which != npos)
-								impl_->tooltip.show(widget_->handle(), ei.mouse.x, ei.mouse.y + 20, (*(impl_->cont.begin() + which))->text);
+								impl_->tooltip.show(widget_->handle(), point(ei.mouse.x, ei.mouse.y + 20), (*(impl_->cont.begin() + which))->text, 0);
 							else
 								impl_->tooltip.close();
 						}

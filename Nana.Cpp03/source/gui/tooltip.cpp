@@ -40,8 +40,6 @@ namespace nana{ namespace gui{
 
 				if (pos.y + sz.height >= scr_area.y + scr_area.height)
 					pos.y = static_cast<int>(scr_area.y + scr_area.height - sz.height);
-				else
-					pos.y += 20;
 
 				if (pos.y < scr_area.y)
 					pos.y = scr_area.y;
@@ -56,7 +54,8 @@ namespace nana{ namespace gui{
 				typedef widget_object<category::root_tag, drawer> base_type;
 			public:
 				tip_form()
-					:base_type(rectangle(), appear::bald<appear::floating>())
+					:	base_type(rectangle(), appear::bald<appear::floating>()),
+						duration_(0)
 				{
 					API::take_active(this->handle(), false, 0);
 
@@ -65,6 +64,11 @@ namespace nana{ namespace gui{
 				}
 			private:
 				//tooltip_interface implementation
+				bool tooltip_empty() const override
+				{
+					return this->empty();
+				}
+
 				void tooltip_text(const nana::string& text) //override
 				{
 					label_.caption(text);
@@ -72,8 +76,17 @@ namespace nana{ namespace gui{
 					this->size(text_s.width + 10, text_s.height + 10);
 					label_.move(5, 5, text_s.width, text_s.height);
 
-					timer_.interval(500);
-					timer_.make_tick(nana::make_fun(*this, &tip_form::_m_tick));
+					timer_.umake_events();
+					if (duration_)
+					{
+						timer_.interval(static_cast<unsigned>(duration_));
+						timer_.make_tick(nana::make_fun(*this, &tip_form::_m_tick_duration));
+					}
+					else
+					{
+						timer_.interval(500);
+						timer_.make_tick(nana::make_fun(*this, &tip_form::_m_tick));
+					}
 				}
 
 				virtual nana::size tooltip_size() const //override
@@ -85,6 +98,17 @@ namespace nana{ namespace gui{
 				{
 					ignore_pos_ = ignore_pos;
 					pos_ = scr_pos;
+					if (duration_)
+					{
+						this->move(scr_pos.x, scr_pos.y);
+						this->show();
+					}
+				}
+
+				virtual void duration(std::size_t d) override
+				{
+					duration_ = d;
+					timer_.umake_events();
 				}
 			private:
 				void _m_tick()
@@ -111,11 +135,18 @@ namespace nana{ namespace gui{
 					show();
 				}
 
+				void _m_tick_duration()
+				{
+					timer_.enable(false);
+					timer_.umake_events();
+					this->close();
+				}
 			private:
 				timer timer_;
 				gui::label	label_;
 				nana::point	pos_;
 				bool		ignore_pos_;
+				std::size_t duration_;
 			};//end class tip_form
 
 
@@ -187,19 +218,33 @@ namespace nana{ namespace gui{
 
 				void show(const nana::string& text)
 				{
-					if (!window_)
+					if (!window_ || window_->tooltip_empty())
 						window_ = nana::shared_ptr<tooltip_interface>(factory()->create(), deleter(factory()));
 
+					window_->duration(0);
 					window_->tooltip_text(text);
 					window_->tooltip_move(API::cursor_position(), true);
 				}
 
 				void show(point pos, const nana::string& text)
 				{
-					if (!window_)
+					if (!window_ || window_->tooltip_empty())
 						window_ = nana::shared_ptr<tooltip_interface>(factory()->create(), deleter(factory()));
 
+					window_->duration(0);
 					window_->tooltip_text(text);
+					pos = pos_by_screen(pos, window_->tooltip_size());
+					window_->tooltip_move(pos, false);
+				}
+
+				void show_duration(window wd, point pos, const nana::string& text, std::size_t duration)
+				{
+					if (!window_ || window_->tooltip_empty())
+						window_ = nana::shared_ptr<tooltip_interface>(factory()->create(), deleter(factory()));
+
+					window_->duration(duration);
+					window_->tooltip_text(text);
+
 					pos = pos_by_screen(pos, window_->tooltip_size());
 					window_->tooltip_move(pos, false);
 				}
@@ -286,12 +331,11 @@ namespace nana{ namespace gui{
 			}
 		}
 
-		void tooltip::show(window wd, int x, int y, const nana::string& text)
+		void tooltip::show(window wd, point pos, const nana::string& text, std::size_t duration)
 		{
 			internal_scope_guard lock;
-			nana::point pos(x, y);
 			API::calc_screen_point(wd, pos);
-			ctrl::instance()->show(pos, text);
+			ctrl::instance()->show_duration(wd, pos, text, duration);
 		}
 
 		void tooltip::close()

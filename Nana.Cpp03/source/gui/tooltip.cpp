@@ -30,7 +30,7 @@ namespace nana{ namespace gui{
 				}
 			};	//end class drawer
 
-			nana::point pos_by_screen(nana::point pos, const nana::size& sz)
+			nana::point pos_by_screen(nana::point pos, const nana::size& sz, bool overlap_allowed)
 			{
 				const nana::rectangle scr_area = API::screen_area_from_point(pos);
 				if (pos.x + sz.width > scr_area.x + scr_area.width)
@@ -40,6 +40,8 @@ namespace nana{ namespace gui{
 
 				if (pos.y + sz.height >= scr_area.y + scr_area.height)
 					pos.y = static_cast<int>(scr_area.y + scr_area.height - sz.height);
+				else if(!overlap_allowed)
+					pos.y += 20; //Add some pixels to avoid overlapping between cursor and tip window.
 
 				if (pos.y < scr_area.y)
 					pos.y = scr_area.y;
@@ -125,7 +127,7 @@ namespace nana{ namespace gui{
 							return;
 						}
 
-						pos = pos_by_screen(pos, size());
+						pos = pos_by_screen(pos, size(), false);
 					}
 					else
 						pos = pos_;
@@ -226,17 +228,6 @@ namespace nana{ namespace gui{
 					window_->tooltip_move(API::cursor_position(), true);
 				}
 
-				void show(point pos, const nana::string& text)
-				{
-					if (!window_ || window_->tooltip_empty())
-						window_ = nana::shared_ptr<tooltip_interface>(factory()->create(), deleter(factory()));
-
-					window_->duration(0);
-					window_->tooltip_text(text);
-					pos = pos_by_screen(pos, window_->tooltip_size());
-					window_->tooltip_move(pos, false);
-				}
-
 				void show_duration(window wd, point pos, const nana::string& text, std::size_t duration)
 				{
 					if (!window_ || window_->tooltip_empty())
@@ -245,7 +236,7 @@ namespace nana{ namespace gui{
 					window_->duration(duration);
 					window_->tooltip_text(text);
 
-					pos = pos_by_screen(pos, window_->tooltip_size());
+					pos = pos_by_screen(pos, window_->tooltip_size(), true);
 					window_->tooltip_move(pos, false);
 				}
 

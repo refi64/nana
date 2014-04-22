@@ -154,7 +154,7 @@ namespace nana{ namespace gui{
 				: public std::iterator<std::input_iterator_tag, item_proxy>
 			{
 			public:
-				item_proxy();
+				item_proxy(essence_t*);
 				item_proxy(essence_t*, const index_pair&);
 
 				bool empty() const;

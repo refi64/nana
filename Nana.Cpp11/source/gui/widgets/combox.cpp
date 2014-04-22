@@ -907,6 +907,11 @@ namespace nana{ namespace gui{
 				{
 					return ! this->operator==(r);
 				}
+
+				nana::any * item_proxy::_m_anyobj(bool alloc_if_empty) const
+				{
+					return impl_->anyobj(pos_, alloc_if_empty);
+				}
 			//end class item_proxy
 		}
 	}//end namespace drawerbase
@@ -1035,9 +1040,9 @@ namespace nana{ namespace gui{
 			API::refresh_window(*this);
 		}
 
-		nana::any * combox::_m_anyobj(std::size_t i, bool allocate_if_empty) const
+		nana::any * combox::_m_anyobj(std::size_t pos, bool alloc_if_empty) const
 		{
-			return get_drawer_trigger().get_drawer_impl().anyobj(i, allocate_if_empty);
+			return get_drawer_trigger().get_drawer_impl().anyobj(pos, alloc_if_empty);
 		}
 
 		auto combox::_m_at_key(std::shared_ptr<nana::detail::key_interface>&& p) -> item_proxy

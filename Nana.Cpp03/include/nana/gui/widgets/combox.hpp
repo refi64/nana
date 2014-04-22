@@ -14,9 +14,9 @@
 #define NANA_GUI_WIDGETS_COMBOX_HPP
 #include "widget.hpp"
 #include "float_listbox.hpp"
-#include <nana/concepts.hpp>
 #include <nana/key_type.hpp>
 #include <nana/memory.hpp>
+#include <nana/concepts.hpp>
 #include <functional>
 
 namespace nana{ namespace gui
@@ -75,6 +75,20 @@ namespace nana{ namespace gui
 				bool		selected() const;
 				item_proxy& icon(const nana::paint::image&);
 				nana::paint::image icon() const;
+
+				template<typename T>
+				T * anyobj() const
+				{
+					auto p = _m_anyobj(false);
+					return (p ? p->get<T>() : nullptr);
+				}
+				
+				template<typename T>
+				void anyobj(const T& t)
+				{
+					auto p = _m_anyobj(true);
+					*p = t;
+				}
 			public:
 				/// Behavior of Iterator's value_type
 				bool operator==(const nana::string& s) const;
@@ -108,6 +122,8 @@ namespace nana{ namespace gui
 				/// Behavior of Iterator
 				bool operator!=(const item_proxy&) const;
 			private:
+				nana::any * _m_anyobj(bool alloc_if_empty) const;
+			private:
 				drawer_impl * impl_;
 				std::size_t pos_;
 			};//end class item_proxy
@@ -116,7 +132,7 @@ namespace nana{ namespace gui
 
 	class combox
 		:	public widget_object<category::widget_tag, drawerbase::combox::trigger>,
-			public concepts::any_objective<std::size_t, 1>
+			public nana::concepts::any_objective<std::size_t, 1>
 	{
 	public:
 		typedef float_listbox::item_renderer item_renderer;
@@ -173,7 +189,7 @@ namespace nana{ namespace gui
 		//Override _m_caption for caption()
 		nana::string _m_caption() const;
 		void _m_caption(const nana::string&);
-		nana::any* _m_anyobj(std::size_t, bool allocate_if_empty) const;
+		nana::any * _m_anyobj(std::size_t pos, bool alloc_if_empty) const;
 		item_proxy _m_at_key(nana::shared_ptr<nana::detail::key_interface>&);
 		void _m_erase(nana::detail::key_interface*);
 	};

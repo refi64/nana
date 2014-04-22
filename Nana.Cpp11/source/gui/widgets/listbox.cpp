@@ -2555,18 +2555,22 @@ namespace nana{ namespace gui{
 			//end class trigger
 
 			//class item_proxy
-				item_proxy::item_proxy()
-					:	ess_(nullptr),
+				item_proxy::item_proxy(essence_t * ess)
+					:	ess_(ess),
 						cat_(nullptr)
 				{}
 
 				item_proxy::item_proxy(essence_t * ess, const index_pair& pos)
 					:	ess_(ess),
+						cat_(nullptr),
 						pos_(pos)
 				{
-					auto i = ess_->lister.cat_container().begin();
-					std::advance(i, pos.cat);
-					cat_ = &(*i);
+					if (ess)
+					{
+						auto i = ess_->lister.cat_container().begin();
+						std::advance(i, pos.cat);
+						cat_ = &(*i);
+					}
 				}
 
 				bool item_proxy::empty() const
@@ -2704,12 +2708,10 @@ namespace nana{ namespace gui{
 				// Behavior of Iterator
 				item_proxy & item_proxy::operator++()
 				{
-					++pos_.item;
-
-					if (pos_.item < cat_->items.size())
+					if (++pos_.item < cat_->items.size())
 						return *this;
 
-					ess_ = nullptr;
+					cat_ = nullptr;
 					return *this;
 				}
 
@@ -2717,10 +2719,9 @@ namespace nana{ namespace gui{
 				item_proxy	item_proxy::operator++(int)
 				{
 					item_proxy ip(*this);
-					++pos_.item;
 
-					if (pos_.item >= cat_->items.size())
-						ess_ = nullptr;
+					if (++pos_.item >= cat_->items.size())
+						cat_ = nullptr;
 					return ip;
 				}
 
@@ -2754,7 +2755,7 @@ namespace nana{ namespace gui{
 					if((ess_ != rhs.ess_) || (cat_ != rhs.cat_))
 						return false;
 
-					if (ess_)	//Not empty
+					if (cat_)	//Not empty
 						return (pos_ == rhs.pos_);
 
 					return true;	//Both are empty
@@ -2889,7 +2890,7 @@ namespace nana{ namespace gui{
 				//Behavior of a container
 				item_proxy cat_proxy::end() const
 				{
-					return item_proxy(nullptr, index_pair());
+					return item_proxy(ess_);
 				}
 
 				//Behavior of a container
@@ -3211,7 +3212,7 @@ namespace nana{ namespace gui{
 			ess->update();
 			if(_where.item < ess->lister.size_item(_where.cat))
 				return ip;
-			return item_proxy();
+			return item_proxy(ess);
 		}
 
 		void listbox::set_sort_compare(size_type col, std::function<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> strick_ordering)

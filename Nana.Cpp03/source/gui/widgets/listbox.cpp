@@ -2509,18 +2509,22 @@ namespace nana{ namespace gui{
 
 
 			//class item_proxy
-				item_proxy::item_proxy()
-					:	ess_(0),
+				item_proxy::item_proxy(essence_t* ess)
+					:	ess_(ess),
 						cat_(0)
 				{}
 
 				item_proxy::item_proxy(essence_t* ess, const index_pair& pos)
 					:	ess_(ess),
+						cat_(0),
 						pos_(pos)
 				{
-					std::list<category_t>::iterator i = ess_->lister.cat_container().begin();
-					std::advance(i, pos.cat);
-					cat_ = &(*i);
+					if(ess)
+					{
+						std::list<category_t>::iterator i = ess_->lister.cat_container().begin();
+						std::advance(i, pos.cat);
+						cat_ = &(*i);
+					}
 				}
 
 				bool item_proxy::empty() const
@@ -2650,11 +2654,10 @@ namespace nana{ namespace gui{
 				// Behavior of Iterator
 				item_proxy & item_proxy::operator++()
 				{
-					++pos_.item;
-					if(pos_.item < cat_->items.size())
+					if(++pos_.item < cat_->items.size())
 						return *this;
 
-					ess_ = 0;
+					cat_ = 0;
 					return *this;
 				}
 
@@ -2662,9 +2665,8 @@ namespace nana{ namespace gui{
 				item_proxy	item_proxy::operator++(int)
 				{
 					item_proxy ip(*this);
-					++pos_.item;
-					if(pos_.item >= cat_->items.size())
-						ess_ = 0;
+					if(++pos_.item >= cat_->items.size())
+						cat_ = 0;
 					return ip;
 				}
 
@@ -2698,7 +2700,7 @@ namespace nana{ namespace gui{
 					if((ess_ != rhs.ess_) || (cat_ != rhs.cat_))
 						return false;
 
-					if(ess_)		//Not empty
+					if(cat_)		//Not empty
 						return (pos_ == rhs.pos_);
 
 					return true;	//Both are empty
@@ -2815,7 +2817,7 @@ namespace nana{ namespace gui{
 				//Behavior of a container
 				item_proxy cat_proxy::end() const
 				{
-					return item_proxy(0, index_pair());
+					return item_proxy(ess_);
 				}
 
 				//Behavior of a container
@@ -3127,7 +3129,7 @@ namespace nana{ namespace gui{
 			ess->update();
 			if(_where.item < ess->lister.size_item(_where.cat))
 				return ip;
-			return item_proxy();
+			return item_proxy(ess);
 		}
 
 		void listbox::set_sort_compare(size_type col, nana::functor<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> strick_ordering)

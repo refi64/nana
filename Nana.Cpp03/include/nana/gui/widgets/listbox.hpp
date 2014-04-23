@@ -211,7 +211,7 @@ namespace nana{ namespace gui{
 				T* value_ptr() const
 				{
 					const nana::any * pany = _m_value();
-					return (pany ? pany->template get<T>() : 0);
+					return (pany ? pany->get<T>() : 0);
 				}
 
 				template<typename T>
@@ -219,11 +219,11 @@ namespace nana{ namespace gui{
 				{
 					const nana::any * pany = _m_value();
 					if(0 == pany)
-						throw std::runtime_error("treebox::item_proxy.value<T>() is empty");
+						throw std::runtime_error("listbox::item_proxy.value<T>() is empty");
 
-					T * p = pany->template get<T>();
+					T * p = pany->get<T>();
 					if(0 == p)
-						throw std::runtime_error("treebox::item_proxy.value<T>() invalid type of value");
+						throw std::runtime_error("listbox::item_proxy.value<T>() invalid type of value");
 					return *p;
 				}
 
@@ -235,9 +235,9 @@ namespace nana{ namespace gui{
 				}
 
 				/// Behavior of Iterator's value_type
-				bool operator==(const nana::string& s) const;
-				bool operator==(const char * s) const;
-				bool operator==(const wchar_t * s) const;
+				bool operator==(const nana::string&) const;
+				bool operator==(const char *) const;
+				bool operator==(const wchar_t *) const;
 
 				/// Behavior of Iterator
 				item_proxy & operator=(const item_proxy&);

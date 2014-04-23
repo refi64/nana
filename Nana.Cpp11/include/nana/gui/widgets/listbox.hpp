@@ -198,7 +198,7 @@ namespace nana{ namespace gui{
 				template<typename T>
 				void resolve_to(T& t) const
 				{
-					auto proxy = _m_resolver().template get<resolver_proxy<T> >();
+					auto proxy = _m_resolver().get<resolver_proxy<T> >();
 					if(nullptr == proxy)
 						throw std::invalid_argument("Nana.Listbox.ItemProxy: the type passed to value() does not match the resolver.");
 					
@@ -212,7 +212,7 @@ namespace nana{ namespace gui{
 				T* value_ptr() const
 				{
 					auto * pany = _m_value();
-					return (pany ? pany->template get<T>() : nullptr);
+					return (pany ? pany->get<T>() : nullptr);
 				}
 
 				template<typename T>
@@ -220,11 +220,11 @@ namespace nana{ namespace gui{
 				{
 					auto * pany = _m_value();
 					if(nullptr == pany)
-						throw std::runtime_error("treebox::item_proxy.value<T>() is empty");
+						throw std::runtime_error("listbox::item_proxy.value<T>() is empty");
 
-					T * p = pany->template get<T>();
+					T * p = pany->get<T>();
 					if(nullptr == p)
-						throw std::runtime_error("treebox::item_proxy.value<T>() invalid type of value");
+						throw std::runtime_error("listbox::item_proxy.value<T>() invalid type of value");
 					return *p;
 				}
 

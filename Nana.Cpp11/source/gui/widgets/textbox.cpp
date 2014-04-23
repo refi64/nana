@@ -463,20 +463,24 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		textbox& textbox::from(int n)
 		{
 #ifdef NANA_UNICODE
-			_m_caption(std::to_wstring(n));
+			std::wstringstream ss;
 #else
-			_m_caption(std::to_string(n));
+			std::stringstream ss;
 #endif
+			ss << n;
+			_m_caption(ss.str());
 			return *this;
 		}
 
 		textbox& textbox::from(double d)
 		{
 #ifdef NANA_UNICODE
-			_m_caption(std::to_wstring(d));
+			std::wstringstream ss;
 #else
-			_m_caption(std::to_string(d));
+			std::stringstream ss;
 #endif
+			ss << d;
+			_m_caption(ss.str());
 			return *this;
 		}
 

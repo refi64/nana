@@ -76,24 +76,37 @@ namespace nana{ namespace gui
 				nana::paint::image icon() const;
 
 				template<typename T>
-				T * anyobj() const
+				T * value_ptr() const
 				{
 					auto p = _m_anyobj(false);
 					return (p ? p->get<T>() : nullptr);
 				}
+
+				template<typename T>
+				T & value() const
+				{
+					auto * pany = _m_anyobj(false);
+					if (nullptr == pany)
+						throw std::runtime_error("combox::item_proxy.value<T>() is empty");
+
+					T * p = pany->get<T>();
+					if (nullptr == p)
+						throw std::runtime_error("combox::item_proxy.value<T>() invalid type of value");
+					return *p;
+				}
 				
 				template<typename T>
-				void anyobj(const T& t)
+				item_proxy& value(const T& t)
 				{
-					auto p = _m_anyobj(true);
-					*p = t;
+					*_m_anyobj(true) = t;
+					return *this;
 				}
 
 				template<typename T>
-				void anyobj(T&& t)
+				item_proxy& value(T&& t)
 				{
-					auto p = _m_anyobj(true);
-					*p = std::move(t);
+					*_m_anyobj(true) = std::move(t);
+					return *this;
 				}
 			public:
 				/// Behavior of Iterator's value_type

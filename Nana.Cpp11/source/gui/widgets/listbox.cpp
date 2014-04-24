@@ -26,14 +26,14 @@ namespace nana{ namespace gui{
 	{
 		namespace listbox
 		{
-			class es_header
+			class es_header   /// Essence of the columns Header
 			{
 			public:
 				typedef std::size_t size_type;
 
 				struct column_t
 				{
-					nana::string text;
+					nana::string text;  //< "text" header of the column number "index" with weigth "pixels"
 					unsigned pixels;
 					bool visible;
 					size_type index;
@@ -356,7 +356,7 @@ namespace nana{ namespace gui{
 				{
 					category_t cg;
 					cg.expand = true;
-					list_.push_back(cg);
+					list_.push_back(cg);   // we allwais have cat # 0
 				}
 
 				void bind(essence_t* ess, widget& wd)
@@ -480,7 +480,7 @@ namespace nana{ namespace gui{
 					return sorted_reverse_;
 				}
 
-				//Append a new category with a specified name.
+				///Append a new category with a specified name.
 				category_t* create_cat(const nana::string& text)
 				{
 					category_t cg;
@@ -509,7 +509,7 @@ namespace nana{ namespace gui{
 					return &list_.back();
 				}
 
-
+				/// Insert before item in "pos" a new item with "text" in column 0
 				bool insert(const index_pair& pos, const nana::string& text)
 				{
 					auto & catobj = *_m_at(pos.cat);
@@ -531,6 +531,7 @@ namespace nana{ namespace gui{
 					return true;
 				}
 
+				/// Insert  before item in "pos" a new item with "text" in column 0
 				bool insert(const index_pair& pos, nana::string&& text)
 				{
 					auto & catobj = *_m_at(pos.cat);
@@ -960,7 +961,7 @@ namespace nana{ namespace gui{
 								break;
 							}
 						}
-						if(good == false) return;
+						if(good == false) return;   // items in listbox : nothing to select (and an empty but visible cat?)
 					}
 
 					//start moving
@@ -1195,7 +1196,7 @@ namespace nana{ namespace gui{
 					if(list_.size() <= from.cat) return false;
 
 					//this is a category, so...
-					if(npos == from.item)
+					if(from.is_category())
 					{
 						//because the first is a category, and offs must not be 0, the category would not be candidated.
 						//the algorithm above to calc the offset item is always starting with a item.
@@ -1310,7 +1311,7 @@ namespace nana{ namespace gui{
 			private:
 				essence_t * ess_;
 				nana::gui::listbox * widget_;
-				std::size_t sorted_index_;		//It stands for the index of header which is used for sorting.
+				std::size_t sorted_index_;		///< The index of the column used to sort
 				bool	resort_;
 				bool	sorted_reverse_;
 				bool	ordered_categories_;	//A switch indicates whether the categories are ordered.
@@ -1336,7 +1337,7 @@ namespace nana{ namespace gui{
 				unsigned suspension_width;
 
 				es_header header;
-				es_lister lister;
+				es_lister lister;  // we have at least one emty cat. the #0
 				nana::any resolver;
 
 				state_t ptr_state;
@@ -1350,7 +1351,7 @@ namespace nana{ namespace gui{
 				{
 					static const unsigned scale = 16;
 					int offset_x;
-					index_pair offset_y;	//x stands for category, y stands for item. "y == npos" means that is a category.
+					index_pair offset_y;	//cat stands for category, item stands for item. "item == npos" means that is a category.
 
 					nana::gui::scroll<true> v;
 					nana::gui::scroll<false> h;
@@ -2020,7 +2021,7 @@ namespace nana{ namespace gui{
 						if(n-- == 0) break;
 						idx.item = 0;
 
-						state = ((npos == tracker.item) && (idx.cat == tracker.cat) ? essence_t::state_t::highlighted : essence_t::state_t::normal);
+						state = (tracker.is_category() && (idx.cat == tracker.cat) ? essence_t::state_t::highlighted : essence_t::state_t::normal);
 
 						_m_draw_categ(*i_categ, rect.x - essence_->scroll.offset_x, y, txtoff, header_w, rect, bgcolor, state);
 						y += essence_->item_size;
@@ -2500,7 +2501,7 @@ namespace nana{ namespace gui{
 					//Get the item which the mouse is placed.
 					if (lister.forward(offset_y, essence_->pointer_where.second, item_pos))
 					{
-						if (item_pos.item != npos)	//being the npos of item.second is a category
+						if (!item_pos.is_category())	//being the npos of item.second is a category
 							return;
 
 						bool do_expand = (lister.expand(item_pos.cat) == false);
@@ -2537,10 +2538,8 @@ namespace nana{ namespace gui{
 					case keyboard::os_arrow_down:
 						essence_->lister.move_select(up);
 						essence_->trace_selected_item();
-						draw();
-						API::lazy_refresh();
 						break;
-					case L' ':
+					case STR(' ') :
 						{
 							selection s;
 							bool ck = ! essence_->lister.item_selected_all_checked(s);
@@ -2551,6 +2550,8 @@ namespace nana{ namespace gui{
 					default:
 						return;
 					}
+					draw();
+					API::lazy_refresh();
 				}
 			//end class trigger
 

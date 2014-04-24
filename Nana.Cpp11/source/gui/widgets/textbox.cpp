@@ -301,10 +301,10 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			return (editor ? editor->textbase().saved() : false);
 		}
 
-		bool textbox::getline(std::size_t n, nana::string& text) const
+		bool textbox::getline(std::size_t line_index, nana::string& text) const
 		{
 			auto editor = get_drawer_trigger().editor();
-			return (editor ? editor->getline(n, text) : false);
+			return (editor ? editor->getline(line_index, text) : false);
 		}
 
 		textbox& textbox::append(const nana::string& text, bool at_caret)

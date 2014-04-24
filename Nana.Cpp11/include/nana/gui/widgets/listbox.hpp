@@ -291,7 +291,7 @@ namespace nana{ namespace gui{
 				template<typename T>
 				item_proxy append(const T& t)
 				{
-					auto proxy = _m_resolver().template get<resolver_proxy<T> >();
+					auto proxy = _m_resolver().get<resolver_proxy<T> >();
 					if(proxy)
 					{
 						auto & res = proxy->res;
@@ -303,7 +303,7 @@ namespace nana{ namespace gui{
 							ip.text(i, res->decode(i, t));
 						return ip;
 					}
-					return item_proxy();
+					return item_proxy(ess_);
 				}
 
 				size_type columns() const;

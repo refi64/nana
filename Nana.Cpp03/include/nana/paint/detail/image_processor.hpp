@@ -116,7 +116,7 @@ namespace detail
 				double rate_x = double(r_src.width) / r_dst.width;
 				double rate_y = double(r_src.height) / r_dst.height;
 				
-				const int right_bound = static_cast<int>(r_src.width) - 1;
+				const int right_bound = static_cast<int>(r_src.width) - 1 + r_src.x;
 
 				const nana::pixel_rgb_t * s_raw_pixel_buffer = s_pixbuf.raw_ptr(0);
 

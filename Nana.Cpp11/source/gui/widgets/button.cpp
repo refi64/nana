@@ -275,22 +275,25 @@ namespace drawerbase
 		{
 			window wd = widget_->handle();
 			bool eb = API::window_enabled(wd);
-			bool def_bground = true;
+
 			attr_.bgcolor = API::background(wd);
 			attr_.fgcolor = API::foreground(wd);
 
 			element_state e_state = attr_.e_state;
-			if (attr_.focused)
+			if (eb)
 			{
-				if (element_state::normal == e_state)
-					e_state = element_state::focus_normal;
-				else if (element_state::hovered == e_state)
-					e_state = element_state::focus_hovered;
+				if (attr_.focused)
+				{
+					if (element_state::normal == e_state)
+						e_state = element_state::focus_normal;
+					else if (element_state::hovered == e_state)
+						e_state = element_state::focus_hovered;
+				}
 			}
-			if (cite_.draw(graph, attr_.bgcolor, attr_.fgcolor, graph.size(), e_state))
-				def_bground = false;
+			else
+				e_state = element_state::disabled;
 
-			if(def_bground)
+			if (false == cite_.draw(graph, attr_.bgcolor, attr_.fgcolor, graph.size(), e_state))
 			{
 				_m_draw_background(graph);
 				_m_draw_border(graph);

@@ -624,6 +624,7 @@ namespace nana{	namespace gui
 			states_.push_back(element_state::focus_hovered);
 			states_.push_back(element_state::pressed);
 			states_.push_back(element_state::disabled);
+			join_.clear();
 		}
 
 		void bground::join(element_state::t target, element_state::t joiner)

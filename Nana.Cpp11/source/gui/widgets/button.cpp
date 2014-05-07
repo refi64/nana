@@ -295,8 +295,11 @@ namespace drawerbase
 
 			if (false == cite_.draw(graph, attr_.bgcolor, attr_.fgcolor, graph.size(), e_state))
 			{
-				_m_draw_background(graph);
-				_m_draw_border(graph);
+				if (bground_mode::basic != API::effects_bground_mode(wd))
+				{
+					_m_draw_background(graph);
+					_m_draw_border(graph);
+				}
 			}
 			_m_draw_title(graph, eb);
 		}

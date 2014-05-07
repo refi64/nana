@@ -95,6 +95,11 @@ namespace nana{namespace gui{
 
 			button& set_bground(const pat::cloneable<element::element_interface>&);
 			button& set_bground(const std::string&);
+
+			button& transparent(bool enable);
+			bool transparent() const;
+
+			button& edge_effects(bool enable);
 		private:
 			void _m_shortkey();
 			void _m_complete_creation();

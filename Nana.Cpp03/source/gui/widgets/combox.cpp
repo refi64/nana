@@ -345,6 +345,11 @@ namespace nana{ namespace gui{
 					pos = items_.size();
 					nana::shared_ptr<item> p(new item(kv));
 					items_.push_back(p);
+
+					//Redraw, because the state of push button is changed when a first new item is created.
+					if (0 == pos)
+						API::refresh_window(*widget_);
+
 					return pos;
 				}
 
@@ -384,6 +389,10 @@ namespace nana{ namespace gui{
 							--module_.index;
 
 						items_.erase(items_.begin() + pos);
+
+						//Redraw, because the state of push button is changed when the last item is created.
+						if (items_.empty())
+							API::refresh_window(*widget_);
 					}
 				}
 

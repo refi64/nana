@@ -447,6 +447,33 @@ namespace drawerbase
 				return *this;
 			}
 
+			button& button::transparent(bool enabled)
+			{
+				if (enabled)
+					API::effects_bground(*this, effects::bground_transparent(0), 0.0);
+				else
+					API::effects_bground_remove(*this);
+				return *this;
+			}
+
+			bool button::transparent() const
+			{
+				return (bground_mode::basic == API::effects_bground_mode(*this));
+			}
+
+			button& button::edge_effects(bool enable)
+			{
+				if (enable)
+				{
+					API::effects_edge_nimbus(*this, effects::edge_nimbus::active);
+					API::effects_edge_nimbus(*this, effects::edge_nimbus::over);
+				}
+				else
+					API::effects_edge_nimbus(*this, effects::edge_nimbus::none);
+
+				return *this;
+			}
+
 			void button::_m_shortkey()
 			{
 				eventinfo ei;

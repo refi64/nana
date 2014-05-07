@@ -93,7 +93,12 @@ namespace nana{namespace gui{
 			button& enable_focus_color(bool);              ///< Enables/Disables showing the caption with a special color to indicate the button is focused.
 
 			button& set_bground(const pat::cloneable<element::element_interface>&);	///< Sets a user-defined background element.
-			button& set_bground(const std::string&);	///< Sets a pre-defined background element by a name. 
+			button& set_bground(const std::string&);	///< Sets a pre-defined background element by a name.
+
+			button& transparent(bool enable);
+			bool transparent() const;
+
+			button& edge_effects(bool enable);
 		private:
 			void _m_shortkey();
 			void _m_complete_creation();

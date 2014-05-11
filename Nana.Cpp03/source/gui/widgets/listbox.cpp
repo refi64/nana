@@ -696,7 +696,7 @@ namespace nana{ namespace gui{
 
 				void erase(const index_pair& pos)
 				{
-					container::value_type catobj = *_m_at(pos.cat);
+					container::value_type& catobj = *_m_at(pos.cat);
 					if(pos.item < catobj.items.size())
 					{
 						catobj.items.erase(catobj.items.begin() + pos.item);

@@ -9,6 +9,7 @@ namespace nana{	namespace gui
 	{
 		struct implement;
 	public:
+		typedef std::vector<std::pair<nana::string, nana::string> > filters;
 		filebox(window owner, bool is_open_mode);
 		~filebox();
 
@@ -24,6 +25,12 @@ namespace nana{	namespace gui
 		filebox& init_path(const nana::string&);
 		filebox& init_file(const nana::string&);
 		filebox& add_filter(const nana::string& description, const nana::string& filetype);
+		filebox& add_filter(const filters & type_filters)
+		{
+			for (filters::const_iterator i = type_filters.begin(); i != type_filters.end(); ++i)
+                add_filter(i->first, i->second);
+            return *this;
+		}
 
 		nana::string path() const;
 		nana::string file() const;

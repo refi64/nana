@@ -299,9 +299,9 @@ public:
 		ready_ = false;
 	}
 	
-	bool ready() const			{	return ready_;	}
-	nana::wint_t bytes() const {	return bytes_;	}
-	nana::wint_t size() const	{	return size_;	}
+	bool		ready() const			{	return ready_;	}
+	std::size_t	bytes() const {	return bytes_;	}
+	std::size_t	size() const	{	return size_;	}
 	void reset()				{	ready_ = false;	}
 private:
 	struct helper
@@ -330,9 +330,9 @@ private:
 			++size;
 		}
 
-		nana::string path;
-		nana::wint_t bytes;
-		nana::wint_t size;
+		nana::string	path;
+		std::size_t		bytes;
+		std::size_t		size;
 		std::deque<std::pair<nana::string, bool> > files;
 	private:
 		messenger& msnger_;
@@ -372,8 +372,8 @@ private:
 
 private:
 	bool ready_;
-	nana::wint_t bytes_;
-	nana::wint_t size_;
+	std::size_t bytes_;
+	std::size_t size_;
 	std::vector<std::deque<std::pair<nana::string, bool> > > files_;
 };
 
@@ -388,21 +388,21 @@ public:
 	{
 		this->caption(STR("The FreeMe - A Sample of Nana, stdex.sf.net"));
 		
-		pic_.create(*this, 0, 0, 400, 144);
+		pic_.create(*this, nana::rectangle(0, 0, 400, 144));
 		pic_.load(STR("background.png"));
 
-		desc_.create(*this, 10, 150, 380, 110);
+		desc_.create(*this, nana::rectangle(10, 150, 380, 110));
 		desc_.caption(	STR("The FreeMe - A Sample of Nana C++ Library\n")
 						STR("Refer to stdex.sourceforge.net for the source code if you are a C++ developer.\n\n")
 						STR("The FreeMe cleans junk files in:\n    DLLCache, Prefetch, Temporary and Internet Cache Directories."));
 
-		btn_.create(*this, 270, 270, 120, 26);
+		btn_.create(*this, nana::rectangle(270, 270, 120, 26));
 		btn_.caption(STR("Scan junk files"));
-		btn_.make_event<nana::gui::events::click>(nana::functor<void()>(*this, &self_type::_m_button));
+		btn_.make_event<nana::gui::events::click>(*this, &self_type::_m_button);
 		
-		pgbar_.create(*this, 0, 310, 400, 20);
+		pgbar_.create(*this, nana::rectangle(0, 310, 400, 20));
 		
-		lbl_.create(*this, 5, 335, 400, 15);
+		lbl_.create(*this, nana::rectangle(5, 335, 400, 15));
 		lbl_.caption(STR("Nana C++ Library"));
 		this->show();
 	}

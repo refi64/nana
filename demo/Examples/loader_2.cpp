@@ -9,7 +9,7 @@ int main()
 { 
     using namespace nana::gui; 
     form fm; 
-    button btn(fm, 10, 10, 150, 23); 
+    button btn(fm, nana::rectangle(10, 10, 150, 23)); 
     btn.caption(STR("Open a new form")); 
     btn.make_event<events::click>(click); 
     fm.show(); 

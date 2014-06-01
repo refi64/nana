@@ -1,7 +1,7 @@
 
 
 #include <nana/gui/wvl.hpp>
-#include <nana/gui/widgets/buttton.hpp>
+#include <nana/gui/widgets/button.hpp>
 #include <nana/audio/player.hpp>
 #include <nana/threads/pool.hpp>
 

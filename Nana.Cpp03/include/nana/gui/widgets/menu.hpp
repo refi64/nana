@@ -23,17 +23,30 @@ namespace nana{ namespace gui{
 		{
 			struct menu_type; //declaration
 
+			struct checks
+			{
+				enum t
+				{
+					none,
+					option,
+					highlight
+				};
+			};
+
 			struct menu_item_type
 			{
-				//class item_proxy
-				//@brief: this class is used as parameter of menu event function.
+				/// This class is used as parameter of menu event function.
 				class item_proxy
-					: nana::noncopyable
 				{
 				public:
 					item_proxy(std::size_t, menu_item_type &);
-					void enabled(bool v);
-					bool enabled() const;
+					item_proxy& enabled(bool);
+					bool		enabled() const;
+
+					item_proxy&	check_style(checks::t);
+					item_proxy&	checked(bool);
+					bool		checked() const;
+
 					std::size_t index() const;
 				private:
 					std::size_t index_;
@@ -56,7 +69,7 @@ namespace nana{ namespace gui{
 				menu_type		*sub_menu;
 				nana::string	text;
 				event_fn_t	functor;
-				int				style;
+				checks::t		style;
 				paint::image	image;
 				mutable nana::char_t	hotkey;
 			};
@@ -89,7 +102,7 @@ namespace nana{ namespace gui{
 					state::t item_state;
 					bool enabled;
 					bool checked;
-					int check_style;
+					checks::t check_style;
 				};
 
 				virtual ~renderer_interface() = 0;
@@ -112,7 +125,7 @@ namespace nana{ namespace gui{
 		//let menubar access the private _m_popup() method.
 		friend class menu_accessor;
 	public:
-		enum check_t{check_none, check_option, check_highlight};
+		typedef drawerbase::menu::checks checks;
 
 		typedef drawerbase::menu::renderer_interface renderer_interface;
 		typedef drawerbase::menu::menu_item_type item_type;
@@ -121,12 +134,16 @@ namespace nana{ namespace gui{
 		
 		menu();
 		~menu();
-		void append(const nana::string& text, const event_fn_t& = event_fn_t());
-		void append_splitter();
+		
+		/// Appends an item to the menu.
+		item_proxy	append(const nana::string& text, const event_fn_t& = event_fn_t());
+		void		append_splitter();
 		void clear();
+
+		/// Closes the menu. It does not destroy the menu; just close the window for the menu.
 		void close();
 		void image(std::size_t n, const paint::image&);
-		void check_style(std::size_t n, check_t style);
+		void check_style(std::size_t n, checks::t);
 		void checked(std::size_t n, bool check);
 		bool checked(std::size_t n) const;
 		void enabled(std::size_t n, bool enable);

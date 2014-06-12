@@ -552,6 +552,9 @@ namespace nana{	namespace gui
 
 		field_t& operator<<(window wd) override
 		{
+			if (API::empty_window(wd))
+				throw std::invalid_argument("Place: An invalid window handle.");
+
 			elements.emplace_back(wd);
 			_m_make_destroy(wd);
 			return *this;

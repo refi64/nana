@@ -559,6 +559,8 @@ namespace nana{	namespace gui
 
 		field_t& operator<<(window wd)
 		{
+			if(API::empty_window(wd))
+				throw std::invalid_argument("Place: An invalid window handle.");
 			elements.push_back(wd);
 			_m_make_destroy(wd);
 			return *this;

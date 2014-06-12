@@ -163,12 +163,6 @@ namespace nana{ namespace gui{
 		menu& item_pixels(unsigned);				///< Sets the height in pixel for the items.
 		unsigned item_pixels() const;
 
-		template<typename Renderer>
-		void renderer(const Renderer& rd)			///< Sets a user-defined renderer. (See Note 5)
-		{
-			renderer(rd);
-		}
-
 		void renderer(const pat::cloneable<renderer_interface>&);	///< Sets a user-defined renderer. 
 		const pat::cloneable<renderer_interface>& renderer() const;
 

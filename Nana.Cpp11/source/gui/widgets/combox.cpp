@@ -1017,6 +1017,7 @@ namespace nana{ namespace gui{
 		void combox::option(std::size_t i)
 		{
 			get_drawer_trigger().get_drawer_impl().option(i, false);
+			API::update_window(handle());
 		}
 
 		nana::string combox::text(std::size_t i) const

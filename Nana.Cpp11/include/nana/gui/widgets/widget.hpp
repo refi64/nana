@@ -63,6 +63,7 @@ namespace gui
 		nana::point pos() const;
 		void move(int x, int y);
 		void move(int x, int y, unsigned width, unsigned height);
+		void move(const nana::rectangle&);
 
 		void foreground(nana::color_t);
 		nana::color_t foreground() const;

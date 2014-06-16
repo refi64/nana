@@ -161,10 +161,25 @@ namespace nana
 			return *this;
 		}
 
+		int rectangle::right() const
+		{
+			return static_cast<int>(x + width);
+		}
+
+		int rectangle::bottom() const
+		{
+			return static_cast<int>(y + height);
+		}
+
 		bool rectangle::is_hit(int pos_x, int pos_y) const
 		{
 			return	(x <= pos_x && pos_x < x + static_cast<int>(width)) &&
-					(y <= pos_y && pos_y < y + static_cast<int>(height));		
+					(y <= pos_y && pos_y < y + static_cast<int>(height));
+		}
+
+		bool rectangle::empty_size() const
+		{
+			return (0 == width) || (0 == height);
 		}
 	//end struct rectangle
 

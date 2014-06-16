@@ -125,6 +125,11 @@ namespace gui
 			_m_move(x, y, width, height);
 		}
 
+		void widget::move(const nana::rectangle& r)
+		{
+			_m_move(r.x, r.y, r.width, r.height);
+		}
+
 		void widget::foreground(nana::color_t value)
 		{
 			_m_foreground(value);

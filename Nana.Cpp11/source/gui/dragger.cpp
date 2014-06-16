@@ -9,7 +9,13 @@ namespace nana{ namespace gui{
 		struct drag_target_t
 		{
 			window wd;
-			nana::point origin;
+			nana::rectangle restrict_area;
+			nana::arrange	move_direction;
+			nana::point		origin;
+
+			drag_target_t(window w, const nana::rectangle& r, nana::arrange m)
+				: wd(w), restrict_area(r), move_direction(m)
+			{}
 		};
 
 		struct trigger_t
@@ -30,11 +36,30 @@ namespace nana{ namespace gui{
 			_m_clear_triggers();
 		}
 
-		void drag_target(window wd)
+		void drag_target(window wd, const nana::rectangle& restrict_area, arrange arg)
 		{
-			drag_target_t dt;
-			dt.wd = wd;
-			targets_.push_back(dt);
+			for (auto & td : targets_)
+			{
+				if (td.wd == wd)
+				{
+					td.restrict_area = restrict_area;
+					td.move_direction = arg;
+					return;
+				}
+			}
+			targets_.emplace_back(wd, restrict_area, arg);
+		}
+
+		void remove_target(window wd)
+		{
+			for (auto i = targets_.begin(); i != targets_.end(); ++i)
+			{
+				if (i->wd == wd)
+				{
+					targets_.erase(i);
+					return;
+				}
+			}
 		}
 
 		void trigger(window wd)
@@ -76,6 +101,21 @@ namespace nana{ namespace gui{
 			}
 		}
 
+		void _m_check_restrict_area(nana::point & pos, const nana::size & size, const nana::rectangle& restr_area)
+		{
+			if ((pos.x > 0) && (static_cast<int>(size.width) + pos.x > restr_area.right()))
+				pos.x = restr_area.right() - static_cast<int>(size.width);
+
+			if (pos.x < restr_area.x)
+				pos.x = restr_area.x;
+
+			if ((pos.y > 0) && (static_cast<int>(size.height) + pos.y > restr_area.bottom()))
+				pos.y = restr_area.bottom() - static_cast<int>(size.height);
+
+			if (pos.y < restr_area.y)
+				pos.y = restr_area.y;
+		}
+
 		void _m_trace(const eventinfo& ei)
 		{
 			switch(ei.identifier)
@@ -103,16 +143,29 @@ namespace nana{ namespace gui{
 						if(API::is_window_zoomed(t.wd, true) == false)
 						{
 							window owner = API::get_owner_window(t.wd);
-							if(owner)
-							{
-								nana::point wdps = t.origin;
+
+							nana::point wdps = t.origin;
+							if (owner)
 								API::calc_window_point(owner, wdps);
+
+							switch (t.move_direction)
+							{
+							case nana::arrange::horizontal:
+								wdps.x += pos.x;
+								break;
+							case nana::arrange::vertical:
+								wdps.y += pos.y;
+								break;
+							default:
 								wdps.x += pos.x;
 								wdps.y += pos.y;
-								API::move_window(t.wd, wdps.x, wdps.y);
+								break;
 							}
-							else
-								API::move_window(t.wd, t.origin.x + pos.x, t.origin.y + pos.y);
+
+							if (!t.restrict_area.empty_size())
+								_m_check_restrict_area(wdps, API::window_size(t.wd), t.restrict_area);
+
+							API::move_window(t.wd, wdps.x, wdps.y);
 						}
 					}
 				}
@@ -146,7 +199,17 @@ namespace nana{ namespace gui{
 
 		void dragger::target(window wd)
 		{
-			impl_->drag_target(wd);
+			impl_->drag_target(wd, rectangle(), nana::arrange::horizontal_vertical);
+		}
+
+		void dragger::target(window wd, const rectangle& restrict_area, nana::arrange arg)
+		{
+			impl_->drag_target(wd, restrict_area, arg);
+		}
+
+		void dragger::remove_target(window wd)
+		{
+			impl_->remove_target(wd);
 		}
 
 		void dragger::trigger(window tg)

@@ -191,7 +191,11 @@ namespace nana
 		rectangle & operator=(const size&);
 
 		rectangle& pare_off(int pixels);
+
+		int right() const;
+		int bottom() const;
 		bool is_hit(int x, int y) const;
+		bool empty_size() const;
 
 		int x;
 		int y;

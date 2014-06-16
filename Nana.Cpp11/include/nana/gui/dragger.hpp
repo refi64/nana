@@ -19,6 +19,8 @@ namespace nana{ namespace gui
 		dragger();
 		~dragger();
 		void target(window);
+		void target(window, const rectangle& restrict_area, nana::arrange);
+		void remove_target(window);
 		void trigger(window);
 	private:
 		dragger_impl_t * impl_;

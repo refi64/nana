@@ -1,6 +1,6 @@
 /*
  *	An Implementation of Place for Layout
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
@@ -15,21 +15,49 @@
 #include <cstring>
 #include <nana/gui/place.hpp>
 #include <nana/gui/programming_interface.hpp>
+#include <nana/gui/widgets/widget.hpp>
+#include <nana/gui/dragger.hpp>
 
 
 namespace nana{	namespace gui
 {
+	namespace place_parts
+	{
+		class splitter_interface
+		{
+		public:
+			virtual ~splitter_interface(){}
+		};
+
+		class splitter_dtrigger
+			: public drawer_trigger
+		{
+		};
+
+		template<bool IsLite>
+		class splitter
+			:	public widget_object <typename std::conditional<IsLite, category::lite_widget_tag, category::widget_tag>::type, splitter_dtrigger>,
+				public splitter_interface
+		{
+		};
+	}//end namespace place_parts
+
 	//number_t is used for storing a number type variable
 	//such as integer, real and percent. Essentially, percent is a typo of real.
 	class number_t
 	{
 	public:
-		enum class kind{integer, real, percent};
+		enum class kind{none, integer, real, percent};
 
 		number_t()
-			: kind_(kind::integer)
+			: kind_(kind::none)
 		{
 			value_.integer = 0;
+		}
+
+		bool is_none() const
+		{
+			return (kind::none == kind_);
 		}
 
 		kind kind_of() const
@@ -82,7 +110,7 @@ namespace nana{	namespace gui
 	public:
 		enum class token
 		{
-			div_start, div_end,
+			div_start, div_end, splitter,
 			identifier, vertical, grid, number, array,
 			weight, gap, margin,
 			equal,
@@ -117,6 +145,9 @@ namespace nana{	namespace gui
 			{
 			case '\0':
 				return token::eof;
+			case '|':
+				++sp_;
+				return token::splitter;
 			case '=':
 				++sp_;
 				return token::equal;
@@ -336,6 +367,7 @@ namespace nana{	namespace gui
 		class div_arrange;
 		class div_vertical_arrange;
 		class div_grid;
+		class div_splitter;
 
 		window window_handle;
 		event_handle event_size_handle;
@@ -364,7 +396,7 @@ namespace nana{	namespace gui
 		{
 			enum class kind
 			{
-				window, gap, fixed, percent, room
+				splitter, window, gap, fixed, percent, room
 			};
 
 			kind kind_of_element;
@@ -656,13 +688,15 @@ namespace nana{	namespace gui
 	class place::implement::division
 	{
 	public:
-		enum class kind{arrange, vertical_arrange, grid};
+		enum class kind{arrange, vertical_arrange, grid, splitter};
 
 		division(kind k, std::string&& n)
 			:	kind_of_division(k),
 				name(std::move(n)),
 				margin_for_all(true),
-				field(nullptr)
+				field(nullptr),
+				div_next(nullptr),
+				div_owner(nullptr)
 		{}
 
 		virtual ~division()
@@ -679,12 +713,12 @@ namespace nana{	namespace gui
 
 		bool is_fixed() const
 		{
-			return ((weight.kind_of() == number_t::kind::integer) && (weight.integer() != 0));
+			return (weight.kind_of() == number_t::kind::integer);
 		}
 
 		bool is_percent() const
 		{
-			return ((weight.kind_of() == number_t::kind::percent) && (weight.real() != 0));
+			return (weight.kind_of() == number_t::kind::percent);
 		}
 
 		//return the fixed pixels and adjustable items.
@@ -835,7 +869,19 @@ namespace nana{	namespace gui
 			return r;
 		}
 
-		virtual void collocate() = 0;
+		division * find_last_adjustable()
+		{
+			for (auto i = children.rbegin(); i != children.rend(); ++i)
+			{
+				if (false == (*i)->is_fixed())
+					return (*i);
+			}
+			return nullptr;
+		}
+
+		//Collocate the division and its children divisions,
+		//The window parameter is specified for the window which the place object binded.
+		virtual void collocate(window) = 0;
 
 	public:
 		kind kind_of_division;
@@ -848,6 +894,7 @@ namespace nana{	namespace gui
 		bool margin_for_all;	//the first element stands for all edge if margin_for_all is true.
 		std::vector<number_t> margin;
 		field_impl * field;
+		division * div_next, *div_owner;
 	};
 
 
@@ -860,7 +907,7 @@ namespace nana{	namespace gui
 			: division(kind::arrange, std::move(name))
 		{}
 
-		virtual void collocate()
+		void collocate(window wd) override
 		{
 			const nana::rectangle area = margin_area();
 
@@ -900,9 +947,20 @@ namespace nana{	namespace gui
 						adj_px = adjustable_pixels;
 				}
 
+				//Use right to calc width is to avoid deviation
+				int right = static_cast<int>(left + adj_px);
+				child->field_area.width = static_cast<unsigned>(right - child->field_area.x);
+				if (gap_size && (child->field_area.height > gap_size))
+					child->field_area.width -= gap_size;
+
 				left += adj_px;
-				child->field_area.width = static_cast<unsigned>(adj_px)-(static_cast<unsigned>(adj_px) > gap_size ? gap_size : 0);
-				child->collocate();	/// The child div have full position. Now we can collocate  inside it the child fields and child-div. 
+				child->collocate(wd);	/// The child div have full position. Now we can collocate  inside it the child fields and child-div. 
+			}
+
+			auto last_div = find_last_adjustable();
+			if (last_div && (left < this->field_area.width))
+			{
+				last_div->field_area.height += static_cast<unsigned>(field_area.width - left);
 			}
 
 			if(field)
@@ -957,7 +1015,7 @@ namespace nana{	namespace gui
 			: division(kind::vertical_arrange, std::move(name))
 		{}
 
-		virtual void collocate()
+		void collocate(window wd) override
 		{
 			nana::rectangle area = margin_area();
 			auto pair = fixed_pixels(kind::vertical_arrange);		/// Calcule in first the summe of all fixed fields in this div and in all child div. In second count unproseced fields
@@ -976,7 +1034,6 @@ namespace nana{	namespace gui
 			pair.first += static_cast<unsigned>(percent_pixels);
 			double adjustable_pixels = (pair.second && pair.first < area.height ? (double(area.height - pair.first) / pair.second) : 0.0);
 
-
 			double top = area.y;
 			for(auto child : children)
 			{
@@ -990,7 +1047,7 @@ namespace nana{	namespace gui
 					if(false == child->is_percent())
 					{
 						adj_px = child->fixed_pixels(kind::vertical_arrange).first;
-						if(adj_px <= adjustable_pixels)
+						if (adj_px <= adjustable_pixels)
 							adj_px = adjustable_pixels;
 					}
 					else
@@ -999,9 +1056,20 @@ namespace nana{	namespace gui
 				else
 					adj_px = child->weight.integer();
 
+				//Use bottom to calc height is to avoid deviation.
+				int bottom = static_cast<int>(top + adj_px);
+				child->field_area.height = static_cast<unsigned>(bottom - child->field_area.y);
+				if (gap_size && (child->field_area.height > gap_size))
+					child->field_area.height -= gap_size;
+
 				top += adj_px;
-				child->field_area.height = static_cast<unsigned>(adj_px)-(static_cast<unsigned>(adj_px) > gap_size ? gap_size : 0);
-				child->collocate();
+				child->collocate(wd);
+			}
+
+			auto last_div = find_last_adjustable();
+			if (last_div && (top < this->field_area.height))
+			{
+				last_div->field_area.height += static_cast<unsigned>(field_area.height - top);
 			}
 
 			if(field)
@@ -1059,7 +1127,7 @@ namespace nana{	namespace gui
 			dimension.first = dimension.second = 0;
 		}
 
-		virtual void collocate()
+		void collocate(window wd) override
 		{
 			if(nullptr == field)
 				return;
@@ -1262,6 +1330,141 @@ namespace nana{	namespace gui
 		std::pair<unsigned, unsigned> dimension;
 	};//end class div_grid
 
+	class place::implement::div_splitter
+		: public division
+	{
+		struct div_block
+		{
+			division * div;
+			int	pixels;
+			double		scale;
+
+			div_block(division* d, int px)
+				: div(d), pixels(px)
+			{}
+		};
+	public:
+		div_splitter()
+			:	division(kind::splitter, std::string()),
+				splitter_cursor_(gui::cursor::arrow),
+				leaf_left_(nullptr), leaf_right_(nullptr),
+				pause_move_collocate_(false)
+		{
+			this->weight.assign(4);
+		}
+
+		void leaf_left(division * d)
+		{
+			leaf_left_ = d;
+		}
+
+		void leaf_right(division * d)
+		{
+			leaf_right_ = d;
+		}
+
+		void direction(bool horizontal)
+		{
+			splitter_cursor_ = (horizontal ? cursor::size_we : cursor::size_ns);
+		}
+	private:
+		void collocate(window wd) override
+		{
+			if (splitter_.empty())
+			{
+				splitter_.create(wd);
+				splitter_.cursor(splitter_cursor_);
+
+				dragger_.trigger(splitter_);
+				splitter_.make_event<events::mouse_down>([this](const eventinfo& ei)
+				{
+					if (false == ei.mouse.left_button)
+						return;
+
+					begin_point_ = splitter_.pos();
+
+					auto px_ptr = &nana::rectangle::width;
+
+					left_pos_ = leaf_left_->field_area.x;
+					right_pos_ = leaf_right_->field_area.x + leaf_right_->field_area.width;
+					if (nana::gui::cursor::size_we != splitter_cursor_)
+					{
+						left_pos_ = leaf_left_->field_area.y;
+						right_pos_ = leaf_right_->field_area.y + leaf_right_->field_area.height;
+						px_ptr = &nana::rectangle::height;
+					}
+
+					left_pixels_ = leaf_left_->field_area.*px_ptr;
+					right_pixels_ = leaf_right_->field_area.*px_ptr;
+				});
+
+				splitter_.make_event<events::mouse_move>([this](const eventinfo& ei)
+				{
+					if (false == ei.mouse.left_button)
+						return;
+
+					int delta = splitter_.pos().x - begin_point_.x;
+					auto px_ptr = &nana::rectangle::width;
+					if (nana::gui::cursor::size_we != splitter_cursor_)
+					{
+						delta = splitter_.pos().y - begin_point_.y;
+						px_ptr = &nana::rectangle::height;
+					}
+
+					int total_pixels = static_cast<int>(left_pixels_ + right_pixels_);
+
+					int w = static_cast<int>(left_pixels_) + delta;
+					if (w > total_pixels)
+						w = total_pixels;
+					else if (w < 0)
+						w = 0;
+
+					leaf_left_->weight.assign_percent(100.0 * w / div_owner->field_area.*px_ptr);
+
+					w = static_cast<int>(right_pixels_) - delta;
+					if (w > total_pixels)
+						w = total_pixels;
+					else if (w < 0)
+						w = 0;
+
+					leaf_right_->weight.assign_percent(100.0 * w / div_owner->field_area.*px_ptr);
+
+					pause_move_collocate_ = true;
+					div_owner->collocate(splitter_.parent());
+					pause_move_collocate_ = false;
+				});
+			}
+
+			nana::rectangle restrict_area = leaf_left_->field_area;
+			if (nana::gui::cursor::size_we == splitter_cursor_)
+			{
+				restrict_area.width += field_area.width;
+				restrict_area.width += leaf_right_->field_area.width;
+			}
+			else
+			{
+				restrict_area.height += field_area.height;
+				restrict_area.height += leaf_right_->field_area.height;
+			}
+
+			dragger_.target(splitter_, restrict_area, (gui::cursor::size_ns == splitter_cursor_ ? nana::arrange::vertical : nana::arrange::horizontal));
+
+
+			if (false == pause_move_collocate_)
+				splitter_.move(this->field_area);
+		}
+	private:
+		nana::gui::cursor	splitter_cursor_;
+		place_parts::splitter<true>	splitter_;
+		nana::point	begin_point_;
+		division * leaf_left_;
+		division * leaf_right_;
+		int			left_pos_, right_pos_;
+		unsigned	left_pixels_, right_pixels_;
+		dragger	dragger_;
+		bool	pause_move_collocate_;	//A flag represents whether do move when collocating.
+	};
+
 	place::implement::~implement()
 	{
 		API::umake_event(event_size_handle);
@@ -1307,10 +1510,30 @@ namespace nana{	namespace gui
 		for(token tk = tknizer.read(); tk != token::eof; tk = tknizer.read())
 		{
 			bool exit_for = false;
-			switch(tk)
+			switch (tk)
 			{
+			case token::splitter:
+				if (!children.empty() && (division::kind::splitter != children.back()->kind_of_division))	//Ignore the splitter when there is not a division.
+				{
+					auto splitter = new div_splitter;
+
+					splitter->leaf_left(children.back());
+					children.back()->div_next = splitter;
+					children.push_back(splitter);
+				}
+				break;
 			case token::div_start:
-				children.push_back(scan_div(tknizer));
+				{
+					auto div = scan_div(tknizer);
+
+					if (children.size())
+					{
+						children.back()->div_next = div;
+						if (division::kind::splitter == children.back()->kind_of_division)
+							dynamic_cast<div_splitter&>(*children.back()).leaf_right(div);
+					}
+					children.push_back(div);
+				}
 				break;
 			case token::vertical:
 			case token::grid:
@@ -1422,6 +1645,25 @@ namespace nana{	namespace gui
 		div->weight = weight;
 		div->gap = gap;
 		div->field = field;		//attach the field to the division
+
+		if (children.size() && (division::kind::splitter == children.back()->kind_of_division))
+		{
+			//Erase the splitter if the last one is a splitter.
+			delete children.back();
+			children.pop_back();
+
+			if (children.size())
+				children.back()->div_next = nullptr;
+		}
+
+		for (auto child : children)
+		{
+			child->div_owner = div;
+			if (division::kind::splitter == child->kind_of_division)
+			{
+				dynamic_cast<div_splitter&>(*child).direction(div_type != token::vertical);
+			}
+		}
 		div->children.swap(children);
 		div->margin_for_all = margin_for_all;
 		div->margin.swap(margin);
@@ -1457,7 +1699,7 @@ namespace nana{	namespace gui
 					if(impl_->root_division)
 					{
 						impl_->root_division->field_area = API::window_size(ei.window);
-						impl_->root_division->collocate();
+						impl_->root_division->collocate(ei.window);
 					}
 				});
 		}
@@ -1518,7 +1760,7 @@ namespace nana{	namespace gui
 			if(impl_->root_division && impl_->window_handle)
 			{
 				impl_->root_division->field_area = API::window_size(impl_->window_handle);
-				impl_->root_division->collocate();
+				impl_->root_division->collocate(impl_->window_handle);
 
 				for(auto & field : impl_->fields)
 				{

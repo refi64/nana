@@ -188,8 +188,10 @@ namespace nana
 
 		rectangle& pare_off(int pixels);	 ///<Pares the specified pixels off the rectangle. It's equal to x += pixels; y + pixels; width -= (pixels << 1); height -= (pixels << 1);
 
-
+		int right() const;
+		int bottom() const;
 		bool is_hit(int x, int y) const;
+		bool empty_size() const;
 
 		int x;
 		int y;

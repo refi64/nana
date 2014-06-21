@@ -172,6 +172,17 @@ namespace gui
 		{
 			return handle_;
 		}
+
+		widget_object& borderless(bool enable)
+		{
+			API::widget_borderless(handle_, enable);
+			return *this;
+		}
+
+		bool borderless() const
+		{
+			return API::widget_borderless(handle_);
+		}
 	protected:
 		DrawerTrigger& get_drawer_trigger()
 		{

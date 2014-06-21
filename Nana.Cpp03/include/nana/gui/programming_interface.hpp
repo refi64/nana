@@ -242,7 +242,14 @@ namespace API
 	void detach_menubar(window menubar);
 	void restore_menubar_taken_window();
 
+	//Tests a window whether it is maximized or minimized.
 	bool is_window_zoomed(window, bool ask_for_max);
+
+	//Enables or disables a borderless widget.
+	void widget_borderless(window, bool);
+	//Tests a widget whether it is borderless.
+	bool widget_borderless(window);
+
 
 	nana::gui::mouse_action::t mouse_action(window);
 	nana::gui::element_state::t element_state(window);

@@ -1581,6 +1581,13 @@ namespace nana{ namespace gui{
 				{
 					if(header.visible())
 					{
+						if (lister.wd_ptr()->borderless())
+						{
+							r = graph->size();
+							r.height = header_size;
+							return !r.empty_size();
+						}
+
 						const unsigned ex_width = 4 + (scroll.v.empty() ? 0 : scroll.scale - 1);
 						if(graph->width() > ex_width)
 						{
@@ -1596,15 +1603,29 @@ namespace nana{ namespace gui{
 
 				bool rect_lister(nana::rectangle& r) const
 				{
-					unsigned width = 4 + (scroll.v.empty() ? 0 : scroll.scale - 1);
-					unsigned height = 2 + (scroll.h.empty() ? 0 : scroll.scale) + (header.visible() ? header_size : 0);
+					unsigned head_pixels = (header.visible() ? header_size : 0);
+					unsigned width = (scroll.v.empty() ? 0 : scroll.scale - 1);
+					unsigned height = (scroll.h.empty() ? 0 : scroll.scale) + head_pixels;
 
-					if(graph->width() <= width || graph->height() <= height) return false;
+					if (!lister.wd_ptr()->borderless())
+					{
+						width += 4;
+						height += 2;
 
-					r.x = 2;
-					r.y = (header.visible() ? header_size + 1 : 1);
-					r.width = graph->width() - width;
-					r.height = graph->height() - height;
+						r.x = 2;
+						r.y = head_pixels + 1;
+					}
+					else
+					{
+						r.x = 0;
+						r.y = head_pixels;
+					}
+
+					nana::size gsz = graph->size();
+					if(gsz.width <= width || gsz.height <= height) return false;
+
+					r.width = gsz.width - width;
+					r.height = gsz.height - height;
 					return true;
 				}
 
@@ -2147,6 +2168,9 @@ namespace nana{ namespace gui{
 
 				void _m_draw_border(int x, int y, unsigned width) const
 				{
+					if (API::widget_borderless(*essence_->lister.wd_ptr()))
+						return;
+
 					//Draw selecting inner rectangle
 					nana::paint::graphics * graph = essence_->graph;
 					graph->rectangle(x , y , width, essence_->item_size, 0x99DEFD, false);

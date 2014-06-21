@@ -1259,10 +1259,34 @@ namespace API
 
 	bool is_window_zoomed(window wd, bool ask_for_max)
 	{
-		internal_scope_guard isg;
+		internal_scope_guard lock;
 		auto const iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 		if(restrict::window_manager.available(iwd))
 			return detail::bedrock::interface_type::is_window_zoomed(iwd->root, ask_for_max);
+		return false;
+	}
+
+	void widget_borderless(window wd, bool enabled)
+	{
+		auto const iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+		internal_scope_guard lock;
+		if (restrict::window_manager.available(iwd))
+		{
+			if ((gui::category::widget_tag::value == iwd->other.category) && (iwd->flags.borderless != enabled))
+			{
+				iwd->flags.borderless = enabled;
+				restrict::window_manager.update(iwd, true, false);
+			}
+		}
+	}
+
+	bool widget_borderless(window wd)
+	{
+		auto const iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+		internal_scope_guard lock;
+		if (restrict::window_manager.available(iwd))
+			return iwd->flags.borderless;
+
 		return false;
 	}
 

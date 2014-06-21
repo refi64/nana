@@ -149,7 +149,8 @@ namespace detail
 			bool destroying	:1;
 			bool dropable	:1; //Whether the window has make mouse_drop event.
 			bool fullscreen	:1;	//When the window is maximizing whether it fit for fullscreen.
-			unsigned Reserved: 23;
+			bool borderless :1;
+			unsigned Reserved	:22;
 			unsigned char tab;		//indicate a window that can receive the keyboard TAB
 			mouse_action	action;
 		}flags;

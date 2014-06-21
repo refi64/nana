@@ -317,6 +317,7 @@ namespace nana{	namespace gui{
 				flags.action = mouse_action::normal;
 				flags.refreshing = false;
 				flags.destroying = false;
+				flags.borderless = false;
 
 				visible = false;
 

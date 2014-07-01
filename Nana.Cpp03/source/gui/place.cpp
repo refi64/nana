@@ -418,39 +418,48 @@ namespace nana{	namespace gui
 				room_t	*	room_ptr;
 			}u;
 
+			mutable event_handle destroy_handle_if_window;	//Useless if the kind is not a window
+
 			element_t(window wd)
-				: kind_of_element(kind::window)
+				:	kind_of_element(kind::window),
+					destroy_handle_if_window(0)
 			{
 				u.handle = wd;
 			}
 
 			element_t(unsigned gap)
-				: kind_of_element(kind::gap)
+				:	kind_of_element(kind::gap),
+					destroy_handle_if_window(0)
 			{
 				u.gap_value = gap;
 			}
 
 			element_t(const fixed_t& fixed)
-				: kind_of_element(kind::fixed)
+				:	kind_of_element(kind::fixed),
+					destroy_handle_if_window(0)
 			{
 				u.fixed_ptr = new fixed_t(fixed);
 			}
 
 			element_t(const percent_t& per)
-				: kind_of_element(kind::percent)
+				:	kind_of_element(kind::percent),
+					destroy_handle_if_window(0)
 			{
 				u.percent_ptr = new percent_t(per);
 			}
 
 			element_t(const room_t& rm)
-				: kind_of_element(kind::room)
+				:	kind_of_element(kind::room),
+					destroy_handle_if_window(0)
 			{
 				u.room_ptr = new room_t(rm);
 			}
 
 			element_t(const element_t& rhs)
-				: kind_of_element(rhs.kind_of_element)
+				:	kind_of_element(rhs.kind_of_element),
+					destroy_handle_if_window(rhs.destroy_handle_if_window)
 			{
+				rhs.destroy_handle_if_window = 0;
 				switch(kind_of_element)
 				{
 				case kind::fixed:
@@ -473,6 +482,8 @@ namespace nana{	namespace gui
 			    if(this != &rhs)
                 {
                     kind_of_element = rhs.kind_of_element;
+					destroy_handle_if_window = rhs.destroy_handle_if_window;
+					rhs.destroy_handle_if_window = 0;
 
                     switch(kind_of_element)
                     {
@@ -495,6 +506,7 @@ namespace nana{	namespace gui
 
 			~element_t()
 			{
+				API::umake_event(destroy_handle_if_window);
 				switch(kind_of_element)
 				{
 				case kind::fixed:
@@ -584,9 +596,9 @@ namespace nana{	namespace gui
 
 		//Listen to destroy of a window
 		//It will delete the element and recollocate when the window destroyed.
-		void _m_make_destroy(window wd)
+		event_handle _m_make_destroy(window wd)
 		{
-			API::make_event<events::destroy>(wd, element_destroy_handler(this));
+			return API::make_event<events::destroy>(wd, element_destroy_handler(this));
 		}
 
 		field_t& operator<<(window wd)
@@ -594,7 +606,7 @@ namespace nana{	namespace gui
 			if(API::empty_window(wd))
 				throw std::invalid_argument("Place: An invalid window handle.");
 			elements.push_back(wd);
-			_m_make_destroy(wd);
+			elements.back().destroy_handle_if_window = _m_make_destroy(wd);
 			return *this;
 		}
 
@@ -607,14 +619,14 @@ namespace nana{	namespace gui
 		field_t& operator<<(const fixed_t& fx)
 		{
 			elements.push_back(fx);
-			_m_make_destroy(fx.first);
+			elements.back().destroy_handle_if_window = _m_make_destroy(fx.first);
 			return *this;
 		}
 
 		field_t& operator<<(const percent_t& pcnt)
 		{
 			elements.push_back(pcnt);
-			_m_make_destroy(pcnt.first);
+			elements.back().destroy_handle_if_window = _m_make_destroy(pcnt.first);
 			return *this;
 		}
 
@@ -626,7 +638,7 @@ namespace nana{	namespace gui
 			if(x.second.second == 0)
 				x.second.second = 1;
 			elements.push_back(x);
-			_m_make_destroy(r.first);
+			elements.back().destroy_handle_if_window = _m_make_destroy(r.first);
 			return *this;
 		}
 

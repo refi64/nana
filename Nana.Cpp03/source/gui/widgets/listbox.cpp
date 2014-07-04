@@ -320,16 +320,32 @@ namespace nana{ namespace gui{
 				struct weak_ordering
 				{
 					category_t& cat;
-					bool neg;
-					std::size_t si;
+					bool reverse;
+					std::size_t sorted_index;
 
-					weak_ordering(category_t& cat, bool neg, std::size_t si)
-						: cat(cat), neg(neg), si(si)
+					weak_ordering(category_t& cat, bool reverse, std::size_t si)
+						: cat(cat), reverse(reverse), sorted_index(si)
 					{}
 
 					bool operator()(std::size_t x, std::size_t y)
 					{
-						return (neg ? cat.items[x].texts[si] > cat.items[y].texts[si] : cat.items[x].texts[si] < cat.items[y].texts[si]);
+						item_t & item_x = cat.items[x];
+						item_t & item_y = cat.items[y];
+
+						if (item_x.texts.size() <= sorted_index || item_y.texts.size() <= sorted_index)
+						{
+							nana::string a;
+							if (item_x.texts.size() > sorted_index)
+								a = item_x.texts[sorted_index];
+
+							nana::string b;
+							if (item_y.texts.size() > sorted_index)
+								b = item_y.texts[sorted_index];
+
+							return (reverse ? a > b : a < b);
+						}
+
+						return (reverse ? item_x.texts[sorted_index] > item_y.texts[sorted_index] : item_x.texts[sorted_index] < item_y.texts[sorted_index]);
 					}
 				};
 
@@ -337,22 +353,34 @@ namespace nana{ namespace gui{
 				struct weak_ordering_udcomp
 				{
 					category_t& cat;
-					bool neg;
-					std::size_t si;
+					bool reverse;
+					std::size_t sorted_index;
 					typedef nana::functor<bool(const nana::string&, nana::any*, const nana::string&, nana::any*, bool reverse)> compare_t;
 					compare_t comp;
 
-					weak_ordering_udcomp(category_t& cat, bool neg, std::size_t si, const compare_t& comp)
-						: cat(cat), neg(neg), si(si), comp(comp)
+					weak_ordering_udcomp(category_t& cat, bool sort_reverse, std::size_t si, const compare_t& comp)
+						: cat(cat), reverse(sort_reverse), sorted_index(si), comp(comp)
 					{}
 
 					bool operator()(std::size_t x, std::size_t y)
 					{
 						item_t & mx = cat.items[x];
 						item_t & my = cat.items[y];
-						const nana::string& a = mx.texts[si];
-						const nana::string& b = my.texts[si];
-						return comp(a, mx.anyobj, b, my.anyobj, neg);
+
+						if(mx.texts.size() <= sorted_index || my.texts.size() <= sorted_index)
+						{
+							nana::string a;
+							if (mx.texts.size() > sorted_index)
+								a = mx.texts[sorted_index];
+
+							nana::string b;
+							if (my.texts.size() > sorted_index)
+								b = my.texts[sorted_index];
+
+							return comp(a, mx.anyobj, b, my.anyobj, reverse);
+						}
+
+						return comp(mx.texts[sorted_index], mx.anyobj, my.texts[sorted_index], my.anyobj, reverse);
 					}
 				};
 

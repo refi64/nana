@@ -408,9 +408,20 @@ namespace nana{ namespace gui{
 									//!comp(x, y) != comp(x, y)
 									auto & mx = cat.items[x];
 									auto & my = cat.items[y];
-									auto & a = mx.texts[sorted_index_];
-									auto & b = my.texts[sorted_index_];
-									return weak_ordering_comp(a, mx.anyobj, b, my.anyobj, sorted_reverse_);
+									if (mx.texts.size() <= sorted_index_ || my.texts.size() <= sorted_index_)
+									{
+										nana::string a;
+										if (mx.texts.size() > sorted_index_)
+											a = mx.texts[sorted_index_];
+
+										nana::string b;
+										if (my.texts.size() > sorted_index_)
+											b = my.texts[sorted_index_];
+
+										return weak_ordering_comp(a, mx.anyobj, b, my.anyobj, sorted_reverse_);
+									}
+
+									return weak_ordering_comp(mx.texts[sorted_index_], mx.anyobj, my.texts[sorted_index_], my.anyobj, sorted_reverse_);
 								});
 						}
 					}
@@ -419,8 +430,24 @@ namespace nana{ namespace gui{
 						for(auto & cat: list_)
 						{
 							std::sort(std::begin(cat.sorted), std::end(cat.sorted), [&cat, this](std::size_t x, std::size_t y){
-									auto & a = cat.items[x].texts[sorted_index_];
-									auto & b = cat.items[y].texts[sorted_index_];
+									auto & item_x = cat.items[x];
+									auto & item_y = cat.items[y];
+
+									if (item_x.texts.size() <= sorted_index_ || item_y.texts.size() <= sorted_index_)
+									{
+										nana::string a;
+										if (item_x.texts.size() > sorted_index_)
+											a = item_x.texts[sorted_index_];
+
+										nana::string b;
+										if (item_y.texts.size() > sorted_index_)
+											b = item_y.texts[sorted_index_];
+
+										return (sorted_reverse_ ? a > b : a < b);
+									}
+
+									auto & a = item_x.texts[sorted_index_];
+									auto & b = item_y.texts[sorted_index_];
 									return (sorted_reverse_ ? a > b : a < b);
 								});
 						}

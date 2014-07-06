@@ -713,6 +713,17 @@ namespace nana{	namespace gui
 			name.swap(n);
 		}
 
+		division(kind::t k, const std::string& n)
+			:	kind_of_division(k),
+				name(n),
+				margin_for_all(true),
+				field(0),
+				div_next(0),
+				div_owner(0)
+		{
+		}
+
+
 		virtual ~division()
 		{
 			//detach the field
@@ -1013,6 +1024,8 @@ namespace nana{	namespace gui
 						API::move_window(el.u.room_ptr->first, x, area.y, adj_px, area.height);
 						left += adjustable_pixels;
 						break;
+					default:
+						break;
 					}
 				}
 
@@ -1117,6 +1130,8 @@ namespace nana{	namespace gui
 					case ekind::room:
 						API::move_window(el.u.room_ptr->first, r.x, r.y, r.width, adj_px);
 						top += adjustable_pixels;
+						break;
+					default:
 						break;
 					}
 				}
@@ -1382,7 +1397,7 @@ namespace nana{	namespace gui
 			splitter_cursor_ = (horizontal ? cursor::size_we : cursor::size_ns);
 		}
 	private:
-		void collocate(window wd) override
+		void collocate(window wd)
 		{
 			if (splitter_.empty())
 			{

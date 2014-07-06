@@ -512,25 +512,25 @@ namespace nana{	namespace gui
 
 			element_t& operator=(element_t && rv)
 			{
-                if(this != &rv)
-                {
+				if(this != &rv)
+				{
 					u = rv.u;
-                    kind_of_element = rv.kind_of_element;
+					kind_of_element = rv.kind_of_element;
 					destroy_handle_if_window = rv.destroy_handle_if_window;
-                    switch(kind_of_element)
-                    {
-                    case kind::fixed:
-                        rv.u.fixed_ptr = nullptr;
-                        break;
-                    case kind::percent:
-                        rv.u.percent_ptr = nullptr;
-                        break;
-                    case kind::room:
-                        rv.u.room_ptr = nullptr;
-                    default:	break;
-                    }
-                }
-                return *this;
+					switch(kind_of_element)
+					{
+					case kind::fixed:
+						rv.u.fixed_ptr = nullptr;
+						break;
+					case kind::percent:
+						rv.u.percent_ptr = nullptr;
+						break;
+					case kind::room:
+						rv.u.room_ptr = nullptr;
+					default:	break;
+					}
+				}
+				return *this;
 			}
 
 			~element_t()
@@ -1007,6 +1007,7 @@ namespace nana{	namespace gui
 						API::move_window(el.u.room_ptr->first, x, area.y, adj_px, area.height);
 						left += adjustable_pixels;
 						break;
+					default:	break;
 					}
 				}
 
@@ -1116,6 +1117,7 @@ namespace nana{	namespace gui
 						API::move_window(el.u.room_ptr->first, r.x, r.y, r.width, adj_px);
 						top += adjustable_pixels;
 						break;
+					default:	break;
 					}
 				}
 

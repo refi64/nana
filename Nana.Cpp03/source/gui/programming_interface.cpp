@@ -1276,7 +1276,7 @@ namespace API
 		internal_scope_guard lock;
 		if (restrict::window_manager.available(iwd))
 		{
-			if ((gui::category::widget_tag::value == iwd->other.category) && (iwd->flags.borderless != enabled))
+			if ((gui::category::flags::widget == iwd->other.category) && (iwd->flags.borderless != enabled))
 			{
 				iwd->flags.borderless = enabled;
 				restrict::window_manager.update(iwd, true, false);

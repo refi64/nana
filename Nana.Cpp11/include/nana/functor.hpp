@@ -110,7 +110,6 @@ namespace nana
 	template<typename T, typename MFPtr>
 	std::function<typename traits::mfptr_traits<MFPtr>::function> make_fun(T& obj, MFPtr mf)
 	{
-		typedef typename traits::mfptr_traits<MFPtr>::function function;
 		typedef typename traits::mfptr_traits<MFPtr>::concept_type concept_type;
 
 		return detail::only_bind_this<std::is_base_of<concept_type, typename std::remove_pointer<T>::type>::value, MFPtr, traits::mfptr_traits<MFPtr>::parameter>::act(obj, mf);

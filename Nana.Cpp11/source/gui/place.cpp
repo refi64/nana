@@ -445,51 +445,9 @@ namespace nana{	namespace gui
 			{
 				u.room_ptr = new room_t(rm);
 			}
-		private:
-			element_t(const element_t& rhs)
-				: kind_of_element(rhs.kind_of_element)
-			{
-				switch(kind_of_element)
-				{
-				case kind::fixed:
-					u.fixed_ptr = new fixed_t(*rhs.u.fixed_ptr);
-					break;
-				case kind::percent:
-					u.percent_ptr = new percent_t(*rhs.u.percent_ptr);
-					break;
-				case kind::room:
-					u.room_ptr = new room_t(*rhs.u.room_ptr);
-					break;
-				default:
-					u = rhs.u;
-					break;
-				}
-			}
-
-			element_t& operator=(const element_t& rhs)
-			{
-			    if(this != &rhs)
-                {
-                    kind_of_element = rhs.kind_of_element;
-
-                    switch(kind_of_element)
-                    {
-                    case kind::fixed:
-                        u.fixed_ptr = new fixed_t(*rhs.u.fixed_ptr);
-                        break;
-                    case kind::percent:
-                        u.percent_ptr = new percent_t(*rhs.u.percent_ptr);
-                        break;
-                    case kind::room:
-                        u.room_ptr = new room_t(*rhs.u.room_ptr);
-                        break;
-                    default:
-                        u = rhs.u;
-                        break;
-                    }
-                }
-                return *this;
-			}
+		//private:	//VC2012 does not support = delete;
+		//	element_t(const element_t&) = delete;
+		//	element_t& operator=(const element_t&) = delete;
 		public:
 			element_t(element_t && rv)
 				:	kind_of_element(rv.kind_of_element),

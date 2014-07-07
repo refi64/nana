@@ -28,14 +28,22 @@ namespace detail
 
 		signal_manager::~signal_manager()
 		{
-			manager_.clear();
+			//It means error when manager_ is not empty at destruction.
+			for(std::map<identifier, inner_invoker*>::iterator i = manager_.begin(); i != manager_.end(); ++i)
+			{
+				delete i->second;
+			}
 		}
 
 		void signal_manager::umake(identifier id)
 		{
 			if(id == 0) return;
-			manager_.erase(id);
-			end_ = manager_.end();
+			std::map<identifier, inner_invoker*>::iterator i = manager_.find(id);
+			if(i != manager_.end())
+			{
+				delete i->second;
+				manager_.erase(i);
+			}
 		}
 
 		void signal_manager::fireaway(signal_manager::identifier wd, int message, const signals& info)

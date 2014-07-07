@@ -107,7 +107,6 @@ namespace detail
 			if(id)
 			{
 				inner_invoker * & invk = manager_[id];
-				end_ = manager_.end();
 				if(invk == 0)
 				{
 					invk = new (std::nothrow) extend_memfun<Class>(object, f);
@@ -123,11 +122,11 @@ namespace detail
 			if(id)
 			{
 				inner_invoker * & invk = manager_[id];
-				end_ = manager_.end();
 				if(invk == 0)
 				{
 					invk = new (std::nothrow) extend<Function>(f);
-					if(invk)	return true;
+					if(invk)
+						return true;
 				}
 			}
 			return false;
@@ -173,7 +172,6 @@ namespace detail
 		};
 	private:
 		std::map<identifier, inner_invoker*>	manager_;
-		std::map<identifier, inner_invoker*>::iterator end_;
 	};
 
 	class shortkey_container

@@ -563,6 +563,15 @@ namespace nana{ namespace gui{
 					return true;
 				}
 
+				size_type index_by_display_order(size_type cat, size_type order_pos) const
+				{
+					container::const_iterator i = _m_at(cat);
+					if (order_pos >= i->sorted.size())
+						throw std::out_of_range("listbox: Invalid item position.");
+
+					return i->sorted[order_pos];
+				}
+
 				category_t::container::value_type& at(const index_pair& pos)
 				{
 					size_type index = pos.item;
@@ -2897,6 +2906,11 @@ namespace nana{ namespace gui{
 						throw std::runtime_error("listbox.back() no element in the container.");
 					
 					return item_proxy(ess_, index_pair(pos_, cat_->items.size() - 1));
+				}
+
+				size_type cat_proxy::index_by_display_order(size_type order_pos) const
+				{
+					return ess_->lister.index_by_display_order(pos_, order_pos);
 				}
 
 				size_type cat_proxy::size() const

@@ -323,7 +323,11 @@ namespace nana{ namespace gui{
 				item_proxy at(size_type pos) const;
 				item_proxy back() const;
 
-				size_type size() const;      // how many cat?
+				/// Returns the index of a item by its display pos, the index of the item isn't changed after sorting.
+				size_type index_by_display_order(size_type pos) const;
+
+				/// Returns the number of items
+				size_type size() const;
 
 				/// Behavior of Iterator
 				cat_proxy& operator=(const cat_proxy&);

@@ -580,6 +580,14 @@ namespace nana{ namespace gui{
 					return true;
 				}
 
+				size_type index_by_display_order(size_type cat, size_type order_pos) const
+				{
+					auto & catobj = *_m_at(cat);
+					if (order_pos >= catobj.sorted.size())
+						throw std::out_of_range("listbox: Invalid item position.");
+
+					return catobj.sorted[order_pos];
+				}
 
 				category_t::container::value_type& at(const index_pair& pos)
 				{
@@ -1374,7 +1382,7 @@ namespace nana{ namespace gui{
 																//if where == lister || where == checker, 'second' indicates the offset to the scroll offset_y which stands for the first item displayed in lister.
 																//if where == unknown, 'second' ignored.
 
-				struct
+				struct scroll_part
 				{
 					static const unsigned scale = 16;
 					int offset_x;
@@ -2969,6 +2977,11 @@ namespace nana{ namespace gui{
 						throw std::runtime_error("listbox.back() no element in the container.");
 
 					return item_proxy(ess_, index_pair(pos_, cat_->items.size() - 1));
+				}
+
+				size_type cat_proxy::index_by_display_order(size_type order_pos) const
+				{
+					return ess_->lister.index_by_display_order(pos_, order_pos);
 				}
 
 				size_type cat_proxy::size() const

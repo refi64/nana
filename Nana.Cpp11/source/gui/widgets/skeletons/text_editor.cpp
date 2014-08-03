@@ -1689,7 +1689,10 @@ namespace nana{	namespace gui{	namespace widgets
 			case keyboard::os_arrow_right:	move_right();	break;
 			case keyboard::os_arrow_up:		move_up();		break;
 			case keyboard::os_arrow_down:	move_down();	break;
-			case keyboard::os_del:		del();	break;
+			case keyboard::os_del:
+				if (this->attr().editable)
+					del();
+				break;
 			default:
 				return false;
 			}

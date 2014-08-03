@@ -186,7 +186,6 @@ bool operator==(const nana::shared_ptr<T> & a, const nana::shared_ptr<U> & b)
 	return (a.get() == b.get());
 }
 
-#endif
+#endif	//endif NANA_USE_BOOST_SMART_PTR
 	
-#endif
-
+#endif	//endif NANA_MEMORY_HPP

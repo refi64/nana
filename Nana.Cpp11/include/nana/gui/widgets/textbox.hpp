@@ -48,6 +48,7 @@ namespace nana{ namespace gui{
 				void key_char(graph_reference, const eventinfo&)	override;
 				void mouse_wheel(graph_reference, const eventinfo&)	override;
 				void resize(graph_reference, const eventinfo&)		override;
+				void typeface_changed(graph_reference)				override;
 			private:
 				void _m_text_area(unsigned width, unsigned height);
 				void _m_draw_border(graph_reference);
@@ -107,17 +108,21 @@ namespace nana{ namespace gui{
 		/// The file of last store operation.
 		std::string filename() const;
 
-		/// Determine whether the text is edited.
+		/// Determine whether the text was edited.
 		bool edited() const;
 
 		/// Determine whether the changed text has been saved into the file.
 		bool saved() const;
 
-        /// Read the text in a specified line. It returns true for success.
+        /// Read the text from a specified line. It returns true for success.
 		bool getline(std::size_t line_index, nana::string&) const;
 
         /// Appends an string. If `at_caret` is `true`, the string is inserted at the position of caret, otherwise, it is appended at end of the textbox.
-		textbox& append(const nana::string& text, bool at_caret); 
+		textbox& append(const nana::string& text, bool at_caret);
+
+		/// Determine wheter the text is line wrapped. 
+		bool line_wrapped() const;
+		textbox& line_wrapped(bool);
 
         /// Shows/Hides the border.
 		textbox& border(bool);

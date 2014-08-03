@@ -60,6 +60,7 @@ namespace nana{ namespace gui{
 				void key_char(graph_reference, const nana::gui::eventinfo&);
 				void mouse_wheel(graph_reference, const nana::gui::eventinfo&);
 				void resize(graph_reference, const nana::gui::eventinfo&);
+				void typeface_changed(graph_reference);
 			private:
 				void _m_text_area(unsigned width, unsigned height);
 				void _m_draw_border(graph_reference);
@@ -98,16 +99,20 @@ namespace nana{ namespace gui{
 		///@return	The filename
 		std::string filename() const;
 
-		///@brief	Test the change of text.
-		///@return	Returns true if it is changed.
+		/// Determine whether the text was edited.
 		bool edited() const;
 
-		///@brief	Test the text whether it is saved to a file.
-		///@return	Returns true if the textbox saved the change of text.
+		/// Determine whether the changed text has been saved into the file.
 		bool saved() const;
 
+		/// Read the text from a specified line. It returns true for success.
 		bool getline(std::size_t n, nana::string&) const;
 		textbox& append(const nana::string&, bool at_caret);
+
+		/// Determine whether the text mode is line wrapped
+		bool textbox::line_wrapped() const;
+		textbox& line_wrapped(bool);
+
 		textbox& border(bool);
 		bool multi_lines() const;
 		textbox& multi_lines(bool);

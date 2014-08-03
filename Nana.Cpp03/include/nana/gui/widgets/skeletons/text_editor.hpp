@@ -23,6 +23,9 @@ namespace nana{	namespace gui{	namespace widgets
 		class text_editor
 		{
 			struct attributes;
+			class editor_behavior_interface;
+			class behavior_normal;
+			class behavior_linewrapped;
 		public:
 			typedef nana::char_t	char_type;
 			typedef textbase<char_type>::size_type size_type;
@@ -38,12 +41,18 @@ namespace nana{	namespace gui{	namespace widgets
 			text_editor(window, graph_reference);
 			~text_editor();
 
+			void typeface_changed();
+
+			/// Determines whether the text_editor is line wrapped.
+			bool line_wrapped() const;
+			/// Sets the text_editor whether it is line wrapped, it returns false if the state is not changed.
+			bool line_wrapped(bool);
+
 			void border_renderer(nana::functor<void(nana::paint::graphics&)>);
 
 			void load(const char*);
 
-			//text_area
-			//@return: Returns true if the area of text is changed.
+			/// Sets a new text area, it returns true if the text area is changed.
 			bool text_area(const nana::rectangle&);
 			bool tip_string(const nana::string&);
 
@@ -80,9 +89,12 @@ namespace nana{	namespace gui{	namespace widgets
 			bool hit_select_area(nana::upoint pos) const;
 			bool move_select();
 			bool mask(char_t);
+
+			/// Returns width of text area excluding the vscroll size.
+			unsigned width_pixels() const;
 		public:
 			void draw_scroll_rectangle();
-			void redraw(bool has_focus);
+			void render(bool focused);
 		public:
 			void put(const nana::string&);
 			void put(nana::char_t);
@@ -140,30 +152,22 @@ namespace nana{	namespace gui{	namespace widgets
 			int _m_endy() const;
 
 			void _m_draw_tip_string() const;
-			void _m_update_line(std::size_t textline) const;
+
 			//_m_draw_string
 			//@brief: Draw a line of string
-			void _m_draw_string(int top, unsigned color, std::size_t textline, bool if_mask) const;
+			void _m_draw_string(int top, nana::color_t color, const nana::upoint& str_pos, const nana::string&, bool if_mask) const;
 			//_m_draw
 			//@brief: Draw a character at a position specified by caret pos. 
 			//@return: true if beyond the border
-			bool _m_draw(nana::char_t);
+			bool _m_draw(nana::char_t, std::size_t secondary_before);
 			void _m_get_sort_select_points(nana::upoint& a, nana::upoint& b) const;
 
 			void _m_offset_y(int y);
 
-			//_m_adjust_caret_into_screen
-			//@brief: Adjust the text offset in order to moving caret into visible area if it is out of the visible area
-			//@note:	the function assumes the points_.caret is correct
-			bool _m_adjust_caret_into_screen();
-
-			//_m_screen_to_caret
-			//@brief: Set the caret position from the screen point specified by (x, y)
-			//@param x, y: screen point
-			nana::upoint _m_screen_to_caret(int x, int y) const;
-			unsigned _m_pixels_by_char(std::size_t textline, std::size_t pos) const;
+			unsigned _m_pixels_by_char(const nana::string&, std::size_t pos) const;
 			static bool _m_is_right_text(const unicode_bidi::entity&);
 		private:
+			editor_behavior_interface * behavior_;
 			nana::gui::window window_;
 			graph_reference graph_;
 			skeletons::textbase<nana::char_t> textbase_;
@@ -176,6 +180,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 				nana::string tip_string;
 
+				bool line_wrapped;
 				bool multi_lines;
 				bool editable;
 				bool enable_background;
@@ -186,12 +191,13 @@ namespace nana{	namespace gui{	namespace widgets
 				nana::gui::scroll<false>*	hscroll;
 			}attributes_;
 
-			struct text_area
+			struct text_area_type
 			{
 				nana::rectangle	area;
 
 				bool captured;
 				unsigned long tab_space;
+				unsigned long scroll_pixels;
 				unsigned long vscroll;
 				unsigned long hscroll;
 				nana::functor<void(nana::paint::graphics&)> border_renderer;
@@ -218,6 +224,4 @@ namespace nana{	namespace gui{	namespace widgets
 }//end namespace widgets
 }//end namespace gui
 }//end namespace nana
-
 #endif
-

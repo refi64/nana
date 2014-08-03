@@ -86,7 +86,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		void drawer::refresh(graph_reference graph)
 		{
-			editor_->redraw(status_.has_focus);
+			editor_->render(status_.has_focus);
 		}
 
 		void drawer::focus(graph_reference graph, const eventinfo& ei)
@@ -191,6 +191,13 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			_m_text_area(ei.size.width, ei.size.height);
 			refresh(graph);
 			API::lazy_refresh();
+		}
+
+		void drawer::typeface_changed(graph_reference graph)
+		{
+			editor_->typeface_changed();
+			refresh(graph);
+			API::update_window(widget_->handle());
 		}
 
 		void drawer::_m_text_area(unsigned width, unsigned height)
@@ -319,6 +326,21 @@ namespace nana{ namespace gui{ namespace drawerbase {
 				editor->put(text);
 				API::update_window(this->handle());
 			}
+			return *this;
+		}
+
+		/// Determine wheter the text is auto-line changed. 
+		bool textbox::line_wrapped() const
+		{
+			return get_drawer_trigger().editor()->line_wrapped();
+		}
+
+		textbox& textbox::line_wrapped(bool autl)
+		{
+			drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
+			if (editor->line_wrapped(autl))
+				editor->render(API::is_focus_window(handle()));
+
 			return *this;
 		}
 

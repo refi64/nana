@@ -24,7 +24,7 @@ namespace nana
 
 		~auto_buf()
 		{
-			if(size_ > 2)
+			if(size_ > 1)
 				delete [] myptr_;
 			else
 				delete myptr_;
@@ -34,21 +34,19 @@ namespace nana
 
 		void alloc(std::size_t count)
 		{
-			if(size_ > 2)
+			if(size_ > 1)
 				delete [] myptr_;
 			else
 				delete myptr_;
 
 			myptr_ = 0;
 
-			if(count >= 0)
-			{
-				size_ = count;
-				if(count > 1)
-					myptr_ = new value_type[size_];
-				else
-					myptr_ = new value_type;
-			}
+
+			size_ = count;
+			if(count > 1)
+				myptr_ = new value_type[size_];
+			else
+				myptr_ = new value_type;
 		}
 
 		value_type* get() const

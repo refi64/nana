@@ -277,7 +277,7 @@ namespace nana{ namespace gui{
 					if(editor_)
 					{
 						text_area(widget_->size());
-						editor_->redraw(state_.focused);
+						editor_->render(state_.focused);
 					}
 					_m_draw_push_button(enb);
 					_m_draw_image();

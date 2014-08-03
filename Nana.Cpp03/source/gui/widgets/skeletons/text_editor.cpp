@@ -28,6 +28,7 @@ namespace nana{	namespace gui{	namespace widgets
 			virtual void render(nana::color_t fgcolor) = 0;
 			virtual	nana::point		caret_to_screen(unsigned x, unsigned y) = 0;
 			virtual nana::upoint	screen_to_caret(int x, int y) = 0;
+			virtual bool move_caret_ns(bool to_north) = 0;
 			virtual bool adjust_caret_into_screen() = 0;
 		};
 
@@ -176,11 +177,54 @@ namespace nana{	namespace gui{	namespace widgets
 				return res;
 			}
 
+			bool move_caret_ns(bool to_north)
+			{
+				coordinate & points = editor_.points_;
+
+				if (to_north)	//North
+				{
+					if (points.caret.y)
+					{
+						points.caret.x = static_cast<unsigned>(editor_.textbase_.getline(--points.caret.y).size());
+
+						if (points.xpos < points.caret.x)
+							points.caret.x = points.xpos;
+
+						bool redraw_required = (static_cast<int>(points.caret.y) < points.offset.y);
+
+						if (static_cast<unsigned>(points.offset.y) > points.caret.y)
+							editor_._m_offset_y(static_cast<int>(points.caret.y));
+
+						if (adjust_caret_into_screen())
+							redraw_required = true;
+
+						return redraw_required;
+					}
+				}
+				else //South
+				{
+					if (points.caret.y + 1 < editor_.textbase_.lines())
+					{
+						points.caret.x = static_cast<unsigned>(editor_.textbase_.getline(++points.caret.y).size());
+
+						if (points.xpos < points.caret.x)
+							points.caret.x = points.xpos;
+
+						return adjust_caret_into_screen();
+					}
+				}
+				return false;
+			}
+
 			//adjust_caret_into_screen
 			//@brief:	Adjust the text offset in order to moving caret into visible area if it is out of the visible area
 			//@note:	the function assumes the points_.caret is correct
 			bool adjust_caret_into_screen()
 			{
+				const unsigned scrlines = editor_.screen_lines();
+				if (0 == scrlines)
+					return false;
+
 				coordinate& points = editor_.points_;
 				skeletons::textbase<nana::char_t>& textbase = editor_.textbase_;
 
@@ -206,7 +250,6 @@ namespace nana{	namespace gui{	namespace widgets
 				else
 					adjusted = false;
 
-				const unsigned scrlines = editor_.screen_lines();
 				int value = points.offset.y;
 				if (scrlines && (points.caret.y >= points.offset.y + scrlines))
 				{
@@ -296,21 +339,59 @@ namespace nana{	namespace gui{	namespace widgets
 				if (second < linemtr_.size())
 					linemtr_.erase(linemtr_.begin() + first + 1, linemtr_.begin() + second);
 
+
 				pre_calc_line(first, editor_.width_pixels());
+
+				//textbase is implement by using deque, and the linemtr holds the text pointers
+				//If the textbase is changed, it will check the text pointers.
+				std::size_t line = 0;
+				for(std::vector<line_metrics>::iterator i = linemtr_.begin(); i != linemtr_.end(); ++i)
+				{
+					const nana::string& linestr = editor_.textbase_.getline(line);
+					const nana::char_t * p = i->line_sections.front().begin;
+					if (p < linestr.data() || (linestr.data() + linestr.size() < p))
+						pre_calc_line(line, editor_.width_pixels());
+
+					++line;
+				}
 			}
 
 			void add_lines(std::size_t pos, std::size_t lines)
 			{
 				if (pos < linemtr_.size())
 				{
-					for (std::size_t i = 0; i < lines; ++i, ++pos)
-						linemtr_.insert(linemtr_.begin() + pos, line_metrics());
+					for (std::size_t i = 0; i < lines; ++i)
+						linemtr_.insert(linemtr_.begin() + pos + i, line_metrics());
+
+					//textbase is implement by using deque, and the linemtr holds the text pointers
+					//If the textbase is changed, it will check the text pointers.
+					std::size_t line = 0;
+					for(std::vector<line_metrics>::iterator i = linemtr_.begin(); i != linemtr_.end(); ++i)
+					{
+						if (line < pos || (pos + lines) <= line)
+						{
+							const nana::string& linestr = editor_.textbase_.getline(line);
+							const nana::char_t * p = i->line_sections.front().begin;
+							if (p < linestr.data() || (linestr.data() + linestr.size() < p))
+								pre_calc_line(line, editor_.width_pixels());
+						}
+						++line;
+					}
 				}
 			}
 
 			void pre_calc_line(std::size_t line, unsigned pixels) override
 			{
 				const string_type& lnstr = editor_.textbase_.getline(line);
+				if (lnstr.empty())
+				{
+					line_metrics & mtr = linemtr_[line];
+					mtr.line_sections.clear();
+					mtr.line_sections.push_back(text_section(lnstr.data(), lnstr.data()));
+					mtr.line_sections.back().pixels = 0;
+					mtr.take_lines = 1;
+					return;
+				}
 
 				std::vector<text_section> sections;
 				_m_text_section(lnstr, sections);
@@ -531,7 +612,7 @@ namespace nana{	namespace gui{	namespace widgets
 					scrpos.x = 0;
 
 				scrpos.x += editor_.text_area_.area.x;
-				scrpos.y = editor_.text_area_.area.y + static_cast<int>(lines * editor_.line_height());
+				scrpos.y = editor_.text_area_.area.y + static_cast<int>((lines - editor_.points_.offset.y) * editor_.line_height());
 				return scrpos;
 			}
 
@@ -612,13 +693,94 @@ namespace nana{	namespace gui{	namespace widgets
 				return res;
 			}
 
-			bool adjust_caret_into_screen() override
+			bool move_caret_ns(bool to_north)
 			{
-				return false;
+				coordinate & points = editor_.points_;
+
+				nana::upoint secondary_pos;
+				_m_pos_secondary(points.caret, secondary_pos);
+
+				if (to_north)	//North
+				{
+					if (0 == secondary_pos.y)
+					{
+						if (0 == points.caret.y)
+							return false;
+
+						--points.caret.y;
+						secondary_pos.y = static_cast<unsigned>(take_lines(points.caret.y)) - 1;
+					}
+					else
+						--secondary_pos.y;
+				}
+				else //South
+				{
+					++secondary_pos.y;
+					if (secondary_pos.y >= take_lines(points.caret.y))
+					{
+						secondary_pos.y = 0;
+						if (points.caret.y + 1 >= editor_.textbase_.lines())
+							return false;
+
+						++points.caret.y;
+					}
+				}
+
+				_m_pos_from_secondary(points.caret.y, secondary_pos, points.caret.x);
+				return adjust_caret_into_screen();
+			}
+
+			bool adjust_caret_into_screen()
+			{
+				const unsigned scrlines = editor_.screen_lines();
+				if (0 == scrlines)
+					return false;
+
+				coordinate & points = editor_.points_;
+				editor_._m_get_scrollbar_size();
+
+				std::size_t off_secondary;
+				std::size_t off_primary = _m_textline(points.offset.y, off_secondary);
+
+				unsigned caret_secondary;
+				{
+					nana::upoint secondpos;
+					_m_pos_secondary(points.caret, secondpos);
+					caret_secondary = secondpos.y;
+				}
+
+				//Use the caret line for the offset line when caret is in front of current offset line.
+				if (off_primary > points.caret.y || (off_primary == points.caret.y && (off_secondary > caret_secondary)))
+				{
+					//Use the line which was specified by points.caret for the first line.
+					_m_set_offset_by_secondary(points.caret.y, caret_secondary);
+					return true;
+				}
+
+				//Find the last screen line. If the text does not reach the bottom of screen,
+				//do not adjust the offset line.
+				nana::upoint bottom;	//x=primary, y=secondary
+				if (false == _m_advance_secondary(off_primary, off_secondary, static_cast<int>(scrlines - 1), bottom))
+					return false;
+
+				//Do not adjust the offset line if the caret line does not reach the bottom line.
+				if (points.caret.y < bottom.x || (points.caret.y == bottom.x && caret_secondary <= bottom.y))
+					return false;
+
+				_m_advance_secondary(points.caret.y, caret_secondary, -static_cast<int>(scrlines), bottom);
+
+				_m_set_offset_by_secondary(bottom.x, bottom.y);
+				return true;
 			}
 		private:
 			void _m_text_section(const nana::string& str, std::vector<text_section>& tsec)
 			{
+				if (str.empty())
+				{
+					tsec.push_back(text_section(str.data(), str.data()));
+					return;
+				}
+
 				const nana::char_t* end = str.data() + str.size();
 
 				const nana::char_t * word = 0;
@@ -647,6 +809,160 @@ namespace nana{	namespace gui{	namespace widgets
 					tsec.push_back(text_section(word, end));
 			}
 
+			void _m_set_offset_by_secondary(std::size_t primary, std::size_t secondary)
+			{
+				std::size_t lines = 0;
+
+				for(std::vector<line_metrics>::iterator i = linemtr_.begin(), end = linemtr_.begin() + primary; i != end; ++i)
+				{
+					lines += i->take_lines;
+				}
+
+				editor_.points_.offset.y = static_cast<int>(lines + secondary);
+			}
+
+			bool _m_advance_secondary(std::size_t primary, std::size_t secondary, int distance, nana::upoint& new_sec)
+			{
+				if (primary >= linemtr_.size())
+					return false;
+
+				if (secondary >= linemtr_[primary].take_lines)
+					return false;
+
+				if (0 == distance)
+				{
+					new_sec.x = static_cast<unsigned>(primary);
+					new_sec.y = static_cast<unsigned>(secondary);
+					return true;
+				}
+
+				if (distance < 0)
+				{
+					std::size_t n = static_cast<std::size_t>(-distance);
+
+					if (secondary > n)
+					{
+						new_sec.x = static_cast<unsigned>(primary);
+						new_sec.y = static_cast<unsigned>(secondary - n);
+						return true;
+					}
+
+					if (0 == primary)
+						return false;
+
+					--primary;
+					n -= (secondary + 1);
+
+					while (true)
+					{
+						unsigned lines = linemtr_[primary].take_lines;
+						if (lines >= n)
+						{
+							new_sec.x = static_cast<unsigned>(primary);
+							new_sec.y = static_cast<unsigned>(lines - n);
+							return true;
+						}
+						if (0 == primary)
+							return false;
+
+						--primary;
+						n -= lines;
+					}
+				}
+				else
+				{
+					std::size_t n = static_cast<std::size_t>(distance);
+
+					if (linemtr_[primary].take_lines - (secondary + 1) >= n)
+					{
+						new_sec.x = static_cast<unsigned>(primary);
+						new_sec.y = static_cast<unsigned>(secondary + n);
+						return true;
+					}
+
+					n -= (linemtr_[primary].take_lines - (secondary + 1));
+					++primary;
+					while (primary < linemtr_.size())
+					{
+						line_metrics & mtr = linemtr_[primary];
+						if (mtr.take_lines >= n)
+						{
+							new_sec.x = static_cast<unsigned>(primary);
+							new_sec.y = static_cast<unsigned>(n - 1);
+							return true;
+						}
+						++primary;
+						n -= mtr.take_lines;
+					}
+				}
+				return false;
+			}
+
+			bool _m_pos_from_secondary(std::size_t textline, const nana::upoint& secondary, unsigned & pos)
+			{
+				if (textline >= linemtr_.size())
+					return false;
+
+				line_metrics & mtr = linemtr_[textline];
+				if (secondary.y >= mtr.line_sections.size() || mtr.line_sections.size() != mtr.take_lines)
+					return false;
+
+				text_section & section = mtr.line_sections[secondary.y];
+				unsigned len = static_cast<unsigned>(section.end - section.begin);
+
+				const nana::char_t* chptr = section.begin + (secondary.x > len ? len : secondary.x);
+				pos = static_cast<unsigned>(chptr - editor_.textbase_.getline(textline).data());
+				return true;
+			}
+
+			bool _m_pos_secondary(const nana::upoint& charpos, nana::upoint& secondary_pos) const
+			{
+				if (charpos.y >= linemtr_.size())
+					return false;
+
+				secondary_pos.x = charpos.x;
+				secondary_pos.y = 0;
+
+				unsigned len = 0;
+				const line_metrics & mtr = linemtr_[charpos.y];
+				for(std::vector<text_section>::const_iterator i = mtr.line_sections.begin(); i != mtr.line_sections.end(); ++i)
+				{
+					const text_section & ts = *i;
+					len = static_cast<unsigned>(ts.end - ts.begin);
+					if (len >= secondary_pos.x)
+						return true;
+
+					++secondary_pos.y;
+					secondary_pos.x -= static_cast<unsigned>(len);
+				}
+				--secondary_pos.y;
+				secondary_pos.x = len;
+				return true;
+			}
+
+
+			std::size_t _m_textline(std::size_t scrline, std::size_t & secondary) const
+			{
+				secondary = 0;
+				std::size_t primary = 0;
+
+				coordinate & points = editor_.points_;
+
+				for(std::vector<line_metrics>::const_iterator i = linemtr_.begin(); i != linemtr_.end(); ++i)
+				{
+					if (i->take_lines > scrline)
+					{
+						secondary = scrline;
+						return primary;
+					}
+					else
+						scrline -= i->take_lines;
+
+					++primary;
+				}
+				return primary;
+			}
+
 			//secondary, index of line that the text was splitted into multilines.
 			std::size_t _m_textline_from_screen(int y, std::size_t & secondary) const
 			{
@@ -660,7 +976,7 @@ namespace nana{	namespace gui{	namespace widgets
 					return 0;
 				std::size_t screen_line;
 				if (y < text_area.area.y)
-					screen_line = static_cast<std::size_t>(points.offset.y ? points.offset.y - 1 : 0);
+					screen_line = static_cast<std::size_t>(points.offset.y);
 				else
 					screen_line = static_cast<std::size_t>((y - text_area.area.y) / static_cast<int>(editor_.line_height()) + points.offset.y);
 				
@@ -1412,42 +1728,19 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::move_up()
 		{
-			bool need_redraw = _m_cancel_select(0);
-			if(points_.caret.y)
-			{
-				points_.caret.x = static_cast<unsigned>(textbase_.getline(--points_.caret.y).size());
+			const bool redraw_required = _m_cancel_select(0);
+			if(behavior_->move_caret_ns(true) || redraw_required)
+				render(true);
 
-				if(points_.xpos < points_.caret.x)
-					points_.caret.x = points_.xpos;
-
-				if((static_cast<int>(points_.caret.y) < points_.offset.y))
-					need_redraw = true;
-
-				if(static_cast<unsigned>(points_.offset.y) > points_.caret.y)
-					_m_offset_y(static_cast<int>(points_.caret.y));
-
-				if(behavior_->adjust_caret_into_screen())
-					need_redraw = true;
-			}
-
-			if(need_redraw)	render(true);
 			_m_scrollbar();
 		}
 
 		void text_editor::move_down()
 		{
-			bool need_redraw = _m_cancel_select(0);
-			if(points_.caret.y + 1 < textbase_.lines())
-			{
-				points_.caret.x = static_cast<unsigned>(textbase_.getline(++points_.caret.y).size());
+			const bool redraw_required = _m_cancel_select(0);
+			if(behavior_->move_caret_ns(false) || redraw_required)
+				render(true);
 
-				if(points_.xpos < points_.caret.x)
-					points_.caret.x = points_.xpos;
-
-				if(behavior_->adjust_caret_into_screen())
-					need_redraw = true;
-			}
-			if(need_redraw)	render(true);
 			_m_scrollbar();
 		}
 

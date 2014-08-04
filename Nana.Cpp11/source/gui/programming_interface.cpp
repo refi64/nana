@@ -491,7 +491,7 @@ namespace API
 		if(wd)
 		{
 			auto iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			if(restrict::window_manager.available(iwd) && (iwd->other.category == category::flags::root))
 			{
 				native_window_type owner = restrict::interface_type::get_owner_window(iwd->root);
@@ -500,6 +500,11 @@ namespace API
 			}
 		}
 		return 0;
+	}
+
+	bool set_parent_window(window wd, window new_parent)
+	{
+		return restrict::bedrock.wd_manager.set_parent(reinterpret_cast<restrict::core_window_t*>(wd), reinterpret_cast<restrict::core_window_t*>(new_parent));
 	}
 
 	void umake_event(window wd)

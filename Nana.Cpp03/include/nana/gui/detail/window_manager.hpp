@@ -185,6 +185,7 @@ namespace detail
 		void clear();
 		bool make(window, unsigned long key);
 		void umake(window);
+		void keys(window, std::vector<unsigned long>&) const;
 		window find(unsigned long key) const;
 	private:
 		std::vector<item_type> keybase_;
@@ -515,22 +516,9 @@ namespace detail
 				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd) == false)	return;
 
-				parent = wd->parent;
-
-				if(wd == attr_.capture.window)
-					capture_window(wd, false);
-
-				if(wd->other.category == static_cast<category::flags::t>(category::root_tag::value))
+				if(wd->parent)
 				{
-					typename root_table_type::value_type* object = root_runtime(wd->root);
-					object->shortkeys.clear();
-					wd->other.attribute.root->focus = 0;
-				}
-				else
-					unregister_shortkey(wd);
-
-				if(parent)
-				{
+					parent = wd->parent;
 					cont_type & cont = parent->children;
 					typename cont_type::iterator i = std::find(cont.begin(), cont.end(), wd);
 					if(i != cont.end())
@@ -1036,6 +1024,34 @@ namespace detail
 			tray_event_manager_.fire(wd, code, ei);
 		}
 
+		bool set_parent(core_window_t* wd, core_window_t* newpa)
+		{
+			if ((0 == wd) || (0 == newpa))
+				return false;
+			
+			//Thread-Safe Required!
+			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
+			if (available(wd, newpa) && (!wd->owner) && (wd->parent != newpa) && (!wd->flags.modal))
+			{
+				//Check the newpa's parent. If wd is father of newpa, return false.
+				core_window_t* check_newpa = newpa->parent;
+				while (check_newpa)
+				{
+					if (check_newpa == wd)
+						return false;
+
+					check_newpa = check_newpa->parent;
+				}
+
+				core_window_t* wdpa = wd->parent;
+				this->_m_disengage(wd, newpa);
+				this->update(wdpa, true, true);
+				this->update(wd, false, true);
+				return true;
+			}
+			return false;		
+		}
+
 		//set_focus
 		//@brief: set a keyboard focus to a window. this may fire a focus event.
 		core_window_t* set_focus(core_window_t* wd)
@@ -1347,6 +1363,38 @@ namespace detail
 			if(object) object->shortkeys.umake(reinterpret_cast<nana::gui::window>(wnd));
 		}
 
+		std::vector<std::pair<core_window_t*, unsigned long> > shortkeys(core_window_t* wd, bool with_children)
+		{
+			std::vector<std::pair<core_window_t*, unsigned long> > result;
+			if (wd)
+			{
+				//Thread-Safe Required!
+				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
+				if(available(wd))
+				{
+					typename root_table_type::value_type * root_rt = root_runtime(wd->root);
+					if (root_rt)
+					{
+						std::vector<unsigned long> keys;
+						root_rt->shortkeys.keys(reinterpret_cast<window>(wd), keys);
+						for (std::vector<unsigned long>::iterator i = keys.begin(); i != keys.end(); ++i)
+							result.push_back(std::make_pair(wd, *i));
+
+						if (with_children)
+						{
+							std::vector<std::pair<core_window_t*, unsigned long> > child_keys;
+							for(std::vector<core_window_t*>::iterator i = wd->children.begin(); i != wd->children.end(); ++i)
+							{
+								shortkeys(*i, true).swap(child_keys);
+								std::copy(child_keys.begin(), child_keys.end(), std::back_inserter(result));
+							}
+						}
+					}
+				}
+			}
+			return result;
+		}
+
 		core_window_t* find_shortkey(nana::gui::native_window_type native_window, unsigned long key)
 		{
 			if(native_window)
@@ -1392,6 +1440,169 @@ namespace detail
 			window_manager * wmgr_;
 		};
 	private:
+		void _m_disengage(core_window_t* wd, core_window_t* for_new)
+		{
+			core_window_t * const wdpa = wd->parent;
+			bool established = (for_new && wdpa != for_new);
+			core_window_t::other_tag::attr_root_tag* pa_root_attr = 0;
+			
+			if (established)
+				pa_root_attr = for_new->root_widget->other.attribute.root;
+
+			core_window_t::other_tag::attr_root_tag * root_attr = wd->root_widget->other.attribute.root;
+
+			//Holds the shortkeys of wd and its children, and then
+			//register these shortkeys for establishing.
+			std::vector<std::pair<core_window_t*,unsigned long> > sk_holder;
+
+			if ((!established) || (pa_root_attr != root_attr))
+			{
+				if (wd == attr_.capture.window)
+					capture_window(wd, false);
+
+				if (established)
+					shortkeys(wd, true).swap(sk_holder);
+
+				if (wd->other.category == category::root_tag::value)
+				{
+					root_runtime(wd->root)->shortkeys.clear();
+					wd->other.attribute.root->focus = 0;
+				}
+				else
+					unregister_shortkey(wd);
+
+				if (root_attr->focus == wd)
+					root_attr->focus = 0;
+
+				if (root_attr->menubar == wd)
+					root_attr->menubar = 0;
+
+				//test if wd is a TABSTOP window
+				if (wd->flags.tab & detail::tab_type::tabstop)
+				{
+					typename core_window_t::container & tabstop = root_attr->tabstop;
+					typename core_window_t::container::iterator i = std::find(tabstop.begin(), tabstop.end(), wd);
+					if (i != tabstop.end())
+						tabstop.erase(i);
+
+					if (established)
+						pa_root_attr->tabstop.push_back(wd);
+				}
+			}
+
+			if ((!established) || (pa_root_attr != root_attr))
+			{
+				if (effects::edge_nimbus::none != wd->effect.edge_nimbus)
+				{
+					std::vector<core_window_t::edge_nimbus_action> & cont = root_attr->effects_edge_nimbus;
+					for (std::vector<core_window_t::edge_nimbus_action>::iterator i = cont.begin(); i != cont.end();)
+					{
+						if (established)
+						{
+							if (_m_condition_by_disengage(i->window, wd))
+							{
+								pa_root_attr->effects_edge_nimbus.push_back(*i);
+								i = cont.erase(i);
+								continue;
+							}
+						}
+						else if (i->window == wd)
+						{
+							cont.erase(i);
+							break;
+						}
+
+						++i;
+					}
+				}
+			}
+
+			if (wd->parent)
+			{
+				if (wd->parent->children.size() > 1)
+				{
+					for (std::vector<core_window_t*>::iterator i = wd->parent->children.begin(), end = wd->parent->children.end(); i != end; ++i)
+					{
+						if (((*i)->index) > (wd->index))
+						{
+							for (; i != end; ++i)
+								--((*i)->index);
+							break;
+						}
+					}
+				}
+
+				if (established)
+				{
+					std::vector<core_window_t*>::iterator i = std::find(wd->parent->children.begin(), wd->parent->children.end(), wd);
+					wd->parent->children.erase(i);
+
+					if (for_new->children.empty())
+						wd->index = 0;
+					else
+						wd->index = for_new->children.back()->index + 1;
+					for_new->children.push_back(wd);
+				}
+			}
+
+			if (wd->other.category == category::frame_tag::value)
+			{
+				//remove the frame handle from the WM frames manager.
+				std::vector<core_window_t*> & frames = root_attr->frames;
+				typename std::vector<core_window_t*>::iterator i = std::find(frames.begin(), frames.end(), wd);
+				if (i != frames.end())
+					frames.erase(i);
+
+				if (established)
+					pa_root_attr->frames.push_back(wd);
+			}
+
+			if (established)
+			{
+				wd->parent = for_new;
+				wd->root = for_new->root;
+				wd->root_graph = for_new->root_graph;
+				wd->root_widget = for_new->root_widget;
+				
+				wd->pos_owner.x = wd->pos_owner.y = 0;
+
+				nana::point delta_pos = wd->pos_root;
+				delta_pos.x -= for_new->pos_root.x;
+				delta_pos.y -= for_new->pos_root.y;
+
+				_m_set_pos_root_by_disengage(wd, delta_pos);
+
+				for(std::vector<std::pair<core_window_t*,unsigned long> >::iterator i = sk_holder.begin(); i != sk_holder.end(); ++i)
+					register_shortkey(i->first, i->second);
+			}
+		}
+
+		static bool _m_condition_by_disengage(core_window_t* wd, core_window_t* effect_wd)
+		{
+			while (effect_wd->parent)
+			{
+				if (effect_wd->parent == wd)
+					return true;
+
+				effect_wd = effect_wd->parent;
+			}
+			return false;					
+		}
+
+		static void _m_set_pos_root_by_disengage(core_window_t* wd, const nana::point& delta_pos)
+		{
+			wd->pos_root.x -= delta_pos.x;
+			wd->pos_root.y -= delta_pos.y;
+			for(std::vector<core_window_t*>::iterator i = wd->children.begin(); i != wd->children.end(); ++i)
+			{
+				core_window_t* child = *i;
+				child->root = wd->root;
+				child->root_graph = wd->root_graph;
+				child->root_widget = wd->root_widget;
+				_m_set_pos_root_by_disengage(child, delta_pos);
+			}		
+		}
+
 		void _m_destroy(core_window_t* wd, inner_delete_helper& dl)
 		{
 			if(wd->flags.destroying) return;
@@ -1416,36 +1627,8 @@ namespace detail
 			ei.window = reinterpret_cast<nana::gui::window>(wd);
 			bedrock_type::raise_event(event_code::destroy, wd, ei, true);
 
-			core_window_t * root_wd = wd->root_widget;
-			if(root_wd->other.attribute.root->focus == wd)
-				root_wd->other.attribute.root->focus = 0;
-
-			if(root_wd->other.attribute.root->menubar == wd)
-				root_wd->other.attribute.root->menubar = 0;
-
+			_m_disengage(wd, 0);
 			wndlayout_type::enable_effects_bground(wd, false);
-
-			//test if wd is a TABSTOP window
-			if(wd->flags.tab & nana::gui::detail::tab_type::tabstop)
-			{
-				typename core_window_t::container & tabs = root_wd->other.attribute.root->tabstop;
-				typename core_window_t::container::iterator i = std::find(tabs.begin(), tabs.end(), wd);
-				if(i != tabs.end())
-					tabs.erase(i);
-			}
-
-			if(wd->effect.edge_nimbus)
-			{
-				typename core_window_t::edge_nimbus_container & cont = root_wd->other.attribute.root->effects_edge_nimbus;
-				for(typename core_window_t::edge_nimbus_container::iterator i = cont.begin(); i != cont.end(); ++i)
-				{
-					if(i->window == wd)
-					{
-						cont.erase(i);
-						break;
-					}
-				}
-			}
 
 			bedrock.evt_manager.umake(reinterpret_cast<nana::gui::window>(wd), false);
 			bedrock.evt_manager.umake(reinterpret_cast<nana::gui::window>(wd), true);
@@ -1453,30 +1636,8 @@ namespace detail
 			signal_manager_.fireaway(wd, signals::destroy, signals_);
 			detach_signal(wd);
 
-			if(wd->parent && (wd->parent->children.size() > 1))
-			{
-				typename core_window_t::container::iterator it = wd->parent->children.begin(), end = wd->parent->children.end();
-				for(; it != end; ++it)
-				{
-					if((*it)->index > wd->index)
-					{
-						for(; it != end; ++it)
-							--((*it)->index);
-						break;
-					}
-				}
-			}
-
 			if(wd->other.category == static_cast<category::flags::t>(category::frame_tag::value))
 			{
-				//remove the frame handle from the WM frames manager.
-				{
-					std::vector<core_window_t*> & frames = root_wd->other.attribute.root->frames;
-					typename std::vector<core_window_t*>::iterator i = std::find(frames.begin(), frames.end(), wd);
-					if(i != frames.end())
-						frames.erase(i);
-				}
-
 				//The frame widget does not have an owner, and close their element windows without activating owner.
 				//close the frame container window, it's a native window.
 				typename std::vector<native_window>::iterator i = wd->other.attribute.frame->attach.begin(), end = wd->other.attribute.frame->attach.end();

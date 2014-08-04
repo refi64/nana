@@ -855,7 +855,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 					while (true)
 					{
-						unsigned lines = linemtr_[primary].take_lines;
+						unsigned lines = static_cast<unsigned>(linemtr_[primary].take_lines);
 						if (lines >= n)
 						{
 							new_sec.x = static_cast<unsigned>(primary);

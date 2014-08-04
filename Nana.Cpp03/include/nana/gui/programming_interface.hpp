@@ -107,8 +107,9 @@ namespace API
 	void restore_window(window);
 	void zoom_window(window, bool ask_for_max);
 	bool visible(window);
-	window get_parent_window(window);
-	window get_owner_window(window);
+	window	get_parent_window(window);
+	window	get_owner_window(window);
+	bool	set_parent_window(window, window new_parent);
 
 	template<typename Event, typename Function>
 	event_handle make_event(window wd, Function function)

@@ -94,6 +94,22 @@ namespace detail
 				}
 		}
 
+		void shortkey_container::keys(window wd, std::vector<unsigned long>& v) const
+		{
+			v.clear();
+			if(0 == wd)
+				return;
+
+			for(std::vector<item_type>::const_iterator i = keybase_.begin(); i != keybase_.end(); ++i)
+			{
+				if(wd == i->handle)
+				{
+					v = i->keys;
+					return;
+				}
+			}
+		}
+
 		window shortkey_container::find(unsigned long key) const
 		{
 			if(key < 0x61) key += (0x61 - 0x41);

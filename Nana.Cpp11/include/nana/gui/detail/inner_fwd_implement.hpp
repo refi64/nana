@@ -70,6 +70,24 @@ namespace nana{namespace gui{
 					keybase_.erase(i);
 			}
 
+			std::vector<unsigned long> keys(window wd) const
+			{
+				std::vector<unsigned long> v;
+				if (wd)
+				{
+					for (auto & m : keybase_)
+					{
+						if (m.handle == wd)
+						{
+							v = m.keys;
+							break;
+						}
+					}
+				}
+				return v;
+
+			}
+
 			window find(unsigned long key) const
 			{
 				if (key < 0x61) key += (0x61 - 0x41);

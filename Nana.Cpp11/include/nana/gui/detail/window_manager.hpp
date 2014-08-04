@@ -167,6 +167,7 @@ namespace detail
 		void tray_umake_event(native_window_type);
 		void tray_fire(native_window_type, event_code, const eventinfo&);
 
+		bool set_parent(core_window_t* wd, core_window_t* new_parent);
 		core_window_t* set_focus(core_window_t*);
 
 		core_window_t* capture_redirect(core_window_t*);
@@ -189,10 +190,12 @@ namespace detail
 
 		bool register_shortkey(core_window_t*, unsigned long key);
 		void unregister_shortkey(core_window_t*);
+		std::vector<std::pair<core_window_t*, unsigned long>> shortkeys(core_window_t*, bool with_children);
 
 		core_window_t* find_shortkey(native_window_type, unsigned long key);
 	private:
 		void _m_attach_signal(core_window_t*, signal_invoker_interface*);
+		void _m_disengage(core_window_t*, core_window_t* for_new);
 		void _m_destroy(core_window_t*);
 		void _m_move_core(core_window_t*, int delta_x, int delta_y);
 		core_window_t* _m_find(core_window_t*, int x, int y);

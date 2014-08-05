@@ -1031,7 +1031,14 @@ namespace detail
 			
 			//Thread-Safe Required!
 			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
-			if (available(wd, newpa) && (!wd->owner) && (wd->parent != newpa) && (!wd->flags.modal))
+			if(!available(wd))
+				return false;
+
+			//lite_widget and widget are allowed to reset parent.
+			if((category::flags::lite_widget != wd->other.category) && (category::flags::widget != wd->other.category))
+				return false;
+
+			if (available(newpa) && (!wd->owner) && (wd->parent != newpa) && (!wd->flags.modal))
 			{
 				//Check the newpa's parent. If wd is father of newpa, return false.
 				core_window_t* check_newpa = newpa->parent;
@@ -1351,16 +1358,24 @@ namespace detail
 			return false;
 		}
 
-		void unregister_shortkey(core_window_t* wnd)
+		void unregister_shortkey(core_window_t* wd, bool with_children)
 		{
-			if(wnd == 0) return;
+			if(0 == wd) return;
 
 			//Thread-Safe Required!
 			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
-			if(handle_manager_.available(wnd) == false) return;
+			if(handle_manager_.available(wd) == false) return;
 
-			typename root_table_type::value_type * object = root_runtime(wnd->root);
-			if(object) object->shortkeys.umake(reinterpret_cast<nana::gui::window>(wnd));
+			typename root_table_type::value_type * root_rt = root_runtime(wd->root);
+			if(0 == root_rt)
+				return;
+			
+			root_rt->shortkeys.umake(reinterpret_cast<window>(wd));
+			if(with_children)
+			{
+				for(std::vector<core_window_t*>::iterator i = wd->children.begin(); i != wd->children.end(); ++i)
+					unregister_shortkey(*i, true);
+			}
 		}
 
 		std::vector<std::pair<core_window_t*, unsigned long> > shortkeys(core_window_t* wd, bool with_children)
@@ -1457,11 +1472,30 @@ namespace detail
 
 			if ((!established) || (pa_root_attr != root_attr))
 			{
-				if (wd == attr_.capture.window)
-					capture_window(wd, false);
-
 				if (established)
-					shortkeys(wd, true).swap(sk_holder);
+				{
+					if (_m_check_tree(wd, attr_.capture.window))
+						capture_window(attr_.capture.window, false);
+
+					if (root_attr->focus && _m_check_tree(wd, root_attr->focus))
+						root_attr->focus = 0;
+
+					if (root_attr->menubar && _m_check_tree(wd, root_attr->menubar))
+						root_attr->menubar = 0;
+
+					sk_holder = shortkeys(wd, true);
+				}
+				else
+				{
+					if (wd == attr_.capture.window)
+						capture_window(attr_.capture.window, false);
+
+					if (root_attr->focus == wd)
+						root_attr->focus = 0;
+
+					if (root_attr->menubar == wd)
+						root_attr->menubar = 0;
+				}
 
 				if (wd->other.category == category::root_tag::value)
 				{
@@ -1469,13 +1503,10 @@ namespace detail
 					wd->other.attribute.root->focus = 0;
 				}
 				else
-					unregister_shortkey(wd);
-
-				if (root_attr->focus == wd)
-					root_attr->focus = 0;
-
-				if (root_attr->menubar == wd)
-					root_attr->menubar = 0;
+				{
+					//Unregister all the children's shortkey, if it is disengaged for reset of parent.
+					unregister_shortkey(wd, !established);
+				}
 
 				//test if wd is a TABSTOP window
 				if (wd->flags.tab & detail::tab_type::tabstop)
@@ -1483,37 +1514,54 @@ namespace detail
 					typename core_window_t::container & tabstop = root_attr->tabstop;
 					typename core_window_t::container::iterator i = std::find(tabstop.begin(), tabstop.end(), wd);
 					if (i != tabstop.end())
+					{
 						tabstop.erase(i);
+						if (established)
+							pa_root_attr->tabstop.push_back(wd);
+					}
 
 					if (established)
-						pa_root_attr->tabstop.push_back(wd);
+					{
+						for(std::vector<core_window_t*>::iterator i = wd->children.begin(); i != wd->children.end(); ++i)
+						{
+							std::vector<core_window_t*>::iterator u = std::find(tabstop.begin(), tabstop.end(), *i);
+							if (u != tabstop.end())
+							{
+								tabstop.erase(u);
+								pa_root_attr->tabstop.push_back(*i);
+							}
+						}
+					}
 				}
 			}
 
-			if ((!established) || (pa_root_attr != root_attr))
+			if(!established)
 			{
 				if (effects::edge_nimbus::none != wd->effect.edge_nimbus)
 				{
 					std::vector<core_window_t::edge_nimbus_action> & cont = root_attr->effects_edge_nimbus;
-					for (std::vector<core_window_t::edge_nimbus_action>::iterator i = cont.begin(); i != cont.end();)
+					for(std::vector<core_window_t::edge_nimbus_action>::iterator i = cont.begin(); i != cont.end(); ++i)
 					{
-						if (established)
-						{
-							if (_m_condition_by_disengage(i->window, wd))
-							{
-								pa_root_attr->effects_edge_nimbus.push_back(*i);
-								i = cont.erase(i);
-								continue;
-							}
-						}
-						else if (i->window == wd)
+						if(i->window == wd)
 						{
 							cont.erase(i);
 							break;
 						}
-
-						++i;
 					}
+				}			
+			}
+			else if(pa_root_attr != root_attr)
+			{
+				std::vector<core_window_t::edge_nimbus_action> & cont = root_attr->effects_edge_nimbus;
+				for (std::vector<core_window_t::edge_nimbus_action>::iterator i = cont.begin(); i != cont.end();)
+				{
+					if ((i->window == wd) || _m_condition_by_disengage(wd, i->window))
+					{
+						pa_root_attr->effects_edge_nimbus.push_back(*i);
+						i = cont.erase(i);
+						continue;
+					}
+					++i;
 				}
 			}
 
@@ -1575,6 +1623,19 @@ namespace detail
 				for(std::vector<std::pair<core_window_t*,unsigned long> >::iterator i = sk_holder.begin(); i != sk_holder.end(); ++i)
 					register_shortkey(i->first, i->second);
 			}
+		}
+
+		static bool _m_check_tree(core_window_t* wd, core_window_t* cond)
+		{
+			if (wd == cond)
+				return true;
+
+			for(std::vector<core_window_t*>::iterator i = wd->children.begin(); i != wd->children.end(); ++i)
+			{
+				if (_m_check_tree((*i), cond))
+					return true;
+			}
+			return false;
 		}
 
 		static bool _m_condition_by_disengage(core_window_t* wd, core_window_t* effect_wd)

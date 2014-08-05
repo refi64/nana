@@ -299,7 +299,7 @@ namespace API
 
 	void unregister_shortkey(window wd)
 	{
-		restrict::window_manager.unregister_shortkey(reinterpret_cast<restrict::core_window_t*>(wd));
+		restrict::window_manager.unregister_shortkey(reinterpret_cast<restrict::core_window_t*>(wd), false);
 	}
 
 	nana::size screen_size()

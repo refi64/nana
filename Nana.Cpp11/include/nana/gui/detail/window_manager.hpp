@@ -189,7 +189,7 @@ namespace detail
 		root_misc* root_runtime(native_window_type) const;
 
 		bool register_shortkey(core_window_t*, unsigned long key);
-		void unregister_shortkey(core_window_t*);
+		void unregister_shortkey(core_window_t*, bool with_children);
 		std::vector<std::pair<core_window_t*, unsigned long>> shortkeys(core_window_t*, bool with_children);
 
 		core_window_t* find_shortkey(native_window_type, unsigned long key);

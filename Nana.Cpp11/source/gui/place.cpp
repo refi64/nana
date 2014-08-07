@@ -918,18 +918,15 @@ namespace nana{	namespace gui
 
 				//Use right to calc width is to avoid deviation
 				int right = static_cast<int>(left + adj_px);
+				if (child == children.back() && (right != area.right()))
+					right = area.right();
+
 				child->field_area.width = static_cast<unsigned>(right - child->field_area.x);
 				if (gap_size && (child->field_area.height > gap_size))
 					child->field_area.width -= gap_size;
 
 				left += adj_px;
 				child->collocate(wd);	/// The child div have full position. Now we can collocate  inside it the child fields and child-div. 
-			}
-
-			auto last_div = find_last_adjustable();
-			if (last_div && (left < this->field_area.width))
-			{
-				last_div->field_area.height += static_cast<unsigned>(field_area.width - left);
 			}
 
 			if(field)
@@ -1028,18 +1025,15 @@ namespace nana{	namespace gui
 
 				//Use bottom to calc height is to avoid deviation.
 				int bottom = static_cast<int>(top + adj_px);
+				if (child == children.back() && (bottom != area.bottom()))
+					bottom = area.bottom();
+
 				child->field_area.height = static_cast<unsigned>(bottom - child->field_area.y);
 				if (gap_size && (child->field_area.height > gap_size))
 					child->field_area.height -= gap_size;
 
 				top += adj_px;
 				child->collocate(wd);
-			}
-
-			auto last_div = find_last_adjustable();
-			if (last_div && (top < this->field_area.height))
-			{
-				last_div->field_area.height += static_cast<unsigned>(field_area.height - top);
 			}
 
 			if(field)
@@ -1356,17 +1350,23 @@ namespace nana{	namespace gui
 
 					auto px_ptr = &nana::rectangle::width;
 
-					left_pos_ = leaf_left_->field_area.x;
-					right_pos_ = leaf_right_->field_area.x + leaf_right_->field_area.width;
+					auto area_left = leaf_left_->margin_area();
+					auto area_right = leaf_right_->margin_area();
+
 					if (nana::gui::cursor::size_we != splitter_cursor_)
 					{
-						left_pos_ = leaf_left_->field_area.y;
-						right_pos_ = leaf_right_->field_area.y + leaf_right_->field_area.height;
+						left_pos_ = area_left.y;
+						right_pos_ = area_right.bottom();
 						px_ptr = &nana::rectangle::height;
 					}
+					else
+					{
+						left_pos_ = area_left.x;
+						right_pos_ = area_right.right();
+					}
 
-					left_pixels_ = leaf_left_->field_area.*px_ptr;
-					right_pixels_ = leaf_right_->field_area.*px_ptr;
+					left_pixels_ = area_left.*px_ptr;
+					right_pixels_ = area_right.*px_ptr;
 				});
 
 				splitter_.make_event<events::mouse_move>([this](const eventinfo& ei)
@@ -1390,7 +1390,8 @@ namespace nana{	namespace gui
 					else if (w < 0)
 						w = 0;
 
-					leaf_left_->weight.assign_percent(100.0 * w / div_owner->field_area.*px_ptr);
+					auto owner_area = div_owner->margin_area();
+					leaf_left_->weight.assign_percent(100.0 * w / owner_area.*px_ptr);
 
 					w = static_cast<int>(right_pixels_) - delta;
 					if (w > total_pixels)
@@ -1398,7 +1399,7 @@ namespace nana{	namespace gui
 					else if (w < 0)
 						w = 0;
 
-					leaf_right_->weight.assign_percent(100.0 * w / div_owner->field_area.*px_ptr);
+					leaf_right_->weight.assign_percent(100.0 * w / owner_area.*px_ptr);
 
 					pause_move_collocate_ = true;
 					div_owner->collocate(splitter_.parent());
@@ -1406,20 +1407,7 @@ namespace nana{	namespace gui
 				});
 			}
 
-			nana::rectangle restrict_area = leaf_left_->field_area;
-			if (nana::gui::cursor::size_we == splitter_cursor_)
-			{
-				restrict_area.width += field_area.width;
-				restrict_area.width += leaf_right_->field_area.width;
-			}
-			else
-			{
-				restrict_area.height += field_area.height;
-				restrict_area.height += leaf_right_->field_area.height;
-			}
-
-			dragger_.target(splitter_, restrict_area, (gui::cursor::size_ns == splitter_cursor_ ? nana::arrange::vertical : nana::arrange::horizontal));
-
+			dragger_.target(splitter_, div_owner->margin_area(), (gui::cursor::size_ns == splitter_cursor_ ? nana::arrange::vertical : nana::arrange::horizontal));
 
 			if (false == pause_move_collocate_)
 				splitter_.move(this->field_area);

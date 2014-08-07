@@ -322,6 +322,7 @@ namespace nana{ namespace gui{
 
 				/// Returns the index of a item by its display pos, the index of the item isn't changed after sorting.
 				size_type index_by_display_order(size_type pos) const;
+				size_type display_order(size_type pos) const;
 
 				/// Returns the number of items.
 				size_type size() const;

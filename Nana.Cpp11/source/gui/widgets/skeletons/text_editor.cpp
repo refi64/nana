@@ -111,6 +111,9 @@ namespace nana{	namespace gui{	namespace widgets
 						std::vector<unicode_bidi::entity> reordered;
 						bidi.linestr(lnstr.c_str(), lnstr.size(), reordered);
 
+						std::size_t pxbuf_size = 0;
+						std::unique_ptr<unsigned[]> pxbuf;
+
 						int xbeg = 0;
 						for (auto & ent : reordered)
 						{
@@ -118,43 +121,13 @@ namespace nana{	namespace gui{	namespace widgets
 							unsigned str_w = editor_._m_text_extent_size(ent.begin, len).width;
 							if (xbeg <= x && x < xbeg + static_cast<int>(str_w))
 							{
-								std::unique_ptr<unsigned[]> pxbuf_ptr(new unsigned[len]);
-								unsigned * pxbuf = pxbuf_ptr.get();
-								if (editor_.graph_.glyph_pixels(ent.begin, len, pxbuf))
+								if (len > pxbuf_size)
 								{
-									x -= xbeg;
-									if (_m_is_right_text(ent))
-									{	//RTL
-										for (std::size_t u = 0; u < len; ++u)
-										{
-											int chbeg = (str_w - pxbuf[u]);
-											if (chbeg <= x && x < static_cast<int>(str_w))
-											{
-												res.x = static_cast<unsigned>(u);
-												if ((pxbuf[u] <= 1) || (x <= chbeg + static_cast<int>(pxbuf[u] >> 1)))
-													++res.x;
-												break;
-											}
-											str_w -= pxbuf[u];
-										}
-									}
-									else
-									{
-										//LTR
-										for (std::size_t u = 0; u < len; ++u)
-										{
-											if (x < static_cast<int>(pxbuf[u]))
-											{
-												res.x = static_cast<unsigned>(u);
-												if ((pxbuf[u] > 1) && (x > static_cast<int>(pxbuf[u] >> 1)))
-													++res.x;
-												break;
-											}
-											x -= pxbuf[u];
-										}
-									}
-									res.x += static_cast<unsigned>(ent.begin - lnstr.c_str());
+									pxbuf_size = len;
+									pxbuf.reset(new unsigned[len]);
 								}
+								res.x = editor_._m_char_by_pixels(ent.begin, len, pxbuf.get(), static_cast<int>(str_w), x - xbeg, _m_is_right_text(ent));
+								res.x += static_cast<unsigned>(ent.begin - lnstr.c_str());
 								return res;
 							}
 							xbeg += static_cast<int>(str_w);
@@ -615,8 +588,14 @@ namespace nana{	namespace gui{	namespace widgets
 				unicode_bidi bidi;
 				bidi.linestr(str.begin, str.end - str.begin, reordered);
 
+				std::size_t pxbuf_size = 0;
+				std::unique_ptr<unsigned[]> pxbuf;
+
 				nana::upoint res(static_cast<unsigned>(str.begin - mtr.line_sections.front().begin), static_cast<unsigned>(primary));
 				x -= editor_.text_area_.area.x;
+				if (x < 0)
+					x = 0;
+
 				int xbeg = 0;
 				for (auto & ent : reordered)
 				{
@@ -624,44 +603,13 @@ namespace nana{	namespace gui{	namespace widgets
 					unsigned str_w = editor_._m_text_extent_size(ent.begin, len).width;
 					if (xbeg <= x && x < xbeg + static_cast<int>(str_w))
 					{
-						std::unique_ptr<unsigned[]> pxbuf_ptr(new unsigned[len]);
-						unsigned * pxbuf = pxbuf_ptr.get();
-						if (editor_.graph_.glyph_pixels(ent.begin, len, pxbuf))
+						if (len > pxbuf_size)
 						{
-							x -= xbeg;
-							if (_m_is_right_text(ent))
-							{	//RTL
-								for (std::size_t u = 0; u < len; ++u)
-								{
-									int chbeg = (str_w - pxbuf[u]);
-									if (chbeg <= x && x < static_cast<int>(str_w))
-									{
-										res.x += static_cast<unsigned>(u);
-										if ((pxbuf[u] <= 1) || (x <= chbeg + static_cast<int>(pxbuf[u] >> 1)))
-											++res.x;
-										break;
-									}
-									str_w -= pxbuf[u];
-								}
-							}
-							else
-							{
-								//LTR
-								for (std::size_t u = 0; u < len; ++u)
-								{
-									if (x < static_cast<int>(pxbuf[u]))
-									{
-										res.x += static_cast<unsigned>(u);
-										if ((pxbuf[u] > 1) && (x > static_cast<int>(pxbuf[u] >> 1)))
-											++res.x;
-
-										break;
-									}
-									x -= pxbuf[u];
-								}
-							}
-							res.x += static_cast<unsigned>(ent.begin - str.begin);
+							pxbuf.reset(new unsigned[len]);
+							pxbuf_size = len;
 						}
+						res.x += editor_._m_char_by_pixels(ent.begin, len, pxbuf.get(), static_cast<int>(str_w), x - xbeg, _m_is_right_text(ent));
+						res.x += static_cast<unsigned>(ent.begin - str.begin);
 						return res;
 					}
 					xbeg += static_cast<int>(str_w);
@@ -952,7 +900,13 @@ namespace nana{	namespace gui{	namespace widgets
 					return 0;
 				std::size_t screen_line;
 				if (y < text_area.area.y)
-					screen_line = static_cast<std::size_t>(points.offset.y);
+				{
+					screen_line = (text_area.area.y - y) / static_cast<int>(editor_.line_height());
+					if (screen_line > static_cast<std::size_t>(points.offset.y))
+						screen_line = 0;
+					else
+						screen_line = static_cast<std::size_t>(points.offset.y) - screen_line;
+				}
 				else
 					screen_line = static_cast<std::size_t>((y - text_area.area.y) / static_cast<int>(editor_.line_height()) + points.offset.y);
 				
@@ -2489,6 +2443,46 @@ namespace nana{	namespace gui{	namespace widgets
 		void text_editor::_m_offset_y(int y)
 		{
 			points_.offset.y = y;
+		}
+
+		unsigned text_editor::_m_char_by_pixels(const nana::char_t* str, std::size_t len, unsigned * pxbuf, int str_px, int pixels, bool is_rtl)
+		{
+			unsigned pos = 0;	//Result
+			if (graph_.glyph_pixels(str, len, pxbuf))
+			{
+				if (is_rtl)
+				{	//RTL
+					for (std::size_t u = 0; u < len; ++u)
+					{
+						int chbeg = (str_px - pxbuf[u]);
+						if (chbeg <= pixels && pixels < str_px)
+						{
+							pos = static_cast<unsigned>(u);
+							if ((pxbuf[u] <= 1) || (pixels <= chbeg + static_cast<int>(pxbuf[u] >> 1)))
+								++pos;
+							break;
+						}
+						str_px -= pxbuf[u];
+					}
+				}
+				else
+				{
+					//LTR
+					for (std::size_t u = 0; u < len; ++u)
+					{
+						if (pixels < static_cast<int>(pxbuf[u]))
+						{
+							pos = static_cast<unsigned>(u);
+							if ((pxbuf[u] > 1) && (pixels > static_cast<int>(pxbuf[u] >> 1)))
+								++pos;
+
+							break;
+						}
+						pixels -= static_cast<int>(pxbuf[u]);
+					}
+				}
+			}
+			return pos;
 		}
 
 		unsigned text_editor::_m_pixels_by_char(const nana::string& lnstr, std::size_t pos) const

@@ -165,6 +165,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 			void _m_offset_y(int y);
 
+			unsigned _m_char_by_pixels(const nana::char_t*, std::size_t len, unsigned* pxbuf, int str_px, int pixels, bool is_rtl);
 			unsigned _m_pixels_by_char(const nana::string&, std::size_t pos) const;
 			static bool _m_is_right_text(const unicode_bidi::entity&);
 		private:

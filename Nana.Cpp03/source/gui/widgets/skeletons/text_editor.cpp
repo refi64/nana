@@ -379,7 +379,15 @@ namespace nana{	namespace gui{	namespace widgets
 					text_px += str_w;
 					if (text_px > pixels)
 					{
-						if (text_px == str_w)	//Indicates the splitting of ts string
+						if(text_px != str_w)
+						{
+							line_sections.push_back(text_section(secondary_begin, ts.begin));
+							line_sections.back().pixels = text_px - str_w;
+							text_px = str_w;
+							secondary_begin = ts.begin;
+						}
+
+						if (str_w > pixels)	//Indicates the splitting of ts string
 						{
 							std::size_t len = ts.end - ts.begin;
 
@@ -405,13 +413,6 @@ namespace nana{	namespace gui{	namespace widgets
 
 								text_px = (text_px == pixels ? 0 : *pxi);
 							}
-						}
-						else
-						{
-							line_sections.push_back(text_section(secondary_begin, ts.begin));
-							line_sections.back().pixels = text_px - str_w;
-							text_px = 0;
-							secondary_begin = ts.begin;
 						}
 						continue;
 					}
@@ -697,7 +698,7 @@ namespace nana{	namespace gui{	namespace widgets
 				if (points.caret.y < bottom.x || (points.caret.y == bottom.x && caret_secondary <= bottom.y))
 					return false;
 
-				_m_advance_secondary(points.caret.y, caret_secondary, -static_cast<int>(scrlines), bottom);
+				_m_advance_secondary(points.caret.y, caret_secondary, -static_cast<int>(scrlines - 1), bottom);
 
 				_m_set_offset_by_secondary(bottom.x, bottom.y);
 				return true;
@@ -1692,7 +1693,13 @@ namespace nana{	namespace gui{	namespace widgets
 					if(is_incomplete(textbase_.getline(points_.caret.y), points_.caret.x))
 						--points_.caret.x;
 #endif
-					if(_m_move_offset_x_while_over_border(-2))
+					bool adjust_y = false;
+					if(attributes_.line_wrapped)
+						adjust_y = behavior_->adjust_caret_into_screen();
+
+					bool adjust_x = _m_move_offset_x_while_over_border(-2);
+
+					if(adjust_x || adjust_y)
 						render(true);
 				}
 				else if(points_.caret.y)
@@ -1724,7 +1731,13 @@ namespace nana{	namespace gui{	namespace widgets
 					if(is_incomplete(lnstr, points_.caret.x))
 						++points_.caret.x;
 #endif
-					if(_m_move_offset_x_while_over_border(2))
+					bool adjust_y = false;
+					if(attributes_.line_wrapped)
+						adjust_y = behavior_->adjust_caret_into_screen();
+
+					bool adjust_x = _m_move_offset_x_while_over_border(2);
+
+					if(adjust_x || adjust_y)
 						render(true);
 				}
 				else if(textbase_.lines() && (points_.caret.y < textbase_.lines() - 1))

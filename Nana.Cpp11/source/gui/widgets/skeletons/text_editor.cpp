@@ -306,10 +306,10 @@ namespace nana{	namespace gui{	namespace widgets
 				//textbase is implement by using deque, and the linemtr holds the text pointers
 				//If the textbase is changed, it will check the text pointers.
 				std::size_t line = 0;
-				for (std::vector<line_metrics>::iterator i = linemtr_.begin(); i != linemtr_.end(); ++i)
+				for (auto & mtr: linemtr_)
 				{
 					const nana::string& linestr = editor_.textbase_.getline(line);
-					const nana::char_t * p = i->line_sections.front().begin;
+					const nana::char_t * p = mtr.line_sections.front().begin;
 					if (p < linestr.data() || (linestr.data() + linestr.size() < p))
 						pre_calc_line(line, editor_.width_pixels());
 
@@ -482,13 +482,10 @@ namespace nana{	namespace gui{	namespace widgets
 
 			void render(nana::color_t fgcolor) override
 			{
-				auto & points = editor_.points_;
-
 				std::size_t scrlines = editor_.screen_lines();
 
 				std::size_t secondary;
 				auto primary = _m_textline_from_screen(0, secondary);
-
 				if (primary >= linemtr_.size() || secondary >= linemtr_[primary].line_sections.size())
 					return;
 
@@ -572,8 +569,6 @@ namespace nana{	namespace gui{	namespace widgets
 
 			nana::upoint screen_to_caret(int x, int y) override
 			{
-				const auto & textbase = editor_.textbase_;
-
 				std::size_t secondary;
 				std::size_t primary = _m_textline_from_screen(y, secondary);
 
@@ -868,8 +863,6 @@ namespace nana{	namespace gui{	namespace widgets
 			{
 				secondary = 0;
 				std::size_t primary = 0;
-
-				auto & points = editor_.points_;
 
 				for (auto & mtr : linemtr_)
 				{

@@ -110,7 +110,7 @@ namespace nana{ namespace gui{
 		textbox& append(const nana::string&, bool at_caret);
 
 		/// Determine whether the text mode is line wrapped
-		bool textbox::line_wrapped() const;
+		bool line_wrapped() const;
 		textbox& line_wrapped(bool);
 
 		textbox& border(bool);

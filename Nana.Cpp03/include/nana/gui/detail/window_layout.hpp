@@ -80,7 +80,7 @@ namespace detail
 							core_window_t* ov_wd = i->window;
 							const nana::rectangle& r = i->r;
 
-							if(ov_wd->other.category == static_cast<category::flags::t>(category::frame_tag::value))
+							if(ov_wd->other.category == category::flags::frame)
 							{
 								native_window_type container = ov_wd->other.attribute.frame->container;
 								native_interface::refresh_window(container);

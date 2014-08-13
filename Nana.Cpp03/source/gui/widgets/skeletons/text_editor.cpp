@@ -2,6 +2,7 @@
 #include <nana/system/dataexch.hpp>
 #include <nana/unicode_bidi.hpp>
 #include <nana/auto_buf.hpp>
+#include <stdexcept>
 
 namespace nana{	namespace gui{	namespace widgets
 {
@@ -82,7 +83,7 @@ namespace nana{	namespace gui{	namespace widgets
 				}
 			}
 
-			nana::point	caret_to_screen(unsigned x, unsigned y) override
+			nana::point	caret_to_screen(unsigned x, unsigned y)
 			{
 				skeletons::textbase<nana::char_t> & textbase = editor_.textbase_;
 				if (y > textbase.lines())	y = static_cast<unsigned>(textbase.lines());
@@ -95,7 +96,7 @@ namespace nana{	namespace gui{	namespace widgets
 				return nana::point(pos_x, pos_y);
 			}
 
-			nana::upoint screen_to_caret(int x, int y) override
+			nana::upoint screen_to_caret(int x, int y)
 			{
 				const skeletons::textbase<nana::char_t> & textbase = editor_.textbase_;
 
@@ -346,7 +347,7 @@ namespace nana{	namespace gui{	namespace widgets
 				}
 			}
 
-			void pre_calc_line(std::size_t line, unsigned pixels) override
+			void pre_calc_line(std::size_t line, unsigned pixels)
 			{
 				const string_type& lnstr = editor_.textbase_.getline(line);
 				if (lnstr.empty())
@@ -444,7 +445,7 @@ namespace nana{	namespace gui{	namespace widgets
 				}
 			}
 
-			void pre_calc_lines(unsigned pixels) override
+			void pre_calc_lines(unsigned pixels)
 			{
 				const std::size_t lines = editor_.textbase_.lines();
 				linemtr_.resize(editor_.textbase_.lines());
@@ -491,13 +492,10 @@ namespace nana{	namespace gui{	namespace widgets
 
 			void render(nana::color_t fgcolor)
 			{
-				coordinate & points = editor_.points_;
-
 				std::size_t scrlines = editor_.screen_lines();
 
 				std::size_t secondary;
 				std::size_t primary = _m_textline_from_screen(0, secondary);
-
 				if (primary >= linemtr_.size() || secondary >= linemtr_[primary].line_sections.size())
 					return;
 
@@ -584,8 +582,6 @@ namespace nana{	namespace gui{	namespace widgets
 
 			nana::upoint screen_to_caret(int x, int y)
 			{
-				const skeletons::textbase<nana::char_t> & textbase = editor_.textbase_;
-
 				std::size_t secondary;
 				std::size_t primary = _m_textline_from_screen(y, secondary);
 
@@ -879,8 +875,6 @@ namespace nana{	namespace gui{	namespace widgets
 			{
 				secondary = 0;
 				std::size_t primary = 0;
-
-				coordinate & points = editor_.points_;
 
 				for(std::vector<line_metrics>::const_iterator i = linemtr_.begin(); i != linemtr_.end(); ++i)
 				{

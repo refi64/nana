@@ -269,7 +269,7 @@ namespace detail
 
 		static bool is_queue(core_window_t* wd)
 		{
-			return (wd && wd->other.category == static_cast<category::flags::t>(category::root_tag::value));
+			return (wd && wd->other.category == category::flags::root);
 		}
 
 		std::size_t number_of_core_window() const
@@ -444,7 +444,7 @@ namespace detail
 				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(frame->other.category == static_cast<category::flags::t>(category::frame_tag::value))
 				{
-					if(handle_manager_.available(wd) && (wd->other.category == static_cast<category::flags::t>(category::root_tag::value)) && wd->root != frame->root)
+					if(handle_manager_.available(wd) && (wd->other.category == category::flags::root) && wd->root != frame->root)
 					{
 						frame->other.attribute.frame->attach.push_back(wd->root);
 						return true;
@@ -477,7 +477,7 @@ namespace detail
 			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wd) == false)	return;
 
-			if(wd->other.category == static_cast<category::flags::t>(category::root_tag::value))
+			if(wd->other.category == category::flags::root)
 			{
 				eventinfo ei;
 				ei.unload.cancel = false;
@@ -542,7 +542,7 @@ namespace detail
 			threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 			if(handle_manager_.available(wd) == false)	return;
 
-			if((wd->other.category == static_cast<category::flags::t>(category::root_tag::value)) || (wd->other.category != static_cast<category::flags::t>(category::frame_tag::value)))
+			if((wd->other.category == category::flags::root) || (wd->other.category != category::flags::frame))
 			{
 				root_table_.erase(wd->root);
 				handle_manager_.remove(wd);
@@ -556,7 +556,7 @@ namespace detail
 				threads::lock_guard<threads::recursive_mutex> lock(wnd_mgr_lock_);
 				if(handle_manager_.available(wd))
 				{
-					if(wd->other.category == static_cast<category::flags::t>(category::root_tag::value))
+					if(wd->other.category == category::flags::root)
 						interface_type::window_icon(wd->root, img);
 				}
 			}
@@ -1497,7 +1497,7 @@ namespace detail
 						root_attr->menubar = 0;
 				}
 
-				if (wd->other.category == category::root_tag::value)
+				if (wd->other.category == category::flags::root)
 				{
 					root_runtime(wd->root)->shortkeys.clear();
 					wd->other.attribute.root->focus = 0;
@@ -1593,7 +1593,7 @@ namespace detail
 				}
 			}
 
-			if (wd->other.category == category::frame_tag::value)
+			if (wd->other.category == category::flags::frame)
 			{
 				//remove the frame handle from the WM frames manager.
 				std::vector<core_window_t*> & frames = root_attr->frames;
@@ -1697,7 +1697,7 @@ namespace detail
 			signal_manager_.fireaway(wd, signals::destroy, signals_);
 			detach_signal(wd);
 
-			if(wd->other.category == static_cast<category::flags::t>(category::frame_tag::value))
+			if(wd->other.category == category::flags::frame)
 			{
 				//The frame widget does not have an owner, and close their element windows without activating owner.
 				//close the frame container window, it's a native window.
@@ -1719,7 +1719,7 @@ namespace detail
 				wd->pos_root.x += mv_helper.delta_x_;
 				wd->pos_root.y += mv_helper.delta_y_;
 
-				if(wd->other.category == static_cast<category::flags::t>(category::frame_tag::value))
+				if(wd->other.category == category::flags::frame)
 					interface_type::move_window(wd->other.attribute.frame->container, wd->pos_root.x, wd->pos_root.y);
 
 				std::for_each(wd->children.begin(), wd->children.end(), mv_helper);

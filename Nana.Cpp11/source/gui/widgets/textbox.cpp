@@ -301,6 +301,15 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			return (editor ? editor->textbase().edited() : false);
 		}
 
+		textbox& textbox::edited_reset()
+		{
+			auto editor = get_drawer_trigger().editor();
+			if (editor)
+				editor->textbase().edited_reset();
+
+			return *this;
+		}
+
 		bool textbox::saved() const
 		{
 			internal_scope_guard isg;

@@ -102,6 +102,9 @@ namespace nana{ namespace gui{
 		/// Determine whether the text was edited.
 		bool edited() const;
 
+		/// Reset the edited flag to false manually
+		textbox& edited_reset();
+
 		/// Determine whether the changed text has been saved into the file.
 		bool saved() const;
 

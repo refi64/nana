@@ -440,6 +440,11 @@ namespace skeletons
 			return changed_;
 		}
 
+		void edited_reset()
+		{
+			changed_ = false;
+		}
+
 		bool saved() const
 		{
 			return ! not_saved();
@@ -481,31 +486,27 @@ namespace skeletons
 				evtbase_->first_change();
 		}
 
-        void _m_saved(std::string filename) const
-        {
-            if(filename_ != filename)
-            {
+		void _m_saved(std::string filename) const
+		{
+			if(filename_ != filename)
+			{
 				filename_.swap(filename);
-                changed_ = false;
-                _m_first_change();
-            } 
-            else if(changed_)
-            {
-                changed_ = false;
-                _m_first_change();
-            }
-            changed_ = false;
-        }
+				_m_first_change();
+			} 
+			else if(changed_)
+				_m_first_change();
 
-        void _m_edited()
-        {
-            if(!changed_)
-            {
-                changed_ = true;
-                _m_first_change();
-            }
-            changed_ = true;
-        }
+			changed_ = false;
+		}
+
+		void _m_edited()
+		{
+			if(!changed_)
+			{
+				_m_first_change();
+				changed_ = true;
+			}
+		}
 	private:
 		std::deque<string_type>	text_cont_;
 		textbase_extra_evtbase<char_type>*	evtbase_;

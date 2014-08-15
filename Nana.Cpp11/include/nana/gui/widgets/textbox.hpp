@@ -30,7 +30,6 @@ namespace nana{ namespace gui{
 				mutable extra_evtbase_t	extra_evtbase;
 
 				drawer();
-				bool border(bool);
 				text_editor * editor();
 				const text_editor * editor() const;
 				void set_accept(std::function<bool(nana::char_t)> &&);
@@ -51,12 +50,11 @@ namespace nana{ namespace gui{
 				void typeface_changed(graph_reference)				override;
 			private:
 				void _m_text_area(unsigned width, unsigned height);
-				void _m_draw_border(graph_reference);
+				void _m_draw_border(graph_reference, nana::color_t bgcolor);
 			private:
 				widget*	widget_;
 				struct status_type
 				{
-					bool border;
 					bool has_focus;		//Indicates whether it has the keyboard focus
 				}status_;
 
@@ -126,9 +124,6 @@ namespace nana{ namespace gui{
 		/// Determine wheter the text is line wrapped. 
 		bool line_wrapped() const;
 		textbox& line_wrapped(bool);
-
-        /// Shows/Hides the border.
-		textbox& border(bool);
 
 		/// Determine whether the text is multi-line enabled.
 		bool multi_lines() const;

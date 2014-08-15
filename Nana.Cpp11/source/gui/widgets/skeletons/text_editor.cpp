@@ -981,7 +981,7 @@ namespace nana{	namespace gui{	namespace widgets
 			return false;
 		}
 
-		void text_editor::border_renderer(std::function<void(nana::paint::graphics&)> f)
+		void text_editor::border_renderer(std::function<void(nana::paint::graphics&, nana::color_t)> f)
 		{
 			text_area_.border_renderer = f;
 		}
@@ -1124,7 +1124,7 @@ namespace nana{	namespace gui{	namespace widgets
 					else
 						select_.mode_selection = selection::mode_no_selected;
 				}
-				text_area_.border_renderer(graph_);
+				text_area_.border_renderer(graph_, _m_bgcolor());
 				return true;
 			}
 			return false;
@@ -1148,7 +1148,7 @@ namespace nana{	namespace gui{	namespace widgets
 				else if(select_.dragged == false && pos != caret())
 					select_.dragged = true;
 
-				text_area_.border_renderer(graph_);
+				text_area_.border_renderer(graph_, _m_bgcolor());
 				return true;
 			}
 			return false;
@@ -1175,7 +1175,7 @@ namespace nana{	namespace gui{	namespace widgets
 			if(hit_text_area(screen_x, screen_y) == false)
 				API::window_cursor(window_, nana::gui::cursor::arrow);
 
-			text_area_.border_renderer(graph_);
+			text_area_.border_renderer(graph_, _m_bgcolor());
 			return do_draw;
 		}
 
@@ -1425,16 +1425,11 @@ namespace nana{	namespace gui{	namespace widgets
 
 		void text_editor::render(bool has_focus)
 		{
-			nana::color_t bgcolor;
-			nana::color_t fgcolor = API::foreground(window_);
+			const nana::color_t bgcolor = _m_bgcolor();
 
+			nana::color_t fgcolor = API::foreground(window_);
 			if (!API::window_enabled(window_))
-			{
-				bgcolor = 0xE0E0E0;
 				fgcolor = nana::paint::graphics::mix(bgcolor, fgcolor, 0.5);
-			}
-			else
-				bgcolor = API::background(window_);
 
 			//Draw background
 			if(attributes_.enable_background)
@@ -1452,7 +1447,7 @@ namespace nana{	namespace gui{	namespace widgets
 				_m_draw_tip_string();
 
 			draw_scroll_rectangle();
-			text_area_.border_renderer(graph_);
+			text_area_.border_renderer(graph_, bgcolor);
 		}
 	//public:
 		void text_editor::put(const nana::string& text)
@@ -1771,6 +1766,11 @@ namespace nana{	namespace gui{	namespace widgets
 		}
 
 	//private:
+		nana::color_t text_editor::_m_bgcolor() const
+		{
+			return (!API::window_enabled(window_) ? 0xE0E0E0 : API::background(window_));
+		}
+
 		bool text_editor::_m_scroll_text(bool vertical)
 		{
 			if(attributes_.vscroll && vertical)

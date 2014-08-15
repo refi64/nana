@@ -287,10 +287,11 @@ namespace nana{ namespace gui{
 					_m_draw_image();
 				}
 
-				void draw_border(graph_reference graph)
+				void draw_border(graph_reference graph, nana::color_t bgcolor)
 				{
 					graph.rectangle((state_.focused ? 0x0595E2 : 0x999A9E), false);
-					graph.rectangle(nana::rectangle(graph.size()).pare_off(1), 0xFFFFFF, false);
+					nana::rectangle r(graph.size());
+					graph.rectangle(r.pare_off(1), bgcolor, false);
 				}
 
 				std::size_t the_number_of_options() const

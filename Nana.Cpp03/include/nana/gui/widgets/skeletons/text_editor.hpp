@@ -48,7 +48,7 @@ namespace nana{	namespace gui{	namespace widgets
 			/// Sets the text_editor whether it is line wrapped, it returns false if the state is not changed.
 			bool line_wrapped(bool);
 
-			void border_renderer(nana::functor<void(nana::paint::graphics&)>);
+			void border_renderer(nana::functor<void(nana::paint::graphics&, nana::color_t bgcolor)>);
 
 			void load(const char*);
 
@@ -119,6 +119,7 @@ namespace nana{	namespace gui{	namespace widgets
 			skeletons::textbase<nana::char_t>& textbase();
 			const skeletons::textbase<nana::char_t>& textbase() const;
 		private:
+			nana::color_t _m_bgcolor() const;
 			bool _m_scroll_text(bool vertical);
 			void _m_on_scroll(const nana::gui::eventinfo& ei);
 			void _m_scrollbar();
@@ -201,7 +202,7 @@ namespace nana{	namespace gui{	namespace widgets
 				unsigned long scroll_pixels;
 				unsigned long vscroll;
 				unsigned long hscroll;
-				nana::functor<void(nana::paint::graphics&)> border_renderer;
+				nana::functor<void(nana::paint::graphics&, nana::color_t bgcolor)> border_renderer;
 			}text_area_;
 
 			struct selection

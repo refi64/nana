@@ -21,18 +21,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		drawer::drawer()
 			: widget_(nullptr), editor_(nullptr)
 		{
-			status_.border = true;
 			status_.has_focus = false;
-		}
-
-		bool drawer::border(bool has_border)
-		{
-			if(status_.border != has_border)
-			{
-				status_.border = has_border;
-				return true;
-			}
-			return false;
 		}
 
 		drawer::text_editor* drawer::editor()
@@ -205,7 +194,8 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			if(editor_)
 			{
 				nana::rectangle r(0, 0, width, height);
-				if(status_.border)
+				
+				if (!API::widget_borderless(widget_->handle()))
 				{
 					r.x = r.y = 2;
 					r.width = (width > 4 ? width - 4 : 0);
@@ -215,14 +205,13 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			}
 		}
 
-		void drawer::_m_draw_border(graph_reference graph)
+		void drawer::_m_draw_border(graph_reference graph, nana::color_t bgcolor)
 		{
-			if(status_.border)
+			if (!API::widget_borderless(widget_->handle()))
 			{
 				nana::rectangle r(graph.size());
 				graph.rectangle(r, (status_.has_focus ? 0x0595E2 : 0x999A9E), false);
-				r.pare_off(1);
-				graph.rectangle(r, 0xFFFFFF, false);
+				graph.rectangle(r.pare_off(1), bgcolor, false);
 			}
 		}
 	//end class drawer
@@ -349,17 +338,6 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			if (editor->line_wrapped(autl))
 				editor->render(API::is_focus_window(handle()));
 
-			return *this;
-		}
-
-		textbox& textbox::border(bool has_border)
-		{
-			if(get_drawer_trigger().border(has_border))
-			{
-				auto editor = get_drawer_trigger().editor();
-				if(editor)
-					API::refresh_window(handle());
-			}
 			return *this;
 		}
 

@@ -1,3 +1,15 @@
+/*
+ *	A Menubar implementation
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2009-2014 Jinhao(cnjinhao@hotmail.com)
+ *
+ *	Distributed under the Boost Software License, Version 1.0. 
+ *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	http://www.boost.org/LICENSE_1_0.txt)
+ *
+ *	@file: nana/gui/widgets/menubar.hpp
+ */
+
 #ifndef NANA_GUI_WIDGETS_MENUBAR_HPP
 #define NANA_GUI_WIDGETS_MENUBAR_HPP
 #include "widget.hpp"
@@ -98,6 +110,4 @@ namespace gui
 	};//end class menubar
 }//end namespace gui
 }//end namespace nana
-
-
 #endif

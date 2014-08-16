@@ -116,9 +116,7 @@ namespace gui
 					graph_.set_pixel(pos.x + size.width - 1, pos.y, corner);
 					graph_.set_pixel(pos.x, pos.y + size.height - 1, corner);
 					graph_.set_pixel(pos.x + size.width - 1, pos.y + size.height - 1, corner);
-
-					r.pare_off(1);
-					graph_.rectangle(r, body, true);
+					graph_.rectangle(r.pare_off(1), body, true);
 				}
 
 				void item_renderer::caption(int x, int y, const nana::string& text)
@@ -140,12 +138,12 @@ namespace gui
 				nana::gui::menu* trigger::push_back(const nana::string& text)
 				{
 					nana::string::value_type shkey;
-					API::transform_shortkey_text(text, shkey, 0);
+					API::transform_shortkey_text(text, shkey, nullptr);
 
 					if(shkey)
 						API::register_shortkey(widget_->handle(), shkey);
 
-					std::size_t i = items_->cont().size();
+					auto i = items_->cont().size();
 					items_->append(text, shkey);
 					_m_draw();
 					return items_->get_menu(i);
@@ -160,13 +158,6 @@ namespace gui
 				{
 					return items_->cont().size();
 				}
-
-				/*
-				void trigger::bind_window(widget_reference widget)	//deperecated
-				{
-					widget_ = &widget;
-				}
-				*/
 
 				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
@@ -205,8 +196,8 @@ namespace gui
 							popup = true;
 						}
 					}
-					else if(_m_track_mouse(ei.mouse.x, ei.mouse.y))
-						popup = true;
+					else
+						popup = _m_track_mouse(ei.mouse.x, ei.mouse.y);
 
 					if(popup)
 					{
@@ -397,22 +388,21 @@ namespace gui
 
 				void trigger::_m_move(bool to_left)
 				{
-					if(items_->cont().size() == 0) return;
+					if(items_->cont().empty()) return;
 
+					const std::size_t last_pos = items_->cont().size() - 1;
 					std::size_t index = state_.active;
 					if(to_left)
 					{
-						if(index > 0)
-							--index;
-						else
-							index = items_->cont().size() - 1;
+						--index;
+						if (index > last_pos)
+							index = last_pos;
 					}
 					else
 					{
-						if(index == items_->cont().size() - 1)
+						++index;
+						if(index > last_pos)
 							index = 0;
-						else
-							++index;
 					}
 
 					if(index != state_.active)
@@ -560,8 +550,11 @@ namespace gui
 						{
 							unsigned off_w = (hotkey_pos ? graph_->text_extent_size(text, static_cast<unsigned>(hotkey_pos)).width : 0);
 							nana::size hotkey_size = graph_->text_extent_size(text.c_str() + hotkey_pos, 1);
+
+							unsigned ascent, descent, inleading;
+							graph_->text_metrics(ascent, descent, inleading);
 							int x = item_pos.x + 8 + off_w;
-							int y = item_pos.y + text_top_off + hotkey_size.height;
+							int y = item_pos.y + text_top_off + ascent + 1;
 							graph_->line(x, y, x + hotkey_size.width - 1, y, 0x0);
 						}
 

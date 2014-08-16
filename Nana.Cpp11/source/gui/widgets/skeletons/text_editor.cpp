@@ -1824,7 +1824,7 @@ namespace nana{	namespace gui{	namespace widgets
 				int x = text_area_.area.x + static_cast<int>(tx_area.width);
 				if (nullptr == wdptr)
 				{
-					std::unique_ptr<gui::scroll<true>> scptr(new gui::scroll<true>);
+					auto scptr = std::make_unique<gui::scroll<true>>();
 					wdptr = scptr.get();
 					wdptr->create(window_, nana::rectangle(x, text_area_.area.y, text_area_.vscroll, tx_area.height));
 					wdptr->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
@@ -1855,7 +1855,7 @@ namespace nana{	namespace gui{	namespace widgets
 				int y = text_area_.area.y + static_cast<int>(tx_area.height);
 				if(nullptr == wdptr)
 				{
-					std::unique_ptr<gui::scroll<false>> scptr(new gui::scroll<false>);
+					auto scptr = std::make_unique<gui::scroll<false>>();
 					wdptr = scptr.get();
 					wdptr->create(window_, nana::rectangle(text_area_.area.x, y, tx_area.width, text_area_.hscroll));
 					wdptr->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);

@@ -346,7 +346,7 @@ namespace nana{	namespace gui
 
 			auto & eop = m.table[name];
 			if(nullptr == eop)
-				eop = std::shared_ptr<element_object_t>(new element_object_t);
+				eop = std::make_shared<element_object_t>();
 
 			eop->push(factory);
 			if(nullptr == m.employee)

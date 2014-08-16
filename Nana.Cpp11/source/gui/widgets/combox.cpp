@@ -104,7 +104,7 @@ namespace nana{ namespace gui{
 
 				void insert(const nana::string& text)
 				{
-					items_.emplace_back(new item(text));
+					items_.emplace_back(std::make_shared<item>(text));
 					API::refresh_window(widget_->handle());
 				}
 
@@ -119,8 +119,8 @@ namespace nana{ namespace gui{
 						return nullptr;
 
 					auto & any_ptr = items_[pos]->any_ptr;
-					if(allocate_if_empty && (nullptr == any_ptr))
-						any_ptr.reset(new nana::any);
+					if (allocate_if_empty && (nullptr == any_ptr))
+						any_ptr = std::make_shared<nana::any>();
 					return any_ptr.get();
 				}
 
@@ -340,7 +340,7 @@ namespace nana{ namespace gui{
 					}
 
 					pos = items_.size();
-					items_.emplace_back(new item(std::move(p)));
+					items_.emplace_back(std::make_shared<item>(std::move(p)));
 
 					//Redraw, because the state of push button is changed when a first new item is created.
 					if (0 == pos)

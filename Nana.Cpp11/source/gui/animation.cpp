@@ -474,10 +474,10 @@ namespace nana{	namespace gui
 				auto thr = new thread_variable;
 				thr->animations.push_back(p);
 				thr->performance_parameter = 0.0;
-				thr->thread = std::shared_ptr<std::thread>(new std::thread([this, thr]()
+				thr->thread = std::make_shared<std::thread>([this, thr]()
 				{
 					_m_perf_thread(thr);
-				}));
+				});
 
 				threads_.push_back(thr);
 				return thr;

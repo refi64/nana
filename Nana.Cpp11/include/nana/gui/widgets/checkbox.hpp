@@ -27,6 +27,7 @@ namespace drawerbase
 			struct implement;
 		public:
 			drawer();
+			~drawer();	//To instance imptr_;
 			void attached(widget_reference, graph_reference)	override;
 			void refresh(graph_reference)	override;
 			void mouse_enter(graph_reference, const eventinfo&)	override;
@@ -44,7 +45,7 @@ namespace drawerbase
 			static const int interval = 4;
 			widget* widget_;
 			unsigned state_;
-			std::shared_ptr<implement> imptr_;
+			std::unique_ptr<implement> imptr_;
 			implement * impl_;
 		};
 	}//end namespace checkbox

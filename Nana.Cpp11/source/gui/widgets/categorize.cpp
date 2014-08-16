@@ -565,7 +565,7 @@ namespace nana{	namespace gui{
 						if(i)
 						{
 							for(node_handle child = i->child; child; child = child->next)
-								style_.module.items.emplace_back(new item(child->value.first));
+								style_.module.items.emplace_back(std::make_shared<item>(child->value.first));
 						}
 						r = style_.active_item_rectangle;
 					}
@@ -576,7 +576,7 @@ namespace nana{	namespace gui{
 						{
 							auto end = v.cbegin() + head_;
 							for(auto i = v.cbegin(); i != end; ++i)
-								style_.module.items.emplace_back(new item((*i)->value.first));
+								style_.module.items.emplace_back(std::make_shared<item>((*i)->value.first));
 						}
 						r = style_.active_item_rectangle;
 					}

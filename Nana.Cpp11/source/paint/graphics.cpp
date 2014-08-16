@@ -89,7 +89,6 @@ namespace paint
 		font::~font()
 		{
 			delete impl_;
-			impl_ = nullptr;
 		}
 
 		bool font::empty() const

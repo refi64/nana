@@ -178,9 +178,8 @@ namespace nana{ namespace gui{
 				{
 					static std::shared_ptr<gui::tooltip::factory_if_type> fp;
 					if (nullptr == fp)
-					{
-						fp.reset(new tip_form_factory());
-					}
+						fp = std::make_shared<tip_form_factory>();
+
 					return fp;
 				}
 

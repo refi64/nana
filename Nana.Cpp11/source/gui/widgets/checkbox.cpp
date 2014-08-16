@@ -37,6 +37,9 @@ namespace checkbox
 				impl_->radio = false;
 			}
 
+			drawer::~drawer()
+			{}
+
 			void drawer::attached(widget_reference widget, graph_reference)
 			{
 				widget_ = &widget;

@@ -711,7 +711,7 @@ namespace detail
 		{
 			caret_holder_.exit_thread = false;
 			auto fn = [this](){ this->_m_caret_routine(); };
-			caret_holder_.thr = std::unique_ptr<std::thread>(new std::thread(fn));
+			caret_holder_.thr.reset(new std::thread(fn));
 		}
 	}
 

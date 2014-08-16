@@ -104,7 +104,7 @@ namespace nana{ namespace gui{
 		textbox& reset (const nana::string& newtext = STR("") );      ///< discard the old text and set a newtext
 
 		/// The file of last store operation.
-		std::string filename() const;
+		nana::string filename() const;
 
 		/// Determine whether the text was edited.
 		bool edited() const;

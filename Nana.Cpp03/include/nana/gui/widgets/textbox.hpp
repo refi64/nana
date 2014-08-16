@@ -95,7 +95,7 @@ namespace nana{ namespace gui{
 
 		///@brief	The file of last store operation.
 		///@return	The filename
-		std::string filename() const;
+		nana::string filename() const;
 
 		/// Determine whether the text was edited.
 		bool edited() const;

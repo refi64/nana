@@ -12,11 +12,12 @@
 
 #ifndef NANA_GUI_WIDGET_DETAIL_TEXTBASE_HPP
 #define NANA_GUI_WIDGET_DETAIL_TEXTBASE_HPP
-#include <string>
+
 #include <deque>
 #include <memory>
 #include <fstream>
 #include <nana/charset.hpp>
+#include <nana/deploy.hpp>
 
 #include "textbase_extra_evtbase.hpp"
 
@@ -236,9 +237,10 @@ namespace skeletons
 			}
 		}
 
-		void store(const char* tfs) const
+		void store(const nana::char_t* fs) const
 		{
-			std::ofstream ofs(tfs, std::ios::binary);
+			std::string fs_mbs = nana::charset(fs);
+			std::ofstream ofs(fs_mbs.data(), std::ios::binary);
 			if(ofs && text_cont_.size())
 			{
 				if(text_cont_.size() > 1)
@@ -252,13 +254,14 @@ namespace skeletons
 				}
 				std::string mbs = nana::charset(text_cont_.back());
 				ofs.write(mbs.c_str(), mbs.size());
-				_m_saved(tfs);
+				_m_saved(fs);
 			}
 		}
 
-		void store(const char* tfs, nana::unicode encoding) const
+		void store(const nana::char_t* fs, nana::unicode encoding) const
 		{
-			std::ofstream ofs(tfs, std::ios::binary);
+			std::string fs_mbs = nana::charset(fs);
+			std::ofstream ofs(fs_mbs.data(), std::ios::binary);
 			if(ofs && text_cont_.size())
 			{
 				const char * le_boms[] = {"\xEF\xBB\xBF", "\xFF\xFE", "\xFF\xFE\x0\x0"};	//BOM for little-endian
@@ -288,7 +291,7 @@ namespace skeletons
 				}
 				std::string mbs = nana::charset(text_cont_.back()).to_bytes(encoding);
 				ofs.write(mbs.c_str(), static_cast<std::streamsize>(mbs.size()));
-				_m_saved(tfs);
+				_m_saved(fs);
 			}
 		}
 
@@ -413,7 +416,7 @@ namespace skeletons
 		{
 			std::deque<string_type>().swap(text_cont_);
 			attr_max_.reset();
-			_m_saved("");
+			_m_saved(nana::string());
 		}
 
 		void merge(size_type pos)
@@ -430,7 +433,7 @@ namespace skeletons
 			}
 		}
 
-		const std::string& filename() const
+		const nana::string& filename() const
 		{
 			return filename_;
 		}
@@ -486,7 +489,7 @@ namespace skeletons
 				evtbase_->first_change();
 		}
 
-		void _m_saved(std::string && filename) const
+		void _m_saved(nana::string && filename) const
 		{
 			if(filename_ != filename)
 			{
@@ -512,7 +515,7 @@ namespace skeletons
 		textbase_extra_evtbase<char_type>*	evtbase_;
 
 		mutable bool			changed_;
-		mutable std::string		filename_;	//A string for the saved filename.
+		mutable nana::string	filename_;	//A string for the saved filename.
 		mutable std::shared_ptr<string_type> nullstr_;
 
 		struct attr_max

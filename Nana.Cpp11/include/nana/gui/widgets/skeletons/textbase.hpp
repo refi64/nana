@@ -56,9 +56,13 @@ namespace skeletons
 					((text_cont_.size() == 1) && (text_cont_[0].size() == 0)));
 		}
 
-		void load(const char* tfs)
+		void load(const nana::char_t* fs)
 		{
-			std::ifstream ifs(tfs);
+			if (nullptr == fs)
+				return;
+
+			std::string fs_mbs = nana::charset(fs);
+			std::ifstream ifs(fs_mbs.data());
 			ifs.seekg(0, std::ios::end);
 			std::size_t bytes = static_cast<std::size_t>(ifs.tellg());
 			ifs.seekg(0, std::ios::beg);
@@ -73,7 +77,7 @@ namespace skeletons
 					if(0xBB == ch && 0xBF == ifs.get())
 					{
 						ifs.close();
-						load(tfs, nana::unicode::utf8);
+						load(fs, nana::unicode::utf8);
 						return;
 					}
 				}
@@ -87,12 +91,12 @@ namespace skeletons
 							if(ifs.get() == 0 && ifs.get() == 0)
 							{
 								ifs.close();
-								load(tfs, nana::unicode::utf32);
+								load(fs, nana::unicode::utf32);
 								return;
 							}
 						}
 						ifs.close();
-						load(tfs, nana::unicode::utf16);
+						load(fs, nana::unicode::utf16);
 						return;
 					}
 				}
@@ -102,7 +106,7 @@ namespace skeletons
 					{
 						//UTF16(big-endian)
 						ifs.close();
-						load(tfs, nana::unicode::utf16);
+						load(fs, nana::unicode::utf16);
 						return;
 					}
 				}
@@ -115,7 +119,7 @@ namespace skeletons
 						{
 							//UTF32(big_endian)
 							ifs.close();
-							load(tfs, nana::unicode::utf32);
+							load(fs, nana::unicode::utf32);
 							return;
 						}
 					}
@@ -141,6 +145,8 @@ namespace skeletons
 				}
 				++lines;
 			}
+
+			_m_saved(fs);
 		}
 
 		static void byte_order_translate_2bytes(std::string& str)
@@ -171,9 +177,13 @@ namespace skeletons
 			}
 		}
 
-		void load(const char * tfs, nana::unicode encoding)
+		void load(const nana::char_t * fs, nana::unicode encoding)
 		{
-			std::ifstream ifs(tfs);
+			if (nullptr == fs)
+				return;
+
+			std::string fs_mbs = nana::charset(fs);
+			std::ifstream ifs(fs_mbs.data());
 			std::string str;
 			bool big_endian = true;
 
@@ -235,6 +245,8 @@ namespace skeletons
 				}
 				++lines;
 			}
+
+			_m_saved(fs);
 		}
 
 		void store(const nana::char_t* fs) const

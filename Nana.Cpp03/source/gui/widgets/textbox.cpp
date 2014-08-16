@@ -251,10 +251,16 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		void textbox::load(const nana::char_t* file)
 		{
+			if(0 == file)
+				return;
+
 			internal_scope_guard isg;
 			drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
 			if(editor)
-				editor->load(static_cast<std::string>(nana::charset(file)).c_str());
+			{
+				editor->load(file);
+				API::update_window(handle());
+			}
 		}
 
 		void textbox::store(const nana::char_t* file) const

@@ -51,7 +51,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 			void border_renderer(std::function<void(nana::paint::graphics&, nana::color_t bgcolor)>);
 
-			void load(const char*);
+			void load(const nana::char_t*);
 
 			//text_area
 			//@return: Returns true if the area of text is changed.

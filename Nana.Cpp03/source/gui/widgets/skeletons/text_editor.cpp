@@ -416,12 +416,12 @@ namespace nana{	namespace gui{	namespace widgets
 						}
 						continue;
 					}
-
-					if (text_px == pixels)
+					else if (text_px == pixels)
 					{
 						line_sections.push_back(text_section(secondary_begin, ts.begin));
-						line_sections.back().pixels = text_px;
-						secondary_begin = 0;
+						line_sections.back().pixels = text_px - str_w;
+						secondary_begin = ts.begin;
+						text_px = str_w;
 					}
 				}
 
@@ -981,16 +981,18 @@ namespace nana{	namespace gui{	namespace widgets
 				if (autl)
 				{
 					behavior_ = new behavior_linewrapped(*this);
-					_m_scrollbar();
 					behavior_->pre_calc_lines(width_pixels());
-					points_.offset.x = 0;
 				}
 				else
-				{
 					behavior_ = new behavior_normal(*this);
-					_m_scrollbar();
-				}
+
 				delete old_behavior;
+
+				points_.offset.x = 0;
+				_m_offset_y(0);
+				move_caret(0, 0);
+
+				_m_scrollbar();
 				render(API::is_focus_window(window_));
 				return true;
 			}
@@ -1002,13 +1004,16 @@ namespace nana{	namespace gui{	namespace widgets
 			text_area_.border_renderer = fn;
 		}
 
-		void text_editor::load(const char* tfs)
+		void text_editor::load(const nana::char_t* fs)
 		{
-			_m_reset();
-			textbase_.load(tfs);
-			behavior_->pre_calc_lines(width_pixels());
-			render(API::is_focus_window(window_));
-			_m_scrollbar();
+			if(fs)
+			{
+				_m_reset();
+				textbase_.load(fs);
+				behavior_->pre_calc_lines(width_pixels());
+				render(API::is_focus_window(window_));
+				_m_scrollbar();
+			}
 		}
 
 		bool text_editor::text_area(const nana::rectangle& r)
@@ -1850,8 +1855,8 @@ namespace nana{	namespace gui{	namespace widgets
 					API::take_active(scroll->handle(), false, window_);
 				}
 
-				if(textbase_.lines() != scroll->amount())
-					scroll->amount(static_cast<int>(textbase_.lines()));
+				if(behavior_->take_lines() != scroll->amount())
+					scroll->amount(static_cast<int>(behavior_->take_lines()));
 
 				if(screen_lines() != scroll->range())
 					scroll->range(screen_lines());

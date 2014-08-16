@@ -50,7 +50,7 @@ namespace nana{	namespace gui{	namespace widgets
 
 			void border_renderer(nana::functor<void(nana::paint::graphics&, nana::color_t bgcolor)>);
 
-			void load(const char*);
+			void load(const nana::char_t*);
 
 			/// Sets a new text area, it returns true if the text area is changed.
 			bool text_area(const nana::rectangle&);

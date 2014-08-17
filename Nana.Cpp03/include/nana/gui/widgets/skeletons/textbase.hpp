@@ -56,13 +56,16 @@ namespace skeletons
 					((text_cont_.size() == 1) && (text_cont_.begin()->size() == 0)));
 		}
 
-		void load(const nana::char_t* fs)
+		bool load(const nana::char_t* fs)
 		{
 			if(0 == fs)
-				return;
+				return false;
 			
 			std::string fs_mbs = nana::charset(fs);
 			std::ifstream ifs(fs_mbs.data());
+			if(!ifs)
+				return false;
+
 			ifs.seekg(0, std::ios::end);
 			std::size_t bytes = static_cast<std::size_t>(ifs.tellg());
 			ifs.seekg(0, std::ios::beg);
@@ -77,8 +80,7 @@ namespace skeletons
 					if(0xBB == ch && 0xBF == ifs.get())
 					{
 						ifs.close();
-						load(fs, nana::unicode::utf8);
-						return;
+						return load(fs, nana::unicode::utf8);
 					}
 				}
 				else if(0xFF == ch)
@@ -91,13 +93,11 @@ namespace skeletons
 							if(ifs.get() == 0 && ifs.get() == 0)
 							{
 								ifs.close();
-								load(fs, nana::unicode::utf32);
-								return;
+								return load(fs, nana::unicode::utf32);
 							}
 						}
 						ifs.close();
-						load(fs, nana::unicode::utf16);
-						return;
+						return load(fs, nana::unicode::utf16);
 					}
 				}
 				else if(0xFE == ch)
@@ -106,8 +106,7 @@ namespace skeletons
 					{
 						//UTF16(big-endian)
 						ifs.close();
-						load(fs, nana::unicode::utf16);
-						return;
+						return load(fs, nana::unicode::utf16);
 					}
 				}
 				else if(0 == ch)
@@ -119,8 +118,7 @@ namespace skeletons
 						{
 							//UTF32(big_endian)
 							ifs.close();
-							load(fs, nana::unicode::utf32);
-							return;
+							return load(fs, nana::unicode::utf32);
 						}
 					}
 				}
@@ -145,6 +143,7 @@ namespace skeletons
 			}
 
 			_m_saved(fs);
+			return true;
 		}
 
 		static void byte_order_translate_2bytes(std::string& str)
@@ -175,13 +174,16 @@ namespace skeletons
 			}
 		}
 
-		void load(const nana::char_t* fs, nana::unicode::t encoding)
+		bool load(const nana::char_t* fs, nana::unicode::t encoding)
 		{
 			if(0 == fs)
-				return;
+				return false;
 
 			std::string fs_mbs = nana::charset(fs);
 			std::ifstream ifs(fs_mbs.data());
+			if(!ifs)
+				return false;
+
 			std::string str;
 			bool big_endian = true;
 			
@@ -240,6 +242,7 @@ namespace skeletons
 			}
 
 			_m_saved(fs);
+			return true;
 		}
 
 		void store(const nana::char_t* fs) const

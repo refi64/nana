@@ -1122,6 +1122,15 @@ namespace detail
 								if(0 == file.find("file://"))
 									file = file.substr(7);
 
+								while(file.size())
+								{
+									auto ch = file.back();
+									if('\r' == ch || '\n' == ch)
+										file.pop_back();
+									else
+										break;
+								}
+
 								files->push_back(nana::charset(file));
 							}
 							if(files->size())

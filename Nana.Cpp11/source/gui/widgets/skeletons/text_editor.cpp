@@ -989,16 +989,16 @@ namespace nana{	namespace gui{	namespace widgets
 			text_area_.border_renderer = f;
 		}
 
-		void text_editor::load(const nana::char_t* fs)
+		bool text_editor::load(const nana::char_t* fs)
 		{
-			if (fs)
-			{
-				_m_reset();
-				textbase_.load(fs);
-				behavior_->pre_calc_lines(width_pixels());
-				render(API::is_focus_window(window_));
-				_m_scrollbar();
-			}
+			if (!textbase_.load(fs))
+				return false;
+			
+			_m_reset();
+			behavior_->pre_calc_lines(width_pixels());
+			render(API::is_focus_window(window_));
+			_m_scrollbar();
+			return true;
 		}
 
 		bool text_editor::text_area(const nana::rectangle& r)
@@ -1830,7 +1830,7 @@ namespace nana{	namespace gui{	namespace widgets
 				int x = text_area_.area.x + static_cast<int>(tx_area.width);
 				if (nullptr == wdptr)
 				{
-					auto scptr = std::make_unique<gui::scroll<true>>();
+					std::unique_ptr<gui::scroll<true>> scptr(new gui::scroll<true>);
 					wdptr = scptr.get();
 					wdptr->create(window_, nana::rectangle(x, text_area_.area.y, text_area_.vscroll, tx_area.height));
 					wdptr->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
@@ -1861,7 +1861,7 @@ namespace nana{	namespace gui{	namespace widgets
 				int y = text_area_.area.y + static_cast<int>(tx_area.height);
 				if(nullptr == wdptr)
 				{
-					auto scptr = std::make_unique<gui::scroll<false>>();
+					std::unique_ptr<gui::scroll<false>> scptr(new gui::scroll<false>);
 					wdptr = scptr.get();
 					wdptr->create(window_, nana::rectangle(text_area_.area.x, y, tx_area.width, text_area_.hscroll));
 					wdptr->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);

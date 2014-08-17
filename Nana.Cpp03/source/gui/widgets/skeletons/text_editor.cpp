@@ -1006,16 +1006,16 @@ namespace nana{	namespace gui{	namespace widgets
 			text_area_.border_renderer = fn;
 		}
 
-		void text_editor::load(const nana::char_t* fs)
+		bool text_editor::load(const nana::char_t* fs)
 		{
-			if(fs)
-			{
-				_m_reset();
-				textbase_.load(fs);
-				behavior_->pre_calc_lines(width_pixels());
-				render(API::is_focus_window(window_));
-				_m_scrollbar();
-			}
+			if (!textbase_.load(fs))
+				return false;
+			
+			_m_reset();
+			behavior_->pre_calc_lines(width_pixels());
+			render(API::is_focus_window(window_));
+			_m_scrollbar();
+			return true;
 		}
 
 		bool text_editor::text_area(const nana::rectangle& r)

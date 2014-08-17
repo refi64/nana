@@ -256,11 +256,8 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 			internal_scope_guard lock;
 			drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
-			if(editor)
-			{
-				editor->load(file);
+			if(editor && editor->load(file))
 				API::update_window(handle());
-			}
 		}
 
 		void textbox::store(const nana::char_t* file) const

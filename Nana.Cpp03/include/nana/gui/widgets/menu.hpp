@@ -162,6 +162,8 @@ namespace nana{ namespace gui{
 		bool exit_submenu();
 		std::size_t size() const;
 		int send_shortkey(nana::char_t key);
+		void pick();
+
 		menu& max_pixels(unsigned);
 		unsigned max_pixels() const;
 

@@ -300,6 +300,9 @@ namespace gui
 								state_.menu_active = false;
 							}
 							break;
+						case keyboard::enter:
+							state_.menu->pick();
+							break;
 						default:
 							{
 								if(2 != state_.menu->send_shortkey(ei.keyboard.key))

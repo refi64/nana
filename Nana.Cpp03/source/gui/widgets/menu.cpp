@@ -731,7 +731,7 @@ namespace nana{ namespace gui{
 
 					make_event<events::destroy>(*this, &menu_window::_m_destroy);
 					make_event<events::key_down>(*this, &menu_window::_m_key_down);
-					make_event<events::mouse_up>(*this, &menu_window::_m_strike);
+					make_event<events::mouse_up>(*this, &menu_window::pick);
 
 					if(want_focus_)
 						event_focus_ = make_event<events::focus>(*this, &menu_window::_m_focus_changed);
@@ -793,59 +793,8 @@ namespace nana{ namespace gui{
 
 					return object->get_drawer_trigger().send_shortkey(key);
 				}
-			private:
-				//_m_destroy just destroys the children windows.
-				//If the all window including parent windows want to be closed call the _m_close_all() instead of close()
-				void _m_destroy()
-				{
-					if(this->submenu_.parent)
-					{
-						this->submenu_.parent->submenu_.child = 0;
-						this->submenu_.parent->submenu_.object = 0;
-					}
 
-					if(this->submenu_.child)
-					{
-						menu_window * tail = this;
-						while(tail->submenu_.child) tail = tail->submenu_.child;
-
-						while(tail != this)
-						{
-							menu_window * junk = tail;
-							tail = tail->submenu_.parent;
-							junk->close();
-						}
-					}
-				}
-
-				void _m_close_all()
-				{
-					menu_window * root = this;
-					while(root->submenu_.parent)
-						root = root->submenu_.parent;
-
-					//Avoid generating a focus event when the menu is destroying and a focus event.
-					if (event_focus_)
-						umake_event(event_focus_);
-
-					if(root != this)
-					{
-						//Disconnect the menu chain at this menu, and delete the menus before this.
-						this->submenu_.parent->submenu_.child = 0;
-						this->submenu_.parent->submenu_.object = 0;
-						this->submenu_.parent = 0;
-						root->close();
-						//The submenu is treated its parent menu as an owner window,
-						//if the root is closed, the all submenus will be closed
-					}
-					else
-					{
-						//Then, delete the menus from this.
-						this->close();
-					}
-				}
-
-				void _m_strike()
+				void pick()
 				{
 					menu_window * object = this;
 					while(object->submenu_.child)
@@ -911,6 +860,57 @@ namespace nana{ namespace gui{
 						}
 					}
 				}
+			private:
+				//_m_destroy just destroys the children windows.
+				//If the all window including parent windows want to be closed call the _m_close_all() instead of close()
+				void _m_destroy()
+				{
+					if(this->submenu_.parent)
+					{
+						this->submenu_.parent->submenu_.child = 0;
+						this->submenu_.parent->submenu_.object = 0;
+					}
+
+					if(this->submenu_.child)
+					{
+						menu_window * tail = this;
+						while(tail->submenu_.child) tail = tail->submenu_.child;
+
+						while(tail != this)
+						{
+							menu_window * junk = tail;
+							tail = tail->submenu_.parent;
+							junk->close();
+						}
+					}
+				}
+
+				void _m_close_all()
+				{
+					menu_window * root = this;
+					while(root->submenu_.parent)
+						root = root->submenu_.parent;
+
+					//Avoid generating a focus event when the menu is destroying and a focus event.
+					if (event_focus_)
+						umake_event(event_focus_);
+
+					if(root != this)
+					{
+						//Disconnect the menu chain at this menu, and delete the menus before this.
+						this->submenu_.parent->submenu_.child = 0;
+						this->submenu_.parent->submenu_.object = 0;
+						this->submenu_.parent = 0;
+						root->close();
+						//The submenu is treated its parent menu as an owner window,
+						//if the root is closed, the all submenus will be closed
+					}
+					else
+					{
+						//Then, delete the menus from this.
+						this->close();
+					}
+				}
 
 				//when the focus of the menu window is losing, close the menu.
 				//But here is not every menu window may have focus event installed,
@@ -946,7 +946,7 @@ namespace nana{ namespace gui{
 						this->goto_submenu();
 						break;
 					case keyboard::enter:
-						this->_m_strike();
+						this->pick();
 						break;
 					default:
 						if(2 != send_shortkey(ei.keyboard.key))
@@ -1230,6 +1230,12 @@ namespace nana{ namespace gui{
 		int menu::send_shortkey(nana::char_t key)
 		{
 			return (impl_->uiobj ? impl_->uiobj->send_shortkey(key) : 0);
+		}
+
+		void menu::pick()
+		{
+			if(impl_->uiobj)
+				impl_->uiobj->pick();
 		}
 
 		menu& menu::max_pixels(unsigned px)

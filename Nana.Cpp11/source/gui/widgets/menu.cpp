@@ -727,7 +727,7 @@ namespace nana{ namespace gui{
 
 					make_event<events::destroy>(*this, &menu_window::_m_destroy);
 					make_event<events::key_down>(*this, &menu_window::_m_key_down);
-					make_event<events::mouse_up>(*this, &menu_window::_m_strike);
+					make_event<events::mouse_up>(*this, &menu_window::pick);
 
 					if (want_focus_)
 						event_focus_ = make_event<events::focus>(*this, &menu_window::_m_focus_changed);
@@ -789,6 +789,73 @@ namespace nana{ namespace gui{
 
 					return object->get_drawer_trigger().send_shortkey(key);
 				}
+
+				void pick()
+				{
+					menu_window * object = this;
+					while (object->submenu_.child)
+						object = object->submenu_.child;
+
+					auto active = object->get_drawer_trigger().active();
+					if (active != npos)
+					{
+						auto * menu = object->get_drawer_trigger().data();
+						if (menu)
+						{
+							menu_item_type & item = menu->items.at(active);
+							if (item.flags.splitter == false && item.sub_menu == nullptr)
+							{
+								//There is a situation that menu will not call functor if the item style is check_option
+								//and it is checked before clicking.
+								bool call_functor = true;
+
+								if (checks::highlight == item.style)
+								{
+									item.flags.checked = !item.flags.checked;
+								}
+								else if (checks::option == item.style)
+								{
+									if (active > 0)
+									{
+										//clear the checked state in front of active if it is check_option.
+										auto i = active;
+										do
+										{
+											--i;
+											menu_item_type & im = menu->items.at(i);
+											if (im.flags.splitter) break;
+
+											if (checks::option == im.style && im.flags.checked)
+												im.flags.checked = false;
+										} while (i);
+									}
+
+									for (auto i = active + 1; i < menu->items.size(); ++i)
+									{
+										menu_item_type & im = menu->items.at(i);
+										if (im.flags.splitter) break;
+
+										if ((checks::option == im.style) && im.flags.checked)
+											im.flags.checked = false;
+									}
+
+									item.flags.checked = true;
+								}
+
+								this->_m_close_all();	//means deleting this;
+								//The deleting operation has moved here, because item.functor.operator()(ip)
+								//may create a window, which make a killing focus for menu window, if so the close_all
+								//operation preformences after item.functor.operator()(ip), that would be deleting this object twice!
+
+								if (call_functor && item.flags.enabled && item.functor)
+								{
+									item_type::item_proxy ip(active, item);
+									item.functor.operator()(ip);
+								}
+							}
+						}
+					}
+				}
 			private:
 				//_m_destroy just destroys the children windows.
 				//The all window including parent windows want to be closed by calling the _m_close_all() instead of close()
@@ -841,73 +908,6 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void _m_strike()
-				{
-					menu_window * object = this;
-					while(object->submenu_.child)
-						object = object->submenu_.child;
-
-					auto active = object->get_drawer_trigger().active();
-					if(active != npos)
-					{
-						auto * menu = object->get_drawer_trigger().data();
-						if(menu)
-						{
-							menu_item_type & item = menu->items.at(active);
-							if(item.flags.splitter == false && item.sub_menu == nullptr)
-							{
-								//There is a situation that menu will not call functor if the item style is check_option
-								//and it is checked before clicking.
-								bool call_functor = true;
-
-								if(checks::highlight == item.style)
-								{
-									item.flags.checked = !item.flags.checked;
-								}
-								else if(checks::option == item.style)
-								{
-									if(active > 0)
-									{
-										//clear the checked state in front of active if it is check_option.
-										auto i = active;
-										do
-										{
-											--i;
-											menu_item_type & im = menu->items.at(i);
-											if(im.flags.splitter) break;
-
-											if(checks::option == im.style && im.flags.checked)
-												im.flags.checked = false;
-										}while(i);
-									}
-
-									for(auto i = active + 1; i < menu->items.size(); ++i)
-									{
-										menu_item_type & im = menu->items.at(i);
-										if(im.flags.splitter) break;
-
-										if((checks::option == im.style) && im.flags.checked)
-											im.flags.checked = false;
-									}
-
-									item.flags.checked = true;
-								}
-
-								this->_m_close_all();	//means deleting this;
-								//The deleting operation has moved here, because item.functor.operator()(ip)
-								//may create a window, which make a killing focus for menu window, if so the close_all
-								//operation preformences after item.functor.operator()(ip), that would be deleting this object twice!
-
-								if(call_functor && item.flags.enabled && item.functor)
-								{
-									item_type::item_proxy ip(active, item);
-									item.functor.operator()(ip);
-								}
-							}
-						}
-					}
-				}
-
 				//when the focus of the menu window is losing, close the menu.
 				//But here is not every menu window may have focus event installed,
 				//It is only installed when the owner of window is the desktop window.
@@ -942,7 +942,7 @@ namespace nana{ namespace gui{
 						this->goto_submenu();
 						break;
 					case keyboard::enter:
-						this->_m_strike();
+						this->pick();
 						break;
 					default:
 						if(2 != send_shortkey(ei.keyboard.key))
@@ -1227,6 +1227,12 @@ namespace nana{ namespace gui{
 		int menu::send_shortkey(nana::char_t key)
 		{
 			return (impl_->uiobj ? impl_->uiobj->send_shortkey(key) : 0);
+		}
+
+		void menu::pick()
+		{
+			if (impl_->uiobj)
+				impl_->uiobj->pick();
 		}
 
 		menu& menu::max_pixels(unsigned px)

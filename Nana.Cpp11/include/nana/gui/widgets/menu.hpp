@@ -157,6 +157,7 @@ namespace nana{ namespace gui{
 		bool exit_submenu();						///< Closes the current window of the sub menu.
 		std::size_t size() const;					///< Return the number of items.
 		int send_shortkey(nana::char_t key);
+		void pick();
 
 		menu& max_pixels(unsigned);				    ///< Sets the max width in pixels of the item.
 		unsigned max_pixels() const;

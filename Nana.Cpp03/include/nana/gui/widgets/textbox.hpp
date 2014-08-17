@@ -92,6 +92,7 @@ namespace nana{ namespace gui{
 		void load(const nana::char_t* file);
 		void store(const nana::char_t* file) const;
 		void store(const nana::char_t* file, nana::unicode::t encoding) const;
+		textbox& reset(const nana::string& newtext = STR(""));
 
 		///@brief	The file of last store operation.
 		///@return	The filename

@@ -254,7 +254,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			if(0 == file)
 				return;
 
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
 			if(editor)
 			{
@@ -265,7 +265,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		void textbox::store(const nana::char_t* file) const
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			const drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
 			if(editor && file)
 				editor->textbase().store(file);
@@ -273,15 +273,28 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		void textbox::store(const nana::char_t* file, nana::unicode::t encoding) const
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			const drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
 			if(editor && file)
 				editor->textbase().store(file, encoding);
 		}
 
+		textbox& textbox::reset(const nana::string& str)
+		{
+			internal_scope_guard lock;
+			drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
+			if (editor)
+			{
+				editor->text(str);
+				editor->textbase().reset();
+				API::update_window(this->handle());
+			}
+			return *this;
+		}
+
 		nana::string textbox::filename() const
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			const drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
 			if(editor)
 				return editor->textbase().filename();
@@ -291,7 +304,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		bool textbox::edited() const
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			const drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
 			return (editor ? editor->textbase().edited() : false);
 		}
@@ -307,7 +320,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		bool textbox::saved() const
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			const drawerbase::textbox::drawer::text_editor* editor = get_drawer_trigger().editor();
 			return (editor ? editor->textbase().saved() : false);
 		}
@@ -383,7 +396,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		textbox& textbox::tip_string(const nana::string& str)
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
 			if(editor && editor->tip_string(str))
 				API::refresh_window(this->handle());
@@ -400,14 +413,14 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		bool textbox::selected() const
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
 			return (editor ? editor->selected() : false);
 		}
 
 		void textbox::select(bool yes)
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			widgets::skeletons::text_editor * editor = get_drawer_trigger().editor();
 			if(editor && editor->select(yes))
 				API::refresh_window(*this);		
@@ -415,7 +428,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		void textbox::copy() const
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
 			if(editor)
 				editor->copy();
@@ -423,7 +436,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		void textbox::paste()
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
 			if(editor)
 			{
@@ -434,7 +447,7 @@ namespace nana{ namespace gui{ namespace drawerbase {
 
 		void textbox::del()
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
 			if(editor)
 			{
@@ -523,14 +536,14 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		//Override _m_caption for caption()
 		nana::string textbox::_m_caption() const
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			const drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
 			return (editor ? editor->text() : nana::string());
 		}
 
 		void textbox::_m_caption(const nana::string& str)
 		{
-			internal_scope_guard isg;
+			internal_scope_guard lock;
 			drawerbase::textbox::drawer::text_editor * editor = get_drawer_trigger().editor();
 			if(editor)
 			{

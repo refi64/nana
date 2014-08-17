@@ -453,6 +453,12 @@ namespace skeletons
 			changed_ = false;
 		}
 
+		void reset()
+		{
+			filename_.clear();
+			changed_ = false;
+		}
+
 		bool saved() const
 		{
 			return ! not_saved();

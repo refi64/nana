@@ -981,6 +981,8 @@ namespace nana{	namespace gui{	namespace widgets
 				if (autl)
 				{
 					behavior_ = new behavior_linewrapped(*this);
+					text_area_.vscroll = text_area_.scroll_pixels;
+					text_area_.hscroll = 0;
 					behavior_->pre_calc_lines(width_pixels());
 				}
 				else

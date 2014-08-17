@@ -966,6 +966,8 @@ namespace nana{	namespace gui{	namespace widgets
 				if (autl)
 				{
 					behavior_.reset(new behavior_linewrapped(*this));
+					text_area_.vscroll = text_area_.scroll_pixels;
+					text_area_.hscroll = 0;
 					behavior_->pre_calc_lines(width_pixels());
 				}
 				else
@@ -2552,9 +2554,7 @@ namespace nana{	namespace gui{	namespace widgets
 					multi_lines(true),
 					editable(true),
 					enable_background(true),
-					enable_counterpart(false),
-					vscroll(nullptr),
-					hscroll(nullptr)
+					enable_counterpart(false)
 			{}
 		//end struct attributes
 

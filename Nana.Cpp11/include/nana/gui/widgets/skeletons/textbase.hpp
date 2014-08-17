@@ -132,18 +132,16 @@ namespace skeletons
 			text_cont_.clear();		//Clear only if the file can be opened.
 			attr_max_.reset();
 
-			std::string str;
-			std::size_t lines = 0;
+			std::string str_mbs;
 			while(ifs.good())
 			{
-				std::getline(ifs, str);
-				text_cont_.push_back(nana::charset(str));
+				std::getline(ifs, str_mbs);
+				text_cont_.emplace_back(nana::charset(str_mbs));
 				if(text_cont_.back().size() > attr_max_.size)
 				{
 					attr_max_.size = text_cont_.back().size();
-					attr_max_.line = lines;
+					attr_max_.line = text_cont_.size() - 1;
 				}
-				++lines;
 			}
 
 			_m_saved(fs);
@@ -215,15 +213,11 @@ namespace skeletons
 						byte_order_translate_4bytes(str);
 				}
 
-				text_cont_.push_back(nana::charset(str, encoding));
-				if(text_cont_.back().size() > attr_max_.size)
-				{
-					attr_max_.size = text_cont_.back().size();
-					attr_max_.line = 0;
-				}
-			}
+				text_cont_.emplace_back(nana::charset(str, encoding));
 
-			std::size_t lines = 1;
+				attr_max_.size = text_cont_.back().size();
+				attr_max_.line = 0;
+			}
 
 			while(ifs.good())
 			{
@@ -237,13 +231,12 @@ namespace skeletons
 						byte_order_translate_4bytes(str);
 				}
 
-				text_cont_.push_back(nana::charset(str, encoding));
+				text_cont_.emplace_back(nana::charset(str, encoding));
 				if(text_cont_.back().size() > attr_max_.size)
 				{
 					attr_max_.size = text_cont_.back().size();
-					attr_max_.line = lines;
+					attr_max_.line = text_cont_.size() - 1;
 				}
-				++lines;
 			}
 
 			_m_saved(fs);

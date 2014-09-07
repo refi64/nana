@@ -1,19 +1,18 @@
 
 #include <nana/gui/dragger.hpp>
 
-namespace nana{ namespace gui{
-
-
+namespace nana
+{
 	class dragger::dragger_impl_t
 	{
 		struct drag_target_t
 		{
 			window wd;
-			nana::rectangle restrict_area;
-			nana::arrange	move_direction;
-			nana::point		origin;
+			rectangle restrict_area;
+			arrange	move_direction;
+			point		origin;
 
-			drag_target_t(window w, const nana::rectangle& r, nana::arrange m)
+			drag_target_t(window w, const rectangle& r, arrange m)
 				: wd(w), restrict_area(r), move_direction(m)
 			{}
 		};
@@ -36,7 +35,7 @@ namespace nana{ namespace gui{
 			_m_clear_triggers();
 		}
 
-		void drag_target(window wd, const nana::rectangle& restrict_area, arrange arg)
+		void drag_target(window wd, const rectangle& restrict_area, arrange arg)
 		{
 			for (auto & td : targets_)
 			{
@@ -66,11 +65,14 @@ namespace nana{ namespace gui{
 		{
 			trigger_t tg;
 			tg.wd = wd;
-			auto f = std::bind(&dragger_impl_t::_m_trace, this, std::placeholders::_1);
-			tg.press = API::make_event<events::mouse_down>(wd, f);
-			tg.over = API::make_event<events::mouse_move>(wd, f);
-			tg.release = API::make_event<events::mouse_up>(wd, f);
-			tg.destroy = API::make_event<events::destroy>(wd, f);
+			auto fn = std::bind(&dragger_impl_t::_m_trace, this, std::placeholders::_1);
+			auto & events = API::events(wd);
+			tg.press	= events.mouse_down.connect(fn);
+			tg.over		= events.mouse_move.connect(fn);
+			tg.release	= events.mouse_up.connect(fn);
+			tg.destroy = events.destroy.connect([this](const arg_destroy& arg){
+				_m_destroy(arg.window_handle);
+			});
 
 			triggers_.push_back(tg);
 		}
@@ -88,14 +90,14 @@ namespace nana{ namespace gui{
 			triggers_.clear();
 		}
 
-		void _m_destroy(const eventinfo& ei)
+		void _m_destroy(::nana::window wd)
 		{
 			for(auto i = triggers_.begin(); i != triggers_.end(); ++i)
 			{
-				if(i->wd == ei.window)
+				if(i->wd == wd)
 				{
 					triggers_.erase(i);
-					API::capture_window(ei.window, false);
+					API::capture_window(wd, false);
 					return;
 				}
 			}
@@ -116,13 +118,13 @@ namespace nana{ namespace gui{
 				pos.y = restr_area.y;
 		}
 
-		void _m_trace(const eventinfo& ei)
+		void _m_trace(const arg_mouse& arg)
 		{
-			switch(ei.identifier)
+			switch(arg.evt_code)
 			{
-			case events::mouse_down::identifier:
+			case event_code::mouse_down:
 				dragging_ = true;
-				API::capture_window(ei.window, true);
+				API::capture_window(arg.window_handle, true);
 				origin_ = API::cursor_position();
 				for(auto & t : targets_)
 				{
@@ -132,8 +134,8 @@ namespace nana{ namespace gui{
 						API::calc_screen_point(owner, t.origin);
 				}
 				break;
-			case events::mouse_move::identifier:
-				if(dragging_ && ei.mouse.left_button)
+			case event_code::mouse_move:
+				if(dragging_ && arg.left_button)
 				{
 					nana::point pos = API::cursor_position();
 					pos.x -= origin_.x;
@@ -170,8 +172,8 @@ namespace nana{ namespace gui{
 					}
 				}
 				break;
-			case events::mouse_up::identifier:
-				API::capture_window(ei.window, false);
+			case event_code::mouse_up:
+				API::capture_window(arg.window_handle, false);
 				dragging_ = false;
 				break;
 			default:
@@ -217,6 +219,4 @@ namespace nana{ namespace gui{
 			impl_->trigger(tg);
 		}
 	//end class dragger
-
-}//end namespace gui
 }//end namespace nana

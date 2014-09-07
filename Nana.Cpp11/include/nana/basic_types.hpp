@@ -78,23 +78,20 @@ namespace nana
 		typedef nana::detail::drawable_impl_type*	drawable_type;
 	}
 
-	namespace gui
+	enum class mouse_action
 	{
-		enum class mouse_action
-		{
-			begin, normal = begin, over, pressed, end
-		};
+		begin, normal = begin, over, pressed, end
+	};
 
-		enum class element_state
-		{
-			normal,
-			hovered,
-			focus_normal,
-			focus_hovered,
-			pressed,
-			disabled
-		};
-	}
+	enum class element_state
+	{
+		normal,
+		hovered,
+		focus_normal,
+		focus_hovered,
+		pressed,
+		disabled
+	};
 
 	typedef unsigned scalar_t;
 	typedef unsigned char	uint8_t;

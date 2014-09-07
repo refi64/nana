@@ -22,89 +22,24 @@
 
 namespace nana
 {
-namespace gui
-{
-	template<typename Form, bool IsMakeVisible = false>
+	template<typename Form, bool IsMakeVisible = true>
 	class form_loader
 	{
 	public:
-		Form& operator()()	const
+		template<typename... Args>
+		Form & operator()(Args &&... args) const
 		{
-			Form* res = detail::bedrock::instance().rt_manager.create_form<Form>();
-			if(res == 0)
+			Form* res = detail::bedrock::instance().rt_manager.create_form<Form>(std::forward<Args>(args)...);
+			if (nullptr == res)
 				throw nana::bad_window("form_loader.operator(): failed to create a window");
 
-			if(IsMakeVisible) res->show();
+			if (IsMakeVisible) res->show();
 
 			return *res;
 		}
 
-		Form& operator()(widget& owner)	const
-		{
-			Form* res = detail::bedrock::instance().rt_manager.create_form<Form, widget&>(owner);
-			if(res == 0)
-				throw nana::bad_window("form_loader.operator(): failed to create a window");
-			if(IsMakeVisible) res->show();
-
-			return *res;
-		}
-
-		Form& operator()(window owner) const
-		{
-			Form* res = detail::bedrock::instance().rt_manager.create_form<Form, window>(owner);
-			if(res == 0)
-				throw nana::bad_window("form_loader.operator(): failed to create a window");
-			if(IsMakeVisible) res->show();
-
-			return *res;
-		}
-
-		template<typename Param1, typename Param2>
-		Form& operator()(Param1 p1, Param2 p2) const
-		{
-			Form* res = detail::bedrock::instance().rt_manager.create_form<Form, Param1, Param2>(p1, p2);
-			if(res == 0)
-				throw nana::bad_window("form_loader.operator(): failed to create a window");
-			if(IsMakeVisible) res->show();
-
-			return *res;
-		}
-
-		template<typename Param1, typename Param2, typename Param3>
-		Form& operator()(Param1 p1, Param2 p2, Param3 p3) const
-		{
-			Form* res = detail::bedrock::instance().rt_manager.create_form<Form, Param1, Param2, Param3>(p1, p2, p3);
-			if(res == 0)
-				throw nana::bad_window("form_loader.operator(): failed to create a window");
-			if(IsMakeVisible) res->show();
-
-			return *res;
-		}
-
-		template<typename Param1, typename Param2, typename Param3, typename Param4>
-		Form& operator()(Param1 p1, Param2 p2, Param3 p3, Param4 p4) const
-		{
-			Form* res = detail::bedrock::instance().rt_manager.create_form<Form, Param1, Param2, Param3, Param4>(p1, p2, p3, p4);
-			if(res == 0)
-				throw nana::bad_window("form_loader.operator(): failed to create a window");
-			if(IsMakeVisible) res->show();
-
-			return *res;
-		}
-
-		template<typename Param1, typename Param2, typename Param3, typename Param4, typename Param5>
-		Form& operator()(Param1 p1, Param2 p2, Param3 p3, Param4 p4, Param5 p5) const
-		{
-			Form* res = detail::bedrock::instance().rt_manager.create_form<Form, Param1, Param2, Param3, Param4, Param5>(p1, p2, p3, p4, p5);
-			if(res == 0)
-				throw nana::bad_window("form_loader.operator(): failed to create a window");
-			if(IsMakeVisible) res->show();
-
-			return *res;
-		}
 	};
 
 	void exec();
-}//end namespace gui
 }//end namespace nana
 #endif

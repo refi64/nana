@@ -1,6 +1,7 @@
 /*
  *	Nana GUI Programming Interface Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
@@ -14,9 +15,12 @@
 #include <nana/config.hpp>
 #include GUI_BEDROCK_HPP
 #include "effects.hpp"
+#include "detail/general_events.hpp"
 #include <nana/paint/image.hpp>
+#include <memory>
 
-namespace nana{	namespace gui{
+namespace nana
+{
 	class drawer_trigger;
 	class widget;
 
@@ -34,77 +38,31 @@ namespace API
 	namespace dev
 	{
 		template<typename Object, typename Concept>
-		void attach_signal(window wd, Object& object, void (Concept::*f)(detail::signals::code, const gui::detail::signals&))
+		void attach_signal(window wd, Object& object, void (Concept::*f)(::nana::detail::signals::code, const ::nana::detail::signals&))
 		{
-			using namespace gui::detail;
+			using namespace ::nana::detail;
 			bedrock::instance().wd_manager.attach_signal(reinterpret_cast<bedrock::core_window_t*>(wd), object, f);
 		}
 
-		template<typename Fn>
-		event_handle make_event(event_code evt_code, window wd, Fn fn, bool at_first)
-		{
-			auto & b = gui::detail::bedrock::instance();
-			return b.evt_manager.make(evt_code, wd, b.category(reinterpret_cast<gui::detail::bedrock::core_window_t*>(wd)), fn, at_first);
-		}
-
-		event_handle make_drawer_event(event_code, window);
-
-		template<typename Event>
-		event_handle make_drawer_event(window wd)
-		{
-			using namespace gui::detail;
-			typedef typename std::remove_pointer<typename std::remove_reference<Event>::type>::type event_t;
-			if(std::is_base_of<detail::event_type_tag, event_t>::value)
-				return make_drawer_event(event_t::identifier, wd);
-
-			return nullptr;
-		}
-#if  defined(_MSC_VER)
-	#if _MSC_VER >= 1800
-		#define NANA_API_MAKE_EVENTS
-	#elif defined(NANA_API_MAKE_EVENTS)
-		#undef NANA_API_MAKE_EVENTS
-	#endif
-#else
-	#define NANA_API_MAKE_EVENTS
-#endif
-
-#ifdef NANA_API_MAKE_EVENTS
-
-		template<typename ...Events>
-		struct make_drawer_events;
-
-		template<typename Event, typename ...Events>
-		struct make_drawer_events<Event, Events...>
-		{
-			static void make(window wd)
-			{
-				make_drawer_event<Event>(wd);
-				make_drawer_events<Events...>::make(wd);
-			}
-		};
-
-		template<typename Event>
-		struct make_drawer_events<Event>
-		{
-			static void make(window wd)
-			{
-				make_drawer_event<Event>(wd);
-			}
-		};
-#endif
+		bool set_events(window, const std::shared_ptr<general_events>&);
 
 		void attach_drawer(widget&, drawer_trigger&);
 		nana::string window_caption(window);
 		void window_caption(window, const nana::string& str);
 
-		window create_window(window, bool nested, const rectangle&, const appearance&);
-		window create_widget(window, const rectangle&);
-		window create_lite_widget(window, const rectangle&);
-		window create_frame(window, const rectangle&);
+		window create_window(window, bool nested, const rectangle&, const appearance&, widget* attached);
+		window create_widget(window, const rectangle&, widget* attached);
+		window create_lite_widget(window, const rectangle&, widget* attached);
+		window create_frame(window, const rectangle&, widget* attached);
 
 		paint::graphics* window_graphics(window);
 	}//end namespace dev
+
+
+	namespace detail
+	{
+		general_events* get_general_events(window);
+	}//end namespace detail
 
 	void exit();
 
@@ -121,12 +79,13 @@ namespace API
 	void window_icon_default(const paint::image&);
 	void window_icon(window, const paint::image&);
 	bool empty_window(window);                            ///< Determines whether a window is existing.
+	void enable_dropfiles(window, bool);
 
     /// \brief Retrieves the native window of a Nana.GUI window.
     ///
     /// The native window type is platform-dependent. Under Microsoft Windows, a conversion can be employed between 
-    /// nana::gui::native_window_type and HWND through reinterpret_cast operator. Under X System, a conversion can 
-    /// be employed between nana::gui::native_window_type and Window through reinterpret_cast operator.
+    /// nana::native_window_type and HWND through reinterpret_cast operator. Under X System, a conversion can 
+    /// be employed between nana::native_window_type and Window through reinterpret_cast operator.
     /// \return If the function succeeds, the return value is the native window handle to the Nana.GUI window. If fails return zero.
 	native_window_type root(window);
 	window	root(native_window_type);                     ///< Retrieves the native window of a Nana.GUI window.
@@ -145,67 +104,32 @@ namespace API
 	window	get_owner_window(window);
 	bool	set_parent_window(window, window new_parent);
 
-	template<typename Event, typename Function>
-	event_handle make_event(window wd, Function function)
+	template<typename Widget=::nana::widget>
+	typename ::nana::dev::event_mapping<Widget>::type & events(window wd)
 	{
-		typedef typename std::remove_pointer<typename std::remove_reference<Event>::type>::type event_t;
-		if (std::is_base_of<detail::event_type_tag, event_t>::value)
-		{
-			gui::detail::bedrock & b = gui::detail::bedrock::instance();
-			return b.evt_manager.make(event_t::identifier, wd, b.category(reinterpret_cast<gui::detail::bedrock::core_window_t*>(wd)), function, false);
-		}
-		return nullptr;
+		typedef typename ::nana::dev::event_mapping<Widget>::type event_type;
+
+		internal_scope_guard lock;
+		auto * general_evt = detail::get_general_events(wd);
+		if (nullptr == general_evt)
+			throw std::runtime_error("API::events(): no events object or invalid window handle.");
+
+		if (std::is_same<decltype(*general_evt), event_type>::value)
+			return *static_cast<event_type*>(general_evt);
+		
+		auto * widget_evt = dynamic_cast<event_type*>(general_evt);
+		if (nullptr == widget_evt)
+			throw std::runtime_error("API::events(): The widget type and window handle do not match.");
+		return *widget_evt;
 	}
 
-#ifdef NANA_API_MAKE_EVENTS
-	template<typename ...Events>
-	struct make_events;
-
-	template<typename Event, typename ...Events>
-	struct make_events<Event, Events...>
+	template<typename EventArg, typename std::enable_if<std::is_base_of<::nana::detail::event_arg_interface, EventArg>::value>::type* = nullptr>
+	bool emit_event(event_code evt_code, window wd, const EventArg& arg)
 	{
-		template<typename Function>
-		static void make(window wd, Function fn)
-		{
-			make_event<Event, Function>(wd, fn);
-			make_events<Events...>::template make<Function>(wd, fn);
-		}
-	};
-
-	template<typename Event>
-	struct make_events<Event>
-	{
-		template<typename Function>
-		static void make(window wd, Function fn)
-		{
-			make_event<Event, Function>(wd, fn);
-		}
-	};
-#endif
-
-	template<typename Event>
-	void raise_event(window wd, eventinfo& ei)
-	{
-		typedef typename std::remove_pointer<typename std::remove_reference<Event>::type>::type event_t;
-		if(std::is_base_of<detail::event_type_tag, event_t>::value)
-			gui::detail::bedrock::raise_event(event_t::identifier, reinterpret_cast<gui::detail::bedrock::core_window_t*>(wd), ei, true);
+		auto & brock = ::nana::detail::bedrock::instance();
+		return brock.emit(evt_code, reinterpret_cast<::nana::detail::bedrock::core_window_t*>(wd), arg, true, brock.get_thread_context());
 	}
 
-
-	template<typename Event, typename Function>
-	event_handle bind_event(window trigger, window listener, Function function)
-	{
-		typedef typename std::remove_pointer<typename std::remove_reference<Event>::type>::type event_t;
-		if(std::is_base_of<detail::event_type_tag, event_t>::value)
-		{
-			gui::detail::bedrock & b = gui::detail::bedrock::instance();
-			return b.evt_manager.bind(event_t::identifier, trigger, listener, b.category(reinterpret_cast<gui::detail::bedrock::core_window_t*>(trigger)), function);
-		}
-
-		return 0;
-	}
-
-	void umake_event(window);
 	void umake_event(event_handle);
 
 	nana::point window_position(window);
@@ -249,11 +173,6 @@ namespace API
 	void window_cursor(window, cursor);
 	cursor window_cursor(window);
 
-	bool tray_insert(native_window_type, const char_t* tip, const char_t* ico);
-	bool tray_delete(native_window_type);
-	void tray_tip(native_window_type, const char_t* text);
-	void tray_icon(native_window_type, const char_t* icon);
-
 	void activate_window(window);
 	bool is_focus_window(window);
 	window focus_window();
@@ -263,7 +182,7 @@ namespace API
 	window	capture_window(window, bool);         ///< Enables or disables the window to grab the mouse input
 	void	capture_ignore_children(bool ignore); ///< Enables or disables the captured window whether redirects the mouse input to its children if the mouse is over its children.
 	void modal_window(window);                    ///< Blocks the routine til the specified window is closed.
-
+	void wait_for(window);
 	color_t foreground(window);
 	color_t foreground(window, color_t);
 	color_t background(window);
@@ -314,10 +233,9 @@ namespace API
 	void widget_borderless(window, bool);	///<Enables or disables a borderless widget.
 	bool widget_borderless(window);			///<Tests a widget whether it is borderless.
 
-	nana::gui::mouse_action mouse_action(window);
-	nana::gui::element_state element_state(window);
+	nana::mouse_action mouse_action(window);
+	nana::element_state element_state(window);
 }//end namespace API
-}//end namespace gui
 }//end namespace nana
 
 #endif

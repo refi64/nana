@@ -15,19 +15,17 @@ namespace nana
 
 	//The class noncopyable and nonmovable will be deprecated while the compiler
 	//supports the deleted functions
-	class noncopyable
+	struct noncopyable
 	{
-		noncopyable(const noncopyable&);
-		noncopyable& operator=(const noncopyable&);
-	public:
+		noncopyable(const noncopyable&) = delete;
+		noncopyable& operator=(const noncopyable&) = delete;
 		noncopyable();
 	};
 
-	class nonmovable
+	struct nonmovable
 	{
-		nonmovable(nonmovable&&);
-		nonmovable& operator=(nonmovable&&);
-	public:
+		nonmovable(nonmovable&&) = delete;
+		nonmovable& operator=(nonmovable&&) = delete;
 		nonmovable();
 	};
 

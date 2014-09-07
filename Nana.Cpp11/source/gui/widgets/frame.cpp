@@ -15,8 +15,6 @@
 
 namespace nana
 {
-namespace gui
-{
 	//class frame:: public widget_object<category::frame_tag>
 		frame::frame(){}
 
@@ -45,6 +43,5 @@ namespace gui
 			return API::frame_container(handle());
 		}
 	//end class frame
-}//end namespace gui
 }//end namespace nana
 

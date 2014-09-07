@@ -13,12 +13,11 @@
 #ifndef NANA_GUI_DETAIL_BEDROCK_HPP
 #define NANA_GUI_DETAIL_BEDROCK_HPP
 #include "window_manager.hpp"
-#include "event_manager.hpp"
+#include "events_operation.hpp"
 #include "runtime_manager.hpp"
+#include "general_events.hpp"
 
 namespace nana
-{
-namespace gui
 {
 	class internal_scope_guard
 	{
@@ -47,7 +46,7 @@ namespace detail
 		struct thread_context;
 
 		~bedrock();
-		void pump_event(window);
+		void pump_event(window, bool is_modal);
 		void map_thread_root_buffer(core_window_t* );
 		static int inc_window(unsigned tid = 0);
 		thread_context* open_thread_context(unsigned tid = 0);
@@ -55,7 +54,7 @@ namespace detail
 		void remove_thread_context(unsigned tid = 0);
 		static bedrock& instance();
 
-		nana::gui::category::flags category(core_window_t*);
+		::nana::category::flags category(core_window_t*);
 		core_window_t* focus();
 		native_window_type root(core_window_t*);
 
@@ -68,7 +67,7 @@ namespace detail
 		void remove_menu();
 		void empty_menu();
 
-		void get_key_state(nana::gui::detail::tag_keyboard&);
+		void get_key_state(arg_keyboard&);
 		bool set_keyboard_shortkey(bool yes);
 		bool whether_keyboard_shortkey() const;
 
@@ -81,15 +80,15 @@ namespace detail
 		void update_cursor(core_window_t *);
 	public:
 		window_manager_t	wd_manager;
-		event_manager		evt_manager;
-		runtime_manager<core_window_t*, bedrock>	rt_manager;
-		static bool fire_event_for_drawer(event_code, core_window_t*, eventinfo&, thread_context*);
-		static bool fire_event(event_code, core_window_t*, eventinfo&);
+		events_operation	evt_operation;
 
-		//raise_event
-		//@return: Returns true if the window is available, otherwise returns false
-		static bool raise_event(event_code, core_window_t*, eventinfo&, bool ask_update);
+		runtime_manager<core_window_t*, bedrock>	rt_manager;
+
+		bool emit(event_code, core_window_t*, const arg_mouse&, bool ask_update, thread_context*);
+		bool emit(event_code, core_window_t*, const event_arg_interface&, bool ask_update, thread_context*);
+		bool emit_drawer(event_code, core_window_t*, const event_arg_interface&, thread_context*);
 	private:
+		bool _m_emit_core(event_code, core_window_t*, bool draw_only, const event_arg_interface&);
 		void _m_event_filter(event_code, core_window_t*, thread_context*);
 	private:
 		static bedrock bedrock_object;
@@ -98,7 +97,6 @@ namespace detail
 		private_impl *impl_;
 	};//end class bedrock
 }//end namespace detail
-}//end namespace gui
 }//end namespace nana
 
 #endif

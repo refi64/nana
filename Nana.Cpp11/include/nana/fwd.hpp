@@ -15,11 +15,7 @@
 
 namespace nana
 {
-	namespace gui
-	{
-		class filebox;
-		class msgbox;
-	}//end namespace gui
+	class filebox;
+	class msgbox;
 }//end namespace nana
-
 #endif	//NANA_FWD_HPP

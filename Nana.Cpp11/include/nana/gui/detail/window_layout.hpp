@@ -25,7 +25,7 @@ namespace nana
 	}
 }
 
-namespace nana{	namespace gui{
+namespace nana{
 namespace detail
 {
 	struct basic_window;
@@ -82,7 +82,6 @@ namespace detail
 		static data_section	data_sect;
 	};//end class window_layout
 }//end namespace detail
-}//end namespace gui
 }//end namespace nana
 
 #endif //NANA_GUI_DETAIL_WINDOW_LAYOUT_HPP

@@ -17,8 +17,6 @@
 
 namespace nana
 {
-namespace gui
-{
 namespace detail
 {
 
@@ -26,7 +24,7 @@ namespace detail
 	{
 		struct window_result
 		{
-			nana::gui::native_window_type handle;
+			native_window_type native_handle;
 
 			unsigned width;		//client size
 			unsigned height;	//client size
@@ -43,7 +41,8 @@ namespace detail
 #if defined(NANA_X11)
 		static void set_modal(native_window_type);
 #endif
-		static void enable_window(native_window_type, bool is_enabled);
+		static void enable_dropfiles(native_window_type, bool);
+		static void enable_window(native_window_type, bool);
 		static bool window_icon(native_window_type, const paint::image&);
 		static void activate_owner(native_window_type);
 		static void activate_window(native_window_type);
@@ -75,11 +74,6 @@ namespace detail
 		static void	caret_pos(native_window_type, int x, int y);
 		static void caret_visible(native_window_type, bool);
 
-		static bool notify_icon_add(native_window_type, const char_t* tip, const char_t* ico);
-		static bool notify_icon_delete(native_window_type);
-		static void notify_tip(native_window_type, const char_t* text);
-		static void notify_icon(native_window_type, const char_t* icon);
-
 		static void	set_focus(native_window_type);
 		static native_window_type get_focus_window();
 		static bool calc_screen_point(native_window_type, nana::point&);
@@ -91,6 +85,5 @@ namespace detail
 
 
 }//end namespace detail
-}//end namespace gui
 }//end namespace nana
 #endif

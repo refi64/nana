@@ -13,8 +13,6 @@
 
 namespace nana
 {
-namespace gui
-{
 	namespace drawerbase
 	{
 		namespace progress
@@ -114,10 +112,8 @@ namespace gui
 			void trigger::_m_draw_box(graph_reference graph)
 			{
 				rectangle r = graph.size();
-				graph.shadow_rectangle(r, gui::color::button_face_shadow_end, gui::color::button_face_shadow_start, true);
-
-				graph.rectangle_line(r,
-						0x808080, 0x808080, 0xFFFFFF, 0xFFFFFF);
+				graph.shadow_rectangle(r, color::button_face_shadow_end, color::button_face_shadow_start, true);
+				graph.rectangle_line(r, 0x808080, 0x808080, 0xFFFFFF, 0xFFFFFF);
 			}
 
 			void trigger::_m_draw_progress(graph_reference graph)
@@ -206,5 +202,4 @@ namespace gui
 			return get_drawer_trigger().unknown();
 		}
 	//end class progress
-}//end namespace gui
 }//end namespace nana

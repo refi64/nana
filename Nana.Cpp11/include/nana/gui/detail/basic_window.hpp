@@ -12,13 +12,15 @@
 #ifndef NANA_GUI_DETAIL_BASIC_WINDOW_HPP
 #define NANA_GUI_DETAIL_BASIC_WINDOW_HPP
 #include "drawer.hpp"
+#include "events_holder.hpp"
 #include "../basis.hpp"
 #include <nana/basic_types.hpp>
 #include <nana/system/platform.hpp>
 #include <nana/gui/effects.hpp>
+#include <memory>
 
-namespace nana{	namespace gui{
-
+namespace nana{
+	class widget;	//declaration ofr nana/widgets/widget.hpp
 namespace detail
 {
 	struct basic_window;
@@ -28,30 +30,30 @@ namespace detail
 	public:
 		typedef basic_window core_window_t;
 
-		caret_descriptor(core_window_t* wd, unsigned width, unsigned height);
+		caret_descriptor(core_window_t*, unsigned width, unsigned height);
 		~caret_descriptor();
 		void set_active(bool);
 		core_window_t* window() const;
 		void position(int x, int y);
-		void effective_range(nana::rectangle);
-		nana::point position() const;
+		void effective_range(::nana::rectangle);
+		::nana::point position() const;
 		void visible(bool isshow);
 		bool visible() const;
-		nana::size size() const;
-		void size(const nana::size&);
+		::nana::size size() const;
+		void size(const ::nana::size&);
 
 		void update();
 	private:
 		void _m_visible(bool isshow);
 	private:
 		core_window_t*	wd_;
-		nana::point point_;
-		nana::size	size_;
-		nana::size	paint_size_;
+		::nana::point point_;
+		::nana::size	size_;
+		::nana::size	paint_size_;
 		bool		visible_;
 		bool		real_visible_state_;
 		bool		out_of_range_;
-		nana::rectangle effective_range_;
+		::nana::rectangle effective_range_;
 	};//end class caret_descriptor
 
 	//tab_type
@@ -69,6 +71,7 @@ namespace detail
 	//struct basic_window
 	//@brief: a window data structure descriptor 
 	struct basic_window
+		: public events_holder
 	{
 		typedef std::vector<basic_window*> container;
 
@@ -90,11 +93,11 @@ namespace detail
 
 		//basic_window
 		//@brief: constructor for the root window
-		basic_window(basic_window* owner, gui::category::root_tag**);
+		basic_window(basic_window* owner, widget*, category::root_tag**);
 
 		template<typename Category>
-		basic_window(basic_window* parent, const rectangle& r, Category**)
-			: other(Category::value)
+		basic_window(basic_window* parent, const rectangle& r, widget* wdg, Category**)
+			: widget_ptr(wdg), other(Category::value)
 		{
 			drawer.bind(this);
 			if(parent)
@@ -108,9 +111,13 @@ namespace detail
 
 		//bind_native_window
 		//@brief: bind a native window and baisc_window
-		void bind_native_window(native_window_type, unsigned width, unsigned height, unsigned extra_width, unsigned extra_height, nana::paint::graphics&);
+		void bind_native_window(native_window_type, unsigned width, unsigned height, unsigned extra_width, unsigned extra_height, paint::graphics&);
 
 		void frame_window(native_window_type);
+	public:
+		//Override event_holder
+		bool set_events(const std::shared_ptr<general_events>&) override;
+		general_events * get_events() const override;
 	private:
 		void _m_init_pos_and_size(basic_window* parent, const rectangle&);
 		void _m_initialize(basic_window* parent);
@@ -121,8 +128,8 @@ namespace detail
 		point	pos_root;	//coordinate for root window
 		point	pos_owner;
 		size	dimension;
-		nana::size	min_track_size;
-		nana::size	max_track_size;
+		::nana::size	min_track_size;
+		::nana::size	max_track_size;
 
 		bool	visible;
 
@@ -132,11 +139,12 @@ namespace detail
 		basic_window	*parent;
 		basic_window	*owner;
 
-		nana::string	title;
-		nana::gui::detail::drawer	drawer;	//Self Drawer with owen graphics
+		::nana::string	title;
+		::nana::detail::drawer	drawer;	//Self Drawer with owen graphics
 		basic_window*		root_widget;	//A pointer refers to the root basic window, if the window is a root, the pointer refers to itself.
 		paint::graphics*	root_graph;		//Refer to the root buffer graphics
 		cursor	predef_cursor;
+		widget* const		widget_ptr;
 
 		struct flags_type
 		{
@@ -158,6 +166,7 @@ namespace detail
 		struct
 		{
 			caret_descriptor* caret;
+			general_events* attached_events;
 		}together;
 
 		struct
@@ -193,7 +202,7 @@ namespace detail
 				bool			ime_enabled;
 			};
 
-			category::flags category;
+			const category::flags category;
 			basic_window *active_window;	//if flags.take_active is false, the active_window still keeps the focus,
 											//if the active_window is null, the parent of this window keeps focus.
 			paint::graphics glass_buffer;	//if effect.bground is avaiable. Refer to window_layout::make_bground.
@@ -205,7 +214,7 @@ namespace detail
 				attr_frame_tag * frame;
 			}attribute;
 
-			other_tag(gui::category::flags);
+			other_tag(category::flags);
 			~other_tag();
 		}other;
 
@@ -216,7 +225,6 @@ namespace detail
 	};
 
 }//end namespace detail
-}//end namespace gui
 }//end namespace nana
 #endif
 

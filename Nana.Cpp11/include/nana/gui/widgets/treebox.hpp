@@ -28,8 +28,8 @@
 
 namespace nana
 {
-namespace gui
-{
+	class treebox;
+
 	namespace drawerbase
 	{
 		namespace treebox
@@ -37,16 +37,6 @@ namespace gui
 			enum class component
 			{
 				begin, expender = begin, crook, icon, text, bground, end
-			};
-
-			template<typename ItemProxy>
-			struct extra_events
-			{
-				typedef ItemProxy item_proxy;
-
-				nana::fn_group<void(window, item_proxy, bool)> expand;
-				nana::fn_group<void(window, item_proxy, bool)> checked;
-				nana::fn_group<void(window, item_proxy, bool)> selected;
 			};
 
 			struct node_image_tag
@@ -69,8 +59,8 @@ namespace gui
 				nana::string text;
 			};
 
-			typedef ::nana::gui::widgets::detail::compset<component, node_attribute> compset_interface;
-			typedef ::nana::gui::widgets::detail::compset_placer<component, node_attribute> compset_placer_interface;
+			typedef widgets::detail::compset<component, node_attribute> compset_interface;
+			typedef widgets::detail::compset_placer<component, node_attribute> compset_placer_interface;
 			
 			class renderer_interface
 			{
@@ -119,9 +109,8 @@ namespace gui
 
 				struct pseudo_node_type{};
 
-				typedef nana::gui::widgets::detail::tree_cont<treebox_node_type> tree_cont_type;
+				typedef widgets::detail::tree_cont<treebox_node_type> tree_cont_type;
 				typedef tree_cont_type::node_type	node_type;
-				typedef extra_events<item_proxy>	ext_event_type;
 
 				trigger();
 				~trigger();
@@ -163,19 +152,19 @@ namespace gui
 				unsigned node_width(const node_type*) const;
 
 				bool rename(node_type*, const nana::char_t* key, const nana::char_t* name);
-				ext_event_type& ext_event() const;
 			private:
 				//Overrides drawer_trigger methods
 				void attached(widget_reference, graph_reference)		override;
 				void refresh(graph_reference)	override;
-				void dbl_click(graph_reference, const eventinfo&)	override;
-				void mouse_down(graph_reference, const eventinfo&)	override;
-				void mouse_up(graph_reference, const eventinfo&)	override;
-				void mouse_move(graph_reference, const eventinfo&)	override;
-				void mouse_wheel(graph_reference, const eventinfo&)	override;
-				void resize(graph_reference, const eventinfo&)		override;
-				void key_down(graph_reference, const eventinfo&)	override;
-				void key_char(graph_reference, const eventinfo&)	override;
+				void dbl_click(graph_reference, const arg_mouse&)	override;
+				void mouse_down(graph_reference, const arg_mouse&)	override;
+				void mouse_up(graph_reference, const arg_mouse&)	override;
+				void mouse_move(graph_reference, const arg_mouse&)	override;
+				void mouse_wheel(graph_reference, const arg_wheel&)	override;
+				void mouse_leave(graph_reference, const arg_mouse&)	override;
+				void resized(graph_reference, const arg_resized&)		override;
+				void key_press(graph_reference, const arg_keyboard&)	override;
+				void key_char(graph_reference, const arg_keyboard&)	override;
 			private:
 				void _m_deal_adjust();
 			private:
@@ -338,15 +327,36 @@ namespace gui
 		}//end namespace treebox
 	}//end namespace drawerbase
 
+	struct arg_treebox
+	{
+		treebox& widget;
+		drawerbase::treebox::item_proxy & item;
+		bool	operated;
+	};
+
+	namespace drawerbase
+	{
+		namespace treebox
+		{
+			struct treebox_events
+				: public general_events
+			{
+				basic_event<arg_treebox> expanded;
+				basic_event<arg_treebox> checked;
+				basic_event<arg_treebox> selected;
+				basic_event<arg_treebox> hovered;
+			};
+		}//end namespace treebox
+	}//end namespace drawerbase
+
     /// Displays a hierarchical list of items, such as the files and directories on a disk.
 	class treebox
-		:public widget_object<category::widget_tag, drawerbase::treebox::trigger>
+		:public widget_object < category::widget_tag, drawerbase::treebox::trigger, drawerbase::treebox::treebox_events>
 	{
 	public:
         /// A type refers to the item and also used to iterate through the node.
 		typedef drawerbase::treebox::item_proxy	item_proxy;
 
-		typedef drawer_trigger_t::ext_event_type ext_event_type;
 		typedef drawerbase::treebox::node_image_tag node_image_type;
 
 		/// The interface of treebox item renderer
@@ -398,8 +408,6 @@ namespace gui
 		/// Determinte whether the checkbox is enabled.
 		bool checkable() const;
 
-		ext_event_type& ext_event() const;
-
 		treebox& icon(const nana::string& id, const node_image_type& node_img);
 
 		node_image_type& icon(const nana::string& id) const;
@@ -425,7 +433,5 @@ namespace gui
 		nana::string make_key_path(item_proxy i, const nana::string& splitter) const;///<returns the key path
 		item_proxy selected() const;
 	};//end class treebox
-}//end namespace gui
 }//end namespace nana
-
 #endif

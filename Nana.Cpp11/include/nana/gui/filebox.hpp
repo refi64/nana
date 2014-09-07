@@ -2,7 +2,7 @@
 #define NANA_GUI_FILEBOX_HPP
 #include <nana/gui/wvl.hpp>
 
-namespace nana{	namespace gui
+namespace nana
 {       /// Create an Open or Save dialog box to let user select the name of a file.
 	class filebox
 		: nana::noncopyable
@@ -56,6 +56,5 @@ namespace nana{	namespace gui
 	private:
 		implement * impl_;
 	};
-}//end namespace gui
 }//end namespace nana
 #endif

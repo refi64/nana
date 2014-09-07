@@ -13,8 +13,6 @@
 
 namespace nana
 {
-namespace gui
-{
 namespace detail
 {
 	//class element_store
@@ -22,7 +20,7 @@ namespace detail
 		: fast_ptr(nullptr)
 	{}
 
-	nana::gui::element::element_interface * const * element_store::bground(const std::string& name)
+	nana::element::element_interface * const * element_store::bground(const std::string& name)
 	{
 		element_interface * const * addr = &(bground_.table[name].fast_ptr);
 		return addr;
@@ -43,7 +41,5 @@ namespace detail
 		store.object = std::move(rv);
 		store.fast_ptr = store.object.get();
 	}
-
 }//end namespace detail
-}//end namespace gui
 }

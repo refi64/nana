@@ -15,9 +15,6 @@
 
 namespace nana
 {
-namespace gui
-{
-
 	//struct appearance
 	//@brief: Window appearance structure
 		appearance::appearance()
@@ -32,6 +29,5 @@ namespace gui
 				decoration(has_decorate)
 		{}
 	//end struct appearance
-}//end namespace gui
 }//end namespace nana
 

@@ -13,7 +13,6 @@
 #include <nana/config.hpp>
 
 #include PLATFORM_SPEC_HPP
-#include <nana/gui/detail/eventinfo.hpp>
 #include <shellapi.h>
 #include <stdexcept>
 
@@ -228,32 +227,18 @@ namespace detail
 		return nullptr;
 	}
 
-	//event_register
-	//@brief: some event is needed to register for system.
-	void platform_spec::event_register_filter(native_window_type wd, event_code eventid)
-	{
-		switch(eventid)
-		{
-		case event_code::mouse_drop:
-			::DragAcceptFiles(reinterpret_cast<HWND>(wd), true);
-			break;
-        default:
-            break;
-		}
-	}
-
 	platform_spec& platform_spec::instance()
 	{
 		static platform_spec object;
 		return object;
 	}
 
-	void platform_spec::keep_window_icon(gui::native_window_type wd, const paint::image& img)
+	void platform_spec::keep_window_icon(native_window_type wd, const paint::image& img)
 	{
 		iconbase_[wd] = img;
 	}
 
-	void platform_spec::release_window_icon(gui::native_window_type wd)
+	void platform_spec::release_window_icon(native_window_type wd)
 	{
 		iconbase_.erase(wd);
 	}

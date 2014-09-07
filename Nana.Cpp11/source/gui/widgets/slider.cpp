@@ -1,7 +1,8 @@
 
 #include <nana/gui/widgets/slider.hpp>
 
-namespace nana{ namespace gui{
+namespace nana
+{
 	namespace drawerbase
 	{
 		namespace slider
@@ -77,7 +78,6 @@ namespace nana{ namespace gui{
 				enum where_t{WhereNone, WhereBar, WhereSlider};
 				
 				typedef drawer_trigger::graph_reference graph_reference;
-				mutable extra_events ext_event;
 
 				controller()
 				{
@@ -106,7 +106,7 @@ namespace nana{ namespace gui{
 					return other_.wd;
 				}
 
-				void attached(nana::gui::slider& wd, graph_reference graph)
+				void attached(nana::slider& wd, graph_reference graph)
 				{
 					other_.wd = wd.handle();
 					other_.widget = &wd;
@@ -171,7 +171,7 @@ namespace nana{ namespace gui{
 						if(attr_.vcur > m)
 						{
 							attr_.vcur = m;
-							ext_event.value_changed(*other_.widget);
+							_m_emit_value_changed();
 						}
 
 						_m_mk_slider_pos_by_value();
@@ -255,16 +255,14 @@ namespace nana{ namespace gui{
 					return (attr_.pos != pos);
 				}
 
-				void set_slider_refpos(int x, int y)
+				void set_slider_refpos(::nana::point pos)
 				{
 					if(this->DirVertical == attr_.dir)
-						std::swap(x, y);
+						std::swap(pos.x, pos.y);
 
 					slider_state_.trace = slider_state_.TraceCapture;
 					slider_state_.snap_pos = static_cast<int>(attr_.pos);
-					slider_state_.refpos.x = x;
-					slider_state_.refpos.y = y;
-
+					slider_state_.refpos = pos;
 					API::capture_window(other_.wd, true);
 				}
 
@@ -352,9 +350,9 @@ namespace nana{ namespace gui{
 
 					if(cmpvalue != attr_.vcur)
 					{
-						this->_m_mk_slider_pos_by_value();
-						this->draw();
-						ext_event.value_changed(*other_.widget);
+						_m_mk_slider_pos_by_value();
+						draw();
+						_m_emit_value_changed();
 					}
 
 					return cmpvalue;
@@ -369,7 +367,7 @@ namespace nana{ namespace gui{
 				{
 					//Test if the slider is captured, the operation should be ignored. Because the mouse_leave always be generated even through
 					//the slider is captured.
-					if(slider_state_.trace == slider_state_.TraceCapture && (nana::gui::API::capture_window() == this->other_.wd))
+					if(slider_state_.trace == slider_state_.TraceCapture && (nana::API::capture_window() == this->other_.wd))
 						return false;
 
 					slider_state_.trace = slider_state_.TraceNone;
@@ -383,22 +381,23 @@ namespace nana{ namespace gui{
 				}
 
 			private:
+				void _m_emit_value_changed() const
+				{
+					other_.widget->events().value_changed.emit(::nana::arg_slider{ *other_.widget });
+				}
+
 				nana::rectangle _m_bar_area() const
 				{
-					nana::rectangle r;
-					nana::size sz = other_.graph->size();
+					auto sz = other_.graph->size();
+					nana::rectangle r = sz;
 					if(this->DirHorizontal == attr_.dir)
 					{
 						r.x = attr_.slider_scale / 2 - attr_.border;
-						r.y = 0;
 						r.width = (static_cast<int>(sz.width) > (r.x << 1) ? sz.width - (r.x << 1) : 0);
-						r.height = sz.height;
 					}
 					else
 					{
-						r.x = 0;
 						r.y = attr_.slider_scale / 2 - attr_.border;
-						r.width = sz.width;
 						r.height = (static_cast<int>(sz.height) > (r.y << 1) ? sz.height - (r.y << 1) : 0);
 					}
 					return r;
@@ -442,10 +441,10 @@ namespace nana{ namespace gui{
 				{
 					if(_m_scale())
 					{
-						unsigned cmpvalue = attr_.vcur;
+						auto cmpvalue = attr_.vcur;
 						attr_.vcur = static_cast<unsigned>(attr_.pos * attr_.vmax / _m_scale());
-						if(cmpvalue != attr_.vcur)
-							ext_event.value_changed(*other_.widget);
+						if (cmpvalue != attr_.vcur)
+							_m_emit_value_changed();
 					}
 					return attr_.vcur;
 				}
@@ -475,7 +474,7 @@ namespace nana{ namespace gui{
 					bar.border_size = attr_.border;
 					bar.r = _m_bar_area();
 
-					if(0 == bar.r.width || 0 == bar.r.height)
+					if (bar.r.empty_size())
 						return;
 
 					proto_.renderer->bar(other_.wd, *other_.graph, bar);
@@ -546,7 +545,7 @@ namespace nana{ namespace gui{
 				struct other_tag
 				{
 					window wd;
-					nana::gui::slider * widget;
+					nana::slider * widget;
 					paint::graphics * graph;
 				}other_;
 				
@@ -598,14 +597,7 @@ namespace nana{ namespace gui{
 
 				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
-					impl_->attached(static_cast<nana::gui::slider&>(widget), graph);
-					window wd = impl_->handle();
-					using namespace API::dev;
-					make_drawer_event<events::mouse_down>(wd);
-					make_drawer_event<events::mouse_up>(wd);
-					make_drawer_event<events::mouse_move>(wd);
-					make_drawer_event<events::mouse_leave>(wd);
-					make_drawer_event<events::size>(wd);
+					impl_->attached(static_cast<nana::slider&>(widget), graph);
 				}
 
 				void trigger::detached()
@@ -618,13 +610,13 @@ namespace nana{ namespace gui{
 					impl_->draw();
 				}
 
-				void trigger::mouse_down(graph_reference, const eventinfo& ei)
+				void trigger::mouse_down(graph_reference, const arg_mouse& arg)
 				{
-					controller_t::where_t what = impl_->seek_where(ei.mouse.x, ei.mouse.y);
+					controller_t::where_t what = impl_->seek_where(arg.pos.x, arg.pos.y);
 					if(controller_t::WhereBar == what || controller_t::WhereSlider == what)
 					{
-						bool mkdir = impl_->set_slider_pos(ei.mouse.x, ei.mouse.y);
-						impl_->set_slider_refpos(ei.mouse.x, ei.mouse.y);
+						bool mkdir = impl_->set_slider_pos(arg.pos.x, arg.pos.y);
+						impl_->set_slider_refpos(arg.pos);
 						if(mkdir)
 						{
 							impl_->draw();
@@ -633,7 +625,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_up(graph_reference, const eventinfo&)
+				void trigger::mouse_up(graph_reference, const arg_mouse&)
 				{
 					bool mkdraw = impl_->release_slider();
 					if(mkdraw)
@@ -643,18 +635,18 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_move(graph_reference, const eventinfo& ei)
+				void trigger::mouse_move(graph_reference, const arg_mouse& arg)
 				{
 					bool mkdraw = false;
 					if(impl_->if_trace_slider())
 					{
-						mkdraw = impl_->move_slider(ei.mouse.x, ei.mouse.y);
+						mkdraw = impl_->move_slider(arg.pos.x, arg.pos.y);
 					}
 					else
 					{
-						controller_t::where_t what = impl_->seek_where(ei.mouse.x, ei.mouse.y);
+						controller_t::where_t what = impl_->seek_where(arg.pos.x, arg.pos.y);
 						if(controller_t::WhereNone != what)
-							mkdraw = impl_->move_adorn(ei.mouse.x, ei.mouse.y);
+							mkdraw = impl_->move_adorn(arg.pos.x, arg.pos.y);
 						else
 							mkdraw = impl_->reset_adorn();
 					}
@@ -666,7 +658,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::mouse_leave(graph_reference, const eventinfo&)
+				void trigger::mouse_leave(graph_reference, const arg_mouse&)
 				{
 					if(impl_->reset_adorn())
 					{
@@ -675,7 +667,7 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void trigger::resize(graph_reference, const eventinfo&)
+				void trigger::resized(graph_reference, const arg_resized&)
 				{
 					impl_->resize();
 					impl_->draw();
@@ -696,11 +688,6 @@ namespace nana{ namespace gui{
 		slider::slider(window wd, const rectangle& r, bool visible)
 		{
 			create(wd, r, visible);
-		}
-
-		slider::ext_event_type& slider::ext_event() const
-		{
-			return get_drawer_trigger().ctrl()->ext_event;
 		}
 
 		void slider::seek(slider::seekdir sd)
@@ -798,5 +785,4 @@ namespace nana{ namespace gui{
 			return (bground_mode::basic == API::effects_bground_mode(*this));
 		}
 	//end class slider
-}//end namespace gui
 }//end namespace nana

@@ -13,7 +13,7 @@
 #define NANA_GUI_WIDGETS_TOOLTIP_HPP
 #include "widgets/widget.hpp"
 
-namespace nana{ namespace gui
+namespace nana
 {
 	///tooltip_interface
 	///An interface for user-defined tooltip window.
@@ -72,9 +72,5 @@ namespace nana{ namespace gui
 	private:
 		static void _m_hold_factory(factory_interface*);
 	};//class tooltip
-
-}//namespace gui
 }//namespace nana
-
 #endif
-

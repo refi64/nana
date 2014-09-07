@@ -18,7 +18,7 @@
 #include <memory>
 
 
-namespace nana{	namespace gui
+namespace nana
 {
 	class animation;
         /// Holds the frames and frame builders. Have reference semantics for efficiency.
@@ -78,8 +78,5 @@ namespace nana{	namespace gui
 	private:
 		impl * impl_;
 	};
-
-}	//end namespace gui
 }	//end namespace nana
-
 #endif	//NANA_GUI_ANIMATION_HPP

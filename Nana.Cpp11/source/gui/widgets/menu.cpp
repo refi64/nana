@@ -6,7 +6,8 @@
 #include <nana/gui/wvl.hpp>
 #include <nana/paint/text_renderer.hpp>
 
-namespace nana{ namespace gui{
+namespace nana
+{
 	namespace drawerbase
 	{
 		namespace menu
@@ -93,7 +94,7 @@ namespace nana{ namespace gui{
 					nana::size sz = graph.size();
 					sz.width -= 30;
 					sz.height -= 2;
-					graph.rectangle(nana::gui::color::gray_border, false);
+					graph.rectangle(color::gray_border, false);
 					graph.rectangle(1, 1, 28, sz.height, 0xF6F6F6, true);
 					graph.rectangle(29, 1, sz.width, sz.height, 0xFFFFFF, true);
 				}
@@ -136,7 +137,7 @@ namespace nana{ namespace gui{
 				void item_text(graph_reference graph, const nana::point& pos, const nana::string& text, unsigned text_pixels, const attr& at)
 				{
 					nana::paint::text_renderer tr(graph);
-					tr.render(pos.x, pos.y, (at.enabled ? 0x0 : nana::gui::color::gray_border), text.c_str(), text.length(), text_pixels, true);
+					tr.render(pos.x, pos.y, (at.enabled ? 0x0 : nana::color::gray_border), text.c_str(), text.length(), text_pixels, true);
 				}
 
 				void sub_arrow(graph_reference graph, const nana::point& pos, unsigned pixels, const attr&)
@@ -308,34 +309,27 @@ namespace nana{ namespace gui{
 				void attached(widget_reference widget, graph_reference graph)
 				{
 					graph_ = &graph;
-
 					widget_ = &widget;
-					window wd = widget;
-					using namespace API::dev;
-					make_drawer_event<events::mouse_move>(wd);
-					make_drawer_event<events::mouse_down>(wd);
-					make_drawer_event<events::mouse_leave>(wd);
-
 					//Get the current cursor pos to determinate the monitor
 					detail_.monitor_pos = API::cursor_position();
 				}
 
-				void mouse_move(graph_reference, const eventinfo& ei)
+				void mouse_move(graph_reference, const arg_mouse& arg)
 				{
 					state_.nullify_mouse = false;
-					if(track_mouse(ei.mouse.x, ei.mouse.y))
+					if(track_mouse(arg.pos.x, arg.pos.y))
 					{
 						draw();
 						API::lazy_refresh();
 					}
 				}
 
-				void mouse_leave(graph_reference graph, const eventinfo& ei)
+				void mouse_leave(graph_reference graph, const arg_mouse& arg)
 				{
-					mouse_move(graph, ei);
+					mouse_move(graph, arg);
 				}
 
-				void mouse_down(graph_reference, const eventinfo&)
+				void mouse_down(graph_reference, const arg_mouse&)
 				{
 					state_.nullify_mouse = false;
 				}
@@ -556,7 +550,7 @@ namespace nana{ namespace gui{
 						}
 						else
 						{
-							graph_->line(item_r.x + 40, item_r.y, graph_->width() - 1, item_r.y, nana::gui::color::gray_border);
+							graph_->line(item_r.x + 40, item_r.y, graph_->width() - 1, item_r.y, nana::color::gray_border);
 							item_r.y += 2;
 						}
 
@@ -723,14 +717,28 @@ namespace nana{ namespace gui{
 					}
 
 					timer_.interval(100);
-					timer_.make_tick(nana::make_fun(*this, &menu_window::_m_check_repeatly));
+					//timer_.make_tick(nana::make_fun(*this, &menu_window::_m_check_repeatly));
+					timer_.elapse(std::bind(&menu_window::_m_check_repeatly, this));
 
-					make_event<events::destroy>(*this, &menu_window::_m_destroy);
-					make_event<events::key_down>(*this, &menu_window::_m_key_down);
-					make_event<events::mouse_up>(*this, &menu_window::pick);
+					events().destroy.connect([this]{
+						_m_destroy();
+					});
+
+					events().key_press.connect([this](const arg_keyboard& arg){
+						_m_key_down(arg);
+					});
+
+					events().mouse_up.connect([this]{
+						pick();
+					});
 
 					if (want_focus_)
-						event_focus_ = make_event<events::focus>(*this, &menu_window::_m_focus_changed);
+					{
+						event_focus_ = events().focus.connect([this](const arg_focus& arg)
+						{
+							_m_focus_changed(arg);
+						});
+					}
 
 					show();
 				}
@@ -911,13 +919,13 @@ namespace nana{ namespace gui{
 				//when the focus of the menu window is losing, close the menu.
 				//But here is not every menu window may have focus event installed,
 				//It is only installed when the owner of window is the desktop window.
-				void _m_focus_changed(const eventinfo& ei)
+				void _m_focus_changed(const arg_focus& arg)
 				{
-					if (false == ei.focus.getting)
+					if (false == arg.getting)
 					{
 						for (auto child = submenu_.child; child; child = child->submenu_.child)
 						{
-							if (API::root(child->handle()) == ei.focus.receiver)
+							if (API::root(child->handle()) == arg.receiver)
 								return;
 						}
 
@@ -925,9 +933,9 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void _m_key_down(const eventinfo& ei)
+				void _m_key_down(const arg_keyboard& arg)
 				{
-					switch(ei.keyboard.key)
+					switch(arg.key)
 					{
 					case keyboard::os_arrow_up:
 						this->goto_next(false);
@@ -945,7 +953,7 @@ namespace nana{ namespace gui{
 						this->pick();
 						break;
 					default:
-						if(2 != send_shortkey(ei.keyboard.key))
+						if(2 != send_shortkey(arg.key))
 						{
 							if(API::empty_window(*this) == false)
 								close();
@@ -958,7 +966,9 @@ namespace nana{ namespace gui{
 				void _m_make_mouse_event()
 				{
 					state_.mouse_pos = API::cursor_position();
-					make_event<events::mouse_move>(*this, &menu_window::_m_mouse_event);
+					events().mouse_move.connect([this]{
+						_m_mouse_event();
+					});
 				}
 
 				void _m_mouse_event()
@@ -999,7 +1009,7 @@ namespace nana{ namespace gui{
 							pos.x += sbm->gaps.x;
 							pos.y += sbm->gaps.y;
 
-							menu_window & mwnd = form_loader<menu_window>()(handle(), pos, mdtrigger.renderer);
+							menu_window & mwnd = form_loader<menu_window, false>()(handle(), pos, mdtrigger.renderer);
 							mwnd.state_.self_submenu = true;
 							submenu_.child = & mwnd;
 							submenu_.child->submenu_.parent = this;
@@ -1164,6 +1174,13 @@ namespace nana{ namespace gui{
 			_m_popup(wd, x, y, false);
 		}
 
+		void menu::popup_await(window wd, int x, int y)
+		{
+			_m_popup(wd, x, y, false);
+			if (impl_->uiobj)
+				API::wait_for(impl_->uiobj->handle());
+		}
+
 		void menu::close()
 		{
 			if(impl_->uiobj)
@@ -1279,11 +1296,10 @@ namespace nana{ namespace gui{
 			if (impl_->mbuilder.data().items.size())
 			{
 				close();
-
-				typedef drawerbase::menu::menu_window menu_window;
-
-				impl_->uiobj = &(form_loader<menu_window>()(wd, point(x, y), &(*impl_->mbuilder.renderer())));
-				impl_->uiobj->make_event<events::destroy>(*this, &menu::_m_destroy_menu_window);
+				impl_->uiobj = &(form_loader<drawerbase::menu::menu_window, false>()(wd, point(x, y), &(*impl_->mbuilder.renderer())));
+				impl_->uiobj->events().destroy.connect([this]{
+					_m_destroy_menu_window();
+				});
 				impl_->uiobj->popup(impl_->mbuilder.data(), called_by_menubar);
 			}
 		}
@@ -1310,18 +1326,17 @@ namespace nana{ namespace gui{
 			: mobj_(mobj), owner_(owner), take_mouse_pos_(false), pos_(pos), mouse_(ms)
 		{}
 
-		void popuper::operator()(const eventinfo& ei)
+		void popuper::operator()(const arg_mouse& arg)
 		{
 			if(take_mouse_pos_)
 			{
-				switch(ei.identifier)
+				switch(arg.evt_code)
 				{
-				case events::click::identifier:
-				case events::mouse_down::identifier:
-				case events::mouse_up::identifier:
-					owner_ = ei.window;
-					pos_.x = ei.mouse.x;
-					pos_.y = ei.mouse.y;
+				case event_code::click:
+				case event_code::mouse_down:
+				case event_code::mouse_up:
+					owner_ = arg.window_handle;
+					pos_ = arg.pos;
 					break;
 				default:
 					return;
@@ -1331,21 +1346,22 @@ namespace nana{ namespace gui{
 			switch(mouse_)
 			{
 			case mouse::left_button:
-				popup = ei.mouse.left_button;
+				popup = arg.left_button;
 				break;
 			case mouse::middle_button:
-				popup = ei.mouse.mid_button;
+				popup = arg.mid_button;
 				break;
 			case mouse::right_button:
-				popup = ei.mouse.right_button;
+				popup = arg.right_button;
 				break;
 			case mouse::any_button:
 				popup = true;
+			default:
+				break;
 			}
 			if(popup)
 				mobj_.popup(owner_, pos_.x, pos_.y);
 		}
 	//end class
 	}//end namespace detail
-}//end namespace gui
 }//end namespace nana

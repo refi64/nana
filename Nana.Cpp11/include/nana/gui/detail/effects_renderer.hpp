@@ -6,7 +6,7 @@
 
 #include <nana/gui/layout_utility.hpp>
 
-namespace nana{	namespace gui{
+namespace nana{
 	namespace detail
 	{
 		template<typename CoreWindow>
@@ -147,7 +147,6 @@ namespace nana{	namespace gui{
 			}
 		};
 	}
-}//end namespace gui
 }//end namespace nana
 
 #endif

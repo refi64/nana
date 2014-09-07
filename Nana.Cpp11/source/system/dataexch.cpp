@@ -84,11 +84,11 @@ namespace nana{ namespace system{
 				::CloseClipboard();
 			}
 #elif defined(NANA_X11)
-			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
-			gui::native_window_type owner = 0;
+			auto & spec = ::nana::detail::platform_spec::instance();
+			native_window_type owner = nullptr;
 			{
-				gui::internal_scope_guard isg;
-				auto wd = gui::detail::bedrock::instance().focus();
+				internal_scope_guard lock;
+				auto wd = detail::bedrock::instance().focus();
 				if(wd)	owner = wd->root;
 			}
 
@@ -140,12 +140,12 @@ namespace nana{ namespace system{
 			}
 #elif defined(NANA_X11)
 			nana::detail::platform_spec & spec = nana::detail::platform_spec::instance();
-			gui::native_window_type requester = nullptr;
+			native_window_type requester = nullptr;
 			spec.lock_xlib();
 			
 			{
-				gui::internal_scope_guard isg;
-				gui::detail::bedrock::core_window_t * wd = gui::detail::bedrock::instance().focus();
+				internal_scope_guard isg;
+				detail::bedrock::core_window_t * wd = detail::bedrock::instance().focus();
 				if(wd)	requester = wd->root;
 			}
 			spec.unlock_xlib();

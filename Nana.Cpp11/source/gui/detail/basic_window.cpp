@@ -1,7 +1,8 @@
 #include <nana/gui/detail/basic_window.hpp>
 #include <nana/gui/detail/native_window_interface.hpp>
 
-namespace nana{	namespace gui{
+namespace nana
+{
 	namespace detail
 	{
 		//class caret_descriptor
@@ -189,19 +190,19 @@ namespace nana{	namespace gui{
 
 		//struct basic_window
 			//struct basic_window::other_tag
-				basic_window::other_tag::other_tag(gui::category::flags categ)
+				basic_window::other_tag::other_tag(category::flags categ)
 					: category(categ), active_window(nullptr), upd_state(update_state::none)
 				{
 					switch(categ)
 					{
-					case nana::gui::category::root_tag::value:
+					case category::root_tag::value:
 						attribute.root = new attr_root_tag;
 						attribute.root->focus	= 0;
 						attribute.root->menubar	= 0;
 						attribute.root->context.focus_changed = false;
 						attribute.root->ime_enabled = false;
 						break;
-					case nana::gui::category::frame_tag::value:
+					case category::frame_tag::value:
 						attribute.frame = new attr_frame_tag;
 						attribute.frame->container = 0;
 						break;
@@ -214,10 +215,10 @@ namespace nana{	namespace gui{
 				{
 					switch(category)
 					{
-					case nana::gui::category::root_tag::value:
+					case category::root_tag::value:
 						delete attribute.root;
 						break;
-					case nana::gui::category::frame_tag::value:
+					case category::frame_tag::value:
 						delete attribute.frame;
 						break;
 					default: break;
@@ -227,13 +228,11 @@ namespace nana{	namespace gui{
 
 			//basic_window
 			//@brief: constructor for the root window
-			basic_window::basic_window(basic_window* owner, gui::category::root_tag**)
-				: other(category::root_tag::value)
+			basic_window::basic_window(basic_window* owner, widget* wdg, category::root_tag**)
+				: widget_ptr(wdg), other(category::root_tag::value)
 			{
 				drawer.bind(this);
 				_m_init_pos_and_size(0, rectangle());
-				//wait for constexpr
-				this->other.category = category::root_tag::value;
 				this->_m_initialize(owner);
 			}
 
@@ -313,7 +312,7 @@ namespace nana{	namespace gui{
 				flags.take_active = true;
 				flags.dropable = false;
 				flags.fullscreen = false;
-				flags.tab = nana::gui::detail::tab_type::none;
+				flags.tab = nana::detail::tab_type::none;
 				flags.action = mouse_action::normal;
 				flags.refreshing = false;
 				flags.destroying = false;
@@ -322,7 +321,7 @@ namespace nana{	namespace gui{
 				visible = false;
 
 				color.foreground = 0x0;
-				color.background = nana::gui::color::button_face;
+				color.background = nana::color::button_face;
 				color.active = 0x60C8FD;
 
 				effect.edge_nimbus = effects::edge_nimbus::none;
@@ -330,6 +329,7 @@ namespace nana{	namespace gui{
 				effect.bground_fade_rate = 0;
 
 				together.caret = nullptr;
+				together.attached_events = nullptr;
 
 				extra_width = extra_height = 0;
 
@@ -339,7 +339,20 @@ namespace nana{	namespace gui{
 				if(agrparent && (thread_id != agrparent->thread_id))
 					thread_id = agrparent->thread_id;
 			}
+
+			bool basic_window::set_events(const std::shared_ptr<general_events>& p)
+			{
+				if (together.attached_events)
+					return false;
+
+				together.attached_events = p.get();
+				return true;
+			}
+
+			general_events * basic_window::get_events() const
+			{
+				return together.attached_events;
+			}
 		//end struct basic_window
 	}//end namespace detail
-}//end namespace gui
 }//end namespace nana

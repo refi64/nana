@@ -19,8 +19,10 @@
 #include <nana/key_type.hpp>
 #include <functional>
 
-namespace nana{ namespace gui{
+namespace nana
+{
 	class listbox;
+
 	namespace drawerbase
 	{
 		namespace listbox
@@ -103,14 +105,14 @@ namespace nana{ namespace gui{
 				void detached()	override;
 				void typeface_changed(graph_reference)	override;
 				void refresh(graph_reference)	override;
-				void mouse_move(graph_reference, const eventinfo&)	override;
-				void mouse_leave(graph_reference, const eventinfo&)	override;
-				void mouse_down(graph_reference, const eventinfo&)	override;
-				void mouse_up(graph_reference, const eventinfo&)	override;
-				void mouse_wheel(graph_reference, const eventinfo&)	override;
-				void dbl_click(graph_reference, const eventinfo&)	override;
-				void resize(graph_reference, const eventinfo&)		override;
-				void key_down(graph_reference, const eventinfo&)	override;
+				void mouse_move(graph_reference, const arg_mouse&)	override;
+				void mouse_leave(graph_reference, const arg_mouse&)	override;
+				void mouse_down(graph_reference, const arg_mouse&)	override;
+				void mouse_up(graph_reference, const arg_mouse&)	override;
+				void mouse_wheel(graph_reference, const arg_wheel&)	override;
+				void dbl_click(graph_reference, const arg_mouse&)	override;
+				void resized(graph_reference, const arg_resized&)		override;
+				void key_press(graph_reference, const arg_keyboard&)	override;
 			private:
 				essence_t * essence_;
 				drawer_header_impl *drawer_header_;
@@ -364,11 +366,24 @@ namespace nana{ namespace gui{
 				category_t*	cat_;
 				size_type	pos_;
 			};
+		}
+	}//end namespace drawerbase
 
-			struct extra_events
+	struct arg_listbox
+	{
+		mutable drawerbase::listbox::item_proxy item;
+		bool	selected;
+	};
+
+	namespace drawerbase
+	{
+		namespace listbox
+		{
+			struct listbox_events
+				: public general_events
 			{
-				nana::fn_group<void(item_proxy, bool)> checked;
-				nana::fn_group<void(item_proxy, bool)> selected;
+				basic_event<arg_listbox> checked;
+				basic_event<arg_listbox> selected;
 			};
 		}
 	}//end namespace drawerbase
@@ -381,13 +396,12 @@ The user can \a drag the header to \a reisize it or to \a reorganize it.
 By \a clicking on a header the list get \a reordered, first up, and then down alternatively,
 */
 	class listbox
-		:	public widget_object<category::widget_tag, drawerbase::listbox::trigger>,
+		:	public widget_object<category::widget_tag, drawerbase::listbox::trigger, drawerbase::listbox::listbox_events>,
 			public concepts::any_objective<drawerbase::listbox::size_type, 2>
 	{
 	public:
 		typedef drawerbase::listbox::size_type	size_type;
 		typedef drawerbase::listbox::index_pair	index_pair;
-		typedef drawerbase::listbox::extra_events	ext_event_type;
 		typedef drawerbase::listbox::cat_proxy	cat_proxy;
 		typedef drawerbase::listbox::item_proxy	item_proxy;
 		typedef drawerbase::listbox::selection	selection;    ///<A container type for items.
@@ -402,8 +416,6 @@ By \a clicking on a header the list get \a reordered, first up, and then down al
 		listbox();
 		listbox(window, bool visible);
 		listbox(window, const rectangle& = rectangle(), bool visible = true);
-
-		ext_event_type& ext_event() const;
 
 		void auto_draw(bool);                                ///<Set state: Redraw automatically after an operation?
 
@@ -502,7 +514,5 @@ By \a clicking on a header the list get \a reordered, first up, and then down al
 		drawerbase::listbox::category_t* _m_at_key(std::shared_ptr<nana::detail::key_interface>);
 		void _m_ease_key(nana::detail::key_interface*);
 	};
-}//end namespace gui
 }//end namespace nana
-
 #endif

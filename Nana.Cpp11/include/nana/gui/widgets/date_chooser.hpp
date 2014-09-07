@@ -16,8 +16,8 @@
 #include "widget.hpp"
 #include <nana/datetime.hpp>
 
-namespace nana{ namespace gui{
-
+namespace nana
+{
 	namespace drawerbase
 	{
 		namespace date_chooser
@@ -55,14 +55,14 @@ namespace nana{ namespace gui{
 				void _m_draw_ex_days(drawing_basis &, graph_reference, int begx, int begy, bool before);
 				void _m_draw_days(const nana::point& refpos, graph_reference);
 				void _m_draw_months(const nana::point& refpos, graph_reference);
-				bool _m_get_trace(int x, int y, int & res);
+				bool _m_get_trace(point, int & res);
 				void _m_perf_transform(transform_action tfid, graph_reference,  graph_reference dirtybuf, graph_reference newbuf, const nana::point& refpos);
 			private:
 				void refresh(graph_reference);
 				void attached(widget_reference, graph_reference)	override;
-				void mouse_move(graph_reference, const eventinfo&)	override;
-				void mouse_leave(graph_reference, const eventinfo&)	override;
-				void mouse_up(graph_reference, const eventinfo&)	override;
+				void mouse_move(graph_reference, const arg_mouse&)	override;
+				void mouse_leave(graph_reference, const arg_mouse&)	override;
+				void mouse_up(graph_reference, const arg_mouse&)	override;
 			private:
 				nana::string weekstr_[7];
 				nana::string monthstr_[12];
@@ -118,7 +118,6 @@ namespace nana{ namespace gui{
 		void weekstr(unsigned index, const nana::string&);///<Set the week strings which will be displayed for day, index is in range of [0, 6]
 		void monthstr(unsigned index, const nana::string&);///<Set the month strings which will be displayed for month. index is in range of [0, 11]
 	};
-}//end namespace gui
 }//end namespace nana
 
 #endif

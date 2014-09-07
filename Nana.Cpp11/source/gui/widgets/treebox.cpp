@@ -17,8 +17,6 @@
 
 namespace nana
 {
-namespace gui
-{
 	namespace drawerbase
 	{
 		//Here defines some function objects
@@ -116,7 +114,7 @@ namespace gui
 				struct rep_tag
 				{
 					nana::paint::graphics * graph;
-					widget * widget_ptr;
+					::nana::treebox * widget_ptr;
 					trigger * trigger_ptr;
 
 					pat::cloneable<compset_placer_interface> comp_placer;
@@ -127,7 +125,7 @@ namespace gui
 				struct shape_tag
 				{
 					nana::upoint border;
-					gui::scroll<true> scroll;
+					nana::scroll<true> scroll;
 					std::size_t	prev_first_value;
 
 					mutable std::map<nana::string, node_image_tag> image_table;
@@ -140,7 +138,6 @@ namespace gui
 				struct attribute_tag
 				{
 					bool auto_draw;
-					mutable ext_event_type ext_event;
 					tree_cont_type tree_cont;
 				}attr;
 
@@ -164,7 +161,7 @@ namespace gui
 					int offset_x_adjust;	//It is a new value of offset_x, and offset_x will be djusted to the new value
 					tree_cont_type::node_type * node;
 					std::size_t scroll_timestamp;
-					gui::timer timer;
+					nana::timer timer;
 				}adjust;
 			public:
 				basic_implement()
@@ -367,7 +364,7 @@ namespace gui
 							{
 								adjust.offset_x_adjust = shape.offset_x + beg;
 								adjust.node = node;
-								adjust.timer.enable(true);
+								adjust.timer.start();
 								return true;
 							}
 						}
@@ -403,7 +400,8 @@ namespace gui
 						if (node->owner)
 						{
 							data.stop_drawing = true;
-							attr.ext_event.checked(data.widget_ptr->handle(), item_proxy(data.trigger_ptr, node), (checkstate::unchecked != cs));
+							item_proxy iprx(data.trigger_ptr, node);
+							data.widget_ptr->events().checked.emit(::nana::arg_treebox{ *data.widget_ptr, iprx, (checkstate::unchecked != cs) });
 							data.stop_drawing = false;
 						}
 						return true;
@@ -416,12 +414,18 @@ namespace gui
 					if(node_state.selected != node)
 					{
 						data.stop_drawing = true;
-						if(node_state.selected)
-							attr.ext_event.selected(data.widget_ptr->handle(), item_proxy(data.trigger_ptr, node_state.selected), false);
+						if (node_state.selected)
+						{
+							item_proxy iprx(data.trigger_ptr, node_state.selected);
+							data.widget_ptr->events().selected.emit(::nana::arg_treebox{ *data.widget_ptr, iprx, false });
+						}
 
 						node_state.selected = node;
-						if(node)
-							attr.ext_event.selected(data.widget_ptr->handle(), item_proxy(data.trigger_ptr, node), true);
+						if (node)
+						{
+							item_proxy iprx(data.trigger_ptr, node_state.selected);
+							data.widget_ptr->events().selected.emit(::nana::arg_treebox{ *data.widget_ptr, iprx, true });
+						}
 						data.stop_drawing = false;
 						return true;
 					}
@@ -443,7 +447,9 @@ namespace gui
 						if(node->child)
 						{
 							data.stop_drawing = true;
-							attr.ext_event.expand(data.widget_ptr->handle(), item_proxy(data.trigger_ptr, node), value);
+							//attr.ext_event.expand(data.widget_ptr->handle(), item_proxy(data.trigger_ptr, node), value);
+							item_proxy iprx(data.trigger_ptr, node);
+							data.widget_ptr->events().expanded.emit(::nana::arg_treebox{ *data.widget_ptr, iprx, value });
 							data.stop_drawing = false;
 						}
 						return true;
@@ -473,10 +479,13 @@ namespace gui
 						{
 							shape.prev_first_value = 0;
 							scroll.create(*data.widget_ptr, nana::rectangle(data.graph->width() - 16, 0, 16, data.graph->height()));
-							auto scroll_fn = nana::make_fun(*this, &basic_implement::event_scrollbar);
-							scroll.template make_event<events::mouse_down>(scroll_fn);
-							scroll.template make_event<events::mouse_move>(scroll_fn);
-							scroll.template make_event<events::mouse_wheel>(scroll_fn);
+
+							auto fn = [this](const arg_mouse& arg){
+								event_scrollbar(arg);
+							};
+							scroll.events().mouse_down.connect(fn);
+							scroll.events().mouse_move.connect(fn);
+							scroll.events().mouse_wheel.connect(fn);
 						}
 
 						scroll.amount(visual_items);
@@ -486,19 +495,19 @@ namespace gui
 					scroll.value(attr.tree_cont.distance_if(shape.first, pred_allow_child()));
 				}
 
-				void event_scrollbar(const eventinfo& ei)
+				void event_scrollbar(const arg_mouse& arg)
 				{
-					if(ei.identifier == events::mouse_wheel::identifier || ei.mouse.left_button)
+					if((event_code::mouse_wheel == arg.evt_code) || arg.left_button)
 					{
 						if(shape.prev_first_value != shape.scroll.value())
 						{
 							shape.prev_first_value = shape.scroll.value();
 							adjust.scroll_timestamp = nana::system::timestamp();
-							adjust.timer.enable(true);
+							adjust.timer.start();
 
 							shape.first = attr.tree_cont.advance_if(nullptr, shape.prev_first_value, pred_allow_child());
 
-							if(ei.window == shape.scroll.handle())
+							if(arg.window_handle == shape.scroll.handle())
 							{
 								draw(false);
 								API::update_window(data.widget_ptr->handle());
@@ -573,7 +582,17 @@ namespace gui
 						if((nl.what() != node_state.comp_pointed || nl.node() != node_state.pointed))
 						{
 							node_state.comp_pointed = nl.what();
+
+							if (node_state.pointed)
+							{
+								item_proxy iprx(data.trigger_ptr, node_state.pointed);
+								data.widget_ptr->events().hovered.emit(::nana::arg_treebox{ *data.widget_ptr, iprx, false });
+							}
+
 							node_state.pointed = nl.node();
+							item_proxy iprx(data.trigger_ptr, node_state.pointed);
+							data.widget_ptr->events().hovered.emit(::nana::arg_treebox{ *data.widget_ptr, iprx, true });
+
 							redraw = (node_state.comp_pointed != component::end);
 						}
 					}
@@ -581,6 +600,9 @@ namespace gui
 					{
 						redraw = true;
 						node_state.comp_pointed = component::end;
+						item_proxy iprx(data.trigger_ptr, node_state.pointed);
+						data.widget_ptr->events().hovered.emit(::nana::arg_treebox{ *data.widget_ptr, iprx, false });
+
 						node_state.pointed = nullptr;
 						close_tooltip_window();
 					}
@@ -609,13 +631,17 @@ namespace gui
 						node_state.tooltip->impl().assign(node_attr, &data.renderer, &data.comp_placer);
 						node_state.tooltip->show();
 
-						node_state.tooltip->template make_event<events::mouse_leave>(*this, &basic_implement::close_tooltip_window);
-						node_state.tooltip->template make_event<events::mouse_move>(*this, &basic_implement::mouse_move_tooltip_window);
+						node_state.tooltip->events().mouse_leave.connect([this](const arg_mouse&){
+							close_tooltip_window();
+						});
+						node_state.tooltip->events().mouse_move.connect([this](const arg_mouse&){
+							mouse_move_tooltip_window();
+						});
 
-						auto click_fn = nana::make_fun(*this, &basic_implement::click_tooltip_window);
-						node_state.tooltip->template make_event<events::mouse_down>(click_fn);
-						node_state.tooltip->template make_event<events::mouse_up>(click_fn);
-						node_state.tooltip->template make_event<events::dbl_click>(click_fn);
+						auto fn = nana::make_fun(*this, &basic_implement::click_tooltip_window);
+						node_state.tooltip->events().mouse_down.connect(fn);
+						node_state.tooltip->events().mouse_up.connect(fn);
+						node_state.tooltip->events().dbl_click.connect(fn);
 					}
 				}
 
@@ -626,6 +652,13 @@ namespace gui
 						tooltip_window * x = node_state.tooltip;
 						node_state.tooltip = nullptr;
 						delete x;
+
+						if (node_state.pointed)
+						{
+							node_state.pointed = nullptr;
+							draw(false);
+							API::update_window(data.widget_ptr->handle());
+						}
 					}
 				}
 
@@ -638,18 +671,18 @@ namespace gui
 						close_tooltip_window();
 				}
 
-				void click_tooltip_window(const eventinfo& ei)
+				void click_tooltip_window(const arg_mouse& arg)
 				{
-					switch(ei.identifier)
+					switch(arg.evt_code)
 					{
-					case events::mouse_down::identifier:
+					case event_code::dbl_click:
+					case event_code::mouse_down:
 						if(make_adjust(node_state.pointed, 1))
 							adjust.scroll_timestamp = 1;
 						return;
-					case events::mouse_up::identifier:
+					case event_code::mouse_up:
 						if(node_state.selected == node_state.pointed)
 							return;
-
 						set_selected(node_state.pointed);
 						break;
 					default:
@@ -1108,7 +1141,7 @@ namespace gui
 							if(size.width > attr.area.width || size.height > attr.area.height)
 							{
 								nana::size fit_size;
-								gui::fit_zoom(size, attr.area, fit_size);
+								nana::fit_zoom(size, attr.area, fit_size);
 
 								attr.area.x += (attr.area.width - fit_size.width) / 2;
 								attr.area.y += (attr.area.height - fit_size.height) / 2;
@@ -1432,9 +1465,9 @@ namespace gui
 					impl_->data.trigger_ptr = this;
 					impl_->data.renderer = nana::pat::cloneable<renderer_interface>(internal_renderer());
 					impl_->data.comp_placer = nana::pat::cloneable<compset_placer_interface>(internal_placer());
-					impl_->adjust.timer.enable(false);
-					impl_->adjust.timer.make_tick(std::bind(&trigger::_m_deal_adjust, this));
-					impl_->adjust.timer.interval(10);
+					impl_->adjust.timer.elapse(std::bind(&trigger::_m_deal_adjust, this));
+					impl_->adjust.timer.interval(16);
+					impl_->adjust.timer.start();
 				}
 
 				trigger::~trigger()
@@ -1680,13 +1713,6 @@ namespace gui
 					}
 				}
 
-				/*
-				void trigger::image(const nana::string& id, const node_image_tag& img)
-				{
-					impl_->shape.image_table[id] = img;
-				}
-				*/
-
 				node_image_tag& trigger::icon(const nana::string& id) const
 				{
 					auto i = impl_->shape.image_table.find(id);
@@ -1748,28 +1774,13 @@ namespace gui
 
 				}
 
-				trigger::ext_event_type& trigger::ext_event() const
-				{
-					return impl_->attr.ext_event;
-				}
-
 				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
 					impl_->data.graph = &graph;
 
 					widget.background(0xFFFFFF);
-					impl_->data.widget_ptr = &widget;
+					impl_->data.widget_ptr = static_cast<::nana::treebox*>(&widget);
 					widget.caption(STR("Nana Treebox"));
-					window wd = impl_->data.widget_ptr->handle();
-					using namespace API::dev;
-					make_drawer_event<events::dbl_click>(wd);
-					make_drawer_event<events::mouse_move>(wd);
-					make_drawer_event<events::mouse_down>(wd);
-					make_drawer_event<events::mouse_up>(wd);
-					make_drawer_event<events::mouse_wheel>(wd);
-					make_drawer_event<events::size>(wd);
-					make_drawer_event<events::key_down>(wd);
-					make_drawer_event<events::key_char>(wd);
 				}
 
 				void trigger::refresh(graph_reference)
@@ -1777,12 +1788,12 @@ namespace gui
 					impl_->draw(false);
 				}
 
-				void trigger::dbl_click(graph_reference, const eventinfo& ei)
+				void trigger::dbl_click(graph_reference, const arg_mouse& arg)
 				{
 					auto & shape = impl_->shape;
 
 					int xpos = impl_->attr.tree_cont.indent_size(shape.first) * shape.indent_pixels - shape.offset_x;
-					item_locator nl(impl_, xpos, ei.mouse.x, ei.mouse.y);
+					item_locator nl(impl_, xpos, arg.pos.x, arg.pos.y);
 					impl_->attr.tree_cont.for_each<item_locator&>(shape.first, nl);
 
 					if(nl.node() && (nl.what() == component::text || nl.what() == component::icon))
@@ -1794,12 +1805,12 @@ namespace gui
 					}
 				}
 
-				void trigger::mouse_down(graph_reference graph, const eventinfo& ei)
+				void trigger::mouse_down(graph_reference graph, const arg_mouse& arg)
 				{
 					auto & shape = impl_->shape;
 
 					int xpos = impl_->attr.tree_cont.indent_size(shape.first) * shape.indent_pixels - shape.offset_x;
-					item_locator nl(impl_, xpos, ei.mouse.x, ei.mouse.y);
+					item_locator nl(impl_, xpos, arg.pos.x, arg.pos.y);
 					impl_->attr.tree_cont.for_each<item_locator&>(shape.first, nl);
 
 					bool has_redraw = false;
@@ -1842,12 +1853,12 @@ namespace gui
 					}
 				}
 
-				void trigger::mouse_up(graph_reference, const eventinfo& ei)
+				void trigger::mouse_up(graph_reference, const arg_mouse& arg)
 				{
 					auto & shape = impl_->shape;
 
 					int xpos = impl_->attr.tree_cont.indent_size(shape.first) * shape.indent_pixels - shape.offset_x;
-					item_locator nl(impl_, xpos, ei.mouse.x, ei.mouse.y);
+					item_locator nl(impl_, xpos, arg.pos.x, arg.pos.y);
 					impl_->attr.tree_cont.for_each<item_locator&>(shape.first, nl);
 
 					if(nullptr == nl.node())
@@ -1874,34 +1885,49 @@ namespace gui
 					}
 				}
 
-				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
+				void trigger::mouse_move(graph_reference graph, const arg_mouse& arg)
 				{
-					if(impl_->track_mouse(ei.mouse.x, ei.mouse.y))
+					if(impl_->track_mouse(arg.pos.x, arg.pos.y))
 					{
 						impl_->draw(false);
 						API::lazy_refresh();
 					}
 				}
 
-				void trigger::mouse_wheel(graph_reference, const eventinfo& ei)
+				void trigger::mouse_wheel(graph_reference, const arg_wheel& arg)
 				{
 					auto & shape = impl_->shape;
 					std::size_t prev = shape.prev_first_value;
 
-					shape.scroll.make_step(!ei.wheel.upwards);
+					shape.scroll.make_step(!arg.upwards);
 
-					impl_->event_scrollbar(ei);
+					impl_->event_scrollbar(arg);
 
 					if(prev != shape.prev_first_value)
 					{
-						impl_->track_mouse(ei.wheel.x, ei.wheel.y);
+						impl_->track_mouse(arg.pos.x, arg.pos.y);
 
 						impl_->draw(false);
 						API::lazy_refresh();
 					}
 				}
 
-				void trigger::resize(graph_reference, const eventinfo&)
+				void trigger::mouse_leave(graph_reference, const arg_mouse&)
+				{
+					if (nullptr == impl_->node_state.pointed)
+						return;
+
+					if (nullptr == impl_->node_state.tooltip)
+					{
+						item_proxy iprx(impl_->data.trigger_ptr, impl_->node_state.pointed);
+						impl_->data.widget_ptr->events().hovered.emit(::nana::arg_treebox{ *impl_->data.widget_ptr, iprx, false });
+						impl_->node_state.pointed = nullptr;
+						impl_->draw(false);
+						API::lazy_refresh();
+					}
+				}
+
+				void trigger::resized(graph_reference, const arg_resized&)
 				{
 					impl_->draw(false);
 					API::lazy_refresh();
@@ -1913,14 +1939,14 @@ namespace gui
 					}
 				}
 
-				void trigger::key_down(graph_reference, const eventinfo& ei)
+				void trigger::key_press(graph_reference, const arg_keyboard& arg)
 				{
 					bool redraw = false;
 					bool scroll = false; //Adjust the scrollbar
 
 					auto & node_state = impl_->node_state;
 
-					switch(ei.keyboard.key)
+					switch(arg.key)
 					{
 					case keyboard::os_arrow_up:
 						if(node_state.selected && node_state.selected != impl_->attr.tree_cont.get_root()->child)
@@ -2024,9 +2050,9 @@ namespace gui
 					}
 				}
 
-				void trigger::key_char(graph_reference, const eventinfo& ei)
+				void trigger::key_char(graph_reference, const arg_keyboard& arg)
 				{
-					auto node = const_cast<node_type*>(impl_->find_track_node(ei.keyboard.key));
+					auto node = const_cast<node_type*>(impl_->find_track_node(arg.key));
 
 					if(node && (node != impl_->node_state.selected))
 					{
@@ -2049,7 +2075,7 @@ namespace gui
 								adjust.offset_x_adjust = 0;
 								adjust.node = nullptr;
 								adjust.scroll_timestamp = 0;
-								adjust.timer.enable(false);
+								adjust.timer.stop();
 								return;
 							}
 						}
@@ -2085,7 +2111,8 @@ namespace gui
 							adjust.offset_x_adjust = 0;
 							adjust.node = nullptr;
 							adjust.scroll_timestamp = 0;
-							adjust.timer.enable(false);
+							//adjust.timer.enable(false);
+							adjust.timer.stop();
 						}
 					}
 				}
@@ -2130,11 +2157,6 @@ namespace gui
 		bool treebox::checkable() const
 		{
 			return get_drawer_trigger().checkable();
-		}
-
-		treebox::ext_event_type& treebox::ext_event() const
-		{
-			return get_drawer_trigger().ext_event();
 		}
 
 		treebox::node_image_type& treebox::icon(const nana::string& id) const
@@ -2205,5 +2227,4 @@ namespace gui
 			return item_proxy(const_cast<drawer_trigger_t*>(&get_drawer_trigger()), get_drawer_trigger().selected());
 		}
 	//end class treebox
-}//end namespace gui
 }//end namespace nana

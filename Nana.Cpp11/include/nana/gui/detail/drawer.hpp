@@ -1,6 +1,6 @@
 /*
  *	A Drawer Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
@@ -13,22 +13,20 @@
 #define NANA_GUI_DETAIL_DRAWER_HPP
 
 #include <vector>
-#include "eventinfo.hpp"
+#include "general_events.hpp"
 #include <nana/paint/graphics.hpp>
 #include <nana/paint/image.hpp>
 #include <functional>
 
 namespace nana
 {
-namespace gui
-{
 	class widget;
 
 	class drawer_trigger
-		: nana::noncopyable, nana::nonmovable
+		: ::nana::noncopyable, ::nana::nonmovable
 	{
 	public:
-		typedef gui::widget&		widget_reference;
+		typedef widget&		widget_reference;
 		typedef paint::graphics&	graph_reference;
 
 		virtual ~drawer_trigger();
@@ -38,24 +36,24 @@ namespace gui
 		virtual void typeface_changed(graph_reference);
 		virtual void refresh(graph_reference);
 
-		virtual void resizing(graph_reference, const eventinfo&);
-		virtual void resize(graph_reference, const eventinfo&);
-		virtual void move(graph_reference, const eventinfo&);
-		virtual void click(graph_reference, const eventinfo&);
-		virtual void dbl_click(graph_reference, const eventinfo&);
-		virtual void mouse_enter(graph_reference, const eventinfo&);
-		virtual void mouse_move(graph_reference, const eventinfo&);
-		virtual void mouse_leave(graph_reference, const eventinfo&);
-		virtual void mouse_down(graph_reference, const eventinfo&);
-		virtual void mouse_up(graph_reference, const eventinfo&);
-		virtual void mouse_wheel(graph_reference, const eventinfo&);
-		virtual void mouse_drop(graph_reference, const eventinfo&);
+		virtual void resizing(graph_reference, const arg_resizing&);
+		virtual void resized(graph_reference, const arg_resized&);
+		virtual void move(graph_reference, const arg_move&);
+		virtual void click(graph_reference, const arg_mouse&);
+		virtual void dbl_click(graph_reference, const arg_mouse&);
+		virtual void mouse_enter(graph_reference, const arg_mouse&);
+		virtual void mouse_move(graph_reference, const arg_mouse&);
+		virtual void mouse_leave(graph_reference, const arg_mouse&);
+		virtual void mouse_down(graph_reference, const arg_mouse&);
+		virtual void mouse_up(graph_reference, const arg_mouse&);
+		virtual void mouse_wheel(graph_reference, const arg_wheel&);
+		virtual void mouse_dropfiles(graph_reference, const arg_dropfiles&);
 
-		virtual void focus(graph_reference, const eventinfo&);
-		virtual void key_down(graph_reference, const eventinfo&);
-		virtual void key_char(graph_reference, const eventinfo&);
-		virtual void key_up(graph_reference, const eventinfo&);
-		virtual void shortkey(graph_reference, const eventinfo&);
+		virtual void focus(graph_reference, const arg_focus&);
+		virtual void key_press(graph_reference, const arg_keyboard&);
+		virtual void key_char(graph_reference, const arg_keyboard&);
+		virtual void key_release(graph_reference, const arg_keyboard&);
+		virtual void shortkey(graph_reference, const arg_keyboard&);
 	};
 
 	namespace detail
@@ -81,23 +79,23 @@ namespace gui
 			void bind(basic_window*);
 
 			void typeface_changed();
-			void click(const eventinfo&);
-			void dbl_click(const eventinfo&);
-			void mouse_enter(const eventinfo&);
-			void mouse_move(const eventinfo&);
-			void mouse_leave(const eventinfo&);
-			void mouse_down(const eventinfo&);
-			void mouse_up(const eventinfo&);
-			void mouse_wheel(const eventinfo&);
-			void mouse_drop(const eventinfo&);
-			void resizing(const eventinfo&);
-			void resize(const eventinfo&);
-			void move(const eventinfo&);
-			void focus(const eventinfo&);
-			void key_down(const eventinfo&);
-			void key_char(const eventinfo&);
-			void key_up(const eventinfo&);
-			void shortkey(const eventinfo&);
+			void click_arg(const arg_mouse&);
+			void dbl_click_arg(const arg_mouse&);
+			void mouse_enter_arg(const arg_mouse&);
+			void mouse_move_arg(const arg_mouse&);
+			void mouse_leave_arg(const arg_mouse&);
+			void mouse_down_arg(const arg_mouse&);
+			void mouse_up_arg(const arg_mouse&);
+			void mouse_wheel_arg(const arg_wheel&);
+			void mouse_dropfiles(const arg_dropfiles&);
+			void resizing_arg(const arg_resizing&);
+			void resized_arg(const arg_resized&);
+			void move_arg(const arg_move&);
+			void focus_arg(const arg_focus&);
+			void key_press_arg(const arg_keyboard&);
+			void key_char_arg(const arg_keyboard&);
+			void key_release_arg(const arg_keyboard&);
+			void shortkey_arg(const arg_keyboard&);
 			void map(window);	//Copy the root buffer to screen
 			void refresh();
 			drawer_trigger* realizer() const;
@@ -107,15 +105,6 @@ namespace gui
 			void clear();
 			void* draw(std::function<void(paint::graphics&)> &&, bool diehard);
 			void erase(void* diehard);
-			void string(int x, int y, unsigned color, const nana::char_t*);
-			void line(int x, int y, int x2, int y2, unsigned color);
-			void rectangle(int x, int y, unsigned width, unsigned height, unsigned color, bool issolid);
-			void shadow_rectangle(int x, int y, unsigned width, unsigned height, nana::color_t beg, nana::color_t end, bool vertical);
-			void bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::graphics& graph, int srcx, int srcy);
-			void bitblt(int x, int y, unsigned width, unsigned height, const nana::paint::image& img, int srcx, int srcy);
-			void stretch(const nana::rectangle& r_dst, const nana::paint::graphics& graph, const nana::rectangle& r_src);
-			void stretch(const nana::rectangle& r_dst, const nana::paint::image& img, const nana::rectangle& r_src);
-			event_handle make_event(event_code, window trigger);
 		private:
 			void _m_bground_pre();
 			void _m_bground_end();
@@ -129,7 +118,6 @@ namespace gui
 			bool refreshing_;
 		};
 	}//end namespace detail
-}//end namespace gui
 }//end namespace nana
 
 #endif

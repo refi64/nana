@@ -98,11 +98,11 @@
     <ClCompile Include="..\..\source\gui\animation.cpp" />
     <ClCompile Include="..\..\source\gui\basis.cpp" />
     <ClCompile Include="..\..\source\gui\detail\basic_window.cpp" />
+    <ClCompile Include="..\..\source\gui\detail\bedrock_pi.cpp" />
     <ClCompile Include="..\..\source\gui\detail\drawer.cpp" />
     <ClCompile Include="..\..\source\gui\detail\element_store.cpp" />
-    <ClCompile Include="..\..\source\gui\detail\event_manager.cpp" />
+    <ClCompile Include="..\..\source\gui\detail\events_operation.cpp" />
     <ClCompile Include="..\..\source\gui\detail\native_window_interface.cpp" />
-    <ClCompile Include="..\..\source\gui\detail\timer_trigger.cpp" />
     <ClCompile Include="..\..\source\gui\detail\win32\bedrock.cpp" />
     <ClCompile Include="..\..\source\gui\detail\window_layout.cpp" />
     <ClCompile Include="..\..\source\gui\detail\window_manager.cpp" />
@@ -111,10 +111,9 @@
     <ClCompile Include="..\..\source\gui\effects.cpp" />
     <ClCompile Include="..\..\source\gui\element.cpp" />
     <ClCompile Include="..\..\source\gui\filebox.cpp" />
-    <ClCompile Include="..\..\source\gui\functional.cpp" />
-    <ClCompile Include="..\..\source\gui\layout.cpp" />
     <ClCompile Include="..\..\source\gui\layout_utility.cpp" />
     <ClCompile Include="..\..\source\gui\msgbox.cpp" />
+    <ClCompile Include="..\..\source\gui\notifier.cpp" />
     <ClCompile Include="..\..\source\gui\place.cpp" />
     <ClCompile Include="..\..\source\gui\programming_interface.cpp" />
     <ClCompile Include="..\..\source\gui\timer.cpp" />
@@ -129,7 +128,6 @@
     <ClCompile Include="..\..\source\gui\widgets\frame.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\label.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\listbox.cpp" />
-    <ClCompile Include="..\..\source\gui\widgets\login.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\menu.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\menubar.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\panel.cpp" />
@@ -141,7 +139,6 @@
     <ClCompile Include="..\..\source\gui\widgets\tabbar.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\textbox.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\toolbar.cpp" />
-    <ClCompile Include="..\..\source\gui\widgets\tray.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\treebox.cpp" />
     <ClCompile Include="..\..\source\gui\widgets\widget.cpp" />
     <ClCompile Include="..\..\source\gui\wvl.cpp" />

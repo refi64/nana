@@ -15,49 +15,46 @@
 
 #ifndef NANA_GUI_TIMER_HPP
 #define NANA_GUI_TIMER_HPP
-#include "programming_interface.hpp"
-#include "detail/timer_trigger.hpp"
+#include <nana/gui/detail/general_events.hpp>
 
 namespace nana
-{
-namespace gui
-{    
+{  
        /// Can repeatedly call a piece of code.
+
+	struct arg_elapse
+	{
+		long long id;	//timer identifier;
+	};
+
 	class timer
 	{
+		struct implement;
+
+		timer(const timer&) = delete;
+		timer& operator=(const timer&) = delete;
+		timer(timer&&) = delete;
+		timer& operator=(timer&&) = delete;
 	public:
 		timer();
 
 		~timer();
 
-		bool empty() const;   ///< Returns true if the timer is invalid.
-		void enable(bool);
-
 		template<typename Function>
-		void make_tick(Function f)
+		void elapse(Function && fn)
 		{
-			API::make_event<detail::basic_event<event_code::elapse> >(reinterpret_cast<window>(this), f);
-			this->_m_set_timer();
+			elapse_.connect(std::forward<Function>(fn));
 		}
 
-		/// Clear all installed event handler.
-		void umake_events();
+		void reset();
+		void start();
+		bool started() const;
+		void stop();
 
-		void interval(unsigned value);   ///< Set the duration between calls (millisec ??)
+		void interval(unsigned milliseconds);   ///< Set the duration between calls (millisec ??)
 		unsigned interval() const;
 	private:
-		//_m_set_timer
-		//timer is a special control. this function will set a timer if empty == true
-		//this function is platform-dependent
-		void _m_set_timer();
-		void _m_kill_timer();
-		void _m_umake_event();
-	private:
-		bool empty_;
-		unsigned interval_;
+		nana::basic_event<arg_elapse> elapse_;
+		implement * const impl_;
 	};
-}//end namespace gui
 }//end namespace nana
-
 #endif
-

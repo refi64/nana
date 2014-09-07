@@ -60,7 +60,7 @@ namespace nana
 								const int png_height = ::png_get_image_height(png_ptr, info_ptr);
 								png_byte color_type = ::png_get_color_type(png_ptr, info_ptr);
 
-								int number_of_passes = ::png_set_interlace_handling(png_ptr);
+								::png_set_interlace_handling(png_ptr);
 								::png_read_update_info(png_ptr, info_ptr);
 
 								//The following codes may longjmp while image_read error.

@@ -1,7 +1,8 @@
 #include <nana/gui/effects.hpp>
 #include <nana/gui/programming_interface.hpp>
 
-namespace nana{	namespace gui{
+namespace nana
+{
 	namespace effects
 	{
 		bground_interface::~bground_interface()
@@ -74,5 +75,4 @@ namespace nana{	namespace gui{
 			}
 		//end class bground_blur
 	}
-}//end namespace gui
 }//end namespace nana

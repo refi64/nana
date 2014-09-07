@@ -17,56 +17,58 @@
 #include <nana/pat/cloneable.hpp>
 #include <nana/any.hpp>
 
-namespace nana{	namespace gui
+namespace nana
 {
+	template<typename T> class categorize;
+
+	template<typename ValueType>
+	struct arg_categorize
+	{
+		categorize<ValueType> & widget;
+		ValueType & value;
+
+		arg_categorize(categorize<ValueType> & wdg, ValueType& v)
+			: widget(wdg), value(v)
+		{}
+	};
+
 	namespace drawerbase
 	{
 		namespace categorize
 		{
-			template<typename CategObj>
-			struct extra_events
+			template<typename T>
+			struct categorize_events
+				: public general_events
 			{
-				typedef CategObj categorize_type;
-				typedef typename categorize_type::value_type value_type;
-				nana::fn_group<void(categorize_type&, value_type&)> selected;
+				basic_event<arg_categorize<T>> selected;
 			};
 
-			class ext_event_adapter_if
+			class event_agent_interface
 			{
 			public:
-				virtual ~ext_event_adapter_if() = 0;
-				virtual void selected(nana::any&) = 0;
+				virtual ~event_agent_interface(){}
+				virtual void selected(::nana::any&) = 0;
 			};
 
-			template<typename CategObj>
-			class ext_event_adapter
-				: public ext_event_adapter_if
+			template<typename T>
+			class event_agent
+				: public event_agent_interface
 			{
 			public:
-				typedef typename CategObj::value_type value_type;
-				ext_event_adapter(CategObj & obj)
-					: categ_obj_(obj)
+				event_agent(::nana::categorize<T>& wdg)
+					: widget_(wdg)
 				{}
 
-				extra_events<CategObj>& ext_event() const
+				void selected(::nana::any & var)
 				{
-					return ext_event_;
+					auto vp = var.get<T>();
+
+					T null_val;
+					arg_categorize<T> arg(widget_, vp ? *vp : null_val);
+					widget_.events().selected.emit(arg);
 				}
 			private:
-				void selected(nana::any& anyobj)
-				{
-					value_type * p = anyobj.get<typename CategObj::value_type>();
-					if(0 == p)
-					{
-						value_type nullval;
-						ext_event_.selected(categ_obj_, nullval);
-					}
-					else
-						ext_event_.selected(categ_obj_, *p);
-				}
-			private:
-				CategObj & categ_obj_;
-				mutable extra_events<CategObj> ext_event_;
+				::nana::categorize<T> & widget_;
 			};
 
 			class renderer
@@ -118,75 +120,69 @@ namespace nana{	namespace gui
 				void path(const nana::string&);
 				nana::string path() const;
 
-				template<typename CategObj>
-				ext_event_adapter<CategObj>* ref_adapter(CategObj& obj) const
+				template<typename T>
+				void create_event_agent(::nana::categorize<T>& wdg)
 				{
-					if(0 == ext_event_adapter_)
-					{
-						ext_event_adapter_ = new ext_event_adapter<CategObj>(obj);
-						_m_attach_adapter_to_drawer();
-					}
-					//categorize guarantees ext_event_adapter refers to the object of ext_event_adapter<CategObj>
-					return static_cast<ext_event_adapter<CategObj>*>(ext_event_adapter_);
+					event_agent_.reset(new event_agent<T>(wdg));
+					_m_event_agent_ready();
 				}
 
 				nana::any & value() const;
 			private:
-				void _m_attach_adapter_to_drawer() const;
+				void _m_event_agent_ready() const;
 			private:
 				void attached(widget_reference, graph_reference)	override;
 				void detached()	override;
 				void refresh(graph_reference)	override;
-				void mouse_down(graph_reference, const eventinfo&)	override;
-				void mouse_up(graph_reference, const eventinfo&)	override;
-				void mouse_move(graph_reference, const eventinfo&)	override;
-				void mouse_leave(graph_reference, const eventinfo&)	override;
+				void mouse_down(graph_reference, const arg_mouse&)	override;
+				void mouse_up(graph_reference, const arg_mouse&)	override;
+				void mouse_move(graph_reference, const arg_mouse&)	override;
+				void mouse_leave(graph_reference, const arg_mouse&)	override;
 			private:
-				mutable ext_event_adapter_if * ext_event_adapter_;
+				std::unique_ptr<event_agent_interface> event_agent_;
 				scheme * scheme_;
 			};
 		}//end namespace categorize
 	}//end namespace drawerbase
 
+
+
 	/// \brief Represent an architecture of categories and what category is chosen. 
 	/// The categorize widget can be used for representing a path of a directory or the order of a hierarchy.
 	template<typename T>
 	class categorize
-		: public widget_object<category::widget_tag, drawerbase::categorize::trigger>
+		: public widget_object<category::widget_tag, drawerbase::categorize::trigger, drawerbase::categorize::categorize_events<T>>
 	{
 	public:
 		typedef T value_type;		///< The type of objects stored
-		typedef drawerbase::categorize::extra_events<categorize> ext_event_type;
 		typedef drawerbase::categorize::renderer renderer;		///< The interface for user-defined renderer.
 
 		categorize()
-		{}
-
-		categorize(window wd, bool visible)
 		{
-			this->create(wd, rectangle(), visible);
-		}
-
-		categorize(window wd, const nana::string& text, bool visible = true)
-		{
-				create(wd, rectangle(), visible);
-				caption(text);
-		}
-
-		categorize(window wd, const nana::char_t* text, bool visible = true)
-		{
-				create(wd, rectangle(), visible);
-				caption(text);
+			this->get_drawer_trigger().create_event_agent(*this);
 		}
 
 		categorize(window wd, const rectangle& r = rectangle(), bool visible = true)
 		{
+			this->get_drawer_trigger().template create_event_agent(*this);
 			this->create(wd, r, visible);
 		}
 
-		ext_event_type& ext_event() const
+		categorize(window wd, bool visible)
+			: categorize(wd, ::nana::rectangle(), visible)
 		{
-			return get_drawer_trigger().ref_adapter(const_cast<categorize&>(*this))->ext_event();
+		}
+
+		categorize(window wd, const nana::string& text, bool visible = true)
+			: categorize(wd, ::nana::rectangle(), visible)
+		{
+			this->caption(text);
+		}
+
+		categorize(window wd, const nana::char_t* text, bool visible = true)
+			: categorize(wd, ::nana::rectangle(), visible)
+		{
+			this->caption(text);
 		}
 
 		/// Insert a new category with a specified name and the object of value type. 
@@ -194,7 +190,7 @@ namespace nana{	namespace gui
 		/// and after inserting, the new category is replaced of the current category as a new current one.
 		categorize& insert(const nana::string& name, const value_type& value)
 		{
-			get_drawer_trigger().insert(name, value);
+			this->get_drawer_trigger().insert(name, value);
 			API::update_window(*this);
 			return *this;
 		}
@@ -202,7 +198,7 @@ namespace nana{	namespace gui
 		/// Inserts a child category into current category.
 		categorize& childset(const nana::string& name, const value_type& value)
 		{
-			if(get_drawer_trigger().childset(name, value))
+			if(this->get_drawer_trigger().childset(name, value))
 				API::update_window(*this);
 			return *this;
 		}
@@ -210,42 +206,41 @@ namespace nana{	namespace gui
 		/// Erases a child category with a specified name from current category.
 		categorize& childset_erase(const nana::string& name)
 		{
-			if(get_drawer_trigger().childset_erase(name))
+			if(this->get_drawer_trigger().childset_erase(name))
 				API::update_window(*this);
 			return *this;
 		}
 
 		void clear()
 		{
-			if(get_drawer_trigger().clear())
+			if(this->get_drawer_trigger().clear())
 				API::update_window(*this);
 		}
 
 		/// Sets the splitter string
 		categorize& splitstr(const nana::string& sstr)
 		{
-			get_drawer_trigger().splitstr(sstr);
+			this->get_drawer_trigger().splitstr(sstr);
 			return *this;
 		}
 
 		nana::string splitstr() const
 		{
-			return get_drawer_trigger().splitstr();
+			return this->get_drawer_trigger().splitstr();
 		}
 
 		/// Retrieves a reference of the current category's value type object. If current category is empty, it throws a exception of std::runtime_error.
 		value_type& value() const
 		{
-			return get_drawer_trigger().value();
+			return this->get_drawer_trigger().value();
 		}
 	private:
 		void _m_caption(const nana::string& str)
 		{
-			get_drawer_trigger().path(str);
-			API::dev::window_caption(*this, get_drawer_trigger().path());
+			this->get_drawer_trigger().path(str);
+			API::dev::window_caption(*this, this->get_drawer_trigger().path());
 		}
 	};
-}//end namespace gui
 }//end namespace nana
 
 #endif

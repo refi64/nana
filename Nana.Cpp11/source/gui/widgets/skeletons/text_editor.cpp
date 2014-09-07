@@ -1,11 +1,15 @@
 #include <nana/gui/widgets/skeletons/text_editor.hpp>
+#include <nana/gui/widgets/skeletons/textbase_export_interface.hpp>
 #include <nana/system/dataexch.hpp>
 #include <nana/unicode_bidi.hpp>
 
-namespace nana{	namespace gui{	namespace widgets
+namespace nana{	namespace widgets
 {
 	namespace skeletons
 	{
+		textbase_event_agent_interface::~textbase_event_agent_interface()
+		{}
+
 		class text_editor::editor_behavior_interface
 		{
 		public:
@@ -1097,7 +1101,7 @@ namespace nana{	namespace gui{	namespace widgets
 		bool text_editor::mouse_enter(bool enter)
 		{
 			if((false == enter) && (false == text_area_.captured))
-				API::window_cursor(window_, nana::gui::cursor::arrow);
+				API::window_cursor(window_, nana::cursor::arrow);
 
 			if(API::focus_window() != window_)
 			{
@@ -1179,7 +1183,7 @@ namespace nana{	namespace gui{	namespace widgets
 			API::capture_window(window_, false);
 			text_area_.captured = false;
 			if(hit_text_area(screen_x, screen_y) == false)
-				API::window_cursor(window_, nana::gui::cursor::arrow);
+				API::window_cursor(window_, nana::cursor::arrow);
 
 			text_area_.border_renderer(graph_, _m_bgcolor());
 			return do_draw;
@@ -1425,7 +1429,7 @@ namespace nana{	namespace gui{	namespace widgets
 			{
 				graph_.rectangle( text_area_.area.x + static_cast<int>(text_area_.area.width - text_area_.vscroll),
 									text_area_.area.y + static_cast<int>(text_area_.area.height - text_area_.hscroll),
-									text_area_.vscroll, text_area_.hscroll, nana::gui::color::button_face, true);
+									text_area_.vscroll, text_area_.hscroll, nana::color::button_face, true);
 			}
 		}
 
@@ -1798,15 +1802,15 @@ namespace nana{	namespace gui{	namespace widgets
 			return false;
 		}
 
-		void text_editor::_m_on_scroll(const eventinfo& ei)
+		void text_editor::_m_on_scroll(const arg_mouse& arg)
 		{
-			if((events::mouse_move::identifier == ei.identifier) && (ei.mouse.left_button == false))
+			if((arg.evt_code == event_code::mouse_move) && (arg.left_button == false))
 				return;
 
 			bool vertical;
-			if(attributes_.vscroll && (attributes_.vscroll->handle() == ei.window))
+			if(attributes_.vscroll && (attributes_.vscroll->handle() == arg.window_handle))
 				vertical = true;
-			else if(attributes_.hscroll && (attributes_.hscroll->handle() == ei.window))
+			else if(attributes_.hscroll && (attributes_.hscroll->handle() == arg.window_handle))
 				vertical = false;
 			else
 				return;
@@ -1830,12 +1834,21 @@ namespace nana{	namespace gui{	namespace widgets
 				int x = text_area_.area.x + static_cast<int>(tx_area.width);
 				if (nullptr == wdptr)
 				{
-					std::unique_ptr<gui::scroll<true>> scptr(new gui::scroll<true>);
+					std::unique_ptr<nana::scroll<true>> scptr(new nana::scroll<true>);
 					wdptr = scptr.get();
 					wdptr->create(window_, nana::rectangle(x, text_area_.area.y, text_area_.vscroll, tx_area.height));
-					wdptr->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
-					wdptr->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
-					wdptr->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);
+
+					auto fn = [this](const arg_mouse& arg)
+					{
+						_m_on_scroll(arg);
+					};
+					wdptr->events().mouse_down.connect(fn);
+					wdptr->events().mouse_move.connect(fn);
+					wdptr->events().mouse_wheel.connect([this](const arg_wheel& arg)
+					{
+						_m_on_scroll(arg);
+					});
+
 					attributes_.vscroll.swap(scptr);
 					API::take_active(wdptr->handle(), false, window_);
 				}
@@ -1861,12 +1874,17 @@ namespace nana{	namespace gui{	namespace widgets
 				int y = text_area_.area.y + static_cast<int>(tx_area.height);
 				if(nullptr == wdptr)
 				{
-					std::unique_ptr<gui::scroll<false>> scptr(new gui::scroll<false>);
+					std::unique_ptr<nana::scroll<false>> scptr(new nana::scroll<false>);
 					wdptr = scptr.get();
 					wdptr->create(window_, nana::rectangle(text_area_.area.x, y, tx_area.width, text_area_.hscroll));
-					wdptr->make_event<events::mouse_down>(*this, &text_editor::_m_on_scroll);
-					wdptr->make_event<events::mouse_move>(*this, &text_editor::_m_on_scroll);
-					wdptr->make_event<events::mouse_wheel>(*this, &text_editor::_m_on_scroll);
+
+					auto fn = [this](const arg_mouse& arg)
+					{
+						_m_on_scroll(arg);
+					};
+					wdptr->events().mouse_down.connect(fn);
+					wdptr->events().mouse_move.connect(fn);
+					wdptr->events().mouse_wheel.connect(fn);
 					wdptr->step(20);
 					attributes_.hscroll.swap(scptr);
 					API::take_active(wdptr->handle(), false, window_);
@@ -2564,6 +2582,5 @@ namespace nana{	namespace gui{	namespace widgets
 		//end class text_editor
 	}//end namespace skeletons
 }//end namespace widgets
-}//end namespace gui
 }//end namespace nana
 

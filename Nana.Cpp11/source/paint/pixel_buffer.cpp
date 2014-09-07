@@ -25,7 +25,7 @@ namespace nana{	namespace paint
 	nana::rectangle valid_rectangle(const nana::size& s, const nana::rectangle& r)
 	{
 		nana::rectangle good_r;
-		nana::gui::overlap(s, r, good_r);
+		nana::overlap(s, r, good_r);
 		return good_r;
 	}
 
@@ -426,7 +426,7 @@ namespace nana{	namespace paint
 		if(drawable)
 		{
 			nana::rectangle r;
-			if(nana::gui::overlap(nana::paint::detail::drawable_size(drawable), want_r, r))
+			if(nana::overlap(nana::paint::detail::drawable_size(drawable), want_r, r))
 				storage_ = std::make_shared<pixel_buffer_storage>(drawable, r);
 		}
 	}
@@ -482,7 +482,7 @@ namespace nana{	namespace paint
 		if(want_r.height == 0) want_r.height = sz.height - want_r.y;
 
 		nana::rectangle r;
-		if(false == gui::overlap(sz, want_r, r))
+		if(false == overlap(sz, want_r, r))
 			return false;
 #if defined(NANA_WINDOWS)
 		BITMAPINFO bmpinfo;
@@ -699,7 +699,7 @@ namespace nana{	namespace paint
 			if(sp->alpha_channel)
 			{
 				nana::rectangle s_good_r, d_good_r;
-				if(gui::overlap(src_r, sp->pixel_size, nana::rectangle(x, y, src_r.width, src_r.height), paint::detail::drawable_size(drawable), s_good_r, d_good_r))
+				if(overlap(src_r, sp->pixel_size, nana::rectangle(x, y, src_r.width, src_r.height), paint::detail::drawable_size(drawable), s_good_r, d_good_r))
 				{
 					pixel_buffer d_pixbuf;
 					d_pixbuf.attach(drawable, d_good_r);
@@ -729,7 +729,7 @@ namespace nana{	namespace paint
 		}
 	}
 
-	void pixel_buffer::paste(gui::native_window_type wd, int x, int y) const
+	void pixel_buffer::paste(native_window_type wd, int x, int y) const
 	{
 		pixel_buffer_storage * sp = storage_.get();
 		if(nullptr == wd || nullptr == sp)	return;
@@ -784,7 +784,7 @@ namespace nana{	namespace paint
 		//Test if the line intersects the rectangle, and retrive the two points that
 		//are always in the area of rectangle, good_pos_beg is left point, good_pos_end is right.
 		nana::point good_pos_beg, good_pos_end;
-		if(gui::intersection(nana::rectangle(sp->pixel_size), pos_beg, pos_end, good_pos_beg, good_pos_end))
+		if(intersection(nana::rectangle(sp->pixel_size), pos_beg, pos_end, good_pos_beg, good_pos_end))
 			(*(sp->img_pro.line))->process(*this, good_pos_beg, good_pos_end, color, fade_rate);
 	}
 
@@ -1000,7 +1000,7 @@ namespace nana{	namespace paint
 		if(nullptr == sp) return;
 
 		nana::rectangle rct;
-		if(false == gui::overlap(nana::rectangle(sp->pixel_size), draw_rct, rct))
+		if(false == overlap(nana::rectangle(sp->pixel_size), draw_rct, rct))
 			return;
 
 		int deltapx = int(vertical ? rct.height : rct.width);
@@ -1080,7 +1080,7 @@ namespace nana{	namespace paint
 		if(nullptr == sp) return;
 
 		nana::rectangle good_src_r, good_dst_r;
-		if(gui::overlap(src_r, sp->pixel_size, r, paint::detail::drawable_size(drawable), good_src_r, good_dst_r))
+		if(overlap(src_r, sp->pixel_size, r, paint::detail::drawable_size(drawable), good_src_r, good_dst_r))
 		{
 			pixel_buffer dst;
 			dst.attach(drawable, good_dst_r);
@@ -1109,7 +1109,7 @@ namespace nana{	namespace paint
 		if(nullptr == sp) return;
 
 		nana::rectangle s_good_r, d_good_r;
-		if(gui::overlap(s_r, sp->pixel_size, nana::rectangle(d_pos.x, d_pos.y, s_r.width, s_r.height), paint::detail::drawable_size(dw_dst), s_good_r, d_good_r))
+		if(overlap(s_r, sp->pixel_size, nana::rectangle(d_pos.x, d_pos.y, s_r.width, s_r.height), paint::detail::drawable_size(dw_dst), s_good_r, d_good_r))
 		{
 			pixel_buffer d_pixbuf;
 			d_pixbuf.attach(dw_dst, d_good_r);
@@ -1123,7 +1123,7 @@ namespace nana{	namespace paint
 		if(nullptr == sp || radius < 1)	return;
 
 		nana::rectangle good_r;
-		if(gui::overlap(r, this->size(), good_r))
+		if(overlap(r, this->size(), good_r))
 			(*(sp->img_pro.blur))->process(*this, good_r, radius);
 	}
 }//end namespace paint

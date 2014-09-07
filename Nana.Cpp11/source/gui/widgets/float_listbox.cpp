@@ -13,7 +13,8 @@
 #include <nana/gui/widgets/float_listbox.hpp>
 #include <nana/gui/widgets/scroll.hpp>
 
-namespace nana{ namespace gui{
+namespace nana
+{
 	namespace drawerbase{
 		namespace float_listbox
 		{
@@ -247,7 +248,9 @@ namespace nana{ namespace gui{
 					if(wd)
 					{
 						widget_ = wd;
-						wd->make_event<events::mouse_wheel>(*this, &drawer_impl::_m_on_scroll);
+						wd->events().mouse_wheel.connect([this](const arg_wheel& arg){
+							scroll_items(arg.upwards);
+						});
 					}
 					if(graph) graph_ = graph;
 				}
@@ -363,34 +366,28 @@ namespace nana{ namespace gui{
 							scrollbar_.amount(module_->items.size());
 							scrollbar_.range(module_->max_items);
 							scrollbar_.value(state_.offset_y);
-							scrollbar_.make_event<events::mouse_wheel>(*this, &drawer_impl::_m_on_scroll);
-							scrollbar_.make_event<events::mouse_move>(*this, &drawer_impl::_m_on_scroll);
-							scrollbar_.make_event<events::mouse_up>(*this, &drawer_impl::_m_on_scroll);
+
+							auto & events = scrollbar_.events();
+							events.mouse_wheel.connect([this](const arg_wheel& arg)
+							{
+								scroll_items(arg.upwards);
+							});
+
+							auto fn = [this](const arg_mouse& arg)
+							{
+								if (arg.left_button && (scrollbar_.value() != state_.offset_y))
+								{
+									state_.offset_y = static_cast<unsigned>(scrollbar_.value());
+									draw();
+									API::update_window(*widget_);
+								}
+							};
+							events.mouse_move.connect(fn);
+							events.mouse_up.connect(fn);
 						}
 					}
 					else
 						scrollbar_.close();
-				}
-
-				void _m_on_scroll(const eventinfo& ei)
-				{
-					switch(ei.identifier)
-					{
-					case events::mouse_wheel::identifier:
-						this->scroll_items(ei.wheel.upwards);
-						break;
-					case events::mouse_move::identifier:
-					case events::mouse_up::identifier:
-						if(ei.mouse.left_button && (scrollbar_.value() != state_.offset_y))
-						{
-							state_.offset_y = static_cast<unsigned>(scrollbar_.value());
-							draw();
-							API::update_window(*widget_);
-						}
-						break;
-					default:
-						break;
-					}
 				}
 			private:
 				widget * widget_;
@@ -412,7 +409,7 @@ namespace nana{ namespace gui{
 						delete orig_renderer;
 					}
 				}state_;
-				nana::gui::scroll<true> scrollbar_;
+				nana::scroll<true> scrollbar_;
 
 				const module_def* module_;
 			};
@@ -443,10 +440,6 @@ namespace nana{ namespace gui{
 				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
 					drawer_->attach(&widget, &graph);
-					window wd = *drawer_->widget_ptr();
-					API::dev::make_drawer_event<events::mouse_move>(wd);
-					API::dev::make_drawer_event<events::mouse_down>(wd);
-					API::dev::make_drawer_event<events::mouse_up>(wd);
 				}
 
 				void trigger::detached()
@@ -459,18 +452,18 @@ namespace nana{ namespace gui{
 					drawer_->draw();
 				}
 
-				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
+				void trigger::mouse_move(graph_reference graph, const arg_mouse& arg)
 				{
-					if(drawer_->set_mouse(graph, ei.mouse.x, ei.mouse.y))
+					if(drawer_->set_mouse(graph, arg.pos.x, arg.pos.y))
 					{
 						drawer_->draw();
 						API::lazy_refresh();
 					}
 				}
 
-				void trigger::mouse_up(graph_reference graph, const eventinfo& ei)
+				void trigger::mouse_up(graph_reference graph, const arg_mouse& arg)
 				{
-					if(drawer_->right_area(graph, ei.mouse.x, ei.mouse.y))
+					if(drawer_->right_area(graph, arg.pos.x, arg.pos.y))
 					{
 						drawer_->set_result();
 						drawer_->widget_ptr()->close();
@@ -489,8 +482,9 @@ namespace nana{ namespace gui{
 			API::capture_window(handle(), true);
 			API::capture_ignore_children(false);
 			API::take_active(handle(), false, parent());
-			get_drawer_trigger().get_drawer_impl().clear_state();
-			get_drawer_trigger().get_drawer_impl().ignore_first_mouse_up(is_ignore_first_mouse_up);
+			auto & impl = get_drawer_trigger().get_drawer_impl();
+			impl.clear_state();
+			impl.ignore_first_mouse_up(is_ignore_first_mouse_up);
 		}
 
 		void float_listbox::set_module(const float_listbox::module_type& md, unsigned pixels)
@@ -513,8 +507,9 @@ namespace nana{ namespace gui{
 
 		void float_listbox::renderer(item_renderer* ir)
 		{
-			get_drawer_trigger().get_drawer_impl().renderer(ir);
-			get_drawer_trigger().get_drawer_impl().resize();
+			auto & impl = get_drawer_trigger().get_drawer_impl();
+			impl.renderer(ir);
+			impl.resize();
 		}
 
 		std::size_t float_listbox::index() const
@@ -522,5 +517,4 @@ namespace nana{ namespace gui{
 			return get_drawer_trigger().get_drawer_impl().index();
 		}
 	//end class float_listbox
-}//end namespace gui
 }

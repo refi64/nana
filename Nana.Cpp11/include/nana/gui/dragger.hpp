@@ -2,7 +2,7 @@
 #define NANA_GUI_DRAGGER_HPP
 #include "programming_interface.hpp"
 
-namespace nana{ namespace gui
+namespace nana
 {
 	/// \brief Helper class that allows the user to drag windows. 
     ///
@@ -25,6 +25,5 @@ namespace nana{ namespace gui
 	private:
 		dragger_impl_t * impl_;
 	};
-}//end namespace gui
 }//end namespace nana
 #endif

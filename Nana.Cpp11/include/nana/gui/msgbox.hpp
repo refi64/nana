@@ -16,7 +16,7 @@
 #include <sstream>
 #include <nana/gui/basis.hpp>
 
-namespace nana{	namespace gui
+namespace nana
 {
 	/// Prefabricated modal dialog box (with text, icon and actions buttons) that inform and instruct the user.
 	class msgbox
@@ -91,8 +91,6 @@ namespace nana{	namespace gui
 		button_t button_;
 		icon_t icon_;
 	};
-
-}//end namespace gui
 }//end namespace nana
 
 #endif

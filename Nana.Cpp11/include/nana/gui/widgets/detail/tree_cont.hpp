@@ -15,8 +15,6 @@
 
 namespace nana
 {
-namespace gui
-{
 namespace widgets
 {
 namespace detail
@@ -516,6 +514,5 @@ namespace detail
 		};//end class tree_cont
 }//end namespace detail
 }//end namespace widgets
-}//end namespace gui
 }//end namesace nana
 #endif

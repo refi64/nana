@@ -16,19 +16,19 @@
 #include <nana/gui/widgets/widget.hpp>
 #include <algorithm>
 
-namespace nana{	namespace gui{
-
+namespace nana
+{
 	//restrict
 	//		this name is only visible for this compiling-unit
 	namespace restrict
 	{
 		namespace
 		{
-			typedef gui::detail::bedrock::core_window_t core_window_t;
-			typedef gui::detail::bedrock::interface_type	interface_type;
+			typedef detail::bedrock::core_window_t core_window_t;
+			typedef detail::bedrock::interface_type	interface_type;
 
-			gui::detail::bedrock& bedrock = gui::detail::bedrock::instance();
-			gui::detail::bedrock::window_manager_t& window_manager = bedrock.wd_manager;
+			auto& bedrock = detail::bedrock::instance();
+			detail::bedrock::window_manager_t& window_manager = bedrock.wd_manager;
 		}
 	}
 
@@ -45,6 +45,17 @@ namespace nana{	namespace gui{
 	}
 namespace API
 {
+	namespace detail
+	{
+		general_events* get_general_events(window wd)
+		{
+			if (!restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)))
+				return nullptr;
+
+			return reinterpret_cast<restrict::core_window_t*>(wd)->together.attached_events;
+		}
+	}//end namespace detail
+
 	void effects_edge_nimbus(window wd, effects::edge_nimbus en)
 	{
 		if(wd)
@@ -140,6 +151,22 @@ namespace API
 
 	namespace dev
 	{
+
+		bool set_events(window wd, const std::shared_ptr<general_events>& gep)
+		{
+			auto iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+			internal_scope_guard lock;
+			if (!restrict::window_manager.available(iwd))
+				return false;
+		
+			if (iwd->set_events(gep))
+			{
+				restrict::bedrock.evt_operation.make(wd, gep);
+				return true;
+			}
+			return false;
+		}
+
 		void attach_drawer(widget& wd, drawer_trigger& dr)
 		{
 			const auto iwd = reinterpret_cast<restrict::core_window_t*>(wd.handle());
@@ -149,19 +176,8 @@ namespace API
 				iwd->drawer.graphics.make(iwd->dimension.width, iwd->dimension.height);
 				iwd->drawer.graphics.rectangle(iwd->color.background, true);
 				iwd->drawer.attached(wd, dr);
-				make_drawer_event<events::size>(wd);
 				iwd->drawer.refresh();	//Always redrawe no matter it is visible or invisible. This can make the graphics data correctly.
 			}
-		}
-
-		event_handle make_drawer_event(event_code code, window wd)
-		{
-			using namespace gui::detail;
-
-			internal_scope_guard isg;
-			if (bedrock::instance().wd_manager.available(reinterpret_cast<bedrock::core_window_t*>(wd)))
-				return reinterpret_cast<bedrock::core_window_t*>(wd)->drawer.make_event(code, wd);
-			return nullptr;
 		}
 
 		nana::string window_caption(window wd)
@@ -198,24 +214,24 @@ namespace API
 			}
 		}
 
-		window create_window(window owner, bool nested, const rectangle& r, const appearance& ap)
+		window create_window(window owner, bool nested, const rectangle& r, const appearance& ap, widget* wdg)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_root(reinterpret_cast<restrict::core_window_t*>(owner), nested, r, ap));
+			return reinterpret_cast<window>(restrict::window_manager.create_root(reinterpret_cast<restrict::core_window_t*>(owner), nested, r, ap, wdg));
 		}
 
-		window create_widget(window parent, const rectangle& r)
+		window create_widget(window parent, const rectangle& r, widget* wdg)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), r, false));
+			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), r, false, wdg));
 		}
 
-		window create_lite_widget(window parent, const rectangle& r)
+		window create_lite_widget(window parent, const rectangle& r, widget* wdg)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), r, true));
+			return reinterpret_cast<window>(restrict::window_manager.create_widget(reinterpret_cast<restrict::core_window_t*>(parent), r, true, wdg));
 		}
 
-		window create_frame(window parent, const rectangle& r)
+		window create_frame(window parent, const rectangle& r, widget* wdg)
 		{
-			return reinterpret_cast<window>(restrict::window_manager.create_frame(reinterpret_cast<restrict::core_window_t*>(parent), r));
+			return reinterpret_cast<window>(restrict::window_manager.create_frame(reinterpret_cast<restrict::core_window_t*>(parent), r, wdg));
 		}
 
 		paint::graphics* window_graphics(window wd)
@@ -351,6 +367,18 @@ namespace API
 	bool empty_window(window wd)
 	{
 		return (restrict::window_manager.available(reinterpret_cast<restrict::core_window_t*>(wd)) == false);
+	}
+
+	void enable_dropfiles(window wd, bool enb)
+	{
+		internal_scope_guard lock;
+		auto iwd = reinterpret_cast<restrict::core_window_t*>(wd);
+		auto native_handle = API::root(wd);
+		if (native_handle)
+		{
+			iwd->flags.dropable = enb;
+			restrict::interface_type::enable_dropfiles(native_handle, enb);
+		}
 	}
 
 	native_window_type root(window wd)
@@ -507,14 +535,9 @@ namespace API
 		return restrict::bedrock.wd_manager.set_parent(reinterpret_cast<restrict::core_window_t*>(wd), reinterpret_cast<restrict::core_window_t*>(new_parent));
 	}
 
-	void umake_event(window wd)
-	{
-		restrict::bedrock.evt_manager.umake(wd, false);
-	}
-
 	void umake_event(event_handle eh)
 	{
-		restrict::bedrock.evt_manager.umake(eh);
+		restrict::bedrock.evt_operation.erase(eh);
 	}
 
 	nana::point window_position(window wd)
@@ -756,26 +779,6 @@ namespace API
 		return cursor::arrow;
 	}
 
-	bool tray_insert(native_window_type wd, const nana::char_t* tip, const nana::char_t* ico)
-	{
-		return restrict::interface_type::notify_icon_add(wd, tip, ico);
-	}
-
-	bool tray_delete(native_window_type wd)
-	{
-		return restrict::interface_type::notify_icon_delete(wd);
-	}
-
-	void tray_tip(native_window_type wd, const char_t* text)
-	{
-		restrict::interface_type::notify_tip(wd, text);
-	}
-
-	void tray_icon(native_window_type wd, const char_t* icon)
-	{
-		restrict::interface_type::notify_icon(wd, icon);
-	}
-
 	bool is_focus_window(window wd)
 	{
 		if(wd)
@@ -854,8 +857,14 @@ namespace API
 		{
 			//modal has to guarantee that does not lock the mutex of window_manager before invokeing the pump_event,
 			//otherwise, the modal will prevent the other thread access the window.
-			restrict::bedrock.pump_event(wd);
+			restrict::bedrock.pump_event(wd, true);
 		}
+	}
+
+	void wait_for(window wd)
+	{
+		if (wd)
+			restrict::bedrock.pump_event(wd, false);
 	}
 
 	nana::color_t foreground(window wd)
@@ -958,7 +967,7 @@ namespace API
 			auto iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd) && (nullptr == iwd->together.caret))
-				iwd->together.caret = new detail::caret_descriptor(iwd, width, height);
+				iwd->together.caret = new ::nana::detail::caret_descriptor(iwd, width, height);
 		}
 	}
 
@@ -970,7 +979,7 @@ namespace API
 			internal_scope_guard isg;
 			if(restrict::window_manager.available(iwd))
 			{
-				detail::caret_descriptor* p = iwd->together.caret;
+				auto p = iwd->together.caret;
 				iwd->together.caret = nullptr;
 				delete p;
 			}
@@ -1073,9 +1082,9 @@ namespace API
 			if(restrict::window_manager.available(iwd))
 			{
 				if(eat)
-					iwd->flags.tab |= detail::tab_type::eating;
+					iwd->flags.tab |= ::nana::detail::tab_type::eating;
 				else
-					iwd->flags.tab &= ~detail::tab_type::eating;
+					iwd->flags.tab &= ~::nana::detail::tab_type::eating;
 			}
 		}
 	}
@@ -1267,7 +1276,7 @@ namespace API
 		internal_scope_guard lock;
 		auto const iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 		if(restrict::window_manager.available(iwd))
-			return detail::bedrock::interface_type::is_window_zoomed(iwd->root, ask_for_max);
+			return ::nana::detail::bedrock::interface_type::is_window_zoomed(iwd->root, ask_for_max);
 		return false;
 	}
 
@@ -1277,7 +1286,7 @@ namespace API
 		internal_scope_guard lock;
 		if (restrict::window_manager.available(iwd))
 		{
-			if ((gui::category::flags::widget == iwd->other.category) && (iwd->flags.borderless != enabled))
+			if ((category::flags::widget == iwd->other.category) && (iwd->flags.borderless != enabled))
 			{
 				iwd->flags.borderless = enabled;
 				restrict::window_manager.update(iwd, true, false);
@@ -1295,16 +1304,16 @@ namespace API
 		return false;
 	}
 
-	nana::gui::mouse_action mouse_action(window wd)
+	nana::mouse_action mouse_action(window wd)
 	{
 		internal_scope_guard isg;
 		auto iwd = reinterpret_cast<restrict::core_window_t*>(wd);
 		if(restrict::window_manager.available(iwd))
 			return iwd->flags.action;
-		return gui::mouse_action::normal;
+		return nana::mouse_action::normal;
 	}
 
-	nana::gui::element_state element_state(window wd)
+	nana::element_state element_state(window wd)
 	{
 		internal_scope_guard isg;
 		auto iwd = reinterpret_cast<restrict::core_window_t*>(wd);
@@ -1313,19 +1322,18 @@ namespace API
 			const bool is_focused = (iwd->root_widget->other.attribute.root->focus == iwd);
 			switch(iwd->flags.action)
 			{
-			case gui::mouse_action::normal:
-				return (is_focused ? gui::element_state::focus_normal : gui::element_state::normal);
-			case gui::mouse_action::over:
-				return (is_focused ? gui::element_state::focus_hovered : gui::element_state::hovered);
-			case gui::mouse_action::pressed:
-				return gui::element_state::pressed;
+			case nana::mouse_action::normal:
+				return (is_focused ? nana::element_state::focus_normal : nana::element_state::normal);
+			case nana::mouse_action::over:
+				return (is_focused ? nana::element_state::focus_hovered : nana::element_state::hovered);
+			case nana::mouse_action::pressed:
+				return nana::element_state::pressed;
 			default:
 				if(false == iwd->flags.enabled)
-					return gui::element_state::disabled;
+					return nana::element_state::disabled;
 			}
 		}
-		return gui::element_state::normal;
+		return nana::element_state::normal;
 	}
 }//end namespace API
-}//end namespace gui
 }//end namespace nana

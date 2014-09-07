@@ -11,8 +11,8 @@
 
 #include <nana/gui/widgets/scroll.hpp>
 
-namespace nana{ namespace gui{
-
+namespace nana
+{
 	namespace drawerbase
 	{
 		namespace scroll
@@ -34,7 +34,7 @@ namespace nana{ namespace gui{
 				vertical_ = v;
 			}
 
-			buttons drawer::what(graph_reference graph, int x, int y)
+			buttons drawer::what(graph_reference graph, const point& screen_pos)
 			{
 				unsigned scale;
 				int pos;
@@ -42,12 +42,12 @@ namespace nana{ namespace gui{
 				if(vertical_)
 				{
 					scale = graph.height();
-					pos = y;
+					pos = screen_pos.y;
 				}
 				else
 				{
 					scale = graph.width();
-					pos = x;
+					pos = screen_pos.x;
 				}
 
 				if(scale >= fixedsize * 2)
@@ -337,6 +337,5 @@ namespace nana{ namespace gui{
 		//end class drawer
 		}//end namespace scroll
 	}//end namespace drawerbase
-}//end namespace gui
 }//end namespace nana
 

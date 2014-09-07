@@ -14,7 +14,8 @@
 #include <cstddef>
 #include <nana/paint/graphics.hpp>
 
-namespace nana{	namespace gui{
+namespace nana
+{
 	namespace effects
 	{
 		enum class edge_nimbus
@@ -25,7 +26,7 @@ namespace nana{	namespace gui{
 		class bground_interface
 		{
 		public:
-			typedef nana::paint::graphics & graph_reference;
+			typedef paint::graphics & graph_reference;
 
 			virtual ~bground_interface() = 0;
 			virtual void take_effect(window, graph_reference) const = 0;
@@ -62,6 +63,5 @@ namespace nana{	namespace gui{
 			std::size_t radius_;
 		};
 	}
-}//end namespace gui
 }//end namespace nana
 #endif

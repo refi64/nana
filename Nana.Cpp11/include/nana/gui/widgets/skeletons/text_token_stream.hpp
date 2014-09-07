@@ -22,7 +22,7 @@
 #include <stack>
 #include <stdexcept>
 
-namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
+namespace nana{ namespace widgets{	namespace skeletons
 {
 	//The tokens are defined for representing a text, the tokens are divided
 	//into two parts.
@@ -548,7 +548,7 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 				if(make_fit)
 				{
 					nana::size  res;
-					nana::gui::fit_zoom(size_, sz, res);
+					nana::fit_zoom(size_, sz, res);
 					size_ = res;
 				}
 				else
@@ -948,6 +948,5 @@ namespace nana{	namespace gui{	namespace widgets{	namespace skeletons
 	};
 }//end namespace skeletons
 }//end namespace widgets
-}//end naemspace gui
 }//end namepsace nana
 #endif	//NANA_GUI_WIDGETS_SKELETONS_TEXT_TOKEN_STREAM

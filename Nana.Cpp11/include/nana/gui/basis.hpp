@@ -19,8 +19,6 @@
 
 namespace nana
 {
-namespace gui
-{
 	namespace detail
 	{
 		struct native_window_handle_impl{};
@@ -225,9 +223,5 @@ namespace gui
 			}
 		};
 	};//end namespace apper
-}//end namespace gui
 }//end namespace nana
-
 #endif
-
-

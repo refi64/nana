@@ -1,6 +1,7 @@
 /*
  *	Platform Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
@@ -43,7 +44,7 @@ namespace nana{
 		};
 	}
 
-	namespace gui{	namespace detail{
+	namespace detail{
 
 #if defined(NANA_WINDOWS)
 	class tray_manager
@@ -483,6 +484,17 @@ namespace nana{
 		}
 #endif
 		
+		void native_interface::enable_dropfiles(native_window_type wd, bool enb)
+		{
+#if defined(NANA_WINDOWS)
+			::DragAcceptFiles(reinterpret_cast<HWND>(wd), enb);
+#else
+			int dndver = (enb ? 4: 0);
+			::XChangeProperty(restrict::spec.open_display(), reinterpret_cast<Window>(wd), restrict::spec.atombase().xdnd_aware, XA_ATOM, sizeof(int) * 8,
+				PropModeReplace, reinterpret_cast<unsigned char*>(&dndver), 1);
+#endif
+		}
+
 		void native_interface::enable_window(native_window_type wd, bool is_enabled)
 		{
 #if defined(NANA_WINDOWS)
@@ -590,7 +602,6 @@ namespace nana{
 					restrict::spec.rev_error_handler();
 				}
 				bedrock.wd_manager.destroy(iwd);
-				bedrock.evt_manager.umake(reinterpret_cast<gui::window>(iwd), false);
 				bedrock.rt_manager.remove_if_exists(iwd);
 				bedrock.wd_manager.destroy_handle(iwd);
 			}
@@ -1229,92 +1240,6 @@ namespace nana{
 #endif
 		}
 
-		bool native_interface::notify_icon_add(native_window_type wd, const char_t* tip, const char_t* ico)
-		{
-#if defined(NANA_WINDOWS)
-			NOTIFYICONDATA icon_data;
-			memset(&icon_data, 0, sizeof icon_data);
-			icon_data.cbSize = sizeof icon_data;
-			icon_data.hWnd = reinterpret_cast<HWND>(wd);
-			icon_data.uID = 0;
-
-			if(tip)
-				icon_data.uFlags		= NIF_ICON | NIF_MESSAGE | NIF_TIP;
-			else
-				icon_data.uFlags		= NIF_ICON | NIF_MESSAGE;
-
-			icon_data.uCallbackMessage	= nana::detail::messages::tray;
-			icon_data.hIcon				= (ico ? (HICON)::LoadImage(0, ico, IMAGE_ICON, 0, 0, LR_LOADFROMFILE) : 0);
-
-			strcpy(icon_data.szTip, (tip ? tip : STR("")));
-
-			if(icon_data.hIcon)
-				tray_manager::instance().set_icon(wd, icon_data.hIcon);
-
-			return (TRUE == ::Shell_NotifyIcon(NIM_ADD, &icon_data));
-#elif defined(NANA_X11)
-			return true;
-#endif
-		}
-
-		bool native_interface::notify_icon_delete(native_window_type wd)
-		{
-#if defined(NANA_WINDOWS)
-			NOTIFYICONDATA icon_data;
-			memset(&icon_data, 0, sizeof icon_data);
-
-			icon_data.cbSize = sizeof icon_data;
-			icon_data.hWnd = reinterpret_cast<HWND>(wd);
-			icon_data.uID = 0;
-			if(TRUE == ::Shell_NotifyIcon(NIM_DELETE, &icon_data))
-			{
-				tray_manager::extra_t ext;
-				if(tray_manager::instance().remove(wd, ext))
-				{
-					if(ext.ico) ::DestroyIcon(ext.ico);
-				}
-				return true;
-			}
-			return false;
-#elif defined(NANA_X11)
-			return true;
-#endif
-		}
-
-		void native_interface::notify_tip(native_window_type wd, const char_t* text)
-		{
-#if defined(NANA_WINDOWS)
-			NOTIFYICONDATA nid;
-			nid.cbSize = sizeof nid;
-			nid.hWnd = reinterpret_cast<HWND>(wd);
-			nid.uID = 0;
-			nid.uFlags = NIF_TIP;
-			std::size_t len = nana::strlen(text);
-			if(len >= 64) len = 63;
-			memcpy(nid.szTip, text, sizeof(char_t) * len);
-			nid.szTip[len] = 0;
-
-			::Shell_NotifyIcon(NIM_MODIFY, &nid);
-#endif
-		}
-
-		void native_interface::notify_icon(native_window_type wd, const char_t* icon)
-		{
-#if defined(NANA_WINDOWS)
-			NOTIFYICONDATA nid;
-			nid.cbSize = sizeof nid;
-			nid.hWnd = reinterpret_cast<HWND>(wd);
-			nid.uID = 0;
-			nid.uFlags = NIF_ICON;
-			nid.hIcon = (HICON)::LoadImage(0, icon, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
-			::Shell_NotifyIcon(NIM_MODIFY, &nid);
-
-			HICON prev = tray_manager::instance().set_icon(wd, nid.hIcon);
-			if(prev)
-				::DestroyIcon(prev);
-#endif
-		}
-
 		void native_interface::set_focus(native_window_type wd)
 		{
 #if defined(NANA_WINDOWS)
@@ -1433,5 +1358,4 @@ namespace nana{
 		}
 	//end struct native_interface
 	}//end namespace detail
-	}//end namespace gui
 }//end namespace nana

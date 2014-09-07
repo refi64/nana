@@ -16,8 +16,7 @@
 #include <vector>
 #include <memory>
 
-namespace nana { namespace gui
-{
+namespace nana {
 namespace drawerbase
 {
 	namespace checkbox
@@ -31,10 +30,10 @@ namespace drawerbase
 			~drawer();	//To instance imptr_;
 			void attached(widget_reference, graph_reference)	override;
 			void refresh(graph_reference)	override;
-			void mouse_enter(graph_reference, const eventinfo&)	override;
-			void mouse_leave(graph_reference, const eventinfo&)	override;
-			void mouse_down(graph_reference, const eventinfo&)	override;
-			void mouse_up(graph_reference, const eventinfo&)	override;
+			void mouse_enter(graph_reference, const arg_mouse&)	override;
+			void mouse_leave(graph_reference, const arg_mouse&)	override;
+			void mouse_down(graph_reference, const arg_mouse&)	override;
+			void mouse_up(graph_reference, const arg_mouse&)	override;
 		public:
 			implement * impl() const;
 		private:
@@ -91,12 +90,11 @@ namespace drawerbase
 		std::size_t checked() const;       ///< Retrieves the index of the checkbox which is checked.
 		std::size_t size() const;
 	private:
-		void _m_checked(const eventinfo&);
-		void _m_destroy(const eventinfo&);
+		void _m_checked(const arg_mouse&);
+		void _m_destroy(const arg_destroy&);
 	private:
 		std::vector<element_tag> ui_container_;
 	};
-}//end namespace gui
 }//end namespace nana
 
 #endif

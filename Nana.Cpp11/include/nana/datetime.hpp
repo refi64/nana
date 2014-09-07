@@ -15,7 +15,7 @@
 
 namespace nana
 {
-	/// A date operation class. \see nana::gui::date_chooser
+	/// A date operation class. \see nana::date_chooser
 	class date
 	{
 	public:

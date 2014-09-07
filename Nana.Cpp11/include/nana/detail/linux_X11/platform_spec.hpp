@@ -26,7 +26,7 @@
 #include <nana/gui/basis.hpp>
 #include <nana/paint/image.hpp>
 #include <nana/paint/graphics.hpp>
-#include <nana/gui/detail/eventinfo.hpp>
+#include <nana/gui/detail/event_code.hpp>
 
 #include <vector>
 #include <map>
@@ -171,8 +171,8 @@ namespace detail
 
 		struct window_context_t
 		{
-			nana::gui::native_window_type owner;
-			std::vector<nana::gui::native_window_type> * owned;
+			native_window_type owner;
+			std::vector<native_window_type> * owned;
 		};
     public:
         int error_code;
@@ -180,8 +180,8 @@ namespace detail
 		typedef drawable_impl_type::font_ptr_t font_ptr_t;
 		typedef void (*timer_proc_type)(unsigned tid);
 		typedef void (*event_proc_type)(Display*, msg_packet_tag&);
-		typedef ::nana::gui::event_code event_code;
-		typedef ::nana::gui::native_window_type native_window_type;
+		typedef ::nana::event_code		event_code;
+		typedef ::nana::native_window_type	native_window_type;
 
 
 		platform_spec();
@@ -225,7 +225,7 @@ namespace detail
 		static bool caret_reinstate(caret_tag&);
 		void set_error_handler();
 		int rev_error_handler();
-		void event_register_filter(native_window_type, event_code);
+
 		//grab
 		//register a grab window while capturing it if it is unviewable.
 		//when native_interface::show a window that is registered as a grab

@@ -29,8 +29,6 @@
 
 namespace nana
 {
-namespace gui
-{
 	namespace detail
 	{
 		template<typename Key, typename Value, std::size_t CacheSize>
@@ -129,38 +127,12 @@ namespace gui
 			pair_type * addr_;
 		};
 
-		template<bool IsPtr, typename HandleType>
-		struct handle_manager_deleter_impl
-		{
-			void operator()(const HandleType handle) const
-			{
-				delete handle;
-			}
-		};
-
-		template<typename HandleType>
-		struct handle_manager_deleter_impl<false, HandleType>
-		{
-			template<typename T> struct error{};
-			
-			void operator()(const HandleType) const
-			{
-				//This Error is that you should define a deleter type for the non-pointer handle type
-				error<HandleType> YouHaveToDefineADeleterForHandleManager3thTemplateParameterForANonPointerHandleType = (int*)0;
-			}
-		};
-
-		template<typename HandleType>
-		struct default_handle_manager_deleter
-			:public handle_manager_deleter_impl<std::is_pointer<HandleType>::value, HandleType>
-		{};
-
 		//handle_manager
 		//@brief
 		//		handle_manager maintains handles of a type. removing a handle dose not destroy it,
 		//	it will be inserted to a trash queue for deleting at a safe time.
 		//		For efficiency, this class is not a thread-safe.
-		template<typename HandleType, typename Condition, typename Deleter = default_handle_manager_deleter<HandleType> >
+		template<typename HandleType, typename Condition, typename Deleter>
 		class handle_manager
 			: nana::noncopyable
 		{
@@ -258,6 +230,9 @@ namespace gui
 
 			bool available(const handle_type handle)	const
 			{
+				if (nullptr == handle)
+					return false;
+
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
 				bool * v = cacher_.get(handle);
 				if(v) return *v;
@@ -308,6 +283,5 @@ namespace gui
 			std::vector<holder_pair>	trash_;
 		};//end class handle_manager
 	}//end namespace detail
-}//end namespace gui
 }// end namespace nana
 #endif

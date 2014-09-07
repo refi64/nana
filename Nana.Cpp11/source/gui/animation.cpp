@@ -29,7 +29,7 @@
     #include <thread>
 #endif //NANA_MINGW
 
-namespace nana{	namespace gui
+namespace nana
 {
 	class animation;
 
@@ -405,7 +405,7 @@ namespace nana{	namespace gui
 				state.this_frameset = framesets.begin();
 
 				{
-					nana::gui::internal_scope_guard isg;
+					nana::internal_scope_guard lock;
 					if(nullptr == perf_manager)
 						perf_manager = new performance_manager;
 				}
@@ -416,7 +416,7 @@ namespace nana{	namespace gui
 			{
 				perf_manager->close(this);
 				{
-					nana::gui::internal_scope_guard isg;
+					nana::internal_scope_guard lock;
 					if(perf_manager->empty())
 					{
 						delete perf_manager;
@@ -623,16 +623,13 @@ namespace nana{	namespace gui
 			if(nullptr == output.diehard)
 			{
 				drawing dw(wd);
-				output.diehard = dw.draw_diehard([this, pos](paint::graphics& tar)
-				{
+				output.diehard = dw.draw_diehard([this, pos](paint::graphics& tar){
 					impl_->render_this_specifically(tar, pos);
 				});
 
-				API::make_event<events::destroy>(wd, [this](const eventinfo& ei)
-				{
+				API::events(wd).destroy.connect([this](const arg_destroy& arg){
 					std::lock_guard<decltype(impl_->thr_variable->mutex)> lock(impl_->thr_variable->mutex);
-					impl_->outputs.erase(ei.window);
-	
+					impl_->outputs.erase(arg.window_handle);
 				});
 			}
 			output.points.push_back(pos);
@@ -641,7 +638,5 @@ namespace nana{	namespace gui
 
 
 	animation::performance_manager * animation::impl::perf_manager;
-
-}	//end namespace gui
 }	//end namespace nana
 

@@ -17,8 +17,8 @@
 #include <nana/gui/layout_utility.hpp>
 #include <algorithm>
 
-namespace nana{
-	namespace gui{
+namespace nana
+{
 		namespace detail
 		{
 
@@ -331,7 +331,7 @@ namespace nana{
 				//@brief:	Notify the glass windows that are overlapped with the specified vis_rect
 				void window_layout::_m_notify_glasses(core_window_t* const sigwd, const nana::rectangle& r_visual)
 				{
-					typedef gui::category::flags cat_flags;
+					typedef category::flags cat_flags;
 
 					nana::rectangle r_of_sigwd(sigwd->pos_root, sigwd->dimension);
 					for (auto wd : data_sect.effects_bground_windows)
@@ -382,7 +382,6 @@ namespace nana{
 
 			window_layout::data_section window_layout::data_sect;
 		}//end namespace detail
-	}//end namespace gui
 }//end namespace nana
 
 

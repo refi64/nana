@@ -13,7 +13,7 @@
 
 #include <nana/gui/widgets/panel.hpp>
 
-namespace nana{	namespace gui
+namespace nana
 {
 	namespace drawerbase
 	{
@@ -39,5 +39,4 @@ namespace nana{	namespace gui
 		}//end namespace panel
 
 	}//end namespace drawerbase
-}//end namespace gui
 }//end namespace nana

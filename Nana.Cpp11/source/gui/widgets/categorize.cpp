@@ -17,18 +17,16 @@
 #include <nana/gui/widgets/detail/tree_cont.hpp>
 #include <stdexcept>
 
-namespace nana{	namespace gui{
+namespace nana
+{
 	namespace drawerbase
 	{
 		namespace categorize
 		{
-			struct ext_event_raw_tag
+			struct event_agent_holder
 			{
 				std::function<void(nana::any&)> selected;
 			};
-
-			ext_event_adapter_if::~ext_event_adapter_if()
-			{}
 
 			struct item
 				: public float_listbox::item_interface
@@ -253,7 +251,7 @@ namespace nana{	namespace gui{
 							not_head = true;
 						str += i->value.first;
 					}
-					return std::move(str);
+					return str;
 				}
 
 				void path(const nana::string& key)
@@ -534,9 +532,9 @@ namespace nana{	namespace gui{
 					return (nullptr != style_.listbox);
 				}
 
-				ext_event_raw_tag& ext_event() const
+				event_agent_holder& evt_holder() const
 				{
-					return ext_event_;
+					return evt_holder_;
 				}
 			private:
 				void _m_selected(node_handle node)
@@ -544,8 +542,8 @@ namespace nana{	namespace gui{
 					if(node)
 					{
 						API::dev::window_caption(window_handle(), tree().path());
-						if(ext_event_.selected)
-							ext_event_.selected(node->value.second.value);
+						if(evt_holder_.selected)
+							evt_holder_.selected(node->value.second.value);
 					}
 				}
 
@@ -582,10 +580,12 @@ namespace nana{	namespace gui{
 					}
 					r.y += r.height;
 					r.width = r.height = 100;
-					style_.listbox = &(form_loader<gui::float_listbox>()(window_, r, true));
+					style_.listbox = &(form_loader<nana::float_listbox>()(window_, r, true));
 					style_.listbox->set_module(style_.module, 16);
-					style_.listbox->show();
-					style_.listbox->make_event<events::destroy>(*this, &scheme::_m_list_closed);
+					style_.listbox->events().destroy.connect([this]
+					{
+						_m_list_closed();
+					});
 				}
 
 				void _m_list_closed()
@@ -645,8 +645,7 @@ namespace nana{	namespace gui{
 				nana::rectangle _m_make_rectangle() const
 				{
 					nana::rectangle r(1, 1, graph_->width() - 2, _m_item_fix_scale());
-					//Test whether the all of items can be displayed.
-					bool all = true;
+					
 					unsigned px = r.width;
 					std::size_t lines = item_lines_;
 					std::vector<node_handle> v;
@@ -667,18 +666,15 @@ namespace nana{	namespace gui{
 							}
 							else
 							{
-								all = false;
-								break;
+								//Too many items, so some of items cann't be displayed
+								r.x += 16;
+								r.width -= 16;
+								return r;
 							}
 						}
 						px -= node->value.second.scale.width;
 					}
 
-					if(false == all)
-					{
-						r.x += 16;
-						r.width -= 16;
-					}
 					return r;
 				}
 
@@ -782,9 +778,9 @@ namespace nana{	namespace gui{
 				{
 					ui_element::t list_trigger;
 					std::size_t active;	//It indicates the item corresponding listbox.
-					mutable nana::rectangle active_item_rectangle;
-					nana::gui::float_listbox::module_type module;
-					nana::gui::float_listbox * listbox;
+					mutable ::nana::rectangle active_item_rectangle;
+					::nana::float_listbox::module_type module;
+					::nana::float_listbox * listbox;
 					scheme::mode	mode;
 					mouse_action	state;	//The state of mouse
 				}style_;
@@ -794,18 +790,17 @@ namespace nana{	namespace gui{
 					pat::cloneable<renderer> ui_renderer;
 				}proto_;
 
-				mutable ext_event_raw_tag	ext_event_;
+				mutable event_agent_holder	evt_holder_;
 			};
 
 			//class trigger
 				trigger::trigger()
-					: ext_event_adapter_(nullptr), scheme_(new scheme)
+					: scheme_(new scheme)
 				{}
 
 				trigger::~trigger()
 				{
 					delete scheme_;
-					delete ext_event_adapter_;
 				}
 
 				void trigger::insert(const nana::string& str, nana::any value)
@@ -874,25 +869,18 @@ namespace nana{	namespace gui{
 					throw std::runtime_error("Nana.GUI.categorize::value(), current category is empty");
 				}
 
-				void trigger::_m_attach_adapter_to_drawer() const
+				void trigger::_m_event_agent_ready() const
 				{
-					if(ext_event_adapter_)
-					{
-						auto & ee = scheme_->ext_event();
-						if(ee.selected == nullptr)
-							ee.selected = nana::make_fun(*ext_event_adapter_, &ext_event_adapter_if::selected);
-					}
+					auto & evt = scheme_->evt_holder();
+					auto evt_agent = event_agent_.get();
+					evt.selected = [evt_agent](::nana::any& val){
+						evt_agent->selected(val);
+					};
 				}
 
 				void trigger::attached(widget_reference widget, graph_reference graph)
 				{
 					scheme_->attach(widget, &graph);
-					window wd = scheme_->window_handle();
-					using namespace API::dev;
-					make_drawer_event<events::mouse_down>(wd);
-					make_drawer_event<events::mouse_up>(wd);
-					make_drawer_event<events::mouse_move>(wd);
-					make_drawer_event<events::mouse_leave>(wd);
 				}
 
 				void trigger::detached()
@@ -905,7 +893,7 @@ namespace nana{	namespace gui{
 					scheme_->draw();
 				}
 
-				void trigger::mouse_down(graph_reference, const eventinfo&)
+				void trigger::mouse_down(graph_reference, const arg_mouse&)
 				{
 					if(scheme_->locate().what > ui_element::somewhere)
 					{
@@ -918,7 +906,7 @@ namespace nana{	namespace gui{
 					}
 				}
 
-				void trigger::mouse_up(graph_reference, const eventinfo&)
+				void trigger::mouse_up(graph_reference, const arg_mouse&)
 				{
 					if(scheme_->locate().what > ui_element::somewhere)
 					{
@@ -931,16 +919,16 @@ namespace nana{	namespace gui{
 					}
 				}
 
-				void trigger::mouse_move(graph_reference, const eventinfo& ei)
+				void trigger::mouse_move(graph_reference, const arg_mouse& arg)
 				{
-					if(scheme_->locate(ei.mouse.x, ei.mouse.y) && API::window_enabled(scheme_->window_handle()))
+					if(scheme_->locate(arg.pos.x, arg.pos.y) && API::window_enabled(scheme_->window_handle()))
 					{
 						scheme_->draw();
 						API::lazy_refresh();
 					}
 				}
 
-				void trigger::mouse_leave(graph_reference, const eventinfo&)
+				void trigger::mouse_leave(graph_reference, const arg_mouse&)
 				{
 					if(API::window_enabled(scheme_->window_handle()) && (scheme_->is_list_shown() == false) && scheme_->erase_locate())
 					{
@@ -951,6 +939,4 @@ namespace nana{	namespace gui{
 			//end class trigger
 		}//end namespace categorize
 	}//end namespace draerbase
-
-}//end namespace gui
 }//end namespace nana

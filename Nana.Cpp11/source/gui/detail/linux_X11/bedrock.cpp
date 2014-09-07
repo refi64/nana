@@ -13,7 +13,7 @@
 #include <nana/config.hpp>
 #include PLATFORM_SPEC_HPP
 #include GUI_BEDROCK_HPP
-#include <nana/gui/detail/eventinfo.hpp>
+#include <nana/gui/detail/event_code.hpp>
 #include <nana/system/platform.hpp>
 #include <nana/gui/detail/inner_fwd_implement.hpp>
 #include <nana/gui/detail/native_window_interface.hpp>
@@ -22,8 +22,6 @@
 #include <errno.h>
 
 namespace nana
-{
-namespace gui
 {
 	//class internal_scope_guard
 		internal_scope_guard::internal_scope_guard()
@@ -62,10 +60,10 @@ namespace detail
 
 	struct bedrock::thread_context
 	{
-		unsigned event_pump_ref_count;
+		unsigned event_pump_ref_count = 0;
 
-		int		window_count;	//The number of windows
-		core_window_t* event_window;
+		int		window_count = 0;	//The number of windows
+		core_window_t* event_window = nullptr;
 
 		struct platform_detail_tag
 		{
@@ -77,15 +75,14 @@ namespace detail
 		struct cursor_tag
 		{
 			core_window_t * window;
-			nana::gui::cursor predef_cursor;
+			nana::cursor predef_cursor;
 			Cursor handle;
 		}cursor;
 
 		thread_context()
-			: event_pump_ref_count(0), window_count(0), event_window(0)
 		{
-			cursor.window = 0;
-			cursor.predef_cursor = nana::gui::cursor::arrow;
+			cursor.window = nullptr;
+			cursor.predef_cursor = nana::cursor::arrow;
 			cursor.handle = 0;
 		}
 	};
@@ -199,7 +196,7 @@ namespace detail
 		if(impl_->cache.tcontext.tid == tid)
 			return impl_->cache.tcontext.object;
 
-		bedrock::thread_context* context = 0;
+		bedrock::thread_context* context = nullptr;
 
 		private_impl::thr_context_container::iterator i = impl_->thr_contexts.find(tid);
 		if(i == impl_->thr_contexts.end())
@@ -251,7 +248,7 @@ namespace detail
 		return bedrock_object;
 	}
 
-	gui::category::flags bedrock::category(bedrock::core_window_t* wd)
+	category::flags bedrock::category(bedrock::core_window_t* wd)
 	{
 		if(wd)
 		{
@@ -259,7 +256,7 @@ namespace detail
 			if(wd_manager.available(wd))
 				return wd->other.category;
 		}
-		return gui::category::flags::super;
+		return category::flags::super;
 	}
 
 	bedrock::core_window_t* bedrock::focus()
@@ -357,11 +354,11 @@ namespace detail
 		}
 	}
 
-	void bedrock::get_key_state(nana::gui::detail::tag_keyboard& kb)
+	void bedrock::get_key_state(arg_keyboard& arg)
 	{
 		XKeyEvent xkey;
 		nana::detail::platform_spec::instance().read_keystate(xkey);
-		kb.ctrl = (xkey.state & ControlMask);
+		arg.ctrl = (xkey.state & ControlMask);
 	}
 
 	bool bedrock::set_keyboard_shortkey(bool yes)
@@ -376,67 +373,121 @@ namespace detail
 		return impl_->estore;
 	}
 
-	void make_eventinfo(eventinfo& ei, detail::bedrock::core_window_t* wd, unsigned int msg, const XEvent& event)
+	bool bedrock::emit(event_code evt_code, core_window_t* wd, const arg_mouse& arg, bool ask_update, thread_context* thrd)
 	{
-		ei.window = reinterpret_cast<window>(wd);
-		if(msg == ButtonPress || msg == ButtonRelease)
-		{
-			if(event.xbutton.button == Button4 || event.xbutton.button == Button5)
-			{
-				ei.wheel.upwards = (event.xbutton.button == Button4);
-				ei.wheel.x = event.xbutton.x - wd->pos_root.x;
-				ei.wheel.y = event.xbutton.y - wd->pos_root.y;
-			}
-			else
-			{
-				ei.mouse.x = event.xbutton.x - wd->pos_root.x;
-				ei.mouse.y = event.xbutton.y - wd->pos_root.y;
+		if(evt_code != arg.evt_code)
+			throw std::runtime_error("Nana.bedrock: Invalid event arg.");
+		return emit(evt_code, wd, static_cast<const ::nana::detail::event_arg_interface&>(arg), ask_update, thrd);
+	}
 
-				ei.mouse.left_button = ei.mouse.mid_button = ei.mouse.right_button = false;
-				ei.mouse.shift = ei.mouse.ctrl = false;
-				switch(event.xbutton.button)
+	bool bedrock::emit(event_code evt_code, core_window_t* wd, const ::nana::detail::event_arg_interface& arg, bool ask_update, thread_context* thrd)
+	{
+		if(wd_manager.available(wd) == false)
+			return false;
+
+		core_window_t * prev_wd;
+		if(thrd)
+		{
+			prev_wd = thrd->event_window;
+			thrd->event_window = wd;
+			_m_event_filter(evt_code, wd, thrd);
+		}
+
+		if(wd->other.upd_state == core_window_t::update_state::none)
+			wd->other.upd_state = core_window_t::update_state::lazy;
+
+		_m_emit_core(evt_code, wd, false, arg);
+
+		if(ask_update)
+			wd_manager.do_lazy_refresh(wd, false);
+		else
+			wd->other.upd_state = core_window_t::update_state::none;
+
+		if(thrd) thrd->event_window = prev_wd;
+		return true;
+	}
+
+	bool bedrock::emit_drawer(event_code evt_code, core_window_t* wd, const ::nana::detail::event_arg_interface& arg, thread_context* thrd)
+	{
+		if(wd_manager.available(wd) == false)
+			return false;
+
+		core_window_t * prev_wd;
+		if(thrd)
+		{
+			prev_wd = thrd->event_window;
+			thrd->event_window = wd;
+			_m_event_filter(evt_code, wd, thrd);
+		}
+
+		if(wd->other.upd_state == core_window_t::update_state::none)
+			wd->other.upd_state = core_window_t::update_state::lazy;
+
+		_m_emit_core(evt_code, wd, true, arg);
+
+		if(thrd) thrd->event_window = prev_wd;
+		return true;
+
+	}
+
+	void assign_arg(arg_mouse& arg, basic_window* wd, unsigned msg, const XEvent& evt)
+	{
+		arg.window_handle = reinterpret_cast<window>(wd);
+		if (ButtonPress == msg || ButtonRelease == msg)
+		{
+			if (evt.xbutton.button != Button4 && evt.xbutton.button != Button5)
+			{
+				arg.evt_code = (ButtonPress == msg ? event_code::mouse_down : event_code::mouse_up);
+				arg.pos.x = evt.xbutton.x - wd->pos_root.x;
+				arg.pos.y = evt.xbutton.y - wd->pos_root.y;
+
+				arg.left_button = arg.mid_button = arg.right_button = false;
+				arg.shift = arg.ctrl = false;
+				switch (evt.xbutton.button)
 				{
 				case Button1:
-					ei.mouse.left_button = true;
+					arg.left_button = true;
 					break;
 				case Button2:
-					ei.mouse.mid_button = true;
+					arg.mid_button = true;
 					break;
 				case Button3:
-					ei.mouse.right_button = true;
+					arg.right_button = true;
 					break;
 				}
 			}
 		}
-		else if(msg == MotionNotify)
+		else if (msg == MotionNotify)
 		{
-			ei.mouse.x = event.xmotion.x - wd->pos_root.x;
-			ei.mouse.y = event.xmotion.y - wd->pos_root.y;
-			ei.mouse.left_button = ei.mouse.mid_button = ei.mouse.right_button = false;
+			arg.evt_code = event_code::mouse_move;
+			arg.pos.x = evt.xmotion.x - wd->pos_root.x;
+			arg.pos.y = evt.xmotion.y - wd->pos_root.y;
+			arg.left_button = arg.mid_button = arg.right_button = false;
 
-			ei.mouse.shift = event.xmotion.state & ShiftMask;
-			ei.mouse.ctrl = event.xmotion.state & ControlMask;
-			if(event.xmotion.state & Button1Mask)
-				ei.mouse.left_button = true;
-			else if(event.xmotion.state & Button2Mask)
-				ei.mouse.right_button = true;
-			else if(event.xmotion.state & Button3Mask)
-				ei.mouse.mid_button = true;
+			arg.shift = evt.xmotion.state & ShiftMask;
+			arg.ctrl = evt.xmotion.state & ControlMask;
+			if (evt.xmotion.state & Button1Mask)
+				arg.left_button = true;
+			else if (evt.xmotion.state & Button2Mask)
+				arg.right_button = true;
+			else if (evt.xmotion.state & Button3Mask)
+				arg.mid_button = true;
 		}
-		else if(EnterNotify == msg)
+		else if (EnterNotify == msg)
 		{
-			ei.mouse.x = event.xcrossing.x - wd->pos_root.x;
-			ei.mouse.y = event.xcrossing.y - wd->pos_root.y;
-			ei.mouse.left_button = ei.mouse.mid_button = ei.mouse.right_button = false;
+			arg.evt_code = event_code::mouse_enter;
+			arg.pos.x = evt.xcrossing.x - wd->pos_root.x;
+			arg.pos.y = evt.xcrossing.y - wd->pos_root.y;
+			arg.left_button = arg.mid_button = arg.right_button = false;
 
-			ei.mouse.shift = event.xcrossing.state & ShiftMask;
-			ei.mouse.ctrl = event.xcrossing.state & ControlMask;
-			if(event.xcrossing.state & Button1Mask)
-				ei.mouse.left_button = true;
-			else if(event.xcrossing.state & Button2Mask)
-				ei.mouse.right_button = true;
-			else if(event.xcrossing.state & Button3Mask)
-				ei.mouse.mid_button = true;
+			arg.shift = evt.xcrossing.state & ShiftMask;
+			arg.ctrl = evt.xcrossing.state & ControlMask;
+			if (evt.xcrossing.state & Button1Mask)
+				arg.left_button = true;
+			else if (evt.xcrossing.state & Button2Mask)
+				arg.right_button = true;
+			else if (evt.xcrossing.state & Button3Mask)
+				arg.mid_button = true;
 		}
 	}
 
@@ -461,90 +512,110 @@ namespace detail
 
 	void window_proc_for_packet(Display * display, nana::detail::msg_packet_tag& msg)
 	{
-		static auto& bedrock = detail::bedrock::instance();
+		static auto& brock = detail::bedrock::instance();
 
 		auto native_window = reinterpret_cast<native_window_type>(msg.u.packet_window);
-		auto root_runtime = bedrock.wd_manager.root_runtime(native_window);
+		auto root_runtime = brock.wd_manager.root_runtime(native_window);
 
 		if(root_runtime)
 		{
 			auto msgwd = root_runtime->window;
 
-			eventinfo ei;
 			switch(msg.kind)
 			{
 			case nana::detail::msg_packet_tag::kind_mouse_drop:
-				msgwd = bedrock.wd_manager.find_window(native_window, msg.u.mouse_drop.x, msg.u.mouse_drop.y);
+				msgwd = brock.wd_manager.find_window(native_window, msg.u.mouse_drop.x, msg.u.mouse_drop.y);
 				if(msgwd)
 				{
-					detail::tag_dropinfo di;
-					di.filenames.swap(*msg.u.mouse_drop.files);
+					arg_dropfiles arg;
+					arg.window_handle = reinterpret_cast<window>(msgwd);
+					arg.files.swap(*msg.u.mouse_drop.files);
 					delete msg.u.mouse_drop.files;
-					di.pos.x = msg.u.mouse_drop.x - msgwd->pos_root.x;
-					di.pos.y = msg.u.mouse_drop.y - msgwd->pos_root.y;
-					ei.dropinfo = & di;
-					ei.window = reinterpret_cast<window>(msgwd);
-					
-					bedrock.fire_event(event_code::mouse_drop, msgwd, ei);
-					bedrock.wd_manager.do_lazy_refresh(msgwd, false);
+					arg.pos.x = msg.u.mouse_drop.x - msgwd->pos_root.x;
+					arg.pos.y = msg.u.mouse_drop.y - msgwd->pos_root.y;
+					msgwd->together.attached_events->mouse_dropfiles.emit(arg);
+					brock.wd_manager.do_lazy_refresh(msgwd, false);
 				}
 				break;
 			default:
 				throw std::runtime_error("Nana.GUI.Bedrock: Undefined message packet");
 			}
-		}		
+		}
+	}
 
+	template<typename Arg>
+	void emit_drawer(void(::nana::detail::drawer::*event_ptr)(const Arg&), basic_window* wd, const Arg& arg, bedrock::thread_context* thrd)
+	{
+		if(bedrock::instance().wd_manager.available(wd) == false)
+			return;
+		basic_window * pre_wd;
+		if(thrd)
+		{
+			pre_wd = thrd->event_window;
+			thrd->event_window = wd;
+		}
+
+		if(wd->other.upd_state == basic_window::update_state::none)
+			wd->other.upd_state = basic_window::update_state::lazy;
+
+		(wd->drawer.*event_ptr)(arg);
+		if(thrd) thrd->event_window = pre_wd;
 	}
 
 	void window_proc_for_xevent(Display* display, XEvent& xevent)
 	{
 		typedef detail::bedrock::core_window_t core_window_t;
 
-		static auto& bedrock = detail::bedrock::instance();
+		static auto& brock = detail::bedrock::instance();
 		static unsigned long	last_mouse_down_time;
 		static core_window_t*	last_mouse_down_window;
 
 		auto native_window = reinterpret_cast<native_window_type>(event_window(xevent));
-		auto root_runtime = bedrock.wd_manager.root_runtime(native_window);
+		auto root_runtime = brock.wd_manager.root_runtime(native_window);
 
 		if(root_runtime)
 		{
 			auto msgwnd = root_runtime->window;
-			auto& context = *bedrock.get_thread_context(msgwnd->thread_id);
+			auto& context = *brock.get_thread_context(msgwnd->thread_id);
 
 			auto pre_event_window = context.event_window;
 			auto mouse_window = root_runtime->condition.mouse_window;
 			auto mousemove_window = root_runtime->condition.mousemove_window;
 
-			eventinfo ei;
-
 			const int message = xevent.type;
 			switch(xevent.type)
 			{
 			case EnterNotify:
-				msgwnd = bedrock.wd_manager.find_window(native_window, xevent.xcrossing.x, xevent.xcrossing.y);
+				msgwnd = brock.wd_manager.find_window(native_window, xevent.xcrossing.x, xevent.xcrossing.y);
 				if(msgwnd)
 				{
-					make_eventinfo(ei, msgwnd, message, xevent);
 					msgwnd->flags.action = mouse_action::over;
-					
 					root_runtime->condition.mousemove_window = msgwnd;
 					mousemove_window = msgwnd;
-					bedrock.raise_event(event_code::mouse_enter, msgwnd, ei, true);
-					bedrock.raise_event(event_code::mouse_move, msgwnd, ei, true);
-					if(false == bedrock.wd_manager.available(mousemove_window))
+
+					arg_mouse arg;
+					assign_arg(arg, msgwnd, message, xevent);
+					brock.emit(event_code::mouse_enter, msgwnd, arg, true, &context);
+
+					arg.evt_code = event_code::mouse_move;
+					brock.emit(event_code::mouse_move, msgwnd, arg, true, &context);
+					
+					if(false == brock.wd_manager.available(mousemove_window))
 						mousemove_window = nullptr;
 				}
 				break;
 			case LeaveNotify:
-				if(bedrock.wd_manager.available(mousemove_window) && mousemove_window->flags.enabled)
+				if(brock.wd_manager.available(mousemove_window) && mousemove_window->flags.enabled)
 				{
-					ei.mouse.x = ei.mouse.y = 0;
 					mousemove_window->flags.action = mouse_action::normal;
-					ei.window = reinterpret_cast<window>(mousemove_window);
-					bedrock.raise_event(event_code::mouse_leave, mousemove_window, ei, true);
+					arg_mouse arg;
+					arg.evt_code = event_code::mouse_leave;
+					arg.window_handle = reinterpret_cast<window>(mousemove_window);
+					arg.pos.x = arg.pos.y = 0;
+					arg.ctrl = arg.shift = false;
+					brock.emit(event_code::mouse_leave, mousemove_window, arg, true, &context);
 				}
-				mousemove_window = 0;
+				mousemove_window = nullptr;
 				break;
 			case FocusIn:
 				if(msgwnd->flags.enabled && msgwnd->flags.take_active)
@@ -553,10 +624,13 @@ namespace detail
 					if(focus && focus->together.caret)
 						focus->together.caret->set_active(true);
 					msgwnd->root_widget->other.attribute.root->context.focus_changed = true;
-					ei.focus.getting = true;
-					ei.focus.receiver = native_window;
-					if(false == bedrock.raise_event(event_code::focus, focus, ei, true))
-						bedrock.wd_manager.set_focus(msgwnd);
+
+					arg_focus arg;
+					arg.window_handle = reinterpret_cast<window>(focus);
+					arg.receiver = native_window;
+					arg.getting = true;
+					if(!brock.emit(event_code::focus, focus, arg, true, &context))
+						brock.wd_manager.set_focus(msgwnd);
 				}
 				break;
 			case FocusOut:
@@ -566,44 +640,45 @@ namespace detail
 					auto recv = native_interface::find_window(pos.x, pos.y);
 
 					auto focus = msgwnd->other.attribute.root->focus;
-					ei.focus.getting = false;
-					ei.focus.receiver = recv;
-					if(bedrock.raise_event(event_code::focus, focus, ei, true))
+					arg_focus arg;
+					arg.window_handle = reinterpret_cast<window>(focus);
+					arg.getting = false;
+					arg.receiver = recv;
+					if(brock.emit(event_code::focus, focus, arg, true, &context))
 					{
 						if(focus->together.caret)
 							focus->together.caret->set_active(false);
 					}
-					bedrock.close_menu_if_focus_other_window(recv);
+					brock.close_menu_if_focus_other_window(recv);
 				}
 				break;
 			case ConfigureNotify:
 				if(msgwnd->dimension.width != static_cast<unsigned>(xevent.xconfigure.width) || msgwnd->dimension.height != static_cast<unsigned>(xevent.xconfigure.height))
 				{
-					ei.size.width = xevent.xconfigure.width;
-					ei.size.height = xevent.xconfigure.height;
-					bedrock.wd_manager.size(msgwnd, ei.size.width, ei.size.height, true, true);
+					auto & cf = xevent.xconfigure;
+					brock.wd_manager.size(msgwnd, cf.width, cf.height, true, true);
 				}
 				
 				if(msgwnd->pos_native.x != xevent.xconfigure.x || msgwnd->pos_native.y != xevent.xconfigure.y)
 				{
 					msgwnd->pos_native.x = xevent.xconfigure.x;
 					msgwnd->pos_native.y = xevent.xconfigure.y;
-					bedrock.event_move(msgwnd, xevent.xconfigure.x, xevent.xconfigure.y);
+					brock.event_move(msgwnd, xevent.xconfigure.x, xevent.xconfigure.y);
 				}
 				break;
 			case ButtonPress:
 				if(xevent.xbutton.button == Button4 || xevent.xbutton.button == Button5)
 					break;
 					
-				msgwnd = bedrock.wd_manager.find_window(native_window, xevent.xbutton.x, xevent.xbutton.y);
+				msgwnd = brock.wd_manager.find_window(native_window, xevent.xbutton.x, xevent.xbutton.y);
 				if(nullptr == msgwnd) break;
 					
-				if((msgwnd == msgwnd->root_widget->other.attribute.root->menubar) && bedrock.get_menu(msgwnd->root, true))
-					bedrock.remove_menu();
+				if((msgwnd == msgwnd->root_widget->other.attribute.root->menubar) && brock.get_menu(msgwnd->root, true))
+					brock.remove_menu();
 				else
-					bedrock.close_menu_if_focus_other_window(msgwnd->root);
+					brock.close_menu_if_focus_other_window(msgwnd->root);
 
-				if(msgwnd && msgwnd->flags.enabled)
+				if(msgwnd->flags.enabled)
 				{
 					bool dbl_click = (last_mouse_down_window == msgwnd) && (xevent.xbutton.time - last_mouse_down_time <= 400);
 					last_mouse_down_time = xevent.xbutton.time;
@@ -615,27 +690,30 @@ namespace detail
 					if(new_focus)
 					{
 						context.event_window = new_focus;
-						auto kill_focus = bedrock.wd_manager.set_focus(new_focus);
+						auto kill_focus = brock.wd_manager.set_focus(new_focus);
 						if(kill_focus != new_focus)
-							bedrock.wd_manager.do_lazy_refresh(kill_focus, false);
+							brock.wd_manager.do_lazy_refresh(kill_focus, false);
 					}
 					msgwnd->root_widget->other.attribute.root->context.focus_changed = false;
 
 					context.event_window = msgwnd;
 
-					make_eventinfo(ei, msgwnd, message, xevent);
+					//make_eventinfo(ei, msgwnd, message, xevent);
 					msgwnd->flags.action = mouse_action::pressed;
-					if(bedrock.raise_event(dbl_click ? event_code::dbl_click : event_code::mouse_down, msgwnd, ei, true))
+					arg_mouse arg;
+					assign_arg(arg, msgwnd, ButtonPress, xevent);
+					arg.evt_code = dbl_click ? event_code::dbl_click : event_code::mouse_down;
+					if(brock.emit(arg.evt_code, msgwnd, arg, true, &context))
 					{
-						if(bedrock.wd_manager.available(mouse_window))
+						if(brock.wd_manager.available(mouse_window))
 						{
 							//If a root window is created during the mouse_down event, Nana.GUI will ignore the mouse_up event.
 							if(msgwnd->root_widget->other.attribute.root->context.focus_changed)
 							{
 								//call the drawer mouse up event for restoring the surface graphics
 								msgwnd->flags.action = mouse_action::normal;
-								bedrock.fire_event_for_drawer(event_code::mouse_up, msgwnd, ei, &context);
-								bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+								emit_drawer(&drawer::mouse_up_arg, msgwnd, arg, &context);
+								brock.wd_manager.do_lazy_refresh(msgwnd, false);
 							}
 						}
 						else
@@ -648,54 +726,62 @@ namespace detail
 			case ButtonRelease:
 				if(xevent.xbutton.button == Button4 || xevent.xbutton.button == Button5)
 				{
-					msgwnd = bedrock.focus();
+					msgwnd = brock.focus();
 					if(msgwnd && msgwnd->flags.enabled)
 					{
-						make_eventinfo(ei, msgwnd, message, xevent);
-						bedrock.raise_event(event_code::mouse_wheel, msgwnd, ei, true);
+						arg_wheel arg;
+						assign_arg(arg, msgwnd, message, xevent);
+						arg.evt_code = event_code::mouse_wheel;
+						brock.emit(event_code::mouse_wheel, msgwnd, arg, true, &context);
 					}
 				}
 				else
 				{
-					msgwnd = bedrock.wd_manager.find_window(native_window, xevent.xbutton.x, xevent.xbutton.y);
+					msgwnd = brock.wd_manager.find_window(native_window, xevent.xbutton.x, xevent.xbutton.y);
 					if(nullptr == msgwnd)
 						break;
 
 					msgwnd->flags.action = mouse_action::normal;
 					if(msgwnd->flags.enabled)
 					{
-						make_eventinfo(ei, msgwnd, message, xevent);
-						bool hit = is_hit_the_rectangle(msgwnd->dimension, ei.mouse.x, ei.mouse.y);
+						arg_mouse arg;
+						assign_arg(arg, msgwnd, message, xevent);
+						bool hit = is_hit_the_rectangle(msgwnd->dimension, arg.pos.x, arg.pos.y);
 						bool fire_click = false;
-						if(bedrock.wd_manager.available(mouse_window) && (msgwnd == mouse_window))
+						if(brock.wd_manager.available(mouse_window) && (msgwnd == mouse_window))
 						{
 							if(msgwnd->flags.enabled && hit)
 							{
 								msgwnd->flags.action = mouse_action::over;
-								bedrock.fire_event_for_drawer(event_code::click, msgwnd, ei, &context);
+								arg.evt_code = event_code::click;
+								emit_drawer(&drawer::click_arg, msgwnd, arg, &context);
 								fire_click = true;
 							}
 						}
 					
 						//Do mouse_up, this handle may be closed by click handler.
-						if(bedrock.wd_manager.available(msgwnd) && msgwnd->flags.enabled)
+						if(brock.wd_manager.available(msgwnd) && msgwnd->flags.enabled)
 						{
 							if(hit)
 								msgwnd->flags.action = mouse_action::over;
 
-							bedrock.fire_event_for_drawer(event_code::mouse_up, msgwnd, ei, &context);
+							arg.evt_code = event_code::mouse_up;
+							emit_drawer(&drawer::mouse_up_arg, msgwnd, arg, &context);
 															
 							if(fire_click)
-								bedrock.fire_event(event_code::click, msgwnd, ei);
-
-							bedrock.fire_event(event_code::mouse_up, msgwnd, ei);
-							bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+							{
+								arg.evt_code = event_code::click;
+								msgwnd->together.attached_events->click.emit(arg);
+							}
+							arg.evt_code = event_code::mouse_up;
+							msgwnd->together.attached_events->mouse_up.emit(arg);
 						}
 						else if(fire_click)
 						{
-							bedrock.fire_event(event_code::click, msgwnd, ei);
-							bedrock.wd_manager.do_lazy_refresh(msgwnd, false);							
+							arg.evt_code = event_code::click;
+							msgwnd->together.attached_events->click.emit(arg);
 						}
+						brock.wd_manager.do_lazy_refresh(msgwnd, false);
 					}
 					mouse_window = nullptr;
 				}
@@ -703,22 +789,17 @@ namespace detail
 			case DestroyNotify:
 				{
 					auto & spec = nana::detail::platform_spec::instance();
-					if(bedrock.wd_manager.available(msgwnd))
+					if(brock.wd_manager.available(msgwnd))
 					{
 						//The msgwnd may be destroyed if the window is destroyed by calling native interface of close_window().
-						if(msgwnd->root == bedrock.get_menu())
-							bedrock.empty_menu();
+						if(msgwnd->root == brock.get_menu())
+							brock.empty_menu();
 
 						spec.remove(native_window);
-						bedrock.wd_manager.destroy(msgwnd);
-						bedrock.evt_manager.umake(reinterpret_cast<gui::window>(msgwnd), false);
+						brock.wd_manager.destroy(msgwnd);
 
-						bedrock.rt_manager.remove_if_exists(msgwnd);
-						bedrock.wd_manager.destroy_handle(msgwnd);
-					}
-					if(--context.window_count <= 0)
-					{
-
+						brock.rt_manager.remove_if_exists(msgwnd);
+						brock.wd_manager.destroy_handle(msgwnd);
 					}
 				}
 				break;
@@ -733,62 +814,71 @@ namespace detail
 				else
 					break;
 
-				msgwnd = bedrock.wd_manager.find_window(native_window, xevent.xmotion.x, xevent.xmotion.y);
-				if(bedrock.wd_manager.available(mousemove_window) && (msgwnd != mousemove_window))
+				msgwnd = brock.wd_manager.find_window(native_window, xevent.xmotion.x, xevent.xmotion.y);
+				if(brock.wd_manager.available(mousemove_window) && (msgwnd != mousemove_window))
 				{
 					auto leave_wd = mousemove_window;
 					root_runtime->condition.mousemove_window = nullptr;
 					mousemove_window = nullptr;
 					//if current window is not the previous mouse event window.
-					make_eventinfo(ei, leave_wd, message, xevent);
 					leave_wd->flags.action = mouse_action::normal;
-					bedrock.raise_event(event_code::mouse_leave, leave_wd, ei, true);
+
+					arg_mouse arg;
+					assign_arg(arg, leave_wd, message, xevent);
+					arg.evt_code = event_code::mouse_leave;
+					brock.emit(event_code::mouse_leave, leave_wd, arg, true, &context);
 
 					//if msgwnd is neither a captured window nor a child of captured window,
 					//redirect the msgwnd to the captured window.
-					auto cap_wd = bedrock.wd_manager.capture_redirect(msgwnd);
+					auto cap_wd = brock.wd_manager.capture_redirect(msgwnd);
 					if(cap_wd)
 						msgwnd = cap_wd;
 				}
 				else if(msgwnd)
 				{
-					make_eventinfo(ei, msgwnd, message, xevent);
 					bool prev_captured_inside;
-					if(bedrock.wd_manager.capture_window_entered(xevent.xmotion.x, xevent.xmotion.y, prev_captured_inside))
+					if(brock.wd_manager.capture_window_entered(xevent.xmotion.x, xevent.xmotion.y, prev_captured_inside))
 					{
-						event_code eid;
+						event_code evt_code;
 						if(prev_captured_inside)
 						{
-							eid = event_code::mouse_leave;
+							evt_code = event_code::mouse_leave;
 							msgwnd->flags.action = mouse_action::normal;
 						}
 						else
 						{
-							eid = event_code::mouse_enter;
+							evt_code = event_code::mouse_enter;
 							msgwnd->flags.action = mouse_action::over;
 						}
-						bedrock.raise_event(eid, msgwnd, ei, true);
+						arg_mouse arg;
+						assign_arg(arg, msgwnd, message, xevent);
+						arg.evt_code = evt_code;
+						brock.emit(evt_code, msgwnd, arg, true, &context);
 					}
 				}
 
 				if(msgwnd)
 				{
-					make_eventinfo(ei, msgwnd, message, xevent);
+					arg_mouse arg;
+					assign_arg(arg, msgwnd, message, xevent);
 					msgwnd->flags.action = mouse_action::over;
 					if(mousemove_window != msgwnd)
 					{
 						root_runtime->condition.mousemove_window = msgwnd;
 						mousemove_window = msgwnd;
-						bedrock.raise_event(event_code::mouse_enter, msgwnd, ei, true);
+						arg.evt_code = event_code::mouse_enter;
+						brock.emit(event_code::mouse_enter, msgwnd, arg, true, &context);
 					}
-					bedrock.raise_event(event_code::mouse_move, msgwnd, ei, true);
+
+					arg.evt_code = event_code::mouse_move;
+					brock.emit(event_code::mouse_move, msgwnd, arg, true, &context);
 				}
-				if(false == bedrock.wd_manager.available(mousemove_window))
+				if(false == brock.wd_manager.available(mousemove_window))
 					mousemove_window = nullptr;
 				break;
 			case MapNotify:
 			case UnmapNotify:
-				bedrock.event_expose(msgwnd, (xevent.type == MapNotify));
+				brock.event_expose(msgwnd, (xevent.type == MapNotify));
 				context.platform.motion_window = nullptr;
 				break;
 			case Expose:
@@ -806,8 +896,8 @@ namespace detail
 				nana::detail::platform_spec::instance().write_keystate(xevent.xkey);
 				if(msgwnd->flags.enabled)
 				{
-					if(msgwnd->root != bedrock.get_menu())
-						msgwnd = bedrock.focus();
+					if(msgwnd->root != brock.get_menu())
+						msgwnd = brock.focus();
 
 					if(msgwnd)
 					{
@@ -879,24 +969,28 @@ namespace detail
 							context.platform.keychar = keychar;
 							if(keychar == keyboard::tab && (false == (msgwnd->flags.tab & detail::tab_type::eating))) //Tab
 							{
-								auto the_next = bedrock.wd_manager.tabstop_next(msgwnd);
+								auto the_next = brock.wd_manager.tabstop_next(msgwnd);
 								if(the_next)
 								{
-									bedrock.wd_manager.set_focus(the_next);
-									bedrock.wd_manager.do_lazy_refresh(the_next, true);
+									brock.wd_manager.set_focus(the_next);
+									brock.wd_manager.do_lazy_refresh(the_next, true);
 									root_runtime->condition.tabstop_focus_changed = true;
 								}
 							}
 							else if(keychar != 0xFF)
 							{
-								ei.keyboard.key = keychar;
-								bedrock.get_key_state(ei.keyboard);
-								bedrock.raise_event(event_code::key_down, msgwnd, ei, true);
+								arg_keyboard arg;
+								arg.evt_code = event_code::key_press;
+								arg.window_handle = reinterpret_cast<window>(msgwnd);
+								arg.ignore = false;
+								arg.key = keychar;
+								brock.get_key_state(arg);
+								brock.emit(event_code::key_press, msgwnd, arg, true, &context);
 							}
 
 							if(XLookupKeySym == status)
 							{
-								bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+								brock.wd_manager.do_lazy_refresh(msgwnd, false);
 								break;
 							}
 						case XLookupChars:
@@ -912,21 +1006,22 @@ namespace detail
 #endif
 								for(int i = 0; i < len; ++i)
 								{
-									ei.keyboard.key = charbuf[i];
-									bedrock.get_key_state(ei.keyboard);
-									ei.keyboard.ignore = false;
+									arg_keyboard arg;
+									arg.evt_code = event_code::key_char;
+									arg.window_handle = reinterpret_cast<window>(msgwnd);
+									arg.ignore = false;
+									arg.key = charbuf[i];
+									brock.get_key_state(arg);
+									brock.emit(event_code::key_char, msgwnd, arg, true, &context);
 
-									ei.identifier = event_code::key_char;
-									ei.window = reinterpret_cast<window>(msgwnd);
-
-									bedrock.evt_manager.answer(event_code::key_char, reinterpret_cast<window>(msgwnd), ei, event_manager::event_kind::user);
-									if(ei.keyboard.ignore == false && bedrock.wd_manager.available(msgwnd))
-										bedrock.fire_event_for_drawer(event_code::key_char, msgwnd, ei, &context);
+									msgwnd->together.attached_events->key_char.emit(arg);
+									if(arg.ignore == false && brock.wd_manager.available(msgwnd))
+										brock.emit_drawer(event_code::key_char, msgwnd, arg, &context);
 								}
 							}
 							break;
 						}
-						bedrock.wd_manager.do_lazy_refresh(msgwnd, false);
+						brock.wd_manager.do_lazy_refresh(msgwnd, false);
 						if(keybuf != fixbuf)
 							delete [] keybuf;
 					}
@@ -936,16 +1031,20 @@ namespace detail
 				nana::detail::platform_spec::instance().write_keystate(xevent.xkey);
 				if(context.platform.keychar != keyboard::alt) //Must NOT be an ALT
 				{
-					msgwnd = bedrock.focus();
+					msgwnd = brock.focus();
 					if(msgwnd)
 					{
-						ei.keyboard.key = static_cast<nana::char_t>(context.platform.keychar);
-						bedrock.get_key_state(ei.keyboard);
-						bedrock.raise_event(event_code::key_up, msgwnd, ei, true);
+						arg_keyboard arg;
+						arg.evt_code = event_code::key_release;
+						arg.window_handle = reinterpret_cast<window>(msgwnd);
+						arg.ignore = false;
+						arg.key = static_cast<nana::char_t>(context.platform.keychar);
+						brock.get_key_state(arg);
+						brock.emit(event_code::key_release, msgwnd, arg, true, &context);
 					}
 				}
 				else
-					bedrock.set_keyboard_shortkey(false);
+					brock.set_keyboard_shortkey(false);
 				break;
 			default:
 				if(message == ClientMessage)
@@ -955,16 +1054,18 @@ namespace detail
 					{
 						if(msgwnd->flags.enabled && (atoms.wm_delete_window == static_cast<Atom>(xevent.xclient.data.l[0])))
 						{
-							ei.unload.cancel = false;
-							bedrock.raise_event(event_code::unload, msgwnd, ei, true);
-							if(false == ei.unload.cancel)
+							arg_unload arg;
+							arg.window_handle = reinterpret_cast<window>(msgwnd);
+							arg.cancel = false;
+							brock.emit(event_code::unload, msgwnd, arg, true, &context);
+							if(false == arg.cancel)
 								native_interface::close_window(native_window);
 						}
 					}
 				}
 			}
 
-			root_runtime = bedrock.wd_manager.root_runtime(native_window);
+			root_runtime = brock.wd_manager.root_runtime(native_window);
 			if(root_runtime)
 			{
 				context.event_window = pre_event_window;
@@ -973,21 +1074,16 @@ namespace detail
 			}
 			else
 			{
-				auto context = bedrock.get_thread_context();
+				auto context = brock.get_thread_context();
 				if(context) context->event_window = pre_event_window;
 			}
 
 			if(msgwnd)
-			{
-				unsigned tid = nana::system::this_thread_id();
-
-				bedrock.wd_manager.remove_trash_handle(tid);
-				bedrock.evt_manager.remove_trash_handle(tid);
-			}
+				brock.wd_manager.remove_trash_handle(::nana::system::this_thread_id());
 		}
 	}
 
-	void bedrock::pump_event(window modal_window)
+	void bedrock::pump_event(window modal_window, bool is_modal)
 	{
 		thread_context * context = open_thread_context();
 		if(0 == context->window_count)
@@ -1033,96 +1129,33 @@ namespace detail
 
 	}//end bedrock::event_loop
 
-	void make_eventinfo_for_mouse(eventinfo& ei, detail::bedrock::core_window_t* wd, unsigned int msg, const event_mask& lparam)
-	{
-		ei.window = reinterpret_cast<window>(wd);
-		ei.mouse.x = lparam.pos.x - wd->pos_root.x;
-		ei.mouse.y = lparam.pos.y - wd->pos_root.y;
-	}
-
-
-	bool bedrock::fire_event_for_drawer(event_code event_id, core_window_t* wd, eventinfo& ei, thread_context* thrd)
-	{
-		if(bedrock_object.wd_manager.available(wd) == false)
-			return false;
-			
-		core_window_t* prev_event_wd;
-		if(thrd)
-		{
-			prev_event_wd = thrd->event_window;
-			thrd->event_window = wd;
-		}
-
-		if(wd->other.upd_state == core_window_t::update_state::none)
-			wd->other.upd_state = core_window_t::update_state::lazy;
-			
-		bool ret = bedrock_object.evt_manager.answer(event_id, reinterpret_cast<window>(wd), ei, event_manager::event_kind::trigger);
-		
-		if(thrd) thrd->event_window = prev_event_wd;
-		return ret;
-	}
-	
-	bool bedrock::fire_event(event_code event_id, core_window_t* wd, eventinfo& ei)
-	{
-		if(bedrock_object.wd_manager.available(wd) == false)
-			return false;
-
-		return bedrock_object.evt_manager.answer(event_id, reinterpret_cast<window>(wd), ei, event_manager::event_kind::user);
-	}
-
-	bool bedrock::raise_event(event_code eid, core_window_t* wd, eventinfo& ei, bool ask_update)
-	{
-		if(bedrock_object.wd_manager.available(wd) == false)
-			return false;
-
-		thread_context * thrd = bedrock_object.get_thread_context();
-		core_window_t * prev_wd;
-		if(thrd)
-		{
-			prev_wd = thrd->event_window;
-			thrd->event_window = wd;
-			bedrock_object._m_event_filter(eid, wd, thrd);
-		}
-
-		if(wd->other.upd_state == core_window_t::update_state::none)
-			wd->other.upd_state = core_window_t::update_state::lazy;
-
-		bedrock_object.evt_manager.answer(eid, reinterpret_cast<window>(wd), ei, event_manager::event_kind::both);
-
-		if(ask_update)
-			bedrock_object.wd_manager.do_lazy_refresh(wd, false);
-		else
-			wd->other.upd_state = core_window_t::update_state::none;
-
-		if(thrd) thrd->event_window = prev_wd;
-		return true;
-	}
 
 	void bedrock::event_expose(core_window_t * wd, bool exposed)
 	{
-		if(wd)
+		if(nullptr == wd)
+			return;
+
+		wd->visible = exposed;
+
+		arg_expose arg;
+		arg.exposed = exposed;
+		arg.window_handle = reinterpret_cast<window>(wd);
+		if(emit(event_code::expose, wd, arg, false, get_thread_context()))
 		{
-			eventinfo ei;
-			ei.exposed = exposed;
-			wd->visible = exposed;
-			if(raise_event(event_code::expose, wd, ei, false))
+			if(false == exposed)
 			{
-				if(false == exposed)
+				if(wd->other.category != category::root_tag::value)
 				{
-					if(wd->other.category != category::root_tag::value)
-					{
+					wd = wd->parent;
+					while(wd->other.category == category::lite_widget_tag::value)
 						wd = wd->parent;
-
-						while(wd->other.category == category::lite_widget_tag::value)
-							wd = wd->parent;
-					}
-					else if(wd->other.category == category::frame_tag::value)
-						wd = wd_manager.find_window(wd->root, wd->pos_root.x, wd->pos_root.y);
 				}
-
-				wd_manager.refresh_tree(wd);
-				wd_manager.map(wd);
+				else if(wd->other.category == category::frame_tag::value)
+					wd = wd_manager.find_window(wd->root, wd->pos_root.x, wd->pos_root.y);
 			}
+
+			wd_manager.refresh_tree(wd);
+			wd_manager.map(wd);
 		}
 	}
 
@@ -1130,10 +1163,11 @@ namespace detail
 	{
 		if(wd)
 		{
-			eventinfo ei;
-			ei.move.x = x;
-			ei.move.y = y;
-			if(raise_event(event_code::move, wd, ei, false))
+			arg_move arg;
+			arg.window_handle = reinterpret_cast<window>(wd);
+			arg.x = x;
+			arg.y = y;
+			if(emit(event_code::move, wd, arg, false, get_thread_context()))
 				wd_manager.update(wd, true, true);
 		}
 	}
@@ -1221,7 +1255,7 @@ namespace detail
 		Display * disp = spec.open_display();
 		switch(event_id)
 		{
-		case events::mouse_enter::identifier:
+		case event_code::mouse_enter:
 			if(wd->predef_cursor != cursor::arrow)
 			{
 				thrd->cursor.window = wd;
@@ -1235,11 +1269,11 @@ namespace detail
 				::XDefineCursor(disp, reinterpret_cast<Window>(wd->root), thrd->cursor.handle);
 			}
 			break;
-		case events::mouse_leave::identifier:
+		case event_code::mouse_leave:
 			if(wd->predef_cursor != cursor::arrow)
 				::XUndefineCursor(disp, reinterpret_cast<Window>(wd->root));
 			break;
-		case events::destroy::identifier:
+		case event_code::destroy:
 			if(thrd->cursor.handle && (wd == thrd->cursor.window))
 			{
 				::XUndefineCursor(disp, reinterpret_cast<Window>(wd->root));
@@ -1254,5 +1288,4 @@ namespace detail
 		}
 	}
 }//end namespace detail
-}//end namespace gui
 }//end namespace nana

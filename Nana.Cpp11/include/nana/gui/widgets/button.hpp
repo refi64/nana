@@ -16,7 +16,7 @@
 #include <nana/gui/element.hpp>
 
 
-namespace nana{namespace gui{
+namespace nana{
 	namespace drawerbase
 	{
 		namespace button
@@ -27,6 +27,8 @@ namespace nana{namespace gui{
 			public:
 				trigger();
 				~trigger();
+
+				void emit_click();
 				void icon(const nana::paint::image&);
 				bool enable_pushed(bool);
 				bool pushed(bool);
@@ -38,27 +40,27 @@ namespace nana{namespace gui{
 			private:
 				void attached(widget_reference, graph_reference) override;
 				void refresh(graph_reference)	override;
-				void mouse_enter(graph_reference, const eventinfo&)	override;
-				void mouse_leave(graph_reference, const eventinfo&)	override;
-				void mouse_down(graph_reference, const eventinfo&)	override;
-				void mouse_up(graph_reference, const eventinfo&)	override;
-				void key_char(graph_reference, const eventinfo&)	override;
-				void key_down(graph_reference, const eventinfo&)	override;
-				void focus(graph_reference, const eventinfo&)	override;
+				void mouse_enter(graph_reference, const arg_mouse&) override;
+				void mouse_leave(graph_reference, const arg_mouse&) override;
+				void mouse_down(graph_reference, const arg_mouse&)	override;
+				void mouse_up(graph_reference, const arg_mouse&)	override;
+				void key_char(graph_reference, const arg_keyboard&)	override;
+				void key_press(graph_reference, const arg_keyboard&) override;
+				void focus(graph_reference, const arg_focus&) override;
 			private:
 				void _m_draw(graph_reference);
 				void _m_draw_title(graph_reference, bool enabled);
 				void _m_draw_background(graph_reference);
 				void _m_draw_border(graph_reference);
 			private:
-				nana::gui::widget* widget_;
-				nana::paint::graphics* graph_;
+				widget* widget_;
+				paint::graphics* graph_;
 
-				nana::gui::element::cite_bground cite_;
+				element::cite_bground cite_;
 
 				struct attr_tag
 				{
-					nana::gui::element_state e_state;
+					element_state e_state;
 					bool omitted;
 					bool focused;
 					bool pushed;
@@ -104,7 +106,6 @@ namespace nana{namespace gui{
 			void _m_complete_creation();
 			void _m_caption(const nana::string&);
 		};
-}//end namespace gui
 }//end namespace nana
 #endif
 

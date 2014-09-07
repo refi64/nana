@@ -21,7 +21,7 @@
 #include <map>
 #include <algorithm>
 
-namespace nana{namespace gui{
+namespace nana{
 	namespace detail
 	{
 		class shortkey_container
@@ -208,6 +208,5 @@ namespace nana{namespace gui{
 			std::map<core_window_t*, std::unique_ptr<signal_invoker_interface>> table_;
 		};
 	}
-}//end namespace gui
 }//end namespace nana
 #endif	//NANA_GUI_INNER_FWD_IMPLEMENT_HPP

@@ -16,8 +16,6 @@
 
 namespace nana
 {
-namespace gui
-{
     ///  Layout managment - an object of class place is attached to a widget, and it automatically positions and resizes the children widgets.
 	class place
 		: nana::noncopyable
@@ -63,7 +61,6 @@ namespace gui
 	private:
 		implement * impl_;
 	};
-}//end namespace gui
 }//end namespace nana
 
 #endif //#ifndef NANA_GUI_PLACE_HPP

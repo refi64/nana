@@ -16,7 +16,7 @@
 
 #include <nana/deploy.hpp>
 
-namespace nana{namespace gui{
+namespace nana{
 	namespace detail
 	{
 		struct signals
@@ -51,6 +51,5 @@ namespace nana{namespace gui{
 			virtual void call_signal(signals::code, const signals&) = 0;
 		};
 	}
-}
 }
 #endif	//NANA_GUI_INNER_FWD_HPP

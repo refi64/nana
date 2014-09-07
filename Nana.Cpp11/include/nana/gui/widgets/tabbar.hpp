@@ -18,29 +18,49 @@
 #include <nana/pat/cloneable.hpp>
 #include <nana/any.hpp>
 
-namespace nana{ namespace gui{
+namespace nana
+{
+	template<typename T> class tabbar;
+
+	template<typename T>
+	struct arg_tabbar
+	{
+		tabbar<T> & widget;
+		T & value;
+	};
+
+	template<typename T>
+	struct arg_tabbar_removed : public arg_tabbar<T>
+	{
+		arg_tabbar_removed(tabbar<T>& wdg, T& v)
+			: arg_tabbar<T>({wdg, v})
+		{}
+
+		bool remove = true;
+	};
+
 	namespace drawerbase
 	{
 		namespace tabbar
 		{
-			template<typename Tabbar>
-			struct extra_events
+			template<typename T>
+			struct tabbar_events
+				: public general_events
 			{
-				typedef Tabbar tabbar;
-				typedef typename tabbar::value_type value_type;
+				typedef T value_type;
 
-				nana::fn_group<void(tabbar&, value_type&)> add_tab;
-				nana::fn_group<void(tabbar&, value_type&)> active;
-				nana::fn_group<bool(tabbar&, value_type&)> remove;
+				basic_event<arg_tabbar<value_type>> added;
+				basic_event<arg_tabbar<value_type>> activated;
+				basic_event<arg_tabbar<value_type>> removed;
 			};
 
-			class internal_event_trigger
+			class event_agent_interface
 			{
 			public:
-				virtual ~internal_event_trigger() = 0;
-				virtual void add_tab(std::size_t i) = 0;
-				virtual void active(std::size_t i) = 0;
-				virtual bool remove(std::size_t i) = 0;
+				virtual ~event_agent_interface() = 0;
+				virtual void added(std::size_t) = 0;
+				virtual void activated(std::size_t) = 0;
+				virtual bool removed(std::size_t) = 0;
 			};
 
 			class item_renderer
@@ -69,43 +89,45 @@ namespace nana{ namespace gui{
 				virtual void list(graph_reference, const nana::rectangle&, state_t) = 0;
 			};
 
-			template<typename Tabbar, typename DrawerTrigger>
-			class event_adapter
-				: public internal_event_trigger
+			template<typename T, typename DrawerTrigger>
+			class event_agent
+				: public event_agent_interface
 			{
 			public:
-				typedef Tabbar tabbar;
-				typedef DrawerTrigger drawer_trigger;
-				typedef typename tabbar::value_type value_type;
+				typedef ::nana::arg_tabbar<T>	arg_tabbar;
 
-				mutable extra_events<tabbar> ext_event;
-
-				event_adapter(tabbar& tb, drawer_trigger & dtr)
+				event_agent(::nana::tabbar<T>& tb, DrawerTrigger & dtr)
 					: tabbar_(tb), drawer_trigger_(dtr)
 				{}
 
-				void add_tab(std::size_t pos)
+				void added(std::size_t pos) override
 				{
-					if((ext_event.add_tab.empty() == false) && (pos != npos))
+					if(pos != npos)
 					{
-						drawer_trigger_.at_no_bound_check(pos) = value_type();
-						ext_event.add_tab(tabbar_, tabbar_[pos]);
+						drawer_trigger_.at_no_bound_check(pos) = T();
+						tabbar_.events().added.emit(arg_tabbar({ tabbar_, tabbar_[pos] }));
 					}
 				}
 
-				void active(std::size_t pos)
+				void activated(std::size_t pos) override
 				{
 					if(pos != npos)
-						ext_event.active(tabbar_, tabbar_[pos]);
+						tabbar_.events().activated.emit(arg_tabbar({ tabbar_, tabbar_[pos]}));
 				}
 
-				bool remove(std::size_t pos)
+				bool removed(std::size_t pos) override
 				{
-					return ((ext_event.remove.empty() == false) && (pos != npos) ? ext_event.remove(tabbar_, tabbar_[pos]) : true);
+					if (pos != npos)
+					{
+						::nana::arg_tabbar_removed<T> arg(tabbar_, tabbar_[pos]);
+						tabbar_.events().removed.emit(arg);
+						return arg.remove;
+					}
+					return true;
 				}
 			private:
-				tabbar & tabbar_;
-				drawer_trigger& drawer_trigger_;
+				::nana::tabbar<T> & tabbar_;
+				DrawerTrigger& drawer_trigger_;
 			};
 
 			class layouter;
@@ -117,31 +139,30 @@ namespace nana{ namespace gui{
 				enum toolbox_button_t{ButtonAdd, ButtonScroll, ButtonList, ButtonClose};
 				trigger();
 				~trigger();
-				void active(std::size_t i);
-				std::size_t active() const;
-				nana::any& at(std::size_t i) const;
-				nana::any& at_no_bound_check(std::size_t i) const;
+				void activate(std::size_t);
+				std::size_t activated() const;
+				nana::any& at(std::size_t) const;
+				nana::any& at_no_bound_check(std::size_t) const;
 				const pat::cloneable<item_renderer> & ext_renderer() const;
 				void ext_renderer(const pat::cloneable<item_renderer>&);
-				void event_adapter(internal_event_trigger*);
+				void set_event_agent(event_agent_interface*);
 				void push_back(const nana::string&, const nana::any&);
-				layouter& layouter_object();
 				std::size_t length() const;
 				bool close_fly(bool);
 				void relate(size_t, window);
-				void tab_color(std::size_t i, bool is_bgcolor, nana::color_t);
+				void tab_color(std::size_t, bool is_bgcolor, nana::color_t);
 				void tab_image(size_t, const nana::paint::image&);
-				void text(std::size_t i, const nana::string&);
-				nana::string text(std::size_t i) const;
+				void text(std::size_t, const nana::string&);
+				nana::string text(std::size_t) const;
 				bool toolbox_button(toolbox_button_t, bool);
 			private:
 				void attached(widget_reference, graph_reference)	override;
 				void detached()	override;
 				void refresh(graph_reference)	override;
-				void mouse_down(graph_reference, const eventinfo&)	override;
-				void mouse_up(graph_reference, const eventinfo&)	override;
-				void mouse_move(graph_reference, const eventinfo&)	override;
-				void mouse_leave(graph_reference, const eventinfo&)	override;
+				void mouse_down(graph_reference, const arg_mouse&)	override;
+				void mouse_up(graph_reference, const arg_mouse&)	override;
+				void mouse_move(graph_reference, const arg_mouse&)	override;
+				void mouse_leave(graph_reference, const arg_mouse&)	override;
 			private:
 				layouter * layouter_;
 			};
@@ -150,12 +171,12 @@ namespace nana{ namespace gui{
     /// Analogous to dividers in a notebook or the labels in a file cabinet
 	template<typename Type>
 	class tabbar
-		: public widget_object<category::widget_tag, drawerbase::tabbar::trigger>
+		: public widget_object<category::widget_tag, drawerbase::tabbar::trigger, drawerbase::tabbar::tabbar_events<Type>>
 	{
+		typedef drawerbase::tabbar::trigger drawer_trigger_t;
 	public:
 		typedef Type value_type;            ///< The type of element data which is stored in the tabbar.
 		typedef drawerbase::tabbar::item_renderer item_renderer; ///< A user-defined item renderer should be derived from this interface.
-		typedef drawerbase::tabbar::extra_events<tabbar> ext_event_type;
 
 		struct button_add{};    ///< The type identifies the add button of the tabbar's toolbox.
 		struct button_scroll{}; ///< The type identifies the scroll button of the tabbar's toolbox.
@@ -171,122 +192,112 @@ namespace nana{ namespace gui{
 
 		tabbar()
 		{
-			_m_init();
+			evt_agent_.reset(new drawerbase::tabbar::event_agent<value_type, drawer_trigger_t>(*this, this->get_drawer_trigger()));
+			this->get_drawer_trigger().set_event_agent(evt_agent_.get());
 		}
 
 		tabbar(window wd, bool visible)
+			: tabbar()
 		{
-			_m_init();
-			create(wd, rectangle(), visible);
-		}
-
-
-		tabbar(window wd, const nana::string& text, bool visible)
-		{
-			_m_init();
-			create(wd, rectangle(), visible);
-			caption(text);
+			this->create(wd, rectangle(), visible);
 		}
 
 		tabbar(window wd, const nana::char_t* text, bool visible)
+			: tabbar(wd, ::nana::string(text), visible)
 		{
-			_m_init();
-			create(wd, rectangle(), visible);
-			caption(text);		
+		}
+
+		tabbar(window wd, const nana::string& text, bool visible)
+			: tabbar()
+		{
+			this->create(wd, rectangle(), visible);
+			this->caption(text);
 		}
 
 		tabbar(window wd, const rectangle& r = rectangle(), bool visible = true)
+			: tabbar()
 		{
-			_m_init();
-			create(wd, r, visible);
+			this->create(wd, r, visible);
 		}
 
 		~tabbar()
 		{
-			get_drawer_trigger().event_adapter(nullptr);
-			delete event_adapter_;
+			this->get_drawer_trigger().set_event_agent(nullptr);
 		}
 
-		value_type & operator[](std::size_t i) const
+		value_type & operator[](std::size_t pos) const
 		{
-			nana::any & value = get_drawer_trigger().at_no_bound_check(i);
-			return static_cast<value_type&>(value);
+			return static_cast<value_type&>(this->get_drawer_trigger().at_no_bound_check(pos));
 		}
 
-		void active(std::size_t i)                  /// Actives a tab specified by i.
+		void activate(std::size_t pos)                  /// Actives a tab specified by i.
 		{
-			get_drawer_trigger().active(i);
+			this->get_drawer_trigger().active(pos);
 		}
 
-		std::size_t active() const
+		std::size_t activated() const
 		{
-			return get_drawer_trigger().active();
+			return this->get_drawer_trigger().activated();
 		}
 
 		value_type & at(std::size_t i) const        /// Returns i'th element
 		{
-			nana::any & value = get_drawer_trigger().at(i);
-			return static_cast<value_type&>(value);
+			return static_cast<value_type&>(this->get_drawer_trigger().at(i));
 		}
 
 		void close_fly(bool fly)                    /// Draw or not a close button in each tab.
 		{
-			if(get_drawer_trigger().close_fly(fly))
+			if(this->get_drawer_trigger().close_fly(fly))
 				API::refresh_window(this->handle());
 		}
 
 		pat::cloneable<item_renderer>& ext_renderer() const
 		{
-			return get_drawer_trigger().ext_renderer();
+			return this->get_drawer_trigger().ext_renderer();
 		}
 
 		void ext_renderer(const pat::cloneable<item_renderer>& ir)
 		{
-			get_drawer_trigger().ext_renderer(ir);
-		}
-
-		ext_event_type& ext_event() const
-		{
-			return event_adapter_->ext_event;
+			this->get_drawer_trigger().ext_renderer(ir);
 		}
 
 		std::size_t length() const                 /// Returns the number of items.
 		{
-			return get_drawer_trigger().length();
+			return this->get_drawer_trigger().length();
 		}
 
 		void push_back(const nana::string& text)  /// Append a new item.
 		{
-			drawer_trigger_t & t = get_drawer_trigger();
+			auto & t = this->get_drawer_trigger();
 			t.push_back(text, value_type());
 			API::update_window(*this);
 		}
 
 		void relate(std::size_t pos, window wd)  /// Binds a window to an item specified by pos, if the item is selected, shows the window, otherwise, hides it.
 		{
-			get_drawer_trigger().relate(pos, wd);
+			this->get_drawer_trigger().relate(pos, wd);
 		}
 
 		void tab_bgcolor(std::size_t i, nana::color_t color)
 		{
-			get_drawer_trigger().tab_color(i, true, color);
+			this->get_drawer_trigger().tab_color(i, true, color);
 		}
 
 		void tab_fgcolor(std::size_t i, nana::color_t color)
 		{
-			get_drawer_trigger().tab_color(i, false, color);
+			this->get_drawer_trigger().tab_color(i, false, color);
 		}
 
 		void tab_image(std::size_t i, const nana::paint::image& img)
 		{
-			get_drawer_trigger().tab_image(i, img);
+			this->get_drawer_trigger().tab_image(i, img);
 		}
         /// Sets buttons of the tabbar's toolbox, refer to notes for more details.
 		template<typename Add, typename Scroll, typename List, typename Close>
 		void toolbox(const button_container<Add, Scroll, List, Close>&, bool enable)
 		{
 			typedef typename button_container<Add, Scroll, List, Close>::type_set type_set;
-			drawer_trigger_t & tg = get_drawer_trigger();
+			auto & tg = this->get_drawer_trigger();
 			bool redraw = false;
 
 			if(type_set::template count<button_add>::value)
@@ -307,22 +318,15 @@ namespace nana{ namespace gui{
 
 		void text(std::size_t pos, const nana::string& str) /// Sets the title of the specified item, If pos is invalid, the method throws an std::out_of_range object.
 		{
-			get_drawer_trigger().text(pos, str);
+			this->get_drawer_trigger().text(pos, str);
 		}
 
 		nana::string text(std::size_t pos) const /// Returns a title of a specified item, If pos is invalid, the method trhows a std::out_of_range object.
 		{
-			return get_drawer_trigger().text(pos);
+			return this->get_drawer_trigger().text(pos);
 		}
 	private:
-		void _m_init()
-		{
-			event_adapter_ = new drawerbase::tabbar::event_adapter<tabbar, drawer_trigger_t>(*this, get_drawer_trigger());
-			get_drawer_trigger().event_adapter(event_adapter_);
-		}
-	private:
-		drawerbase::tabbar::event_adapter<tabbar, drawer_trigger_t> * event_adapter_;
+		std::unique_ptr<drawerbase::tabbar::event_agent<value_type, drawerbase::tabbar::trigger> > evt_agent_;
 	};
-}//end namespace gui
-}
+}//end namespace nana
 #endif

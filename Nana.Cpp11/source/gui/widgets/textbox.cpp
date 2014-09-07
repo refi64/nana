@@ -1,6 +1,7 @@
 /*
  *	A Textbox Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
@@ -14,9 +15,20 @@
 #include <stdexcept>
 #include <sstream>
 
-namespace nana{ namespace gui{ namespace drawerbase {
+namespace nana{	namespace drawerbase {
 	namespace textbox
 	{
+		//class event_agent
+			event_agent::event_agent(::nana::textbox& wdg)
+				:widget_(wdg)
+			{}
+
+			void event_agent::first_change()
+			{
+				widget_.events().first_change.emit(::nana::arg_textbox{ widget_ });
+			}
+		//
+
 	//class draweer
 		drawer::drawer()
 			: widget_(nullptr), editor_(nullptr)
@@ -39,27 +51,17 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			pred_acceptive_ = std::move(fn);
 		}
 
-		void drawer::attached(widget_reference widget, graph_reference graph)
+		void drawer::attached(widget_reference wdg, graph_reference graph)
 		{
-			widget_ = &widget;
-			window wd = widget_->handle();
+			auto wd = wdg.handle();
+			widget_ = &wdg;
+			evt_agent_.reset(new event_agent(static_cast<::nana::textbox&>(wdg)));
 
 			editor_ = new text_editor(wd, graph);
-			editor_->textbase().bind_ext_evtbase(extra_evtbase);
+			editor_->textbase().set_event_agent(evt_agent_.get());
 			editor_->border_renderer(nana::make_fun(*this, &drawer::_m_draw_border));
 
 			_m_text_area(graph.width(), graph.height());
-
-			using namespace API::dev;
-			make_drawer_event<events::focus>(wd);
-			make_drawer_event<events::key_char>(wd);
-			make_drawer_event<events::key_down>(wd);
-			make_drawer_event<events::mouse_down>(wd);
-			make_drawer_event<events::mouse_up>(wd);
-			make_drawer_event<events::mouse_move>(wd);
-			make_drawer_event<events::mouse_wheel>(wd);
-			make_drawer_event<events::mouse_enter>(wd);
-			make_drawer_event<events::mouse_leave>(wd);
 
 			API::tabstop(wd);
 			API::eat_tabstop(wd, true);
@@ -78,9 +80,9 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			editor_->render(status_.has_focus);
 		}
 
-		void drawer::focus(graph_reference graph, const eventinfo& ei)
+		void drawer::focus(graph_reference graph, const arg_focus& arg)
 		{
-			status_.has_focus = ei.focus.getting;
+			status_.has_focus = arg.getting;
 			refresh(graph);
 
 			editor_->show_caret(status_.has_focus);
@@ -88,62 +90,62 @@ namespace nana{ namespace gui{ namespace drawerbase {
 			API::lazy_refresh();
 		}
 
-		void drawer::mouse_down(graph_reference, const eventinfo& ei)
+		void drawer::mouse_down(graph_reference, const arg_mouse& arg)
 		{
-			if(editor_->mouse_down(ei.mouse.left_button, ei.mouse.x, ei.mouse.y))
+			if(editor_->mouse_down(arg.left_button, arg.pos.x, arg.pos.y))
 				API::lazy_refresh();
 		}
 
-		void drawer::mouse_move(graph_reference, const eventinfo& ei)
+		void drawer::mouse_move(graph_reference, const arg_mouse& arg)
 		{
-			if(editor_->mouse_move(ei.mouse.left_button, ei.mouse.x, ei.mouse.y))
+			if(editor_->mouse_move(arg.left_button, arg.pos.x, arg.pos.y))
 				API::lazy_refresh();
 		}
 
-		void drawer::mouse_up(graph_reference graph, const eventinfo& ei)
+		void drawer::mouse_up(graph_reference graph, const arg_mouse& arg)
 		{
-			if(editor_->mouse_up(ei.mouse.left_button, ei.mouse.x, ei.mouse.y))
+			if(editor_->mouse_up(arg.left_button, arg.pos.x, arg.pos.y))
 				API::lazy_refresh();
 		}
 
-		void drawer::mouse_wheel(graph_reference, const eventinfo& ei)
+		void drawer::mouse_wheel(graph_reference, const arg_wheel& arg)
 		{
-			if(editor_->scroll(ei.wheel.upwards, true))
+			if(editor_->scroll(arg.upwards, true))
 			{
 				editor_->reset_caret();
 				API::lazy_refresh();
 			}
 		}
 
-		void drawer::mouse_enter(graph_reference, const eventinfo&)
+		void drawer::mouse_enter(graph_reference, const arg_mouse&)
 		{
 			if(editor_->mouse_enter(true))
 				API::lazy_refresh();
 		}
 
-		void drawer::mouse_leave(graph_reference, const eventinfo&)
+		void drawer::mouse_leave(graph_reference, const arg_mouse&)
 		{
 			if(editor_->mouse_enter(false))
 				API::lazy_refresh();
 		}
 
-		void drawer::key_down(graph_reference, const eventinfo& ei)
+		void drawer::key_press(graph_reference, const arg_keyboard& arg)
 		{
-			if(editor_->move(ei.keyboard.key))
+			if(editor_->move(arg.key))
 			{
 				editor_->reset_caret();
 				API::lazy_refresh();
 			}
 		}
 
-		void drawer::key_char(graph_reference, const eventinfo& ei)
+		void drawer::key_char(graph_reference, const arg_keyboard& arg)
 		{
 			if(editor_->attr().editable)
 			{
-				if (pred_acceptive_ && !pred_acceptive_(ei.keyboard.key))
+				if (pred_acceptive_ && !pred_acceptive_(arg.key))
 					return;
 
-				switch(ei.keyboard.key)
+				switch(arg.key)
 				{
 				case '\b':
 					editor_->backspace();	break;
@@ -160,24 +162,24 @@ namespace nana{ namespace gui{ namespace drawerbase {
 					editor_->del();
 					break;
 				default:
-					if(ei.keyboard.key >= 0xFF || (32 <= ei.keyboard.key && ei.keyboard.key <= 126))
-						editor_->put(ei.keyboard.key);
+					if(arg.key >= 0xFF || (32 <= arg.key && arg.key <= 126))
+						editor_->put(arg.key);
 					else if(sizeof(nana::char_t) == sizeof(char))
 					{	//Non-Unicode Version for Non-English characters
-						if(ei.keyboard.key & (1<<(sizeof(nana::char_t)*8 - 1)))
-							editor_->put(ei.keyboard.key);
+						if(arg.key & (1<<(sizeof(nana::char_t)*8 - 1)))
+							editor_->put(arg.key);
 					}
 				}
 				editor_->reset_caret();
 				API::lazy_refresh();
 			}
-			else if(ei.keyboard.key == static_cast<char_t>(keyboard::copy))
+			else if(arg.key == static_cast<char_t>(keyboard::copy))
 				editor_->copy();
 		}
 
-		void drawer::resize(graph_reference graph, const eventinfo& ei)
+		void drawer::resized(graph_reference graph, const arg_resized& arg)
 		{
-			_m_text_area(ei.size.width, ei.size.height);
+			_m_text_area(arg.width, arg.height);
 			refresh(graph);
 			API::lazy_refresh();
 		}
@@ -242,11 +244,6 @@ namespace nana{ namespace gui{ namespace drawerbase {
 		textbox::textbox(window wd, const rectangle& r, bool visible)
 		{
 			create(wd, r, visible);
-		}
-
-		textbox::ext_event_type& textbox::ext_event() const
-		{
-			return get_drawer_trigger().extra_evtbase;
 		}
 
 		void textbox::load(const nana::char_t* file)
@@ -537,6 +534,5 @@ namespace nana{ namespace gui{ namespace drawerbase {
 				editor->reset_caret_height();
 		}
 	//end class textbox
-}//end namespace gui
 }//end namespace nana
 

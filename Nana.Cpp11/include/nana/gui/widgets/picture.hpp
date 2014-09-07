@@ -17,8 +17,6 @@
 
 namespace nana
 {
-namespace gui
-{
 	namespace xpicture
 	{
 		class picture_drawer: public drawer_trigger
@@ -79,6 +77,5 @@ namespace gui
 		void transparent(bool);
 		bool transparent() const;
 	};
-}//end namespace gui
 }//end namespace nana
 #endif

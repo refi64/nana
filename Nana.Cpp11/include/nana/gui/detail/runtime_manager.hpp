@@ -16,8 +16,6 @@
 
 namespace nana
 {
-namespace gui
-{
 	namespace detail
 	{
 		template<typename Window, typename Bedrock>
@@ -25,82 +23,12 @@ namespace gui
 		{
 		public:
 			typedef Window	window_handle;
-			
-			template<typename Form>
-			Form* create_form()
+
+			template<typename Form, typename... Args>
+			Form* create_form(Args&&... args)
 			{
 				widget_placer<Form> * holder = new widget_placer<Form>;
-				if (holder->create())
-				{
-					holder_[holder->get_handle()] = holder;
-					return holder->get();
-				}
-
-				delete holder;
-				return nullptr;
-			}
-
-			template<typename Form, typename Param>
-			Form* create_form(Param param)
-			{
-				widget_placer<Form> * holder = new widget_placer<Form>;
-				if (holder->template create<Param>(param))
-				{
-					holder_[holder->get_handle()] = holder;
-					return holder->get();
-				}
-
-				delete holder;
-				return nullptr;
-			}
-
-			template<typename Form, typename Param1, typename Param2>
-			Form* create_form(Param1 p1, Param2 p2)
-			{
-				widget_placer<Form> * holder = new widget_placer<Form>;
-				if (holder->template create<Param1, Param2>(p1, p2))
-				{
-					holder_[holder->get_handle()] = holder;
-					return holder->get();
-				}
-
-				delete holder;
-				return nullptr;
-			}
-
-			template<typename Form, typename Param1, typename Param2, typename Param3>
-			Form* create_form(Param1 p1, Param2 p2, Param3 p3)
-			{
-				widget_placer<Form> * holder = new widget_placer<Form>;
-				if (holder->template create<Param1, Param2, Param3>(p1, p2, p3))
-				{
-					holder_[holder->get_handle()] = holder;
-					return holder->get();
-				}
-
-				delete holder;
-				return nullptr;
-			}
-
-			template<typename Form, typename Param1, typename Param2, typename Param3, typename Param4>
-			Form* create_form(Param1 p1, Param2 p2, Param3 p3, Param4 p4)
-			{
-				widget_placer<Form> * holder = new widget_placer<Form>;
-				if (holder->template create<Param1, Param2, Param3, Param4>(p1, p2, p3, p4))
-				{
-					holder_[holder->get_handle()] = holder;
-					return holder->get();
-				}
-
-				delete holder;
-				return nullptr;
-			}
-
-			template<typename Form, typename Param1, typename Param2, typename Param3, typename Param4, typename Param5>
-			Form* create_form(Param1 p1, Param2 p2, Param3 p3, Param4 p4, Param5 p5)
-			{
-				widget_placer<Form> * holder = new widget_placer<Form>;
-				if (holder->template create<Param1, Param2, Param3, Param4, Param5>(p1, p2, p3, p4, p5))
+				if (holder->create(std::forward<Args>(args)...))
 				{
 					holder_[holder->get_handle()] = holder;
 					return holder->get();
@@ -140,55 +68,11 @@ namespace gui
 					delete form_;
 				}
 
-				bool create()
+				template<typename... Args>
+				bool create(Args&&... args)
 				{
 					if (nullptr == form_)
-						form_ = new Form;
-
-					return (form_ && !form_->empty());
-				}
-
-				template<typename Param>
-				bool create(Param param)
-				{
-					if (nullptr == form_)
-						form_ = new Form(param);
-
-					return (form_ && !form_->empty());
-				}
-
-				template<typename Param1, typename Param2>
-				bool create(Param1 p1, Param2 p2)
-				{
-					if (nullptr == form_)
-						form_ = new Form(p1, p2);
-
-					return (form_ && !form_->empty());
-				}
-
-				template<typename Param1, typename Param2, typename Param3>
-				bool create(Param1 p1, Param2 p2, Param3 p3)
-				{
-					if (nullptr == form_)
-						form_ = new Form(p1, p2, p3);
-
-					return (form_ && !form_->empty());
-				}
-
-				template<typename Param1, typename Param2, typename Param3, typename Param4>
-				bool create(Param1 p1, Param2 p2, Param3 p3, Param4 p4)
-				{
-					if (nullptr == form_)
-						form_ = new Form(p1, p2, p3, p4);
-
-					return (form_ && !form_->empty());
-				}
-
-				template<typename Param1, typename Param2, typename Param3, typename Param4, typename Param5>
-				bool create(Param1 p1, Param2 p2, Param3 p3, Param4 p4, Param5 p5)
-				{
-					if (nullptr == form_)
-						form_ = new Form(p1, p2, p3, p4, p5);
+						form_ = new Form(std::forward<Args>(args)...);
 
 					return (form_ && !form_->empty());
 				}
@@ -210,8 +94,6 @@ namespace gui
 		}; //end class runtime_manager
 
 	}//end namespace detail
-
-}//end namespace gui
 }//end namespace nana
 
 

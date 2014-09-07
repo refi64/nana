@@ -1,7 +1,7 @@
 /*
  *	A Message Box Class
  *	Nana C++ Library(http://www.nanapro.org)
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
@@ -19,14 +19,11 @@
 	#include <nana/gui/widgets/button.hpp>
 	#include <nana/gui/widgets/picture.hpp>
 	#include <nana/paint/pixel_buffer.hpp>
-	#include <nana/gui/layout.hpp>
+	#include <nana/gui/place.hpp>
 #endif
 
 namespace nana
 {
-	namespace gui
-	{
-
 #if defined(NANA_X11)
 		class msgbox_window
 			: public form
@@ -37,23 +34,25 @@ namespace nana
 					owner_(wd), pick_(msgbox::pick_yes)
 			{
 				this->caption(title);
-				this->make_event<events::size>(*this, &msgbox_window::_m_size);
+				drawing dw(*this);
+				dw.draw([this](::nana::paint::graphics& graph)
+				{
+					graph.rectangle(nana::rectangle{0, 0, graph.width(), graph.height() - 50}, 0xFFFFFF, true);
+					if(ico_.empty() == false)
+						ico_.stretch(ico_.size(), graph, ::nana::rectangle{12, 25, 32, 32});
+				});
 
 				unsigned width_pixel = 45;
 				unsigned height_pixel = 110;
 
-				gird_.bind(*this);
-				gird_.push(0, 0);	//The area is used for placing content
-				gird * button_gird = gird_.push(10, 25);
-
-				button_gird->add(0, 0);
-
+				place_.bind(*this);
 
 				yes_.create(*this);
-				yes_.make_event<events::click>(*this, &msgbox_window::_m_click);
+				yes_.events().click([this](const arg_mouse& arg)
+				{
+					_m_click(arg);
+				});
 				yes_.caption(STR("OK"));
-				button_gird->add(yes_, 0, 70);
-				button_gird->add(0, 7);
 				width_pixel += 77;
 
 				if(msgbox::yes_no == btn || msgbox::yes_no_cancel == btn)
@@ -61,27 +60,42 @@ namespace nana
 					yes_.caption(STR("Yes"));
 					no_.create(*this);
 					no_.caption(STR("No"));
-					no_.make_event<events::click>(*this, &msgbox_window::_m_click);
-					button_gird->add(no_, 0, 70);
-					button_gird->add(0, 7);
+					no_.events().click([this](const arg_mouse& arg)
+					{
+						_m_click(arg);
+					});
+
 					width_pixel += 77;
 
 					if(msgbox::yes_no_cancel == btn)
 					{
 						cancel_.create(*this);
 						cancel_.caption(STR("Cancel"));
-						cancel_.make_event<events::click>(*this, &msgbox_window::_m_click);
-						button_gird->add(cancel_, 0, 70);
-						button_gird->add(0, 7);
+						cancel_.events().click([this](const arg_mouse& arg)
+						{
+							_m_click(arg);
+						});
+
 						width_pixel += 77;
 						pick_ = msgbox::pick_cancel;
 					}
 					else
 						pick_ = msgbox::pick_no;
 				}
-				gird_.push(0, 15);
-				this->size(width_pixel, height_pixel);
 
+				std::stringstream ss;
+				ss<<"vertical<><weight=50 margin=[10,0,15,0]<><buttons weight="<<(width_pixel - 45)<<">>";
+				place_.div(ss.str().data());
+
+				auto & field = place_.field("buttons");
+				field<<place_.fixed(yes_, 70)<<7;
+				if(!no_.empty())
+				{
+					field<<place_.fixed(no_, 70)<<7;
+					if(!cancel_.empty())
+						field<<place_.fixed(cancel_, 70)<<7;
+				}
+				this->size(width_pixel, height_pixel);
 				_m_icon(ico);
 			}
 
@@ -110,6 +124,7 @@ namespace nana
 					nana::rectangle r = API::make_center(owner_, sz.width, sz.height + ts.height);
 					this->move(r.x, r.y, r.width, r.height);
 				}
+
 				API::modal_window(*this);
 			}
 
@@ -283,32 +298,23 @@ namespace nana
 					}
 			}
 
-			void _m_size(const nana::gui::eventinfo& ei)
+			void _m_click(const arg_mouse& arg)
 			{
-				drawing dw(*this);
-				dw.clear();
-				dw.rectangle(0, 0, ei.size.width, ei.size.height - 50, 0xFFFFFF, true);
-				if(ico_.empty() == false)
-					dw.bitblt(12, 25, 32, 32, ico_, 0, 0);
-			}
-
-			void _m_click(const eventinfo& ei)
-			{
-				if(ei.window == yes_)
+				if(arg.window_handle == yes_)
 					pick_ = (no_.empty() ? msgbox::pick_ok : msgbox::pick_yes);
-				else if(ei.window == no_)
+				else if(arg.window_handle == no_)
 					pick_ = msgbox::pick_no;
-				else if(ei.window == cancel_)
+				else if(arg.window_handle == cancel_)
 					pick_ = msgbox::pick_cancel;
 
 				this->close();
 			}
 		private:
 			window	owner_;
-			gird	gird_;
+			place	place_;
 			nana::paint::graphics	ico_;
-			nana::gui::label	text_;
-			nana::gui::button yes_, no_, cancel_;
+			nana::label	text_;
+			nana::button yes_, no_, cancel_;
 			msgbox::pick_t pick_;
 		};
 #endif
@@ -455,5 +461,4 @@ namespace nana
 		}
 
 		//end class msgbox
-	}
 }

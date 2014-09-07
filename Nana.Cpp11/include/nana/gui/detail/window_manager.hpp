@@ -19,7 +19,7 @@
 
 #include <vector>
 #include "window_layout.hpp"
-#include "eventinfo.hpp"
+#include "event_code.hpp"
 #include "inner_fwd.hpp"
 #include <functional>
 
@@ -31,13 +31,14 @@
 
 namespace nana
 {
+	class widget;	//forward declaration
 	namespace paint
 	{
 		class image;
 	}
 }
 
-namespace nana{	namespace gui{
+namespace nana{
 namespace detail
 {
 	template<typename T>
@@ -92,7 +93,6 @@ namespace detail
 		typedef std::vector<core_window_t*> cont_type;
 
 		typedef window_layout	wndlayout_type;
-		typedef std::function<void(const eventinfo&)> event_fn_t;
 
 		window_manager();
 		~window_manager();
@@ -118,9 +118,9 @@ namespace detail
 		bool available(core_window_t *, core_window_t*);
 		bool available(native_window_type);
 
-		core_window_t* create_root(core_window_t* owner, bool nested, rectangle, const appearance&);
-		core_window_t* create_widget(core_window_t* parent, const rectangle&, bool is_lite);
-		core_window_t* create_frame(core_window_t* parent, const rectangle&);
+		core_window_t* create_root(core_window_t* owner, bool nested, rectangle, const appearance&, widget*);
+		core_window_t* create_widget(core_window_t* parent, const rectangle&, bool is_lite, widget*);
+		core_window_t* create_frame(core_window_t* parent, const rectangle&, widget*);
 		bool insert_frame(core_window_t* frame, native_window);
 		bool insert_frame(core_window_t* frame, core_window_t*);
 		void close(core_window_t*);
@@ -162,10 +162,6 @@ namespace detail
 
 		bool get_graphics(core_window_t*, nana::paint::graphics&);
 		bool get_visual_rectangle(core_window_t*, nana::rectangle&);
-
-		bool tray_make_event(native_window_type, event_code, const event_fn_t& f);
-		void tray_umake_event(native_window_type);
-		void tray_fire(native_window_type, event_code, const eventinfo&);
 
 		bool set_parent(core_window_t* wd, core_window_t* new_parent);
 		core_window_t* set_focus(core_window_t*);
@@ -227,6 +223,5 @@ namespace detail
 		}menu_;
 	};//end class window_manager
 }//end namespace detail
-}//end namespace gui
 }//end namespace nana
 #endif

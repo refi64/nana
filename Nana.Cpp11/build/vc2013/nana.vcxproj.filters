@@ -90,13 +90,7 @@
     <ClCompile Include="..\..\source\gui\detail\drawer.cpp">
       <Filter>Source Files\nana\gui\detail</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\gui\detail\event_manager.cpp">
-      <Filter>Source Files\nana\gui\detail</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\gui\detail\native_window_interface.cpp">
-      <Filter>Source Files\nana\gui\detail</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\gui\detail\timer_trigger.cpp">
       <Filter>Source Files\nana\gui\detail</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\gui\detail\window_manager.cpp">
@@ -135,9 +129,6 @@
     <ClCompile Include="..\..\source\gui\widgets\listbox.cpp">
       <Filter>Source Files\nana\gui\widgets</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\gui\widgets\login.cpp">
-      <Filter>Source Files\nana\gui\widgets</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\gui\widgets\menu.cpp">
       <Filter>Source Files\nana\gui\widgets</Filter>
     </ClCompile>
@@ -168,9 +159,6 @@
     <ClCompile Include="..\..\source\gui\widgets\toolbar.cpp">
       <Filter>Source Files\nana\gui\widgets</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\gui\widgets\tray.cpp">
-      <Filter>Source Files\nana\gui\widgets</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\gui\widgets\treebox.cpp">
       <Filter>Source Files\nana\gui\widgets</Filter>
     </ClCompile>
@@ -196,12 +184,6 @@
       <Filter>Source Files\nana\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\gui\filebox.cpp">
-      <Filter>Source Files\nana\gui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\gui\functional.cpp">
-      <Filter>Source Files\nana\gui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\gui\layout.cpp">
       <Filter>Source Files\nana\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\gui\layout_utility.cpp">
@@ -293,6 +275,15 @@
     </ClCompile>
     <ClCompile Include="..\..\source\gui\detail\element_store.cpp">
       <Filter>Source Files\nana\gui\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\gui\detail\bedrock_pi.cpp">
+      <Filter>Source Files\nana\gui\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\gui\detail\events_operation.cpp">
+      <Filter>Source Files\nana\gui\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\gui\notifier.cpp">
+      <Filter>Source Files\nana\gui</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

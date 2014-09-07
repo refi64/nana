@@ -14,7 +14,7 @@
 
 #include <nana/basic_types.hpp>
 
-namespace nana{	namespace gui { namespace widgets{ namespace detail
+namespace nana{	namespace widgets{ namespace detail
 {
 	/// A component set used for accessing the components of items of a widget.
 	template<typename Component, typename ItemAttribute>
@@ -80,7 +80,5 @@ namespace nana{	namespace gui { namespace widgets{ namespace detail
 	};
 }//end namespace detail
 }//end namespace widgets
-}//end namespace gui
 }//end namespace nana
-
 #endif

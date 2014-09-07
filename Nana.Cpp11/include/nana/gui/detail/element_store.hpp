@@ -20,19 +20,17 @@
 
 namespace nana
 {
-namespace gui
-{
 namespace detail
 {
 	class element_store
 	{
-		typedef nana::gui::element::element_interface element_interface;
-		typedef pat::cloneable<nana::gui::element::element_interface> cloneable_element;
+		typedef ::nana::element::element_interface element_interface;
+		typedef pat::cloneable<::nana::element::element_interface> cloneable_element;
 
 		struct data
 		{
 			cloneable_element object;
-			nana::gui::element::element_interface * fast_ptr;
+			::nana::element::element_interface * fast_ptr;
 
 			data();
 		};
@@ -49,7 +47,6 @@ namespace detail
 		store bground_;
 	};
 }//end namespace detail
-}//end namespace gui
 }
 
 #endif

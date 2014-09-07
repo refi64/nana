@@ -17,7 +17,8 @@
 #include <nana/gui/timer.hpp>
 #include <nana/pat/cloneable.hpp>
 
-namespace nana{ namespace gui{
+namespace nana
+{
 	namespace drawerbase
 	{
 		namespace menu
@@ -149,6 +150,7 @@ namespace nana{ namespace gui{
 		menu * link(std::size_t index);		 	     ///< Retrieves a linked sub menu of the item.
 		menu *create_sub_menu(std::size_t index);
 		void popup(window owner, int x, int y);     ///< Popup the menu at the owner window. 
+		void popup_await(window owner, int x, int y);
 		void answerer(std::size_t index, const event_fn_t&);  ///< Modify answerer of the specified item.
 		void destroy_answer(const std::function<void()>&);  ///< Sets an answerer for the callback while the menu window is closing.
 		void gaps(const nana::point&);				///< Sets the gap between a menu and its sub menus.(\See Note4)
@@ -182,7 +184,7 @@ namespace nana{ namespace gui{
 		public:
 			popuper(menu&, mouse);
 			popuper(menu&, window owner, const point&, mouse);
-			void operator()(const eventinfo&);
+			void operator()(const arg_mouse&);
 		private:
 			menu & mobj_;
 			window owner_;
@@ -194,6 +196,5 @@ namespace nana{ namespace gui{
 
 	detail::popuper menu_popuper(menu&, mouse = mouse::right_button);
 	detail::popuper menu_popuper(menu&, window owner, const point&, mouse = mouse::right_button);
-}//end namespace gui
 }//end namespace nana
 #endif

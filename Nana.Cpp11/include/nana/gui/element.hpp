@@ -25,8 +25,6 @@ namespace nana
 		class image;
 	}
 
-namespace gui
-{
 	namespace element
 	{
 		class element_interface
@@ -191,7 +189,6 @@ namespace gui
 			unsigned left_, top_, right_, bottom_;
 		}; //end class bground
 	}//end namespace element
-}//end namespace gui
 }//end namespace nana
 
 #endif	//NANA_GUI_ELEMENT_HPP

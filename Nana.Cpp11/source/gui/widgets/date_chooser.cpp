@@ -14,13 +14,13 @@
 #include <nana/system/platform.hpp>
 #include <sstream>
 
-namespace nana{ namespace gui{
-
+namespace nana
+{
 	namespace drawerbase
 	{
 		namespace date_chooser
 		{
-			//class trigger: public gui::drawer_trigger
+			//class trigger: public drawer_trigger
 
 				trigger::trigger()
 					: widget_(nullptr), chose_(false), page_(page::date), pos_(where::none)
@@ -325,10 +325,10 @@ namespace nana{ namespace gui{
 						}
 				}
 
-				bool trigger::_m_get_trace(int x, int y, int & res)
+				bool trigger::_m_get_trace(point pos, int & res)
 				{
-					x -= dbasis_.refpos.x;
-					y -= dbasis_.refpos.y;
+					pos.x -= dbasis_.refpos.x;
+					pos.y -= dbasis_.refpos.y;
 
 					int lines = 7, rows = 7;	//defaultly for page::date
 
@@ -341,12 +341,12 @@ namespace nana{ namespace gui{
 					int width = static_cast<int>(dbasis_.row_s * rows);
 					int height = static_cast<int>(dbasis_.line_s * lines);
 
-					if(0 <= x && x < width && 0 <= y && y < height)
+					if(0 <= pos.x && pos.x < width && 0 <= pos.y && pos.y < height)
 					{
-						x = static_cast<int>(x / dbasis_.row_s);
-						y = static_cast<int>(y / dbasis_.line_s);
+						pos.x = static_cast<int>(pos.x / dbasis_.row_s);
+						pos.y = static_cast<int>(pos.y / dbasis_.line_s);
 
-						int n = y * rows + x + 1;
+						int n = pos.y * rows + pos.x + 1;
 						if(page_ == page::date)
 						{
 							if(n < 8) return false; //Here is week title bar
@@ -473,27 +473,21 @@ namespace nana{ namespace gui{
 					_m_draw(graph);
 				}
 
-				void trigger::attached(widget_reference widget, graph_reference graph)
+				void trigger::attached(widget_reference widget, graph_reference)
 				{
 					widget_ = &widget;
-					window wd = widget_->handle();
-					using namespace API::dev;
-					make_drawer_event<events::mouse_move>(wd);
-					make_drawer_event<events::mouse_leave>(wd);
-					make_drawer_event<events::mouse_down>(wd);
-					make_drawer_event<events::mouse_up>(wd);
 				}
 
-				void trigger::mouse_move(graph_reference graph, const eventinfo& ei)
+				void trigger::mouse_move(graph_reference graph, const arg_mouse& arg)
 				{
-					where pos = _m_pos_where(graph, ei.mouse.x, ei.mouse.y);
+					where pos = _m_pos_where(graph, arg.pos.x, arg.pos.y);
 					if(pos == pos_ && pos_ != where::textarea) return;
 					pos_ = pos;
 					_m_draw(graph);
 					API::lazy_refresh();
 				}
 
-				void trigger::mouse_leave(graph_reference graph, const eventinfo&)
+				void trigger::mouse_leave(graph_reference graph, const arg_mouse&)
 				{
 					if(where::none == pos_) return;
 					pos_ = where::none;
@@ -501,10 +495,10 @@ namespace nana{ namespace gui{
 					API::lazy_refresh();
 				}
 
-				void trigger::mouse_up(graph_reference graph, const eventinfo& ei)
+				void trigger::mouse_up(graph_reference graph, const arg_mouse& arg)
 				{
 					bool redraw = true;
-					where pos = _m_pos_where(graph, ei.mouse.x, ei.mouse.y);
+					where pos = _m_pos_where(graph, arg.pos.x, arg.pos.y);
 					transform_action tfid = transform_action::none;
 
 					if(pos == where::topbar)
@@ -525,7 +519,7 @@ namespace nana{ namespace gui{
 						switch(page_)
 						{
 						case page::date:
-							if(_m_get_trace(ei.mouse.x, ei.mouse.y, ret))
+							if(_m_get_trace(arg.pos, ret))
 							{
 								if(ret < 1)
 								{
@@ -559,7 +553,7 @@ namespace nana{ namespace gui{
 							}
 							break;
 						case page::month:
-							if(_m_get_trace(ei.mouse.x, ei.mouse.y, ret))
+							if(_m_get_trace(arg.pos, ret))
 								chmonth_.month = ret;
 							page_ = page::date;
 							tfid = transform_action::to_enter;
@@ -680,8 +674,5 @@ namespace nana{ namespace gui{
 			get_drawer_trigger().month_name(index, str);
 			API::refresh_window(*this);
 		}
-
-
 	//end class date_chooser
-}//end namespace gui
 }//end namespace nana

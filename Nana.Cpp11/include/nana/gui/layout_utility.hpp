@@ -18,8 +18,6 @@
 
 namespace nana
 {
-namespace gui
-{
 	//overlap test if overlaped between r1 and r2
 	bool overlap(const rectangle& r1, const rectangle& r2);
 
@@ -43,6 +41,5 @@ namespace gui
 						const rectangle& cover);
 
 	bool is_hit_the_rectangle(const rectangle& r, int x, int y);
-}//end namespace gui
 }//end namespace nana
 #endif

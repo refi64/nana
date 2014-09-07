@@ -16,8 +16,6 @@
 
 namespace nana
 {
-namespace gui
-{
 	namespace xpicture
 	{
 
@@ -298,5 +296,4 @@ namespace gui
 			return (bground_mode::basic == API::effects_bground_mode(*this));
 		}
 	//end class picture
-}//end namespace gui
 }//end namespace nana

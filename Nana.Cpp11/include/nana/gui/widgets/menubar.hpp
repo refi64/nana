@@ -17,8 +17,6 @@
 
 namespace nana
 {
-namespace gui
-{
 	namespace drawerbase
 	{
 		namespace menubar
@@ -38,34 +36,34 @@ namespace gui
 			};
 
 			class trigger
-				: public gui::drawer_trigger
+				: public drawer_trigger
 			{
 				class itembase;
 			public:
 				trigger();
 				~trigger();
-				gui::menu* push_back(const nana::string&);
-				gui::menu* at(size_t) const;
+				nana::menu* push_back(const nana::string&);
+				nana::menu* at(size_t) const;
 				std::size_t size() const;
 			private:
 				void attached(widget_reference, graph_reference)	override;
 				void refresh(graph_reference)	override;
-				void mouse_move(graph_reference, const eventinfo&)	override;
-				void mouse_leave(graph_reference, const eventinfo&)	override;
-				void mouse_down(graph_reference, const eventinfo&)	override;
-				void mouse_up(graph_reference, const eventinfo&)	override;
-				void focus(graph_reference, const eventinfo&)		override;
-				void key_down(graph_reference, const eventinfo&)	override;
-				void key_up(graph_reference, const eventinfo&)		override;
-				void shortkey(graph_reference, const eventinfo&)	override;
+				void mouse_move(graph_reference, const arg_mouse&)	override;
+				void mouse_leave(graph_reference, const arg_mouse&)	override;
+				void mouse_down(graph_reference, const arg_mouse&)	override;
+				void mouse_up(graph_reference, const arg_mouse&)	override;
+				void focus(graph_reference, const arg_focus&)		override;
+				void key_press(graph_reference, const arg_keyboard&)	override;
+				void key_release(graph_reference, const arg_keyboard&)	override;
+				void shortkey(graph_reference, const arg_keyboard&)	override;
 			private:
 				void _m_move(bool to_left);
 				bool _m_popup_menu();
 				void _m_total_close();
 				bool _m_close_menu();
 				void _m_unload_menu_window();
-				std::size_t _m_item_by_pos(int x, int y);
-				bool _m_track_mouse(int x, int y);
+				std::size_t _m_item_by_pos(const ::nana::point&);
+				bool _m_track_mouse(const ::nana::point&);
 				void _m_draw();
 			private:
 				widget *widget_;
@@ -90,7 +88,7 @@ namespace gui
 
 					bool nullify_mouse;
 
-					nana::gui::menu *menu;
+					nana::menu *menu;
 					nana::point mouse_pos;
 				}state_;
 			};
@@ -111,6 +109,5 @@ namespace gui
 		menu& at(size_t index) const;		    ///< Gets the menu specified by index.
 		std::size_t length() const;		        ///< Number of menus.
 	};//end class menubar
-}//end namespace gui
 }//end namespace nana
 #endif

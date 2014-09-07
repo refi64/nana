@@ -33,7 +33,7 @@ namespace nana
 {
 namespace detail
 {
-	typedef gui::native_window_type native_window_type;
+	typedef native_window_type native_window_type;
 #if defined(NANA_UNICODE)
 	//class conf
 		conf::conf(const char * file)
@@ -176,6 +176,13 @@ namespace detail
 
 		void set(std::size_t id, std::size_t interval, timer_proc_t proc)
 		{
+			auto i = holder_.find(id);
+			if(i != holder_.end())
+			{
+				i->second.interval = interval;
+				i->second.proc = proc;
+				return;
+			}
 			unsigned tid = nana::system::this_thread_id();
 			threadmap_[tid].insert(id);
 			timer_tag & tag = holder_[id];
@@ -584,7 +591,7 @@ namespace detail
 		if(vec)
 		{
 			set_error_handler();
-			auto & wd_manager = gui::detail::bedrock::instance().wd_manager;
+			auto & wd_manager = detail::bedrock::instance().wd_manager;
 			for(auto u = vec->rbegin(); u != vec->rend(); ++u)
 				wd_manager.close(wd_manager.root(*u));
 
@@ -905,22 +912,6 @@ namespace detail
 			}
 			for(int i = 0; i < 5 && (false == caret_holder_.exit_thread); ++i)
 				nana::system::sleep(100);
-		}
-	}
-
-	void platform_spec::event_register_filter(native_window_type wd, event_code eventid)
-	{
-		switch(eventid)
-		{
-		case event_code::mouse_drop:
-			{
-				int dndver = 4;
-				::XChangeProperty(display_, reinterpret_cast<Window>(wd), atombase_.xdnd_aware, XA_ATOM, sizeof(int) * 8,
-									PropModeReplace, reinterpret_cast<unsigned char*>(&dndver), 1);
-			}
-			break;
-		default:
-			break;
 		}
 	}
 
@@ -1263,7 +1254,7 @@ namespace detail
 				{
 					Window child;
 					::XTranslateCoordinates(self.display_, self.root_window(), evt.xclient.window, x, y, &self.xdnd_.pos.x, &self.xdnd_.pos.y, &child);
-					typedef gui::detail::bedrock bedrock;
+					typedef detail::bedrock bedrock;
 
 					auto wd = bedrock::instance().wd_manager.find_window(reinterpret_cast<native_window_type>(evt.xclient.window),													self.xdnd_.pos.x, self.xdnd_.pos.y);
 					if(wd && wd->flags.dropable)

@@ -19,7 +19,7 @@
 #include <nana/gui/dragger.hpp>
 
 
-namespace nana{	namespace gui
+namespace nana
 {
 	namespace place_parts
 	{
@@ -538,14 +538,15 @@ namespace nana{	namespace gui
 		//It will delete the element and recollocate when the window destroyed.
 		event_handle _m_make_destroy(window wd)
 		{
-			return API::make_event<events::destroy>(wd, [this](const eventinfo& ei)
+			return API::events(wd).destroy.connect([this](const arg_destroy& arg)
 			{
 				for(auto i = elements.begin(), end = elements.end(); i != end; ++i)
 				{
-					if(ei.window != i->window_handle())
-						continue;
-					elements.erase(i);
-					break;
+					if (arg.window_handle == i->window_handle())
+					{
+						elements.erase(i);
+						break;
+					}
 				}
 				place_ptr_->collocate();
 			});
@@ -599,15 +600,15 @@ namespace nana{	namespace gui
 
 			//Listen to destroy of a window. The deleting a fastened window
 			//does not change the layout.
-			API::make_event<events::destroy>(wd, [this](const eventinfo& ei)
+			API::events(wd).destroy.connect([this](const arg_destroy& arg)
 			{
-				for(auto i = fastened.begin(), end = fastened.end(); i != end; ++i)
-				{
-					if(ei.window != *i)
-						continue;
+				auto destroyed_wd = arg.window_handle;
+				auto i = std::find_if(fastened.begin(), fastened.end(), [destroyed_wd](::nana::window wd){
+					return (wd == destroyed_wd);
+				});
+
+				if (i != fastened.end())
 					fastened.erase(i);
-					break;
-				}
 			});
 			return *this;
 		}
@@ -918,7 +919,7 @@ namespace nana{	namespace gui
 
 				//Use right to calc width is to avoid deviation
 				int right = static_cast<int>(left + adj_px);
-				if (child == children.back() && (right != area.right()))
+				if ((!child->is_fixed()) && child == children.back() && (right != area.right()))
 					right = area.right();
 
 				child->field_area.width = static_cast<unsigned>(right - child->field_area.x);
@@ -1025,7 +1026,7 @@ namespace nana{	namespace gui
 
 				//Use bottom to calc height is to avoid deviation.
 				int bottom = static_cast<int>(top + adj_px);
-				if (child == children.back() && (bottom != area.bottom()))
+				if ((!child->is_fixed()) && (child == children.back()) && (bottom != area.bottom()))
 					bottom = area.bottom();
 
 				child->field_area.height = static_cast<unsigned>(bottom - child->field_area.y);
@@ -1311,7 +1312,7 @@ namespace nana{	namespace gui
 	public:
 		div_splitter()
 			:	division(kind::splitter, std::string()),
-				splitter_cursor_(gui::cursor::arrow),
+				splitter_cursor_(cursor::arrow),
 				leaf_left_(nullptr), leaf_right_(nullptr),
 				pause_move_collocate_(false)
 		{
@@ -1341,9 +1342,9 @@ namespace nana{	namespace gui
 				splitter_.cursor(splitter_cursor_);
 
 				dragger_.trigger(splitter_);
-				splitter_.make_event<events::mouse_down>([this](const eventinfo& ei)
+				splitter_.events().mouse_down.connect([this](const arg_mouse& arg)
 				{
-					if (false == ei.mouse.left_button)
+					if (false == arg.left_button)
 						return;
 
 					begin_point_ = splitter_.pos();
@@ -1353,7 +1354,7 @@ namespace nana{	namespace gui
 					auto area_left = leaf_left_->margin_area();
 					auto area_right = leaf_right_->margin_area();
 
-					if (nana::gui::cursor::size_we != splitter_cursor_)
+					if (nana::cursor::size_we != splitter_cursor_)
 					{
 						left_pos_ = area_left.y;
 						right_pos_ = area_right.bottom();
@@ -1369,14 +1370,14 @@ namespace nana{	namespace gui
 					right_pixels_ = area_right.*px_ptr;
 				});
 
-				splitter_.make_event<events::mouse_move>([this](const eventinfo& ei)
+				splitter_.events().mouse_move.connect([this](const arg_mouse& arg)
 				{
-					if (false == ei.mouse.left_button)
+					if (false == arg.left_button)
 						return;
 
 					int delta = splitter_.pos().x - begin_point_.x;
 					auto px_ptr = &nana::rectangle::width;
-					if (nana::gui::cursor::size_we != splitter_cursor_)
+					if (nana::cursor::size_we != splitter_cursor_)
 					{
 						delta = splitter_.pos().y - begin_point_.y;
 						px_ptr = &nana::rectangle::height;
@@ -1407,13 +1408,13 @@ namespace nana{	namespace gui
 				});
 			}
 
-			dragger_.target(splitter_, div_owner->margin_area(), (gui::cursor::size_ns == splitter_cursor_ ? nana::arrange::vertical : nana::arrange::horizontal));
+			dragger_.target(splitter_, div_owner->margin_area(), (cursor::size_ns == splitter_cursor_ ? nana::arrange::vertical : nana::arrange::horizontal));
 
 			if (false == pause_move_collocate_)
 				splitter_.move(this->field_area);
 		}
 	private:
-		nana::gui::cursor	splitter_cursor_;
+		nana::cursor	splitter_cursor_;
 		place_parts::splitter<true>	splitter_;
 		nana::point	begin_point_;
 		division * leaf_left_;
@@ -1653,12 +1654,12 @@ namespace nana{	namespace gui
 				throw std::runtime_error("place.bind: it has already binded to a window.");
 
 			impl_->window_handle = wd;
-			impl_->event_size_handle = API::make_event<events::size>(wd, [this](const eventinfo&ei)
+			impl_->event_size_handle = API::events(wd).resized.connect([this](const arg_resized& arg)
 				{
 					if(impl_->root_division)
 					{
-						impl_->root_division->field_area = API::window_size(ei.window);
-						impl_->root_division->collocate(ei.window);
+						impl_->root_division->field_area = API::window_size(arg.window_handle);
+						impl_->root_division->collocate(arg.window_handle);
 					}
 				});
 		}
@@ -1690,6 +1691,10 @@ namespace nana{	namespace gui
 		place::field_reference place::field(const char* name)
 		{
 			name = name ? name : "";
+
+			//check the name
+			if (*name && (*name != '_' && !(('a' <= *name && *name <= 'z') || ('A' <= *name && *name <= 'Z'))))
+				throw std::runtime_error("place.field: bad field name");
 
 			//get the field with specified name, if no such field with specified name
 			//then create one.
@@ -1733,6 +1738,4 @@ namespace nana{	namespace gui
 			}
 		}
 	//end class place
-
-}//end namespace gui
 }//end namespace nana

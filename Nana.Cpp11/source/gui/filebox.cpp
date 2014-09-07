@@ -13,12 +13,11 @@
 	#include <nana/gui/widgets/combox.hpp>
 	#include <nana/filesystem/file_iterator.hpp>
 	#include <nana/gui/place.hpp>
-	#include <nana/gui/functional.hpp>
 	#include <stdexcept>
 	#include <algorithm>
 #endif
 
-namespace nana{	namespace gui
+namespace nana
 {
 #if defined(NANA_LINUX)
 	class filebox_implement
@@ -138,16 +137,55 @@ namespace nana{	namespace gui
 		{
 			path_.create(*this);
 			path_.splitstr(STR("/"));
-			path_.ext_event().selected = nana::make_fun(*this, &filebox_implement::_m_cat_selected);
+			path_.events().selected([this](const arg_categorize<int>&)
+			{
+				auto path = path_.caption();
+				auto root = path.substr(0, path.find(STR('/')));
+				if(root == STR("HOME"))
+					path.replace(0, 4, nana::filesystem::path_user());
+				else if(root == STR("FILESYSTEM"))
+					path.erase(0, 10);
+				else
+					throw std::runtime_error("Nana.GUI.Filebox: Wrong categorize path");
+
+				if(path.size() == 0) path = STR("/");
+				_m_load_cat_path(path);
+			});
 
 			filter_.create(*this);
 			filter_.multi_lines(false);
 			filter_.tip_string(STR("Filter"));
-			filter_.make_event<events::key_up>(*this, &filebox_implement::_m_filter_changed);
+
+			filter_.events().key_release([this](const arg_keyboard&)
+			{
+				_m_list_fs();
+			});
 
 			btn_folder_.create(*this);
 			btn_folder_.caption(STR("&New Folder"));
-			btn_folder_.make_event<events::click>(*this, &filebox_implement::_m_new_folder);
+
+			btn_folder_.events().click([this](const arg_mouse&)
+			{
+				form fm(this->handle(), API::make_center(*this, 300, 35));
+				fm.caption(STR("Name the new folder"));
+
+				textbox folder(fm, nana::rectangle(5, 5, 160, 25));
+				folder.multi_lines(false);
+
+				button btn(fm, nana::rectangle(170, 5, 60, 25));
+				btn.caption(STR("Create"));
+
+				btn.events().click(folder_creator(*this, fm, folder));
+
+				button btn_cancel(fm, nana::rectangle(235, 5, 60, 25));
+				btn_cancel.caption(STR("Cancel"));
+
+				btn_cancel.events().click([&fm](const arg_mouse&)
+				{
+					fm.close();
+				});
+				API::modal_window(fm);
+			});
 
 			tree_.create(*this);
 
@@ -156,8 +194,12 @@ namespace nana{	namespace gui
 			ls_file_.append_header(STR("Modified"), 145);
 			ls_file_.append_header(STR("Type"), 80);
 			ls_file_.append_header(STR("Size"), 70);
-			ls_file_.make_event<events::dbl_click>(*this, &filebox_implement::_m_sel_file);
-			ls_file_.make_event<events::mouse_down>(*this, &filebox_implement::_m_sel_file);
+
+			auto fn_sel_file = [this](const arg_mouse& arg){
+				_m_sel_file(arg);
+			};
+			ls_file_.events().dbl_click(fn_sel_file);
+			ls_file_.events().mouse_down(fn_sel_file);
 			ls_file_.set_sort_compare(0, [](const nana::string& a, nana::any* fs_a, const nana::string& b, nana::any* fs_b, bool reverse) -> bool
 				{
 					int dira = fs_a->get<item_fs>()->directory ? 1 : 0;
@@ -233,18 +275,31 @@ namespace nana{	namespace gui
 			
 			tb_file_.create(*this);
 			tb_file_.multi_lines(false);
-			tb_file_.make_event<events::key_char>(*this, &filebox_implement::_m_keychar);
+
+			tb_file_.events().key_char([this](const arg_keyboard& arg)
+			{
+				if(arg.key == nana::keyboard::enter)
+					_m_ok();
+			});
 
 			cb_types_.create(*this);
 			cb_types_.editable(false);
-			cb_types_.ext_event().selected = [this](combox&){ _m_list_fs(); };
+			cb_types_.events().selected([this](const arg_combox&){ _m_list_fs(); });
 
 			btn_ok_.create(*this);
 			btn_ok_.caption(STR("&OK"));
-			btn_ok_.make_event<events::click>(*this, &filebox_implement::_m_ok);
+
+			btn_ok_.events().click([this](const arg_mouse&)
+			{
+				_m_ok();
+			});
 			btn_cancel_.create(*this);
 			btn_cancel_.caption(STR("&Cancel"));
-			btn_cancel_.make_event<events::click>(destroy(*this));
+
+			btn_cancel_.events().click([this](const arg_mouse&)
+			{
+				API::close_window(handle());
+			});
 
 			selection_.type = kind::none;
 			_m_layout();
@@ -397,8 +452,20 @@ namespace nana{	namespace gui
 				}
 			}
 
-			tree_.ext_event().expand = nana::make_fun(*this, &filebox_implement::_m_tr_expand);
-			tree_.ext_event().selected = nana::make_fun(*this, &filebox_implement::_m_tr_selected);
+			tree_.events().expanded([this](const arg_treebox& arg)
+			{
+				_m_tr_expand(arg.item, arg.operated);
+			});
+
+			tree_.events().selected([this](const arg_treebox& arg)
+			{
+				if(arg.operated && (arg.item.value<kind::t>() == kind::filesystem))
+				{
+					auto path = tree_.make_key_path(arg.item, STR("/")) + STR("/");
+					_m_resolute_path(path);
+					_m_load_cat_path(path);
+				}
+			});
 		}
 
 		nana::string _m_resolute_path(nana::string& path)
@@ -558,12 +625,6 @@ namespace nana{	namespace gui
 			close();
 		}
 
-		void _m_keychar(const eventinfo& ei)
-		{
-			if(ei.keyboard.key == nana::gui::keyboard::enter)
-				_m_ok();
-		}
-
 		struct folder_creator
 		{
 			folder_creator(filebox_implement& fb, form & fm, textbox& tx)
@@ -602,24 +663,6 @@ namespace nana{	namespace gui
 			textbox & tx_path_;
 		};
 
-		void _m_new_folder()
-		{
-			form fm(*this, API::make_center(*this, 300, 35));
-			fm.caption(STR("Name the new folder"));
-
-			textbox folder(fm, nana::rectangle(5, 5, 160, 25));
-			folder.multi_lines(false);
-
-			button btn(fm, nana::rectangle(170, 5, 60, 25));
-			btn.caption(STR("Create"));
-			btn.make_event<events::click>(folder_creator(*this, fm, folder));
-
-			button btn_cancel(fm, nana::rectangle(235, 5, 60, 25));
-			btn_cancel.caption(STR("Cancel"));
-			btn_cancel.make_event<events::click>(destroy(fm));
-			API::modal_window(fm);
-		}
-
 		bool _m_append_def_extension(nana::string& tar) const
 		{
 			auto dotpos = tar.find_last_of(STR('.'));
@@ -647,7 +690,7 @@ namespace nana{	namespace gui
 			return true;
 		}
 	private:
-		void _m_sel_file(const eventinfo& ei)
+		void _m_sel_file(const arg_mouse& arg)
 		{
 			auto sel = ls_file_.selected();
 			if(sel.empty())
@@ -657,7 +700,7 @@ namespace nana{	namespace gui
 			item_fs m;
 			ls_file_.at(index).resolve_to(m);
 
-			if(events::dbl_click::identifier == ei.identifier)
+			if(event_code::dbl_click == arg.evt_code)
 			{
 				if(m.directory)
 					_m_load_cat_path(addr_.filesystem + m.name + STR("/"));
@@ -672,11 +715,6 @@ namespace nana{	namespace gui
 					tb_file_.caption(m.name);
 				}
 			}
-		}
-
-		void _m_filter_changed()
-		{
-			_m_list_fs();
 		}
 
 		void _m_ok()
@@ -747,7 +785,7 @@ namespace nana{	namespace gui
 				_m_finish(kind::filesystem, selection_.target);
 		}
 
-		void _m_tr_expand(window, item_proxy node, bool exp)
+		void _m_tr_expand(item_proxy node, bool exp)
 		{
 			if(false == exp) return;
 
@@ -773,31 +811,6 @@ namespace nana{	namespace gui
 					}
 				}
 			}
-		}
-
-		void _m_tr_selected(window, item_proxy node, bool set)
-		{
-			if(set && (node.value<kind::t>() == kind::filesystem))
-			{
-				auto path = tree_.make_key_path(node, STR("/")) + STR("/");
-				_m_resolute_path(path);
-				_m_load_cat_path(path);
-			}
-		}
-
-		void _m_cat_selected(categorize<int>& cat, int&)
-		{
-			auto path = cat.caption();
-			auto root = path.substr(0, path.find(STR('/')));
-			if(root == STR("HOME"))
-				path.replace(0, 4, nana::filesystem::path_user());
-			else if(root == STR("FILESYSTEM"))
-				path.erase(0, 10);
-			else
-				throw std::runtime_error("Nana.GUI.Filebox: Wrong categorize path");
-
-			if(path.size() == 0) path = STR("/");
-			_m_load_cat_path(path);
 		}
 	private:
 		bool io_read_;
@@ -1008,5 +1021,4 @@ namespace nana{	namespace gui
 
 			return true;
 		}//end class filebox
-}//end namespace gui
 }//end namespace nana

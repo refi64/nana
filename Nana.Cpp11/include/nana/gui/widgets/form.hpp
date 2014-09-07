@@ -15,7 +15,8 @@
 
 #include "widget.hpp"
 
-namespace nana{namespace gui{
+namespace nana
+{
 	namespace drawerbase
 	{
 		namespace form
@@ -26,7 +27,7 @@ namespace nana{namespace gui{
 				trigger();
 				void attached(widget_reference, graph_reference)	override;
 				void refresh(graph_reference)	override;
-				void resize(graph_reference, const eventinfo&)	override;
+				void resized(graph_reference, const arg_resized&) override;
 			private:
 				widget*	wd_;
 			};
@@ -34,12 +35,13 @@ namespace nana{namespace gui{
 	}//end namespace drawerbase
 
 	/// \brief Pop-up window. Is different from other window widgets: its default  constructor create the window.
-	/// \see nana::gui::appearance
-	class form: public widget_object<category::root_tag, drawerbase::form::trigger>
+	/// \see nana::appearance
+	class form: public widget_object<category::root_tag, drawerbase::form::trigger, detail::events_root_extension>
 	{
 	public:
-		typedef nana::gui::appear appear;
+		typedef ::nana::appear appear;
 
+		form(const form& fm, const ::nana::size& = ::nana::size(300, 200), const appearance& = appearance());
 		/// Creates a window at the point and size specified by rect, and with the specified appearance. Creates a form owned by the desktop.
 		form(const rectangle& = API::make_center(300, 200), const appearance& = appearance());
 		form(window, const appearance& = appearance());
@@ -47,14 +49,16 @@ namespace nana{namespace gui{
 		form(window, const rectangle&, const appearance& = appearance());
 	};
 
-	class nested_form: public widget_object<category::root_tag, drawerbase::form::trigger>
+	class nested_form : public widget_object<category::root_tag, drawerbase::form::trigger, detail::events_root_extension>
 	{
 	public:
-		typedef nana::gui::appear appear;
+		typedef ::nana::appear appear;
+
+		nested_form(const form&, const rectangle& = rectangle(), const appearance& = appearance());
+		nested_form(const nested_form&, const rectangle& = rectangle(), const appearance& = appearance());
 
 		nested_form(window, const appearance&);
 		nested_form(window, const rectangle& = rectangle(), const appearance& = appearance());
 	};
-}//end namespace gui
 }//end namespace nana
 #endif

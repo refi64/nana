@@ -17,7 +17,7 @@
 #include <nana/unicode_bidi.hpp>
 #include <memory>
 
-namespace nana{	namespace gui{	namespace widgets
+namespace nana{	namespace widgets
 {
 	namespace skeletons
 	{
@@ -122,7 +122,7 @@ namespace nana{	namespace gui{	namespace widgets
 		private:
 			nana::color_t _m_bgcolor() const;
 			bool _m_scroll_text(bool vertical);
-			void _m_on_scroll(const eventinfo& ei);
+			void _m_on_scroll(const arg_mouse&);
 			void _m_scrollbar();
 			nana::size _m_text_area() const;
 			void _m_get_scrollbar_size();
@@ -171,7 +171,7 @@ namespace nana{	namespace gui{	namespace widgets
 			static bool _m_is_right_text(const unicode_bidi::entity&);
 		private:
 			std::unique_ptr<editor_behavior_interface> behavior_;
-			nana::gui::window window_;
+			nana::window window_;
 			graph_reference graph_;
 			skeletons::textbase<nana::char_t> textbase_;
 			nana::char_t mask_char_;
@@ -191,8 +191,8 @@ namespace nana{	namespace gui{	namespace widgets
 				bool enable_counterpart;
 				nana::paint::graphics counterpart; //this is used to keep the background that painted by external part.
 
-				std::unique_ptr<gui::scroll<true>>	vscroll;
-				std::unique_ptr<gui::scroll<false>>	hscroll;
+				std::unique_ptr<nana::scroll<true>>	vscroll;
+				std::unique_ptr<nana::scroll<false>>	hscroll;
 			}attributes_;
 
 			struct text_area_type
@@ -226,7 +226,6 @@ namespace nana{	namespace gui{	namespace widgets
 		};
 	}//end namespace skeletons
 }//end namespace widgets
-}//end namespace gui
 }//end namespace nana
 
 #endif

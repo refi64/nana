@@ -11,7 +11,7 @@
 	#include <mutex>
 #endif
 
-namespace nana{	namespace gui
+namespace nana
 {
 	//Element definitions
 	namespace element
@@ -443,12 +443,12 @@ namespace nana{	namespace gui
 	{
 		void set_bground(const char* name, const pat::cloneable<element_interface>& obj)
 		{
-			nana::gui::detail::bedrock::instance().get_element_store().bground(name, obj);
+			detail::bedrock::instance().get_element_store().bground(name, obj);
 		}
 
 		void set_bground(const char* name, pat::cloneable<element_interface> && obj)
 		{
-			nana::gui::detail::bedrock::instance().get_element_store().bground(name, std::move(obj));
+			detail::bedrock::instance().get_element_store().bground(name, std::move(obj));
 		}
 
 		//class cite
@@ -817,6 +817,4 @@ namespace nana{	namespace gui
 		}
 		//end class bground
 	}//end namespace element
-
-}//end namespace gui
 }//end namespace nana

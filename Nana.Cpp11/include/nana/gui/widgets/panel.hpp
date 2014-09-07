@@ -17,7 +17,7 @@
 #include "widget.hpp"
 #include <type_traits>
 
-namespace nana{	namespace gui
+namespace nana
 {
 	namespace drawerbase
 	{
@@ -38,7 +38,7 @@ namespace nana{	namespace gui
     /// For placing other widgets, where the bool template parameter determinte if it is  widget or lite_widget, wich in actual use make no difference.
 	template<bool HasBackground>
 	class panel
-		: public widget_object<typename std::conditional<HasBackground, gui::category::widget_tag, gui::category::lite_widget_tag>::type,
+		: public widget_object<typename std::conditional<HasBackground, category::widget_tag, category::lite_widget_tag>::type,
 								drawerbase::panel::drawer>
 	{
 	public:
@@ -67,7 +67,5 @@ namespace nana{	namespace gui
 				API::effects_bground_remove(*this);
 		}
 	};
-
-}//end namespace gui
 }//end namespace nana
 #endif

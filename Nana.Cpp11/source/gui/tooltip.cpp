@@ -14,7 +14,8 @@
 #include <nana/gui/timer.hpp>
 #include <memory>
 
-namespace nana{ namespace gui{
+namespace nana
+{
 	namespace drawerbase
 	{
 		namespace tooltip
@@ -79,17 +80,18 @@ namespace nana{ namespace gui{
 					this->size(text_s.width + 10, text_s.height + 10);
 					label_.move(5, 5, text_s.width, text_s.height);
 
-					timer_.umake_events();
+					timer_.reset();
 					if (duration_)
 					{
 						timer_.interval(static_cast<unsigned>(duration_));
-						timer_.make_tick(std::bind(&tip_form::_m_tick_duration, this));
+						timer_.elapse(std::bind(&tip_form::_m_tick_duration, this));
 					}
 					else
 					{
 						timer_.interval(500);
-						timer_.make_tick(std::bind(&tip_form::_m_tick, this));
+						timer_.elapse(std::bind(&tip_form::_m_tick, this));
 					}
+					timer_.start();
 				}
 
 				virtual nana::size tooltip_size() const override
@@ -111,7 +113,7 @@ namespace nana{ namespace gui{
 				virtual void duration(std::size_t d) override
 				{
 					duration_ = d;
-					timer_.umake_events();
+					timer_.reset();
 				}
 			private:
 				void _m_tick()
@@ -133,21 +135,20 @@ namespace nana{ namespace gui{
 					else
 						pos = pos_;
 
-					timer_.enable(false);
+					timer_.stop();
 					move(pos.x, pos.y);
 					show();
 				}
 
 				void _m_tick_duration()
 				{
-					timer_.enable(false);
-					timer_.umake_events();
+					timer_.reset();
 					this->close();
 				}
 
 			private:
 				timer timer_;
-				gui::label label_;
+				nana::label label_;
 				nana::point pos_;
 				bool		ignore_pos_;
 				std::size_t	duration_;
@@ -160,7 +161,7 @@ namespace nana{ namespace gui{
 				typedef std::function<void(tooltip_interface*)> deleter_type;
 
 				class tip_form_factory
-					: public gui::tooltip::factory_if_type
+					: public nana::tooltip::factory_if_type
 				{
 					tooltip_interface * create() override
 					{
@@ -174,9 +175,9 @@ namespace nana{ namespace gui{
 				};
 
 			public:
-				static std::shared_ptr<gui::tooltip::factory_if_type>& factory()
+				static std::shared_ptr<nana::tooltip::factory_if_type>& factory()
 				{
-					static std::shared_ptr<gui::tooltip::factory_if_type> fp;
+					static std::shared_ptr<nana::tooltip::factory_if_type> fp;
 					if (nullptr == fp)
 						fp = std::make_shared<tip_form_factory>();
 
@@ -253,23 +254,23 @@ namespace nana{ namespace gui{
 						instance(true);
 				}
 			private:
-				void _m_enter(const eventinfo& ei)
+				void _m_enter(const arg_mouse& arg)
 				{
-					pair_t & pr = _m_get(ei.window);
+					pair_t & pr = _m_get(arg.window_handle);
 					if(pr.second.size())
 					{
 						this->show(pr.second);
 					}
 				}
 
-				void _m_leave(const eventinfo&)
+				void _m_leave(const arg_mouse&)
 				{
 					close();
 				}
 
-				void _m_destroy(const eventinfo& ei)
+				void _m_destroy(const arg_destroy& arg)
 				{
-					_m_untip(ei.window);
+					_m_untip(arg.window_handle);
 				}
 
 				void _m_untip(window wd)
@@ -298,11 +299,18 @@ namespace nana{ namespace gui{
 							return pr;
 					}
 
-					API::make_event<events::mouse_enter>(wd, std::bind(&controller::_m_enter, this, std::placeholders::_1));
+					auto & events = API::events(wd);
+					events.mouse_enter.connect([this](const arg_mouse& arg){
+						_m_enter(arg);
+					});
+
 					auto leave_fn = std::bind(&controller::_m_leave, this, std::placeholders::_1);
-					API::make_event<events::mouse_leave>(wd, leave_fn);
-					API::make_event<events::mouse_down>(wd, leave_fn);
-					API::make_event<events::destroy>(wd, std::bind(&controller::_m_destroy, this, std::placeholders::_1));
+					events.mouse_leave.connect(leave_fn);
+					events.mouse_down.connect(leave_fn);
+
+					events.destroy.connect([this](const arg_destroy& arg){
+						_m_destroy(arg);
+					});
 
 					cont_.emplace_back(wd, nana::string());
 					return cont_.back();
@@ -344,6 +352,4 @@ namespace nana{ namespace gui{
 			ctrl::factory().reset(p);
 		}
 	//end class tooltip
-
-}//namespace gui
 }//namespace nana

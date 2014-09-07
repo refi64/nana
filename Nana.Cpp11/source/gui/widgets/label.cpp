@@ -19,15 +19,13 @@
 
 namespace nana
 {
-namespace gui
-{
 	namespace drawerbase
 	{
 		namespace label
 		{
 			class renderer
 			{
-				typedef gui::widgets::skeletons::dstream::linecontainer::iterator iterator;
+				typedef widgets::skeletons::dstream::linecontainer::iterator iterator;
 
 				struct pixel_tag
 				{
@@ -58,15 +56,9 @@ namespace gui
 
 			public:
 				typedef nana::paint::graphics& graph_reference;
-				typedef gui::widgets::skeletons::dstream dstream;
-				typedef gui::widgets::skeletons::fblock fblock;
-				typedef gui::widgets::skeletons::data data;
-
-				renderer()
-					:	format_enabled_(false),
-                        fblock_(nullptr)
-				{
-				}
+				typedef widgets::skeletons::dstream dstream;
+				typedef widgets::skeletons::fblock fblock;
+				typedef widgets::skeletons::data data;
 
 				void parse(const nana::string& s)
 				{
@@ -232,7 +224,7 @@ namespace gui
 					def_.fgcolor = fgcolor;
 				}
 
-				nana::color_t _m_fgcolor(nana::gui::widgets::skeletons::fblock* fp)
+				nana::color_t _m_fgcolor(nana::widgets::skeletons::fblock* fp)
 				{
 					while(fp->fgcolor == 0xFFFFFFFF)
 					{
@@ -243,7 +235,7 @@ namespace gui
 					return fp->fgcolor;
 				}
 
-				std::size_t _m_font_size(nana::gui::widgets::skeletons::fblock* fp)
+				std::size_t _m_font_size(nana::widgets::skeletons::fblock* fp)
 				{
 					while(fp->font_size == 0xFFFFFFFF)
 					{
@@ -254,7 +246,7 @@ namespace gui
 					return fp->font_size;
 				}
 
-				bool _m_bold(nana::gui::widgets::skeletons::fblock* fp)
+				bool _m_bold(nana::widgets::skeletons::fblock* fp)
 				{
 					while(fp->bold_empty)
 					{
@@ -265,7 +257,7 @@ namespace gui
 					return fp->bold;
 				}
 
-				const nana::string& _m_fontname(nana::gui::widgets::skeletons::fblock* fp)
+				const nana::string& _m_fontname(nana::widgets::skeletons::fblock* fp)
 				{
 					while(fp->font.empty())
 					{
@@ -276,7 +268,7 @@ namespace gui
 					return fp->font;
 				}
 
-				void _m_change_font(graph_reference graph, nana::gui::widgets::skeletons::fblock* fp)
+				void _m_change_font(graph_reference graph, nana::widgets::skeletons::fblock* fp)
 				{
 					if(fp != fblock_)
 					{
@@ -607,7 +599,10 @@ namespace gui
 				}
 			private:
 				dstream dstream_;
-				bool format_enabled_;
+				bool format_enabled_ = false;
+				nana::widgets::skeletons::fblock * fblock_ = nullptr;
+				std::deque<traceable> traceable_;
+
 				nana::paint::font font_;
 				struct def_font_tag
 				{
@@ -616,16 +611,14 @@ namespace gui
 					bool	font_bold;
 					nana::color_t fgcolor;
 				}def_;
-				nana::gui::widgets::skeletons::fblock * fblock_;
-				std::deque<traceable> traceable_;
 			};
 
 			//class trigger
 			//@brief: Draw the label
 				struct trigger::impl_t
 				{
-					nana::gui::widget * wd;
-					nana::paint::graphics * graph;
+					widget * wd;
+					paint::graphics * graph;
 
 					align	text_align;
 					align_v	text_align_v;
@@ -678,17 +671,13 @@ namespace gui
 				{
 					impl_->graph = &graph;
 					impl_->wd = &widget;
-					window wd = impl_->wd->handle();
-					API::dev::make_drawer_event<events::mouse_move>(wd);
-					API::dev::make_drawer_event<events::mouse_leave>(wd);
-					API::dev::make_drawer_event<events::click>(wd);
 				}
 
-				void trigger::mouse_move(graph_reference, const eventinfo& ei)
+				void trigger::mouse_move(graph_reference, const arg_mouse& arg)
 				{
 					nana::string target, url;
 
-					if(impl_->renderer.find(ei.mouse.x, ei.mouse.y, target, url))
+					if(impl_->renderer.find(arg.pos.x, arg.pos.y, target, url))
 					{
 						int cur_state = 0;
 						if(target != impl_->target)
@@ -719,7 +708,7 @@ namespace gui
 						}
 
 						if (cur_state)
-							impl_->wd->cursor(1 == cur_state ? gui::cursor::arrow : gui::cursor::hand);
+							impl_->wd->cursor(1 == cur_state ? cursor::arrow : cursor::hand);
 					}
 					else
 					{
@@ -738,21 +727,21 @@ namespace gui
 						}
 
 						if(restore)
-							impl_->wd->cursor(gui::cursor::arrow);
+							impl_->wd->cursor(cursor::arrow);
 					}
 				}
 
-				void trigger::mouse_leave(graph_reference, const eventinfo& ei)
+				void trigger::mouse_leave(graph_reference, const arg_mouse&)
 				{
 					if(impl_->target.size())
 					{
 						impl_->call_listener(command::leave, impl_->target);
 						impl_->target.clear();
-						impl_->wd->cursor(gui::cursor::arrow);
+						impl_->wd->cursor(cursor::arrow);
 					}
 				}
 
-				void trigger::click(graph_reference, const eventinfo&)
+				void trigger::click(graph_reference, const arg_mouse&)
 				{
 					//make a copy, because the listener may popup a window, and then
 					//user moves the mouse. it will reset the url when the mouse is moving out from the element.
@@ -897,5 +886,4 @@ namespace gui
 			API::refresh_window(wd);
 		}
 	//end class label
-}//end namespace gui
 }//end namespace nana

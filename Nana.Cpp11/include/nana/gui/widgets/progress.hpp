@@ -16,8 +16,6 @@
 
 namespace nana
 {
-namespace gui
-{
 	namespace drawerbase
 	{
 		namespace progress
@@ -71,6 +69,5 @@ namespace gui
 		void unknown(bool);
 		bool unknown() const;
 	};
-}//end namespace gui
 }//end namespace nana
 #endif

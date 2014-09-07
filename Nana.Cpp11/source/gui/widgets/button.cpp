@@ -13,8 +13,7 @@
 #include <nana/gui/widgets/button.hpp>
 #include <nana/paint/text_renderer.hpp>
 
-namespace nana{namespace gui{
-namespace drawerbase
+namespace nana{	namespace drawerbase
 {
 	namespace button
 	{
@@ -43,15 +42,6 @@ namespace drawerbase
 
 			widget_ = &widget;
 			window wd = widget;
-
-			using namespace API::dev;
-			make_drawer_event<events::mouse_enter>(wd);
-			make_drawer_event<events::mouse_leave>(wd);
-			make_drawer_event<events::mouse_down>(wd);
-			make_drawer_event<events::mouse_up>(wd);
-			make_drawer_event<events::key_char>(wd);
-			make_drawer_event<events::key_down>(wd);
-			make_drawer_event<events::focus>(wd);
 
 			API::tabstop(wd);
 			API::effects_edge_nimbus(wd, effects::edge_nimbus::active);
@@ -114,14 +104,15 @@ namespace drawerbase
 			_m_draw(graph);
 		}
 
-		void trigger::mouse_enter(graph_reference graph, const eventinfo&)
+
+		void trigger::mouse_enter(graph_reference graph, const arg_mouse&)
 		{
 			attr_.e_state = (attr_.pushed || attr_.keep_pressed ? element_state::pressed : element_state::hovered);
 			_m_draw(graph);
 			API::lazy_refresh();
 		}
 
-		void trigger::mouse_leave(graph_reference graph, const eventinfo&)
+		void trigger::mouse_leave(graph_reference graph, const arg_mouse&)
 		{
 			if(attr_.enable_pushed && attr_.pushed)
 				return;
@@ -131,7 +122,7 @@ namespace drawerbase
 			API::lazy_refresh();
 		}
 
-		void trigger::mouse_down(graph_reference graph, const eventinfo&)
+		void trigger::mouse_down(graph_reference graph, const arg_mouse&)
 		{
 			attr_.e_state = element_state::pressed;
 			attr_.keep_pressed = true;
@@ -141,7 +132,7 @@ namespace drawerbase
 			API::lazy_refresh();
 		}
 
-		void trigger::mouse_up(graph_reference graph, const eventinfo&)
+		void trigger::mouse_up(graph_reference graph, const arg_mouse&)
 		{
 			API::capture_window(*widget_, false);
 			attr_.keep_pressed = false;
@@ -162,24 +153,16 @@ namespace drawerbase
 			}
 		}
 
-		void trigger::key_char(graph_reference, const eventinfo& ei)
+		void trigger::key_char(graph_reference, const arg_keyboard& arg)
 		{
-			if(ei.keyboard.key == static_cast<char_t>(gui::keyboard::enter))
-			{
-				eventinfo e;
-				e.mouse.ctrl = false;
-				e.mouse.mid_button = e.mouse.right_button = false;
-				e.mouse.left_button = true;
-				e.mouse.shift = false;
-				e.mouse.x = e.mouse.y = 0;
-				API::raise_event<events::click>(widget_->handle(), e);
-			}
+			if(arg.key == static_cast<char_t>(keyboard::enter))
+				emit_click();
 		}
 
-		void trigger::key_down(graph_reference, const eventinfo& ei)
+		void trigger::key_press(graph_reference, const arg_keyboard& arg)
 		{
 			bool ch_tabstop_next;
-			switch(ei.keyboard.key)
+			switch(arg.key)
 			{
 			case keyboard::os_arrow_left: case keyboard::os_arrow_up:
 				ch_tabstop_next = false;
@@ -193,9 +176,9 @@ namespace drawerbase
 			API::move_tabstop(widget_->handle(), ch_tabstop_next);
 		}
 
-		void trigger::focus(graph_reference graph, const eventinfo& ei)
+		void trigger::focus(graph_reference graph, const arg_focus& arg)
 		{
-			attr_.focused = ei.focus.getting;
+			attr_.focused = arg.getting;
 			_m_draw(graph);
 			API::lazy_refresh();
 		}
@@ -333,13 +316,24 @@ namespace drawerbase
 			graph.set_pixel(right - 1, bottom - 1, 0x919191);
 			graph.set_pixel(1, bottom - 1, 0x919191);
 
-			graph.set_pixel(0, 0, gui::color::button_face);
-			graph.set_pixel(right, 0, gui::color::button_face);
-			graph.set_pixel(0, bottom, gui::color::button_face);
-			graph.set_pixel(right, bottom, gui::color::button_face);
+			graph.set_pixel(0, 0, color::button_face);
+			graph.set_pixel(right, 0, color::button_face);
+			graph.set_pixel(0, bottom, color::button_face);
+			graph.set_pixel(right, bottom, color::button_face);
 
 			if (element_state::pressed == attr_.e_state)
 				graph.rectangle(r.pare_off(1), 0xC3C3C3, false);
+		}
+
+		void trigger::emit_click()
+		{
+			arg_mouse arg;
+			arg.window_handle = widget_->handle();
+			arg.ctrl = arg.shift = false;
+			arg.mid_button = arg.right_button = false;
+			arg.left_button = true;
+			arg.pos.x = arg.pos.y = 1;
+			API::emit_event(event_code::click, arg.window_handle, arg);
 		}
 
 		void trigger::icon(const nana::paint::image& img)
@@ -470,16 +464,15 @@ namespace drawerbase
 
 			void button::_m_shortkey()
 			{
-				eventinfo ei;
-				ei.mouse.x= 0, ei.mouse.y = 0;
-				ei.mouse.left_button = true;
-				ei.mouse.ctrl = ei.mouse.shift = false;
-				API::raise_event<events::click>(handle(), ei);
+				get_drawer_trigger().emit_click();
 			}
 
 			void button::_m_complete_creation()
 			{
-				make_event<events::shortkey>(*this, &button::_m_shortkey);
+				events().shortkey.connect([this]
+				{
+					_m_shortkey();
+				});
 			}
 
 			void button::_m_caption(const nana::string& text)
@@ -494,6 +487,5 @@ namespace drawerbase
 				base_type::_m_caption(text);
 			}
 		//end class button
-}//end namespace gui
 }//end namespace nana
 

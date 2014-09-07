@@ -16,15 +16,25 @@
 #include <nana/paint/gadget.hpp>
 #include <nana/gui/timer.hpp>
 
-namespace nana{ namespace gui{
+namespace nana
+{
+	template<bool Vert> class scroll;
+
+	template<bool Vert>
+	struct arg_scroll
+	{
+		scroll<Vert> & widget;
+	};
 
 	namespace drawerbase
 	{
 		namespace scroll
 		{
-			struct extra_events
+			template<bool Vert>
+			struct scroll_events
+				: public general_events
 			{
-				nana::fn_group<void(widget&)> value_changed;
+				basic_event<arg_scroll<Vert>> value_changed;
 			};
 
 			enum class buttons
@@ -63,7 +73,7 @@ namespace nana{ namespace gui{
 
 				drawer(metrics_type& m);
 				void set_vertical(bool);
-				buttons what(graph_reference, int x, int y);
+				buttons what(graph_reference, const point&);
 				void scroll_delta_pos(graph_reference, int);
 				void auto_scroll();
 				void draw(graph_reference, buttons);
@@ -85,7 +95,6 @@ namespace nana{ namespace gui{
 			{
 			public:
 				typedef metrics_type::size_type size_type;
-				mutable extra_events ext_event;
 
 				trigger()
 					: graph_(nullptr), drawer_(metrics_)
@@ -115,7 +124,8 @@ namespace nana{ namespace gui{
 					if(graph_ && (metrics_.value != s))
 					{
 						metrics_.value = s;
-						ext_event.value_changed(*widget_);
+						_m_emit_value_changed();
+
 						API::refresh_window(*widget_);
 					}
 				}
@@ -162,7 +172,7 @@ namespace nana{ namespace gui{
 						metrics_.value = value;
 						if(value != cmpvalue)
 						{
-							ext_event.value_changed(*widget_);
+							_m_emit_value_changed();
 							return true;
 						}
 						return false;
@@ -173,21 +183,11 @@ namespace nana{ namespace gui{
 				void attached(widget_reference widget, graph_reference graph)
 				{
 					graph_ = &graph;
-					widget_ = &widget;
+					widget_ = static_cast<::nana::scroll<Vertical>*>(&widget);
 					widget.caption(STR("Nana Scroll"));
 
-					using namespace API::dev;
-					window wd = widget.handle();
-					make_drawer_event<events::mouse_enter>(wd);
-					make_drawer_event<events::mouse_move>(wd);
-					make_drawer_event<events::mouse_down>(wd);
-					make_drawer_event<events::mouse_up>(wd);
-					make_drawer_event<events::mouse_leave>(wd);
-					make_drawer_event<events::mouse_wheel>(wd);
-					make_drawer_event<events::size>(wd);
-
-					timer_.make_tick(nana::make_fun(*this, &trigger::_m_tick));
-					timer_.enable(false);
+					timer_.stop();
+					timer_.elapse(std::bind(&trigger::_m_tick, this));	
 				}
 
 				void detached()
@@ -200,33 +200,33 @@ namespace nana{ namespace gui{
 					drawer_.draw(graph, metrics_.what);
 				}
 
-				void resize(graph_reference graph, const eventinfo& ei)
+				void resized(graph_reference graph, const ::nana::arg_resized&) override
 				{
 					drawer_.draw(graph, metrics_.what);
 					API::lazy_refresh();
 				}
 
-				void mouse_enter(graph_reference graph, const eventinfo& ei)
+				void mouse_enter(graph_reference graph, const ::nana::arg_mouse& arg) override
 				{
-					metrics_.what = drawer_.what(graph, ei.mouse.x, ei.mouse.y);
+					metrics_.what = drawer_.what(graph, arg.pos);
 					drawer_.draw(graph, metrics_.what);
 					API::lazy_refresh();
 				}
 
-				void mouse_move(graph_reference graph, const eventinfo& ei)
+				void mouse_move(graph_reference graph, const ::nana::arg_mouse& arg)
 				{
 					bool redraw = false;
 					if(metrics_.pressed && (metrics_.what == buttons::scroll))
 					{
 						size_type cmpvalue = metrics_.value;
-						drawer_.scroll_delta_pos(graph, (Vertical ? ei.mouse.y : ei.mouse.x));
+						drawer_.scroll_delta_pos(graph, (Vertical ? arg.pos.y : arg.pos.x));
 						if(cmpvalue != metrics_.value)
-							ext_event.value_changed(*widget_);
+							_m_emit_value_changed();
 						redraw = true;
 					}
 					else
 					{
-						buttons what = drawer_.what(graph, ei.mouse.x, ei.mouse.y);
+						buttons what = drawer_.what(graph, arg.pos);
 						if(metrics_.what != what)
 						{
 							redraw = true;
@@ -240,23 +240,23 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void mouse_down(graph_reference graph, const eventinfo& ei)
+				void mouse_down(graph_reference graph, const arg_mouse& arg)
 				{
-					if(ei.mouse.left_button)
+					if(arg.left_button)
 					{
 						metrics_.pressed = true;
-						metrics_.what = drawer_.what(graph, ei.mouse.x, ei.mouse.y);
+						metrics_.what = drawer_.what(graph, arg.pos);
 						switch(metrics_.what)
 						{
 						case buttons::first:
 						case buttons::second:
 							make_step(metrics_.what == buttons::second, 1);
 							timer_.interval(1000);
-							timer_.enable(true);
+							timer_.start();
 							break;
 						case buttons::scroll:
 							API::capture_window(widget_->handle(), true);
-							metrics_.scroll_mouse_offset = (Vertical ? ei.mouse.y : ei.mouse.x) - metrics_.scroll_pos;
+							metrics_.scroll_mouse_offset = (Vertical ? arg.pos.y : arg.pos.x) - metrics_.scroll_pos;
 							break;
 						case buttons::forward:
 						case buttons::backward:
@@ -264,7 +264,7 @@ namespace nana{ namespace gui{
 								size_type cmpvalue = metrics_.value;
 								drawer_.auto_scroll();
 								if(cmpvalue != metrics_.value)
-									ext_event.value_changed(*widget_);
+									_m_emit_value_changed();
 							}
 							break;
 						default:	//Ignore buttons::none
@@ -275,20 +275,19 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void mouse_up(graph_reference graph, const eventinfo& ei)
+				void mouse_up(graph_reference graph, const arg_mouse& arg)
 				{
-					timer_.enable(false);
+					timer_.stop();
 					
 					API::capture_window(widget_->handle(), false);
 
 					metrics_.pressed = false;
-
-					metrics_.what = drawer_.what(graph, ei.mouse.x, ei.mouse.y);
+					metrics_.what = drawer_.what(graph, arg.pos);
 					drawer_.draw(graph, metrics_.what);
 					API::lazy_refresh();
 				}
 
-				void mouse_leave(graph_reference graph, const eventinfo& ei)
+				void mouse_leave(graph_reference graph, const arg_mouse&)
 				{
 					if(metrics_.pressed) return;
 
@@ -297,15 +296,20 @@ namespace nana{ namespace gui{
 					API::lazy_refresh();
 				}
 
-				void mouse_wheel(graph_reference graph, const eventinfo& ei)
+				void mouse_wheel(graph_reference graph, const arg_wheel& arg)
 				{
-					if(make_step(ei.wheel.upwards == false, 3))
+					if(make_step(arg.upwards == false, 3))
 					{
 						drawer_.draw(graph, metrics_.what);
 						API::lazy_refresh();
 					}
 				}
 			private:
+				void _m_emit_value_changed()
+				{
+					widget_->events().value_changed.emit(::nana::arg_scroll<Vertical>({*widget_}));
+				}
+
 				void _m_tick()
 				{
 					make_step(metrics_.what == buttons::second, 1);
@@ -313,7 +317,7 @@ namespace nana{ namespace gui{
 					timer_.interval(100);
 				}
 			private:
-				widget * widget_;
+				::nana::scroll<Vertical> * widget_;
 				nana::paint::graphics * graph_;
 				metrics_type metrics_;
 				drawer	drawer_;
@@ -325,11 +329,10 @@ namespace nana{ namespace gui{
 	/// Provides a way to display an object which is larger than the window's client area.
 	template<bool Vertical>
 	class scroll
-		: public widget_object<category::widget_tag, drawerbase::scroll::trigger<Vertical> >
+		: public widget_object<category::widget_tag, drawerbase::scroll::trigger<Vertical>, drawerbase::scroll::scroll_events<Vertical>>
 	{
 		typedef widget_object<category::widget_tag, drawerbase::scroll::trigger<Vertical> > base_type;
 	public:
-		typedef drawerbase::scroll::extra_events ext_event_type;
 		typedef std::size_t size_type;
 
 		///  \brief The default constructor without creating the widget.
@@ -350,11 +353,6 @@ namespace nana{ namespace gui{
 		scroll(window wd, const rectangle& r, bool visible = true)
 		{
 			this->create(wd, r, visible);
-		}
-
-		ext_event_type& ext_event() const
-		{
-			return this->get_drawer_trigger().ext_event;
 		}
 
 		///  \brief Determines whether it is scrollable.
@@ -442,8 +440,5 @@ namespace nana{ namespace gui{
 			return false;
 		}
 	};//end class scroll
-
-}//end namespace gui
 }//end namespace nana
-
 #endif

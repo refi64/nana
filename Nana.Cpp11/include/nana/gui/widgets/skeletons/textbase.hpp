@@ -18,12 +18,11 @@
 #include <fstream>
 #include <nana/charset.hpp>
 #include <nana/deploy.hpp>
+#include <nana/traits.hpp>
 
-#include "textbase_extra_evtbase.hpp"
+#include "textbase_export_interface.hpp"
 
 namespace nana
-{
-namespace gui
 {
 namespace widgets
 {
@@ -31,7 +30,7 @@ namespace skeletons
 {
 	template<typename CharT>
 	class textbase
-		: public noncopyable
+		: public ::nana::noncopyable
 	{
 	public:
 		typedef CharT						char_type;
@@ -39,15 +38,15 @@ namespace skeletons
 		typedef typename string_type::size_type	size_type;
 
 		textbase()
-			: evtbase_(nullptr), changed_(false)
 		{
+			attr_max_.reset();
 			//Insert an empty string for the first line of empty text.
 			text_cont_.emplace_back();
 		}
 
-		void bind_ext_evtbase(textbase_extra_evtbase<char_type>& extevt)
+		void set_event_agent(textbase_event_agent_interface * evt)
 		{
-			evtbase_ = &extevt;
+			evt_agent_ = evt;
 		}
 
 		bool empty() const
@@ -204,6 +203,8 @@ namespace skeletons
 					len_of_BOM = 2;	break;
 				case nana::unicode::utf32:
 					len_of_BOM = 4;	break;
+				default:
+					throw std::runtime_error("Specified a wrong UTF");
 				}
 
 				big_endian = (str[0] == 0x00 || str[0] == char(0xFE));
@@ -500,8 +501,8 @@ namespace skeletons
 
 		void _m_first_change() const
 		{
-			if(evtbase_)
-				evtbase_->first_change();
+			if (evt_agent_)
+				evt_agent_->first_change();
 		}
 
 		void _m_saved(nana::string && filename) const
@@ -527,18 +528,14 @@ namespace skeletons
 		}
 	private:
 		std::deque<string_type>	text_cont_;
-		textbase_extra_evtbase<char_type>*	evtbase_;
+		textbase_event_agent_interface* evt_agent_ = nullptr;
 
-		mutable bool			changed_;
+		mutable bool			changed_ = false;
 		mutable nana::string	filename_;	//A string for the saved filename.
 		mutable std::shared_ptr<string_type> nullstr_;
 
 		struct attr_max
 		{
-			attr_max()
-				:line(0), size(0)
-			{}
-
 			std::size_t line;
 			std::size_t size;
 
@@ -552,6 +549,5 @@ namespace skeletons
 
 }//end namespace detail
 }//end namespace widgets
-}//end namespace gui
 }//end namespace nana
 #endif

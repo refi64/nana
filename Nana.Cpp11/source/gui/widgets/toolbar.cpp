@@ -14,7 +14,8 @@
 #include <stdexcept>
 #include <nana/gui/tooltip.hpp>
 
-namespace nana{ namespace gui{
+namespace nana
+{
 	namespace drawerbase
 	{
 		namespace toolbar
@@ -207,7 +208,7 @@ namespace nana{ namespace gui{
 				item_renderer::state_t state;
 
 				container cont;
-				gui::tooltip tooltip;
+				nana::tooltip tooltip;
 
 				drawer_impl_type()
 					:	event_size(nullptr),
@@ -227,7 +228,6 @@ namespace nana{ namespace gui{
 				drawer::~drawer()
 				{
 					delete impl_;
-					impl_ = 0;
 				}
 
 				void drawer::append(const nana::string& text, const nana::paint::image& img)
@@ -281,16 +281,10 @@ namespace nana{ namespace gui{
 				{
 					graph_ = &graph;
 
-					widget_ = &widget;
+					widget_ = static_cast<::nana::toolbar*>(&widget);
 					widget.caption(STR("Nana Toolbar"));
-					impl_->event_size = API::make_event<events::size>(widget.parent(), std::bind(&drawer::_m_owner_sized, this, std::placeholders::_1));
+					impl_->event_size = widget.events().resized.connect(std::bind(&drawer::_m_owner_sized, this, std::placeholders::_1));
 
-					using namespace API::dev;
-					auto wd = widget_->handle();
-					make_drawer_event<events::mouse_move>(wd);
-					make_drawer_event<events::mouse_leave>(wd);
-					make_drawer_event<events::mouse_down>(wd);
-					make_drawer_event<events::mouse_up>(wd);
 				}
 
 				void drawer::detached()
@@ -299,37 +293,43 @@ namespace nana{ namespace gui{
 					impl_->event_size = nullptr;
 				}
 
-				void drawer::mouse_move(graph_reference graph, const eventinfo& ei)
+				void drawer::mouse_move(graph_reference graph, const arg_mouse& arg)
 				{
-					if(ei.mouse.left_button == false)
+					if(arg.left_button == false)
 					{
-						size_type which = _m_which(ei.mouse.x, ei.mouse.y, true);
+						size_type which = _m_which(arg.pos.x, arg.pos.y, true);
 						if(impl_->which != which)
 						{
-							if(impl_->which != npos && impl_->cont.at(impl_->which)->enable)
-								ext_event.leave(*static_cast<gui::toolbar*>(widget_), impl_->which);
+							if (impl_->which != npos && impl_->cont.at(impl_->which)->enable)
+							{
+								::nana::arg_toolbar arg{ *widget_, impl_->which };
+								widget_->events().leave.emit(arg);
+							}
 
 							impl_->which = which;
 							if(which == npos || impl_->cont.at(which)->enable)
 							{
-								impl_->state = (ei.mouse.left_button ? item_renderer::state_t::selected : item_renderer::state_t::highlighted);
+								impl_->state = (arg.left_button ? item_renderer::state_t::selected : item_renderer::state_t::highlighted);
 
 								_m_draw();
 								API::lazy_refresh();
 
-								if(impl_->state == item_renderer::state_t::highlighted)
-									ext_event.enter(*static_cast<gui::toolbar*>(widget_), which);
+								if (impl_->state == item_renderer::state_t::highlighted)
+								{
+									::nana::arg_toolbar arg{ *widget_, which };
+									widget_->events().enter.emit(arg);
+								}
 							}
 
 							if(which != npos)
-								impl_->tooltip.show(widget_->handle(), nana::point(ei.mouse.x, ei.mouse.y + 20), (*(impl_->cont.begin() + which))->text, 0);
+								impl_->tooltip.show(widget_->handle(), nana::point(arg.pos.x, arg.pos.y + 20), (*(impl_->cont.begin() + which))->text, 0);
 							else
 								impl_->tooltip.close();
 						}
 					}
 				}
 
-				void drawer::mouse_leave(graph_reference, const eventinfo&)
+				void drawer::mouse_leave(graph_reference, const arg_mouse&)
 				{
 					if(impl_->which != npos)
 					{
@@ -339,13 +339,16 @@ namespace nana{ namespace gui{
 						_m_draw();
 						API::lazy_refresh();
 
-						if(which != npos && impl_->cont.at(which)->enable)
-							ext_event.leave(*static_cast<gui::toolbar*>(widget_), which);
+						if (which != npos && impl_->cont.at(which)->enable)
+						{
+							::nana::arg_toolbar arg{ *widget_, which };
+							widget_->events().leave.emit(arg);
+						}
 					}
 					impl_->tooltip.close();
 				}
 
-				void drawer::mouse_down(graph_reference, const eventinfo&)
+				void drawer::mouse_down(graph_reference, const arg_mouse&)
 				{
 					impl_->tooltip.close();
 					if(impl_->which != npos && (impl_->cont.at(impl_->which)->enable))
@@ -356,14 +359,16 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void drawer::mouse_up(graph_reference, const eventinfo& ei)
+				void drawer::mouse_up(graph_reference, const arg_mouse& arg)
 				{
 					if(impl_->which != npos)
 					{
-						size_type which = _m_which(ei.mouse.x, ei.mouse.y, false);
+						size_type which = _m_which(arg.pos.x, arg.pos.y, false);
 						if(impl_->which == which)
 						{
-							ext_event.selected(*static_cast<gui::toolbar*>(widget_), which);
+							::nana::arg_toolbar arg{ *widget_, which };
+							widget_->events().selected.emit(arg);
+
 							impl_->state = item_renderer::state_t::highlighted;
 						}
 						else
@@ -430,10 +435,10 @@ namespace nana{ namespace gui{
 					}
 				}
 
-				void drawer::_m_owner_sized(const eventinfo& ei)
+				void drawer::_m_owner_sized(const arg_resized& arg)
 				{
 					auto wd = widget_->handle();
-					API::window_size(wd, ei.size.width, widget_->size().height);
+					API::window_size(wd, arg.width, widget_->size().height);
 					_m_draw();
 					API::update_window(wd);
 				}
@@ -471,11 +476,6 @@ namespace nana{ namespace gui{
 			create(wd, r, visible);
 		}
 
-		toolbar::ext_event_type& toolbar::ext_event() const
-		{
-			return get_drawer_trigger().ext_event;
-		}
-
 		void toolbar::append()
 		{
 			get_drawer_trigger().append();
@@ -511,5 +511,4 @@ namespace nana{ namespace gui{
 			API::refresh_window(handle());
 		}
 	//}; class toolbar
-}//end namespace gui
 }//end namespace nana

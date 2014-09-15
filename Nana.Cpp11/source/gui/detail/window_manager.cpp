@@ -812,6 +812,20 @@ namespace detail
 				false);
 		}
 
+		::nana::widget* window_manager::get_widget(core_window_t* wd) const
+		{
+			std::lock_guard<decltype(mutex_)> lock(mutex_);
+			return (impl_->wd_register.available(wd) ? wd->widget_ptr : nullptr);
+		}
+
+		std::vector<window_manager::core_window_t*> window_manager::get_children(core_window_t* wd) const
+		{
+			std::lock_guard<decltype(mutex_)> lock(mutex_);
+			if (impl_->wd_register.available(wd))
+				return wd->children;
+			return std::vector<core_window_t*>();
+		}
+
 		bool window_manager::set_parent(core_window_t* wd, core_window_t* newpa)
 		{	
 			//Thread-Safe Required!

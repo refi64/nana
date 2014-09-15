@@ -76,6 +76,28 @@ namespace API
 	rectangle make_center(unsigned width, unsigned height);           ///< Retrieves a rectangle which is in the center of the screen.
 	rectangle make_center(window, unsigned width, unsigned height);   ///< Retrieves a rectangle which is in the center of the window
 
+	template<typename Widget=::nana::widget, typename EnumFunction>
+	void enum_widgets(window wd, bool recursive, EnumFunction && ef)
+	{
+		static_assert(std::is_convertible<Widget, ::nana::widget>::value, "The Widget is not a widget type.");
+
+		typedef ::nana::detail::basic_window core_window_t;
+		auto & brock = ::nana::detail::bedrock::instance();
+		internal_scope_guard lock;
+
+		auto children = brock.wd_manager.get_children(reinterpret_cast<core_window_t*>(wd));
+		for (auto child : children)
+		{
+			auto wgt = dynamic_cast<Widget*>(brock.wd_manager.get_widget(child));
+			if (nullptr == wgt)
+				continue;
+
+			ef(*wgt);
+			if (recursive)
+				enum_widgets<Widget>(wd, recursive, std::forward<EnumFunction>(ef));
+		}
+	}
+
 	void window_icon_default(const paint::image&);
 	void window_icon(window, const paint::image&);
 	bool empty_window(window);                            ///< Determines whether a window is existing.

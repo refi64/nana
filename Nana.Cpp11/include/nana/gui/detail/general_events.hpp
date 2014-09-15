@@ -13,7 +13,8 @@
 #define NANA_DETAIL_GENERAL_EVENTS_HPP
 
 #include <nana/gui/basis.hpp>
-#include <nana/gui/detail/event_code.hpp>
+#include "event_code.hpp"
+#include "internal_scope_guard.hpp"
 #include <type_traits>
 #include <functional>
 #include <memory>
@@ -86,6 +87,7 @@ namespace nana
 		template<typename Function>
 		event_handle connect_front(Function && fn)
 		{
+			internal_scope_guard lock;
 			if (nullptr == dockers_)
 				dockers_.reset(new std::vector<std::unique_ptr<docker>>);
 
@@ -107,6 +109,7 @@ namespace nana
 		template<typename Function>
 		event_handle connect(Function && fn)
 		{
+			internal_scope_guard lock;
 			if (nullptr == dockers_)
 				dockers_.reset(new std::vector<std::unique_ptr<docker>>);
 
@@ -126,11 +129,13 @@ namespace nana
 
 		std::size_t length() const
 		{
+			internal_scope_guard lock;
 			return (nullptr == dockers_ ? 0 : dockers_->size());
 		}
 
 		void emit(arg_reference& arg) const
 		{
+			internal_scope_guard lock;
 			if (nullptr == dockers_)
 				return;
 
@@ -172,12 +177,14 @@ namespace nana
 
 		void clear()
 		{
+			internal_scope_guard lock;
 			if (dockers_)
 				dockers_.reset();
 		}
 
 		void remove(event_handle evt)
 		{
+			internal_scope_guard lock;
 			if (dockers_)
 			{
 				auto i = std::find_if(dockers_->begin(), dockers_->end(), [evt](const std::unique_ptr<docker>& sp)

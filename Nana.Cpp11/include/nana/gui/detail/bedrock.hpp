@@ -16,16 +16,10 @@
 #include "events_operation.hpp"
 #include "runtime_manager.hpp"
 #include "general_events.hpp"
+#include "internal_scope_guard.hpp"
 
 namespace nana
 {
-	class internal_scope_guard
-	{
-	public:
-		internal_scope_guard();
-		~internal_scope_guard();
-	};
-
 namespace detail
 {
 	struct native_interface;

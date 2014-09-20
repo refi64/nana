@@ -79,7 +79,7 @@ namespace API
 	template<typename Widget=::nana::widget, typename EnumFunction>
 	void enum_widgets(window wd, bool recursive, EnumFunction && ef)
 	{
-		static_assert(std::is_convertible<Widget, ::nana::widget>::value, "The Widget is not a widget type.");
+		static_assert(std::is_convertible<Widget, ::nana::widget>::value, "enum_widgets<Widget>: The specified Widget is not a widget type.");
 
 		typedef ::nana::detail::basic_window core_window_t;
 		auto & brock = ::nana::detail::bedrock::instance();

@@ -50,6 +50,7 @@ namespace nana
 		 *	@remark	It will throw an exception if the place has already binded to a window.
 		 */
 		void bind(window handle);
+		window window_handle() const;
         
 		void div(const char* s);              ///< Divides the attached widget into fields.
 		field_reference field(const char* name);///< Returns a field with the specified name.

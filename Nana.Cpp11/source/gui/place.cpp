@@ -557,6 +557,9 @@ namespace nana
 			if (API::empty_window(wd))
 				throw std::invalid_argument("Place: An invalid window handle.");
 
+			if (API::get_parent_window(wd) != place_ptr_->window_handle())
+				throw std::invalid_argument("Place: the window is not a child of place bind window");
+
 			elements.emplace_back(wd);
 			elements.back().destroy_handle_if_window = _m_make_destroy(wd);
 			return *this;
@@ -1662,6 +1665,11 @@ namespace nana
 						impl_->root_division->collocate(arg.window_handle);
 					}
 				});
+		}
+
+		window place::window_handle() const
+		{
+			return impl_->window_handle;
 		}
 
 		void place::div(const char* s)

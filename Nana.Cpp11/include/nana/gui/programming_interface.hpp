@@ -134,14 +134,14 @@ namespace API
 		internal_scope_guard lock;
 		auto * general_evt = detail::get_general_events(wd);
 		if (nullptr == general_evt)
-			throw std::runtime_error("API::events(): no events object or invalid window handle.");
+			throw std::invalid_argument("API::events(): bad parameter window handle, no events object or invalid window handle.");
 
 		if (std::is_same<decltype(*general_evt), event_type>::value)
 			return *static_cast<event_type*>(general_evt);
 		
 		auto * widget_evt = dynamic_cast<event_type*>(general_evt);
 		if (nullptr == widget_evt)
-			throw std::runtime_error("API::events(): The widget type and window handle do not match.");
+			throw std::invalid_argument("API::events(): bad template parameter Widget, the widget type and window handle do not match.");
 		return *widget_evt;
 	}
 

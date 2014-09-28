@@ -471,15 +471,17 @@ namespace nana
 					return ('v' == idstr_[0] ? token::vert : token::repeated);
 				else if ("arrange" == idstr_ || "gap" == idstr_)
 				{
+					auto ch = idstr_[0];
 					_m_attr_reparray();
-					return ('a' == idstr_[0] ? token::arrange : token::gap);
+					return ('a' == ch ? token::arrange : token::gap);
 				}
 				else if ("margin" == idstr_ || "track" == idstr_ || "grid" == idstr_)
 				{
+					auto idstr = idstr_;
 					if (token::equal != read())
-						_m_throw_error("an equal sign is required after '" + idstr_ + "'");
+						_m_throw_error("an equal sign is required after '" + idstr + "'");
 
-					switch (idstr_[0])
+					switch (idstr[0])
 					{
 					case 'm': return token::margin;
 					case 't': return token::track;

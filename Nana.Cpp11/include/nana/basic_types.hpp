@@ -196,6 +196,28 @@ namespace nana
 		unsigned height;
 	};
 
+	class area_rotator
+	{
+	public:
+		area_rotator(bool rotated, const ::nana::rectangle& area);
+
+		int x() const;
+		int & x_ref();
+		int y() const;
+		int & y_ref();
+		unsigned w() const;
+		unsigned & w_ref();
+		unsigned h() const;
+		unsigned & h_ref();
+
+		int right() const;
+		int bottom() const;
+		const ::nana::rectangle& result() const;
+	private:
+		bool rotated_;
+		::nana::rectangle area_;
+	};//end class area_rotator
+
 	enum class arrange
 	{
 		unknown, horizontal, vertical, horizontal_vertical

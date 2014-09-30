@@ -16,7 +16,7 @@ std::ostream& operator<<( std::ostream& o, const CUnit& u)
 {
    o << "Unit: "<< u.name << " = "<< u.conv.c << " "  ;
 
-   if (! u.conv.lineal)        o << " x nonlineal function of " ;
+   if (! u.conv.linear)        o << " x nonlineal function of " ;
 
    o <<u.base;
 
@@ -41,13 +41,12 @@ void CUnit::add()
             std::cerr << std::endl << name << " allready defined as " << _Units[name] ; 
             return;
         }                   // the unti exist, but the base dont: asume we are actualy defining the base
-        if (! conv.lineal) 
+        if (! conv.linear) 
         {
             std::cerr << std::endl << "Unable to define " << base << " reverting the non-lineal definition of "<< name ; 
             return;
         }
-        conv.s=-conv.s/conv.c; 
-        conv.c=1/conv.c;
+        conv.invert(); 
         name.swap(base);           
     } 
     if (unit_exist(base))   // La base ya existe
@@ -77,8 +76,8 @@ void CUnit::add()
                     CUnit(base,1,base,magnitude);// Creo Primero la base, como base
 
         // Luego la nueva Unit
+    error=false ;
     _Units[name]=*this;
     _Magnitudes[magnitude].insert(name);
 
-    error=false ;
 }

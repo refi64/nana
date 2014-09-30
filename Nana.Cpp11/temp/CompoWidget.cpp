@@ -3,7 +3,7 @@
 #include <iostream>    // temp, for debugging
 #include <fstream>     // temp, for debugging
 
-FilePickBox::FilePickBox (nana::gui::widget &fm, 
+FilePickBox::FilePickBox (nana::widget &fm, 
 						  const nana::string   &label,
 						  const nana::string   &DefLayoutFileName )
 				:	CompoWidget(fm, label, DefLayoutFileName) 
@@ -13,14 +13,14 @@ FilePickBox::FilePickBox (nana::gui::widget &fm,
 
     fb_p.title(STR("Pick ") + caption());
 
-	Pick.make_event	<nana::gui::events::click> ([&](){pick(FileName());}	); 
+	Pick.events().click([&](){pick(FileName());}	); 
 
 	_fileName.editable(true);
 
     InitMyLayout();
     SelectClickableWidget( _label);
 
-    _fileName.ext_event().selected = ([this](nana::gui::combox&cb)
+    _fileName .events().selected   ([this](const nana::arg_combox& arg_cb)
             { 
             //assert((  std::cerr<< "\nBefore calling Validate,in select FilePickBox._fileName: " , true  ));;
             //assert((  std::wcerr<< caption() << std::endl , true  ));;
@@ -28,12 +28,12 @@ FilePickBox::FilePickBox (nana::gui::widget &fm,
                 //if( this->UserSelected() )   
                     this->Validate(this->_validate_only);
             } );
-    _fileName.make_event <nana::gui::events::focus>([this](const nana::gui::eventinfo& ei)
+    _fileName.events().focus([this](const nana::arg_focus & ei)
         {  
             //assert((  std::cerr<< "\nBefore calling validating_only," << (ei.focus.getting ? "geting ":"lossing ") << "Focus: , FilePickBox._fileName: " , true  ));;
             //assert((  std::wcerr<< caption() << std::endl , true  ));;
             
-            if (!ei.focus.getting) 
+            if (!ei .getting) 
                           this->validate_only();
         });
 
@@ -72,7 +72,7 @@ void FilePickBox::pick(const nana::string &file_tip)
     select_file( fb_p, STR(""), file_tip,true);
     std::swap(vo,_validate_only);
 }
-void FilePickBox::select_file(nana::gui::filebox&  fb, const nana::string &action, const nana::string &file_tip, bool select_only)
+void FilePickBox::select_file(nana::filebox&  fb, const nana::string &action, const nana::string &file_tip, bool select_only)
 {
     nana::string old_t;
     if (!action.empty())
@@ -90,7 +90,7 @@ void FilePickBox::select_file(nana::gui::filebox&  fb, const nana::string &actio
  }
 
 
-OpenSaveBox::OpenSaveBox (nana::gui::widget &fm, 
+OpenSaveBox::OpenSaveBox (nana::widget &fm, 
 						  const nana::string   &label,
 						  const nana::string   &DefLayoutFileName )
 				:	FilePickBox(fm, label, DefLayoutFileName) 
@@ -98,8 +98,8 @@ OpenSaveBox::OpenSaveBox (nana::gui::widget &fm,
     fb_o.title(STR("Open ") + caption());
     fb_s.title(STR("Save ") + caption());
 
-    Open.make_event	<nana::gui::events::click> ([&](){open(FileName());}	);
-	Save.make_event	<nana::gui::events::click> ([&](){save(FileName());}    );
+    Open.events().click ([&](){open(FileName());}	);
+	Save.events().click ([&](){save(FileName());}    );
 
     InitMyLayout();
 }

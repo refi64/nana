@@ -5,8 +5,8 @@
 #include <../temp/Units.hpp>
 
 
-namespace nana { namespace gui {
-
+namespace nana {
+ 
 class NumberLabel : public label
 {
   public:
@@ -44,8 +44,8 @@ class NumberBox : public textbox
     {
         multi_lines(false);
         display();
-        make_event <events::focus>([&](const eventinfo& ei)
-                {  if (!ei.focus.getting) 
+        events().focus([&](const arg_focus  & ei)
+                {  if (!ei.getting) 
                         validate_edit( );
                 }); 
     }
@@ -178,15 +178,16 @@ void display()
 
 class UnitPicker : public combox
 {
-          CUnit::unit_name      _defUnit;
-    const CUnit::magnitude_name  magnitude;
+          CUnit::unit_name      _defUnitName;
+          CUnit                 _defUnit{_defUnitName};
+          const CUnit::magnitude_name  magnitude{_defUnit.magnitude};
   public: 
     UnitPicker(widget &wd, const CUnit::unit_name& def)
-          :combox(wd), _defUnit(def), magnitude(CUnit::UnitsDic().at(def).magnitude )
+          :combox(wd), _defUnitName(def) 
     {
         editable(false);
         for(const CUnit::unit_name& un : CUnit::MagnitudesDic().at(magnitude) )
-            push_back (charset ( un /*CUnit::UnitsDic().at(un).to_string ()*/  ));
+            push_back (charset ( un  ));     /*CUnit::UnitsDic().at(un).to_string ()*/ 
         caption(charset (def));
         //ext_event().selected=[&](combox& cb)
         //{
@@ -196,19 +197,19 @@ class UnitPicker : public combox
 
     double to_def   (double val) ///< Convert a value in user selected Unit into Default Unit 
     {
-        return CUnit::CUnit(nana::charset (caption()) ,  _defUnit  ).conv (val);
+        return CUnit::CUnit(nana::charset (caption()) ,  _defUnitName  ).conv (val);
     }
     double to_def   (double val, const CUnit::unit_name& un ) ///< Convert a value in Unit un into Default Unit 
     {
-        return CUnit::CUnit(un ,  _defUnit  ).conv (val);
+        return CUnit::CUnit(un ,  _defUnitName  ).conv (val);
     }
     double from_def (double val) ///< Convert a value in Default Unit into user selected Unit 
     {
-        return CUnit::CUnit( _defUnit, nana::charset (caption())  ).conv (val);
+        return CUnit::CUnit( _defUnitName, nana::charset (caption())  ).conv (val);
     }
     double from_def (double val, const CUnit::unit_name& un ) ///< Convert a value in Default Unit into Unit un 
     {
-        return CUnit::CUnit( _defUnit, nana::charset (caption())  ).conv (val);
+        return CUnit::CUnit( _defUnitName, nana::charset (caption())  ).conv (val);
     }
     double convert_to(double val, const CUnit::unit_name& un) ///< Convert a value in user selected Unit into Unit un 
     {
@@ -238,9 +239,9 @@ public:
           _num(*this,label, defVal, min,max,STR("Vert-Invert.NumUpDonw.Lay.txt"),step,width,decimals),
           _unit(*this, def), _curr_un(def) //_val(defVal)
     {
-        _unit.ext_event().selected=[&](combox& cb)
+        _unit.events().selected([&](const nana::arg_combox& arg_cb)
                                     {
-                                        CUnit u(_curr_un , charset( _unit.caption() )/*CUnit::unit_name ( nana::charset(cb.option ()) ) */);
+                                        CUnit u(_curr_un , charset( _unit.caption() ));   /*CUnit::unit_name ( nana::charset(cb.option ()) ) */
                                         if(u.error )
                                         {    _unit.caption (_unit.caption ()+STR("?"));
                                              return;
@@ -248,11 +249,11 @@ public:
                                         _num.Max   ( u.conv(_num.Max  () )  );
                                         _num.Min   ( u.conv(_num.Min  () )  );
                                         _num.Value ( u.conv(_num.Value() )  );
-                                        if (u.conv.lineal )
+                                        if (u.conv.linear )
                                           _num.Step( u.conv.c*_num.Step()   );
                                        
                                         _curr_un=charset(_unit.caption ());
-                                    };
+                                    });
         InitMyLayout();
         SelectClickableWidget( _num);
         SelectClickableWidget( _unit);
@@ -339,7 +340,7 @@ public:
 };
 
 
-}} // namespace nana { namespace gui {
+}  // namespace nana  
 
         //cb.caption(_cb.caption().substr(6, _cb.caption().find_first_of(STR(" ="),6)-6 )); 
 

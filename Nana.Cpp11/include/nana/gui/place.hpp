@@ -24,8 +24,13 @@ namespace nana
 
 		class field_t
 		{
+			field_t(const field_t&) = delete;
+			field_t& operator=(const field_t&) = delete;
+			field_t(field_t&&) = delete;
+			field_t& operator=(field_t&&) = delete;
 		public:
-			virtual ~field_t() = 0;
+			field_t() = default;
+			virtual ~field_t() = default;
 			virtual field_t& operator<<(window) = 0;
 			virtual field_t& fasten(window) = 0;
 		};
@@ -47,6 +52,8 @@ namespace nana
 		void div(const char* s);              ///< Divides the attached widget into fields.
 		field_reference field(const char* name);///< Returns a field with the specified name.
 		void collocate();                     ///< Layouts the widgets.
+
+		void erase(window handle);				///< Erases a window from field.
 	private:
 		implement * impl_;
 	};

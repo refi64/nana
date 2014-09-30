@@ -61,26 +61,26 @@ class EditLayout_Form;
 class EditableWidget: public EnablingEditing
 {
  public:
-    EditableWidget ( nana::gui::widget* EdWd_owner,                       ///< The ownwer of the form (if any) or panel 
-                     nana::gui::widget& thisEdWd,    ///< the form or panel, owner of place and all other widgets of the editable widget
+    EditableWidget ( nana::widget* EdWd_owner,                       ///< The ownwer of the form (if any) or panel 
+                     nana::widget& thisEdWd,    ///< the form or panel, owner of place and all other widgets of the editable widget
                      nana::string Titel, 
                      const nana::string &DefLayoutFileName=STR("")           );
-    static  void Click(nana::gui::window w)
+    static  void Click(nana::window w)
 		{
-			nana::gui::eventinfo ei;
-			ei.mouse.x= 0, ei.mouse.y = 0;
-			ei.mouse.left_button = true;
-			ei.mouse.ctrl = ei.mouse.shift = false;
-			nana::gui::API::raise_event<nana::gui::events::click>(w, ei);
+			nana::arg_mouse ei;
+			ei.pos.x= 0, ei.pos.y = 0;
+			ei.left_button = true;
+			ei.ctrl = ei.shift = false;
+			nana::API::emit_event(nana::event_code::click,w, ei);
 		}
 
-    nana::gui::widget  *_EdWd_owner ;                                    ///< The ownwer of the form or panel 
-    nana::gui::widget  &_thisEdWd;   ///< the form or panel, owner of place and all other widgets of the editable widget
+    nana::widget  *_EdWd_owner ;                                    ///< The ownwer of the form or panel 
+    nana::widget  &_thisEdWd;   ///< the form or panel, owner of place and all other widgets of the editable widget
 	nana::string		_Titel;   //  ????
     std::string         _myLayout, _DefLayout;
     nana::string        _DefLayoutFileName;	
-	nana::gui::menu	    _menuProgram;
-    nana::gui::vplace	_place;
+	nana::menu	    _menuProgram;
+    nana::vplace	_place;
 	EditLayout_Form*    _myEdLayForm{nullptr};    	//std::unique_ptr <EditLayout_Form> _myEdLayForm;
 
     std::vector<std::function<bool(void)>> _validate, _validated;
@@ -147,18 +147,18 @@ virtual    void add_validated(const std::function<bool(void)>& v)
 
         ReCollocate( );
 	}
-            void InitMenu   (nana::gui::menu& menuProgram)
+            void InitMenu   (nana::menu& menuProgram)
     {
-       menuProgram.append(STR("&Edit this windows Layout"),[&](nana::gui::menu::item_proxy& ip)
+       menuProgram.append(STR("&Edit this windows Layout"),[&](nana::menu::item_proxy& ip)
 	                                                            {EditMyLayout(); }                  );
-       menuProgram.append(STR("&Reset this windows default Layout"),[&](nana::gui::menu::item_proxy& ip)
+       menuProgram.append(STR("&Reset this windows default Layout"),[&](nana::menu::item_proxy& ip)
 	                                                            {ResetDefLayout(); ReCollocate( );} );
     }
-            void SelectClickableWidget(nana::gui::widget& wdg, nana::gui::menu& menuProgram)
+            void SelectClickableWidget(nana::widget& wdg, nana::menu& menuProgram)
             {
-                wdg.make_event<nana::gui::events::click>(nana::gui::menu_popuper(menuProgram) );   
+                wdg.events().click (nana::menu_popuper(menuProgram) );   
             }
-            void SelectClickableWidget(nana::gui::widget& wdg)
+            void SelectClickableWidget(nana::widget& wdg)
             {
                 SelectClickableWidget(wdg, _menuProgram);
             }
@@ -183,7 +183,7 @@ virtual    void add_validated(const std::function<bool(void)>& v)
         return _DefLayout;
     }
 
- 	void         EditMyLayout   (/*nana::gui::widget & EdWd_own, nana::gui::widget &EdLyF_own*/);
+ 	void         EditMyLayout   (/*nana::widget & EdWd_own, nana::widget &EdLyF_own*/);
     static const char* readLayout(const nana::string& FileName, std::string& Layout);
     void ReCollocate( std::string  Layout)
     {
@@ -201,12 +201,12 @@ virtual    void add_validated(const std::function<bool(void)>& v)
 
 class EditableForm: public EditableWidget
 { public:
-    EditableForm ( nana::gui::widget* EdWd_owner,                       ///< The ownwer of the form or panel 
-                   nana::gui::widget& thisEdWd,    ///< the form or panel, owner of place and all other widgets of the editable widget
+    EditableForm ( nana::widget* EdWd_owner,                       ///< The ownwer of the form or panel 
+                   nana::widget& thisEdWd,    ///< the form or panel, owner of place and all other widgets of the editable widget
                    nana::string Titel, 
                    const nana::string &DefLayoutFileName=STR("")           );
-	nana::gui::menubar	_menuBar;
-	nana::gui::menu*	_menuProgramInBar;
+	nana::menubar	_menuBar;
+	nana::menu*	_menuProgramInBar;
     //virtual ~EditableForm();
     void AddMenuProgram ()
     {
@@ -226,30 +226,30 @@ class EditableForm: public EditableWidget
 
 //#include <../temp/CompoWidget.hpp>
 
-class CompoWidget : public  nana::gui::panel<false> , public EditableWidget  
+class CompoWidget : public  nana::panel<false> , public EditableWidget  
 {public:
-	CompoWidget ( nana::gui::widget& owner,              ///< The ownwer of the panel 
+	CompoWidget ( nana::widget& owner,              ///< The ownwer of the panel 
                   nana::string Titel, 
                   const nana::string &DefLayoutFileName=STR(""));
 };
 
 class FilePickBox : public  CompoWidget
-{	nana::gui::label	_label   {*this};
-	nana::gui::combox	_fileName{*this};    //   Only temporal public   !!!!!!!!!!!!!!!!!!!!!!!!!!!
-	nana::gui::button	 Pick    {*this, STR("...")};
+{	nana::label	_label   {*this};
+	nana::combox	_fileName{*this};    //   Only temporal public   !!!!!!!!!!!!!!!!!!!!!!!!!!!
+	nana::button	 Pick    {*this, STR("...")};
 
-	nana::gui::filebox   fb_p    {*this, true};
+	nana::filebox   fb_p    {*this, true};
 
     void SetDefLayout       () override ;
     void AsignWidgetToFields() override ;
 	void		pick(const nana::string &file_tip=STR(""));
  protected:
-	void select_file(nana::gui::filebox&  fb, const nana::string &action, const nana::string &file_tip, bool select_only=false);
+	void select_file(nana::filebox&  fb, const nana::string &action, const nana::string &file_tip, bool select_only=false);
     bool                _user_selected{ false }, _validate_only{false},
                         _canceled{false};
 
  public:
-	FilePickBox     (	nana::gui::widget    &EdWd_owner, 
+	FilePickBox     (	nana::widget    &EdWd_owner, 
 						const nana::string   &label,
 						const nana::string   &DefLayoutFileName=STR("") );
 
@@ -266,9 +266,10 @@ class FilePickBox : public  CompoWidget
 		fb_p.add_filter(description, filetype);
         return *this;
 	}
-	
-	typedef nana::gui::filebox::filters filters;
-	virtual FilePickBox& add_filter(const filters &filtres)
+            
+    using filtres = std::vector<std::pair<nana::string, nana::string>>;
+
+	virtual FilePickBox& add_filter(const filtres &filtres)
         {
             fb_p.add_filter(filtres );
             //for (auto &f : filtres)
@@ -277,7 +278,7 @@ class FilePickBox : public  CompoWidget
         };
     void        onSelectFile( std::function<void(const nana::string& file)> slt)
 	{	 
-        add_validate([this, slt](/*nana::gui::combox&cb*/)
+        add_validate([this, slt](/*nana::combox&cb*/)
                     { 
                       //if( this->UserSelected() )   
                           slt ( nana::charset ( this->FileName() )) ; 
@@ -298,7 +299,7 @@ class FilePickBox : public  CompoWidget
 	void		 FileName(const nana::string&  FileName)
     { 
         _fileName.push_back(FileName).option(_fileName.the_number_of_options());
-        nana::gui::API::update_window (_fileName);
+        nana::API::update_window (_fileName);
     }
 	void		 FileNameOnly(const nana::string&  FileN )  /// validate only
     { 
@@ -318,7 +319,7 @@ class FilePickBox : public  CompoWidget
     }
     bool        UserSelected() const {return _user_selected ;}
     bool        Canceled()     const {return _canceled;}
-    //nana::gui::widget& _file_w()
+    //nana::widget& _file_w()
     //{
     //    return _fileName;
     //}
@@ -326,16 +327,16 @@ class FilePickBox : public  CompoWidget
 
 class OpenSaveBox : public  FilePickBox
 {
-    nana::gui::button	Open{*this, STR("Open") }, 
+    nana::button	Open{*this, STR("Open") }, 
                         Save{*this, STR("Save")};
-	nana::gui::filebox  fb_o{*this, true },                      //   Only temporal public   !!!!!!!!!!!!!!!!!!!!!!!!!!!
+	nana::filebox  fb_o{*this, true },                      //   Only temporal public   !!!!!!!!!!!!!!!!!!!!!!!!!!!
                         fb_s{*this, false };
 
     void SetDefLayout       () override ;
     void AsignWidgetToFields() override ;
 
 public:
-	OpenSaveBox     (	nana::gui::widget    &EdWd_owner, 
+	OpenSaveBox     (	nana::widget    &EdWd_owner, 
 						const nana::string   &label,
 						const nana::string   &DefLayoutFileName=STR("") );
 
@@ -346,9 +347,7 @@ public:
 		fb_s.add_filter(description, filetype);
         return *this;
 	}
-	
-	typedef nana::gui::filebox::filters filters;
-	OpenSaveBox& add_filter(const filters &filtres) override
+	OpenSaveBox& add_filter(const filtres &filtres) override
 	{ 
 		FilePickBox::add_filter(filtres);
 		fb_o.add_filter(filtres);
@@ -364,7 +363,7 @@ public:
 
     OpenSaveBox& onOpenAndSelectFile(std::function<void(const nana::string& file)> opn)
     {
-        add_validated([this, opn](/*nana::gui::combox&cb*/)
+        add_validated([this, opn](/*nana::combox&cb*/)
                     { 
                       if( this->UserSelected() )   
                           opn ( nana::charset ( this->FileName() )) ; 
@@ -377,33 +376,33 @@ public:
     void		open(const nana::string &file_tip=STR("")); 
     void		save(const nana::string &file_tip = STR(""),  const nana::string &action=STR(""));
     
-    nana::gui::event_handle onOpenFile(std::function<void(const nana::string& file)> opn)
+    nana::event_handle onOpenFile(std::function<void(const nana::string& file)> opn)
     {
-        return Open.make_event	<nana::gui::events::click> ([this, opn]()
+        return Open.events().click([this, opn]()
                     { 
                       if( ! this->Canceled () )   
                          opn ( this->FileName() ) ; 
                     } );
  	}
-    nana::gui::event_handle onOpen    (std::function<void(                       )> opn)
+    nana::event_handle onOpen    (std::function<void(                       )> opn)
 	{	 
-        return Open.make_event	<nana::gui::events::click> ([this, opn]()
+        return Open.events().click([this, opn]()
                     { 
                       if( ! Canceled () )   
                          opn (  ) ; 
                     } );
  	}
-    nana::gui::event_handle onSaveFile(std::function<void(const nana::string& file)> sve)
+    nana::event_handle onSaveFile(std::function<void(const nana::string& file)> sve)
 	{	 
-        return Save.make_event	<nana::gui::events::click> ([this,sve]()
+        return Save.events().click ([this,sve]()
                     { 
                       if( ! Canceled () )   
                          sve ( FileName() ) ; 
                     } );
  	}
-    nana::gui::event_handle _onSave_  (std::function<void(                       )> sve)
+    nana::event_handle _onSave_  (std::function<void(                       )> sve)
 	{	 
-        return Save.make_event	<nana::gui::events::click> ([this,sve]()
+        return Save.events().click([this,sve]()
                     { 
                       if( ! Canceled () )   
                          sve (  ) ; 
@@ -412,16 +411,16 @@ public:
 
 };
 
-class EditLayout_Form : public nana::gui::form, public EditableForm
+class EditLayout_Form : public nana::form, public EditableForm
 {
     EditableWidget     &_owner;   /// intercambiar nombre con owner de EditableWidget
 	OpenSaveBox			_OSbx       {*this, STR("Layout:" )};
-	nana::gui::button	_ReCollocate{*this, STR("Apply"	  )},    _hide{*this, STR("Hide"	 )}, 
+	nana::button	_ReCollocate{*this, STR("Apply"	  )},    _hide{*this, STR("Hide"	 )}, 
                         _panic      {*this, STR("Panic !" )},     _def{*this, STR("Default"  )}, 
                         _cpp        {*this, STR("C++ code")};
-    nana::gui::textbox	_textBox{ *this };
-    nana::gui::menu	   &_menuFile{_menuBar.push_back(STR("&File"))};
-    nana::gui::event_handle _hide_not_unload{Hidable()};  // hide_(),
+    nana::textbox	_textBox{ *this };
+    nana::menu	   &_menuFile{_menuBar.push_back(STR("&File"))};
+    nana::event_handle _hide_not_unload{Hidable()};  // hide_(),
 
 public:
 	EditLayout_Form (EditableWidget &EdWd_owner , int i=0);
@@ -447,17 +446,17 @@ public:
     void on_edited();
 	void InitCaptions();
 
-    nana::gui::event_handle Hidable()
+    nana::event_handle Hidable()
     { 
         //assert((    std::cerr<<"\nMaking Hidable EditLayout_Form: " , true ) );; // debbug
         //assert((    std::wcerr<< this->caption() , true ) ); ; // debbug
 
-        return  make_event<nana::gui::events::unload>([this](const nana::gui::eventinfo& ei)
+        return events().unload ([this](const nana::arg_unload  & ei)
         {
             //assert((    std::cerr<<"\n Hiding, not closing EditLayout_Form: "  , true) );;  // debbug
             //assert((    std::wcerr<< this->caption()  , true) );; // debbug
 
-            ei.unload.cancel = true;    //Stop closing and then
+            ei .cancel = true;    //Stop closing and then
             hide();
         });
     };

@@ -10,8 +10,10 @@
 
 
 class CUnit;
- std::ostream& operator<<( std::ostream& o, const CUnit& u);
 
+std::ostream& operator<<( std::ostream& o, const CUnit& u);
+
+/// Converting Units (not necessarily linearly)
 class CUnit
 {
   public:   
@@ -21,50 +23,53 @@ class CUnit
     typedef std::map<unit_name     , CUnit      >   units           ;
     typedef std::map<magnitude_name, magnitude_t>   magnitudes      ;
     typedef std::function <double(double)>          nonLinealFunction;
+
+    /// An option between a linear or a general function to actually perform the conversion
     struct conversion
     {
-        double              c, s;
-        bool                lineal;
-        nonLinealFunction   nlc;
-        conversion()   :c(1),s(0)  , lineal(true)
+        double              c{ 1.0 }, s{ 0.0 };
+        bool                linear{ true };
+        nonLinealFunction   nlc{ _identity } ;
+        conversion() 
         {};
-        conversion(double c_  , double s_=0)            :c(c_),s(s_), nlc(_identity), lineal(true)
+        conversion(double c_  , double s_=0)            :c(c_),s(s_) 
         {};
-        conversion(double c_  , double s_ ,const nonLinealFunction& nlc_):c(c_),s(s_), nlc(nlc_)    , lineal(false) 
+        conversion(double c_, double s_,const nonLinealFunction& nlc_):c(c_),s(s_), nlc(nlc_)  , linear(false) 
         {};
         conversion operator*(const conversion& rc) const
         { 
-            if (lineal && rc.lineal)
+            if (linear && rc.linear)
                 return conversion (rc.c*c, c*rc.s+s);
-            if (lineal )
+            if (linear )
                 return conversion (rc.c*c, c*rc.s+s, rc.nlc);
-            if (rc.lineal )
+            if (rc.linear )
                 return conversion (c,s, [rc,this](double b){return nlc(rc.c*b+rc.s);});
 
             return conversion (c,s, [rc,this](double b){return nlc(rc.c*rc.nlc(b)+rc.s);});
         }
         conversion inverted() const
         { 
-            assert (lineal);
+            assert (linear);
             return conversion (1/c, -s/c);
         }
-        conversion invert() 
+        conversion invert()
         { 
-            assert (lineal);
-            c =1/c; s=-s/c;
+            assert (linear);
+            c =1/c;     /// y=cx+s  => x=(1/c)y-s/c
+            s=-s*c;     /// c'=1/c  ;  s'= -s/c = -sc'
             return *this;
         }
         double operator()(double ori_val) const
         {
-            if (lineal)
+            if (linear)
                 return c*ori_val+s;
             return c*nlc(ori_val)+s;
         }
     } ;
-    conversion      conv;
-    unit_name       name, base;
-    magnitude_name  magnitude;
-    bool            error;
+    conversion      conv ;
+    unit_name       name, base{name};
+    magnitude_name  magnitude ;
+    bool            error{true};
     static const magnitudes& MagnitudesDic() {return _Magnitudes;}
     static const units     & UnitsDic     () {return _Units     ;}
 
@@ -95,18 +100,25 @@ protected:
     void add();
 
   public:
-    CUnit(const unit_name& name_,  double   k_            ,   const unit_name& base_,   magnitude_name magnitude_="")
-        : name(name_), base(base_), magnitude(magnitude_), error(true), conv(k_)
+    /// Create and DEFINE a new conversion: define a "new" "name" unit from another, the base, adding self to a general list of conversion and if needed add new units and the magnitude.
+    CUnit(const unit_name& name_,  
+           const conversion& conv_,   
+           const unit_name& base_,   
+           magnitude_name magnitude_=""): name(name_), base(base_), magnitude(magnitude_), conv(conv_)
     {
         add();
     }
-    CUnit(const unit_name& name_,  const conversion& conv_,   const unit_name& base_,   magnitude_name magnitude_="")
-        : name(name_), base(base_), magnitude(magnitude_), error(true), conv(conv_)
+    /// Create and DEFINE a new conversion: -the same but for "proporcional" units
+    CUnit(  const unit_name& name_,  
+            double           k_   ,   
+            const unit_name& base_,   
+            magnitude_name   magnitude_=""  )    : CUnit(name_, conversion(k_), base_, magnitude_)
     {
-        add();
     }
-    CUnit():error(true){}
-    CUnit(const unit_name& from, const unit_name& to)   // convert from=name, to=base
+    CUnit(){}
+
+    /// create a Convertion from=name, to=base using existing information from the other previos defined convertions
+    CUnit(const unit_name& from, const unit_name& to)   
         : name(from), base(to), error(true)
     {
         if (! (unit_exist(to) && unit_exist(from)) )
@@ -121,111 +133,81 @@ protected:
                      << to << " (" << _Units[to].magnitude<<") are not compatible. " <<  std::endl;
                 return;
         }
-        if (from==to)       {     error=false;     return ;       }
+        magnitude=_Units[from].magnitude;
+        if (from==to)       
+        {     
+            error=false;     
+            return ;       // the conv was def init to be 1.
+        }
+        
 
-        unit_name  c_from=from, c_to, c_to_prev=c_from ;   // Unit Base = current to , and Unit Name = current from
-        do                                                 // while it is not a basic unit (no more walking posible)
+        ///  ...--------- from ----------------->
+        unit_name  c_from, c_to;
+        //conv=_Units[from].conv;
+        for (c_from=from, c_to=_Units[from].base;   // current from and to taken from the first unit and it base
+                            c_from != c_to;                    // upps, tupik in this direction no more convertions, dont walk more
+                                c_to=_Units[c_from=c_to].base) // walk to the next convertion
         {
-            c_to_prev = c_to;
-            c_to      =_Units[c_from].base; 
-            conv      = conv * _Units[c_from].conv;
-            if (c_to == to)       {     error=false;     return ;       } // We arrived !! we have U(from,to)
-
-            c_from=c_to;               // search walking in the direction from->to, using to=U[from]
-
-        }while(c_to_prev != c_to);     // while it is not a basic unit (no more walking posible)
-                                       // we arrived to a basic unit. We have now: U( from , c_to = basic unit)
-
-        //unit_name  c_from=from, c_to ;   // Unit Base = current to , and Unit Name = current from
-        //do{                             //  This is a litter more eficient variant !!!
-        //    if (c_from==to)
-        //    {    
-        //        error=false;
-        //        return ;
-        //    }
-        //    conv=conv * _Units[c_from].conv;
-        //    c_from=_Units[c_to=c_from].base;
-        //}while(c_to!=c_from);
+            conv = _Units[c_from].conv * conv;     /// This order is very important
+            if (c_to == to)       // We arrived !! we have U(from,to)
+            {     
+                error=false;     
+                return ;               ///  ...--------- from --------- to ---------...
+            } 
+            //conv = conv * _Units[c_from].conv;
+        }           ///  ...--------- from ----------------basicUnit1
+        conversion c2bu1{conv};       // direct Conversion to a basic unit: U( from , c_to = basic unit 1)
+        unit_name  bu1{c_to};
 
 
-        conversion c2b(conv);       // direct Conversion to a basic unit: U( from , c_to = basic unit)
-        conv=conversion();          // search walking in the direction to->from , using to=U[from]
-
-       
-        unit_name  c_rfrom=to, c_rto, c_rto_prev=c_rfrom ;   // Unit Base = current to , and Unit Name = current from
-        do                                                 // while it is not a basic unit (no more walking posible)
+        ///  ...--------- to ----------------->
+        conv=conversion(); //_Units[to].conv;
+        for ( c_from=to, c_to=_Units[to].base;   // current from and to taken from the first unit and it base
+                            c_from != c_to;                    // upps, tupik in this direction no more convertions, dont walk more
+                                c_to=_Units[c_from=c_to].base) // walk to the next convertion
         {
-            c_rto_prev = c_rto;
-            c_rto      =_Units[c_rfrom].base; 
+            if (! conv.linear )   /// \todo what if nonlinear? find the inverse definition?
+                return;            
+            conv = _Units[c_from].conv * conv;      /// This order is very important
+            if (c_to == from)       // We arrived !! we have U(to,from) inverted
+            {     
+                error=false; 
+                conv.invert();          
+                return ;               ///  ...--------- to --------- from ---------...
+            } 
+            //onv = conv * _Units[c_from].conv;
+        } ///  ...--------- to ----------------basicUnit2
 
-            if (! _Units[c_rfrom].conv.lineal )   return;
-            conv      =  conv * _Units[c_rfrom].conv.inverted() ;
 
-            if (c_rto == from)       {     error=false;     return ;  } // We arrived !! we have U(to,from)
-
-            c_rfrom=c_rto;               // search walking in the direction to->from, using to=U[from]
-
-        }while(c_rto_prev != c_rto);     // while it is not a basic unit (no more walking posible)
-                                       // we arrived to a basic unit. We have now: U( from , c_to = basic unit)
-
-        //unit_name c_rfrom=to ,  c_rto ; /// Reverse Unit Name =  Reverse current from (to) , and Reverse Unit Base = Reverse current to (from)
-        //do{ 
-        //    if (c_rto==from)
-        //    {    
-        //        error=false; /*conv.invert()*/;
-        //        return ;
-        //    }
-        //    conversion cv(_Units[c_rto].conv);
-        //    if ( !cv.lineal)
-        //    {    
-        //        error=true;
-        //        return ;
-        //    }
-        //    conv= conv * cv.inverted();
-        //    c_rto=_Units[c_rfrom=c_rto].base;
-        //}while(c_rto!=c_rfrom);
-
-        if (c_to!=c_rto)
+        if (c_to!=bu1)
         {    
-            std::cerr << std::endl << "Units "<< from<< " (" << _Units[from].magnitude << ") and "
-                     << to << " (" << _Units[to].magnitude<<") have no conversion defined. " <<  std::endl;
-            error=true;
+            std::cerr << std::endl << "Units "<< from<< " and " << to 
+                      << " (" << _Units[from].magnitude << ") have no conversion defined. " <<  std::endl;
             return ;
         }
-        conv=c2b*conv;
-        error=false;
 
-        //        conversion c2b(conv);    // Conversion to a basic unit: U( from , c_to = basic unit)
-        //conv=conversion();
-        //unit_name rub, run=to ; /// Reverse Unit Name =  Reverse current from (to) , and Reverse Unit Base = Reverse current to (from)
-        //do{ 
-        //    if (run==from)
-        //    {    
-        //        error=false; /*conv.invert()*/;
-        //        return ;
-        //    }
-        //    conversion cv(_Units[run].conv);
-        //    if ( !cv.lineal)
-        //    {    
-        //        error=true;
-        //        return ;
-        //    }
-        //    conv= conv * cv.inverted();
-        //    run=_Units[rub=run].base;
-        //}while(run!=rub);
-        //if (c_to!=rub)
-        //{    
-        //    std::cerr << std::endl << "Units "<< from<< " (" << _Units[from].magnitude << ") and "
-        //             << to << " (" << _Units[to].magnitude<<") have no conversion defined. " <<  std::endl;
-        //    error=true;
-        //    return ;
-        //}
-        //conv=c2b*conv;
-        //error=false;
+        if (! conv.linear )   /// \todo what if nonlinear? find the inverse definition?
+            return;        
+
+        conv=c2bu1*conv.inverted();    /// \todo This order is very important?? is correct??  TEST !!!!
+        error=false;
 
 
     }
-        //for{ unit_name un=name ;  _Units[un].base != un ; un=_Units[un].base)
+    /// dont do anything but prepare for future use, remembering some reference unit
+    CUnit(const unit_name& from):CUnit(from,from){}
+    /// return another convertion, from our present "origen" to "onother base", or just to another unit
+    CUnit to(const unit_name& to)
+    {
+        return CUnit(name,to);
+    }
+    /// return another convertion, to our present "origen" from "onother base", or just to another unit
+    CUnit from(const unit_name& to)
+    {
+        return CUnit(to,name);
+    }
+
+    //for{ unit_name un=name ;  _Units[un].base != un ; un=_Units[un].base)
         //{
         //   conv=conv*_Units[un].conv;
         //   un=_Units[un].base;
@@ -249,7 +231,7 @@ protected:
         CUnit("pg"      , 1000  , "fg"                  );
         CUnit("tone"    , 1000  , "kg"                  );
         CUnit("A"       , 1     , ""     , "Current"    );
-        CUnit("mA"      , 1000  , "A"                   );
+        CUnit("mA"      , 0.001 , "A"                   );
         CUnit("mol"     , 1     , ""     , "Amount"     );
         CUnit("mol"     , No    , "cop"                 );
         CUnit("mmol"    , 0.001 , "mol"                 );
@@ -403,6 +385,5 @@ public:
 
 
 #endif 
-
 
 

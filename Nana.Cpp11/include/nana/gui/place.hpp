@@ -1,12 +1,16 @@
 /*
  *	An Implementation of Place for Layout
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/place.cpp
+ *
+ *	Contributions:
+ *	min/max and splitter bar initial weight by qPCR4vir.
  */
 
 #ifndef NANA_GUI_PLACE_HPP
@@ -22,21 +26,21 @@ namespace nana
 	{
 		struct implement;
 
-		class field_t
+		class field_interface
 		{
-			field_t(const field_t&) = delete;
-			field_t& operator=(const field_t&) = delete;
-			field_t(field_t&&) = delete;
-			field_t& operator=(field_t&&) = delete;
+			field_interface(const field_interface&) = delete;
+			field_interface& operator=(const field_interface&) = delete;
+			field_interface(field_interface&&) = delete;
+			field_interface& operator=(field_interface&&) = delete;
 		public:
-			field_t() = default;
-			virtual ~field_t() = default;
-			virtual field_t& operator<<(window) = 0;
-			virtual field_t& fasten(window) = 0;
+			field_interface() = default;
+			virtual ~field_interface() = default;
+			virtual field_interface& operator<<(window) = 0;
+			virtual field_interface& fasten(window) = 0;
 		};
 	public:
         ///  reference to a field manipulator which refers to a field object created by place 
-		typedef field_t & field_reference;
+		typedef field_interface & field_reference;
 
 		place();
 		place(window);///< Attaches to a specified widget.

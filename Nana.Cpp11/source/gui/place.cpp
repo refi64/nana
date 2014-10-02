@@ -395,46 +395,32 @@ namespace nana
 				}
 
 				{
-					//This is a flag to indicate whether it is a repeated array.
+					//When search the repeated.
 					bool repeated = false;
-
-					//When search a 'repeated', all elements behind it will be ignored.
-					bool ignored = false;
 
 					while (true)
 					{
 						sp_ = _m_eat_whitespace(sp_);
 						auto tk = read();
-						if (token::number == tk)
-						{
-							if (!ignored)
-								array_.push_back(number_);
-						}
-						else if (token::variable == tk)
-						{
-							if (!ignored)
-							{
-								repeated = true;
-								reparray_.assign(std::move(array_));
-								reparray_.push({});
-								array_.clear();
-							}
-						}
-						else if (token::repeated == tk)
-						{
-							if (!ignored)
-							{
-								ignored = true;
-								reparray_.repeated();
-								if (!repeated)
-								{
-									reparray_.assign(std::move(array_));
-									array_.clear();
-								}
-							}
-						}
-						else
+						if (token::number != tk && token::variable != tk && token::repeated != tk)
 							_m_throw_error("invalid array element");
+
+						if (!repeated)
+						{
+							switch (tk)
+							{
+							case token::number:
+								array_.push_back(number_);
+								break;
+							case token::variable:
+								array_.push_back({});
+								break;
+							default:
+								repeated = true;
+								reparray_.repeated();
+								reparray_.assign(std::move(array_));
+							}
+						}
 
 						sp_ = _m_eat_whitespace(sp_);
 						char ch = *sp_++;
@@ -524,8 +510,10 @@ namespace nana
 					case 'a': return token::max_px;
 					}
 				}
-				else if ("vertical" == idstr_ || "vert" == idstr_ || "repeated" == idstr_)
-					return ('v' == idstr_[0] ? token::vert : token::repeated);
+				else if ("vertical" == idstr_ || "vert" == idstr_)
+					return token::vert;
+				else if ("variable" == idstr_ || "repeated" == idstr_)
+					return ('v' == idstr_[0] ? token::variable : token::repeated);
 				else if ("arrange" == idstr_ || "gap" == idstr_)
 				{
 					auto ch = idstr_[0];
@@ -716,7 +704,7 @@ namespace nana
 	};	//end struct implement
 
 	class place::implement::field_impl
-		: public place::field_t
+		: public place::field_interface
 	{
 	public:
 		struct element_t
@@ -752,7 +740,7 @@ namespace nana
 			});
 		}
 
-		field_t& operator<<(window wd) override
+		field_interface& operator<<(window wd) override
 		{
 			if (API::empty_window(wd))
 				throw std::invalid_argument("Place: An invalid window handle.");
@@ -765,8 +753,14 @@ namespace nana
 			return *this;
 		}
 
-		field_t& fasten(window wd) override
+		field_interface& fasten(window wd) override
 		{
+			if (API::empty_window(wd))
+				throw std::invalid_argument("Place: An invalid window handle.");
+
+			if (API::get_parent_window(wd) != place_ptr_->window_handle())
+				throw std::invalid_argument("Place: the window is not a child of place bind window");
+
 			fastened.push_back(wd);
 
 			//Listen to destroy of a window. The deleting a fastened window
@@ -1033,7 +1027,6 @@ namespace nana
 			}
 
 			double children_fixed_px = 0;
-			double precise_px = 0;
 			for (auto& child : children)
 			{
 				if (child->weight.is_not_none())
@@ -1180,16 +1173,67 @@ namespace nana
 			dimension.first = dimension.second = 0;
 		}
 
+		void revise_collapses()
+		{
+			if (collapses_.empty())
+				return;
+			
+			for (auto i = collapses_.begin(); i != collapses_.end();)
+			{
+				if (i->x >= static_cast<int>(dimension.first))
+					i = collapses_.erase(i);
+				else if (i->y >= static_cast<int>(dimension.second))
+					i = collapses_.erase(i);
+				else
+					++i;
+			}
+
+			//Remove the overlapped collapses
+			for (std::size_t i = 0; i < collapses_.size() - 1; ++i)
+			{
+				auto & col = collapses_[i];
+				for (auto u = i + 1; u != collapses_.size();)
+				{
+					auto & z = collapses_[u];
+					if (col.is_hit(z.x, z.y) || col.is_hit(z.right(), z.y) || col.is_hit(z.x, z.bottom()) || col.is_hit(z.right(), z.bottom()))
+						collapses_.erase(collapses_.begin() + u);
+					else
+						++u;
+				}
+			}
+
+			for (auto & col : collapses_)
+			{
+				if (col.right() >= static_cast<int>(dimension.first))
+					col.width = dimension.first - static_cast<unsigned>(col.x);
+
+				if (col.bottom() >= static_cast<int>(dimension.second))
+					col.height = dimension.second - static_cast<unsigned>(col.y);
+			}
+		}
+
 		void collocate(window wd) override
 		{
 			if (nullptr == field)
 				return;
 
-			auto area = field_area;
+			auto area = margin_area();
 
+			unsigned gap_size = 0;
 			auto gap_number = gap.at(0);
-			unsigned gap_size = (gap_number.kind_of() == number_t::kind::percent ?
-				static_cast<unsigned>(area.width * gap_number.real()) : static_cast<unsigned>(gap_number.integer()));
+			if (gap_number.is_not_none())
+			{
+				gap_size = (gap_number.kind_of() == number_t::kind::percent ?
+					static_cast<unsigned>(area.width * gap_number.real()) : static_cast<unsigned>(gap_number.integer()));
+			}
+
+			//When the amount pixels of gaps is out of the area bound.
+			if ((gap_size * dimension.first >= area.width) || (gap_size * dimension.second >= area.height))
+			{
+				for (auto & el : field->elements)
+					API::window_size(el.handle, 0, 0);
+				return;
+			}
 
 			if (dimension.first <= 1 && dimension.second <= 1)
 			{
@@ -1261,13 +1305,22 @@ namespace nana
 
 				auto i = field->elements.cbegin(), end = field->elements.cend();
 
+				double precise_h = 0;
 				for (std::size_t c = 0; c < dimension.second; ++c)
 				{
-					double precise_w = 0, precise_h = 0;
+					unsigned block_height_px = static_cast<unsigned>(block_h + precise_h);
+					precise_h = (block_h + precise_h) - block_height_px;
+
+					double precise_w = 0;
 					for (std::size_t l = 0; l < dimension.first; ++l)
 					{
 						if (table[l + lbp])
+						{
+							precise_w += block_w;
+							auto px = static_cast<int>(precise_w);
+							precise_w -= px;
 							continue;
+						}
 
 						if (i == end)
 						{
@@ -1281,51 +1334,37 @@ namespace nana
 
 						int pos_x = area.x + static_cast<int>(l * (block_w + gap_size));
 						int pos_y = area.y + static_cast<int>(c * (block_h + gap_size));
+
+						unsigned result_h;
 						if (room.first <= 1 && room.second <= 1)
 						{
 							precise_w += block_w;
-							precise_h += block_h;
+							result_h = block_height_px;
 							table[l + lbp] = 1;
 						}
 						else
 						{
 							precise_w += block_w * room.first + (room.first - 1) * gap_size;
-							precise_h += block_h * room.second + (room.second - 1) * gap_size;
-							for (std::size_t y = 0; y < room.second; ++y)
-								for (std::size_t x = 0; x < room.first; ++x)
+							result_h = static_cast<unsigned>(block_h * room.second + precise_h + (room.second - 1) * gap_size);
+
+							for (unsigned y = 0; y < room.second; ++y)
+								for (unsigned x = 0; x < room.first; ++x)
 									table[l + x + lbp + y * dimension.first] = 1;
 						}
-						//precise_w/h may be negative values, in such case, the size of all gaps are larger than area's size.
-						unsigned result_w, result_h;
-						if (precise_w >= 0.0001)
-						{
-							result_w = static_cast<unsigned>(precise_w);
-							precise_w -= result_w;
-						}
-						else
-						{
-							result_w = 0;
-							precise_w = 0;
-						}
-
-						if (precise_h >= 0.0001)
-						{
-							result_h = static_cast<unsigned>(precise_h);
-							precise_h -= result_h;
-						}
-						else
-						{
-							result_h = 0;
-							precise_h = 0;
-						}
+						
+						unsigned result_w = static_cast<unsigned>(precise_w);
+						precise_w -= result_w;
 
 						API::move_window(i->handle, pos_x, pos_y, result_w, result_h);
 						++i;
 					}
 
 					if (exit_for)
+					{
+						for (; i != end; ++i)
+							API::window_size(i->handle, 0, 0);
 						break;
-
+					}
 					lbp += dimension.first;
 				}
 			}
@@ -1699,18 +1738,21 @@ namespace nana
 
 					//Check the collapse area.
 					//Ignore this collapse if its area is less than 2(col.width * col.height < 2)
-					if (!col.empty_size() && (col.width > 1 || col.height > 1))
+					if (!col.empty_size() && (col.width > 1 || col.height > 1) && (col.x >= 0 && col.y >= 0))
 					{
 						//Overwrite if a exist_col in collapses has same position as the col.
+						bool use_col = true;
 						for (auto & exist_col : collapses)
 						{
 							if (exist_col.x == col.x && exist_col.y == col.y)
 							{
 								exist_col = col;
+								use_col = false;
 								break;
 							}
 						}
-						collapses.emplace_back(col);
+						if (use_col)
+							collapses.emplace_back(col);
 					}
 				}
 				else
@@ -1817,6 +1859,7 @@ namespace nana
 			if (0 == p->dimension.second)
 				p->dimension.second = 1;
 
+			p->revise_collapses();
 			div.reset(p.release());
 		}
 			break;

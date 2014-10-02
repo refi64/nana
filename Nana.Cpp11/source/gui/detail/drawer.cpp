@@ -25,7 +25,7 @@
 
 namespace nana
 {
-	typedef ::nana::detail::edge_nimbus_renderer<::nana::detail::bedrock::core_window_t> edge_nimbus_renderer_t;
+	typedef detail::edge_nimbus_renderer<detail::bedrock::core_window_t> edge_nimbus_renderer_t;
 
 	//class drawer_trigger
 		drawer_trigger::~drawer_trigger(){}
@@ -284,7 +284,7 @@ namespace nana
 				bedrock_type::core_window_t * caret_wd = iwd->root_widget->other.attribute.root->focus;
 
 				bool owns_caret = (caret_wd && (caret_wd->together.caret) && (caret_wd->together.caret->visible()));
-				
+
 				//The caret in X11 is implemented by Nana, it is different from Windows'
 				//the caret in X11 is asynchronous, it is hard to hide and show the caret
 				//immediately, and therefore the caret always be flickering when the graphics
@@ -297,14 +297,14 @@ namespace nana
 					owns_caret = nana::detail::platform_spec::instance().caret_update(iwd->root, *iwd->root_graph, false);
 #endif
 				}
-				
+
 				if(false == edge_nimbus_renderer_t::instance().render(iwd))
 				{
 					nana::rectangle vr;
 					if(bedrock_type::window_manager_t::wndlayout_type::read_visual_rectangle(iwd, vr))
 						iwd->root_graph->paste(iwd->root, vr, vr.x, vr.y);
 				}
-				
+
 				if(owns_caret)
 				{
 #ifndef NANA_X11

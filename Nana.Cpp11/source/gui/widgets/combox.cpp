@@ -83,7 +83,7 @@ namespace nana
 
 				void attached(widget_reference wd, graph_reference graph)
 				{
-					widget_ = static_cast<::nana::combox*>(&wd);
+					widget_ = static_cast< ::nana::combox*>(&wd);
 					editor_ = new widgets::skeletons::text_editor(widget_->handle(), graph);
 					editor_->border_renderer([this](graph_reference graph, nana::color_t bgcolor){
 						draw_border(graph, bgcolor);
@@ -508,7 +508,7 @@ namespace nana
 				{
 					if(items_.size() <= module_.index)
 						return;
-					
+
 					auto & img = items_[module_.index]->item_image;
 
 					if(img.empty())
@@ -855,7 +855,7 @@ namespace nana
 				{
 					if (pos_ == nana::npos)
 						return false;
-					
+
 					return (impl_->at(pos_).item_text == s);
 				}
 
@@ -956,7 +956,7 @@ namespace nana
 		combox::combox(window wd, const nana::char_t* text, bool visible)
 		{
 			create(wd, rectangle(), visible);
-			caption(text);		
+			caption(text);
 		}
 
 		combox::combox(window wd, const nana::rectangle& r, bool visible)

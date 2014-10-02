@@ -62,7 +62,7 @@ namespace nana
 		/// \brief off-screen resource defined as ref-counting, can refer one resource
         ///
         /// Load a bitmap into a graphics:
-        /// \code 
+        /// \code
         /// nana::paint::graphics graph;
         /// nana::paint::image img("C:\\ABitmap.bmp");
         /// img.paste(graph, 0, 0); //graph may create if it is empty
@@ -86,7 +86,7 @@ namespace nana
 			const void* context() const;
 			void make(unsigned width, unsigned height);       ///< Creates a bitmap resource that size is width by height in pixel
 			void resize(unsigned width, unsigned height);
-			void typeface(const font&);                       ///< Selects a specified font type into the graphics object. 
+			void typeface(const font&);                       ///< Selects a specified font type into the graphics object.
 			font typeface() const;
 			::nana::size	text_extent_size(const char_t*) const;    ///< Computes the width and height of the specified string of text.
 			::nana::size	text_extent_size(const string&) const;    ///< Computes the width and height of the specified string of text.
@@ -115,17 +115,17 @@ namespace nana
 			void shadow_rectangle(const ::nana::rectangle&, color_t beg_color, color_t end_color, bool vertical);
 			void shadow_rectangle(int x, int y, unsigned width, unsigned height, color_t beg_color, color_t end_color, bool vertical); ///< Draws a width and height rectangle at (x, y) and the color in range of [begin, end]
 
-			void line(int x1, int y1, int x2, int y2, color_t);     ///<  Draws a line from point (x1, y1) to point (x2, y2) in the specified color. 
+			void line(int x1, int y1, int x2, int y2, color_t);     ///<  Draws a line from point (x1, y1) to point (x2, y2) in the specified color.
 			void line(const point& beg, const point& end, color_t);
 			void lines(const point* points, std::size_t n_of_points, color_t);
 			void line_begin(int x, int y);
 			void line_to(int x, int y, color_t);
-			
+
 			void bitblt(int x, int y, const graphics& source);     ///<   Transfers the source to the specified point.
-			void bitblt(const ::nana::rectangle& r_dst, native_window_type src);  ///< Transfers the color data corresponding to r_dst from the src window to this graphics.  
-			void bitblt(const ::nana::rectangle& r_dst, native_window_type src, const point& p_src);  ///< Transfers the color data corresponding to r_dst from the src window at point p_src to this graphics.  
+			void bitblt(const ::nana::rectangle& r_dst, native_window_type src);  ///< Transfers the color data corresponding to r_dst from the src window to this graphics.
+			void bitblt(const ::nana::rectangle& r_dst, native_window_type src, const point& p_src);  ///< Transfers the color data corresponding to r_dst from the src window at point p_src to this graphics.
 			void bitblt(const ::nana::rectangle& r_dst, const graphics& src);     ///< Transfers the color data corresponding to r_dst from the src graphics to this graphics.
-			void bitblt(const ::nana::rectangle& r_dst, const graphics& src, const point& p_src);///< Transfers the color data corresponding to r_dst from the src graphics at point p_src to this graphics.  
+			void bitblt(const ::nana::rectangle& r_dst, const graphics& src, const point& p_src);///< Transfers the color data corresponding to r_dst from the src graphics at point p_src to this graphics.
 
 			void blend(const ::nana::rectangle& s_r, graphics& dst, const point& d_pos, double fade_rate) const;///< blends with the dst object.
 			void blend(const ::nana::rectangle& r, color_t, double fade_rate);      ///< blends the specifed block width the specified color.
@@ -153,7 +153,7 @@ namespace nana
 
 			static color_t mix(color_t colorX, color_t colorY, double persent);
 		private:
-			std::shared_ptr<::nana::detail::drawable_impl_type> dwptr_;
+			std::shared_ptr< ::nana::detail::drawable_impl_type> dwptr_;
 			font			font_shadow_;
             drawable_type	handle_;
 			::nana::size	size_;

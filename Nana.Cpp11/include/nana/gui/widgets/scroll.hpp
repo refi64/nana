@@ -183,11 +183,11 @@ namespace nana
 				void attached(widget_reference widget, graph_reference graph)
 				{
 					graph_ = &graph;
-					widget_ = static_cast<::nana::scroll<Vertical>*>(&widget);
+					widget_ = static_cast< ::nana::scroll<Vertical>*>(&widget);
 					widget.caption(STR("Nana Scroll"));
 
 					timer_.stop();
-					timer_.elapse(std::bind(&trigger::_m_tick, this));	
+					timer_.elapse(std::bind(&trigger::_m_tick, this));
 				}
 
 				void detached()
@@ -278,7 +278,7 @@ namespace nana
 				void mouse_up(graph_reference graph, const arg_mouse& arg)
 				{
 					timer_.stop();
-					
+
 					API::capture_window(widget_->handle(), false);
 
 					metrics_.pressed = false;

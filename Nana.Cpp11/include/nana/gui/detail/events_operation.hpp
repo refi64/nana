@@ -2,9 +2,14 @@
 #define NANA_DETAIL_EVENTS_OPERATION_HPP
 
 #include <nana/gui/detail/general_events.hpp>
-#include <mutex>
 #include <unordered_set>
 #include <unordered_map>
+
+#if defined(NANA_MINGW) && defined(STD_THREAD_NOT_SUPPORTED)
+    #include <nana/std_mutex.hpp>
+#else
+    #include <mutex>
+#endif
 
 namespace nana
 {

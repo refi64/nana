@@ -281,7 +281,7 @@ namespace nana
 				{
 					graph_ = &graph;
 
-					widget_ = static_cast<::nana::toolbar*>(&widget);
+					widget_ = static_cast< ::nana::toolbar*>(&widget);
 					widget.caption(STR("Nana Toolbar"));
 					impl_->event_size = widget.events().resized.connect(std::bind(&drawer::_m_owner_sized, this, std::placeholders::_1));
 

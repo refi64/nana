@@ -105,8 +105,8 @@ namespace API
 
     /// \brief Retrieves the native window of a Nana.GUI window.
     ///
-    /// The native window type is platform-dependent. Under Microsoft Windows, a conversion can be employed between 
-    /// nana::native_window_type and HWND through reinterpret_cast operator. Under X System, a conversion can 
+    /// The native window type is platform-dependent. Under Microsoft Windows, a conversion can be employed between
+    /// nana::native_window_type and HWND through reinterpret_cast operator. Under X System, a conversion can
     /// be employed between nana::native_window_type and Window through reinterpret_cast operator.
     /// \return If the function succeeds, the return value is the native window handle to the Nana.GUI window. If fails return zero.
 	native_window_type root(window);
@@ -138,18 +138,18 @@ namespace API
 
 		if (std::is_same<decltype(*general_evt), event_type>::value)
 			return *static_cast<event_type*>(general_evt);
-		
+
 		auto * widget_evt = dynamic_cast<event_type*>(general_evt);
 		if (nullptr == widget_evt)
 			throw std::invalid_argument("API::events(): bad template parameter Widget, the widget type and window handle do not match.");
 		return *widget_evt;
 	}
 
-	template<typename EventArg, typename std::enable_if<std::is_base_of<::nana::detail::event_arg_interface, EventArg>::value>::type* = nullptr>
+	template<typename EventArg, typename std::enable_if<std::is_base_of< ::nana::detail::event_arg_interface, EventArg>::value>::type* = nullptr>
 	bool emit_event(event_code evt_code, window wd, const EventArg& arg)
 	{
 		auto & brock = ::nana::detail::bedrock::instance();
-		return brock.emit(evt_code, reinterpret_cast<::nana::detail::bedrock::core_window_t*>(wd), arg, true, brock.get_thread_context());
+		return brock.emit(evt_code, reinterpret_cast< ::nana::detail::bedrock::core_window_t*>(wd), arg, true, brock.get_thread_context());
 	}
 
 	void umake_event(event_handle);
@@ -176,11 +176,11 @@ namespace API
      *
      *          This function will tell the drawer to copy the graphics into window after event answering.
      *          Tells Nana.GUI to copy the buffer of event window to screen after the event is processed.
-     *          This function only works for a drawer_trigger, when a drawer_trigger receives an event, 
-     *          after drawing, a drawer_trigger should call lazy_refresh to tell the Nana.GUI to refresh 
+     *          This function only works for a drawer_trigger, when a drawer_trigger receives an event,
+     *          after drawing, a drawer_trigger should call lazy_refresh to tell the Nana.GUI to refresh
      *          the window to the screen after the event process finished.
 	 */
-	void lazy_refresh();                
+	void lazy_refresh();
 
 	/**	@brief:	calls refresh() of a widget's drawer. if currently state is lazy_refresh, Nana.GUI may paste the drawing on the window after an event processing.
 	 *	@param window: specify a window to be refreshed.

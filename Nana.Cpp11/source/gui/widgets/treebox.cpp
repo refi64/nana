@@ -481,7 +481,7 @@ namespace nana
 							scroll.create(*data.widget_ptr, nana::rectangle(data.graph->width() - 16, 0, 16, data.graph->height()));
 
 							auto fn = [this](const arg_mouse& arg){
-								event_scrollbar(arg);
+								this->event_scrollbar(arg);
 							};
 							scroll.events().mouse_down.connect(fn);
 							scroll.events().mouse_move.connect(fn);
@@ -632,10 +632,10 @@ namespace nana
 						node_state.tooltip->show();
 
 						node_state.tooltip->events().mouse_leave.connect([this](const arg_mouse&){
-							close_tooltip_window();
+							this->close_tooltip_window();
 						});
 						node_state.tooltip->events().mouse_move.connect([this](const arg_mouse&){
-							mouse_move_tooltip_window();
+							this->mouse_move_tooltip_window();
 						});
 
 						auto fn = nana::make_fun(*this, &basic_implement::click_tooltip_window);
@@ -1779,7 +1779,7 @@ namespace nana
 					impl_->data.graph = &graph;
 
 					widget.background(0xFFFFFF);
-					impl_->data.widget_ptr = static_cast<::nana::treebox*>(&widget);
+					impl_->data.widget_ptr = static_cast< ::nana::treebox*>(&widget);
 					widget.caption(STR("Nana Treebox"));
 				}
 

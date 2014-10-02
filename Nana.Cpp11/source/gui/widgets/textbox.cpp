@@ -55,7 +55,7 @@ namespace nana{	namespace drawerbase {
 		{
 			auto wd = wdg.handle();
 			widget_ = &wdg;
-			evt_agent_.reset(new event_agent(static_cast<::nana::textbox&>(wdg)));
+			evt_agent_.reset(new event_agent(static_cast< ::nana::textbox&>(wdg)));
 
 			editor_ = new text_editor(wd, graph);
 			editor_->textbase().set_event_agent(evt_agent_.get());
@@ -196,7 +196,7 @@ namespace nana{	namespace drawerbase {
 			if(editor_)
 			{
 				nana::rectangle r(0, 0, width, height);
-				
+
 				if (!API::widget_borderless(widget_->handle()))
 				{
 					r.x = r.y = 2;
@@ -238,7 +238,7 @@ namespace nana{	namespace drawerbase {
 		textbox::textbox(window wd, const nana::char_t* text, bool visible)
 		{
 			create(wd, rectangle(), visible);
-			caption(text);		
+			caption(text);
 		}
 
 		textbox::textbox(window wd, const rectangle& r, bool visible)
@@ -339,7 +339,7 @@ namespace nana{	namespace drawerbase {
 			return *this;
 		}
 
-		/// Determine wheter the text is auto-line changed. 
+		/// Determine wheter the text is auto-line changed.
 		bool textbox::line_wrapped() const
 		{
 			return get_drawer_trigger().editor()->line_wrapped();

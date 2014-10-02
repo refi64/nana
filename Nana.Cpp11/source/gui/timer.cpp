@@ -1,22 +1,28 @@
 /*
  *	A Timer Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *  Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
- *	Distributed under the Boost Software License, Version 1.0. 
- *	(See accompanying file LICENSE_1_0.txt or copy at 
+ *	Distributed under the Boost Software License, Version 1.0.
+ *	(See accompanying file LICENSE_1_0.txt or copy at
  *	http://www.boost.org/LICENSE_1_0.txt)
  *
  *	@file: nana/gui/timer.hpp
  *	@description:
- *		A timer can repeatedly call a piece of code. The duration between 
+ *		A timer can repeatedly call a piece of code. The duration between
  *	calls is specified in milliseconds. Timer is defferent from other graphics
  *	controls, it has no graphics interface.
  */
 #include <nana/deploy.hpp>
 #include <nana/gui/timer.hpp>
-#include <mutex>
 #include <map>
 #include <memory>
+
+#if defined(NANA_MINGW) && defined(STD_THREAD_NOT_SUPPORTED)
+    #include <nana/std_mutex.hpp>
+#else
+    #include <mutex>
+#endif
 
 #if defined(NANA_WINDOWS)
 #include <windows.h>
@@ -28,10 +34,10 @@
 
 namespace nana
 {
+    class timer_core;
 #if defined(NANA_WINDOWS)
 	typedef UINT_PTR timer_identifier;
 #else
-	class timer_core;
 	typedef timer_core* timer_identifier;
 #endif
 

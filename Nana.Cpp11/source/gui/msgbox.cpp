@@ -84,16 +84,16 @@ namespace nana
 				}
 
 				std::stringstream ss;
-				ss<<"vertical<><weight=50 margin=[10,0,15,0]<><buttons weight="<<(width_pixel - 45)<<">>";
+				ss<<"vert<><weight=50 margin=[10,0,15,0]<><buttons arrange=70 gap=7 weight="<<(width_pixel - 45)<<">>";
 				place_.div(ss.str().data());
 
 				auto & field = place_.field("buttons");
-				field<<place_.fixed(yes_, 70)<<7;
+				field<<yes_;
 				if(!no_.empty())
 				{
-					field<<place_.fixed(no_, 70)<<7;
+					field<<no_;
 					if(!cancel_.empty())
-						field<<place_.fixed(cancel_, 70)<<7;
+						field<<cancel_;
 				}
 				this->size(width_pixel, height_pixel);
 				_m_icon(ico);

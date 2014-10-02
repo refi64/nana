@@ -273,6 +273,16 @@ namespace nana
 			{
 			}
 
+			repeated_array& operator=(const repeated_array& rhs)
+			{
+                if(this != &rhs)
+                {
+                    repeated_ = rhs.repeated_;
+                    values_ = rhs.values_;
+                }
+                return *this;
+			}
+
 			void assign(std::vector<number_t>&& c)
 			{
 				values_ = std::move(c);
@@ -916,7 +926,7 @@ namespace nana
 				if (child->kind_of_division == kind::splitter)
 					delay_collocates.emplace_back(child.get());
 				else
-					child->collocate(wd);	/// The child div have full position. Now we can collocate  inside it the child fields and child-div. 
+					child->collocate(wd);	/// The child div have full position. Now we can collocate  inside it the child fields and child-div.
 			}
 
 			for (auto child : delay_collocates)
@@ -1165,7 +1175,7 @@ namespace nana
 		: public division
 	{
 	public:
-		div_grid(std::string&& name, place_parts::repeated_array&& arrange, std::vector<::nana::rectangle>&& collapses)
+		div_grid(std::string&& name, place_parts::repeated_array&& arrange, std::vector<rectangle>&& collapses)
 			: division(kind::grid, std::move(name)),
 			arrange_(std::move(arrange)),
 			collapses_(std::move(collapses))
@@ -1177,7 +1187,7 @@ namespace nana
 		{
 			if (collapses_.empty())
 				return;
-			
+
 			for (auto i = collapses_.begin(); i != collapses_.end();)
 			{
 				if (i->x >= static_cast<int>(dimension.first))
@@ -1351,7 +1361,7 @@ namespace nana
 								for (unsigned x = 0; x < room.first; ++x)
 									table[l + x + lbp + y * dimension.first] = 1;
 						}
-						
+
 						unsigned result_w = static_cast<unsigned>(precise_w);
 						precise_w -= result_w;
 
@@ -1389,7 +1399,7 @@ namespace nana
 		}
 	private:
 		place_parts::repeated_array arrange_;
-		std::vector<::nana::rectangle> collapses_;
+		std::vector<rectangle> collapses_;
 	};//end class div_grid
 
 	class place::implement::div_splitter
@@ -1515,12 +1525,12 @@ namespace nana
 			if (init_weight_.is_not_none())
 			{
 				const bool vert = (::nana::cursor::size_we != splitter_cursor_);
-				
+
 				area_rotator left(vert, leaf_left_->field_area);
 				area_rotator right(vert, leaf_right_->field_area);
 				auto area_px = right.right() - left.x();
 				auto right_px = static_cast<int>(limit_px(leaf_right_, init_weight_.get_value(area_px), static_cast<unsigned>(area_px)));
-				
+
 				auto pos = area_px - right_px - splitter_px; //New position of splitter
 				if (pos < limited_range.x())
 					pos = limited_range.x();
@@ -1659,7 +1669,7 @@ namespace nana
 		place_parts::repeated_array arrange, gap;
 		place_parts::margin margin;
 		std::vector<number_t> array;
-		std::vector<::nana::rectangle> collapses;
+		std::vector<rectangle> collapses;
 		std::vector<std::unique_ptr<division>> children;
 
 		for (token tk = tknizer.read(); tk != token::eof; tk = tknizer.read())
@@ -1708,6 +1718,8 @@ namespace nana
 					array.push_back(tknizer.reparray().at(0));
 					array.push_back(tknizer.reparray().at(1));
 					break;
+                default:
+                    break;
 				}
 				break;
 			case token::collapse:
@@ -1719,7 +1731,7 @@ namespace nana
 							return arg.integer();
 						else if (arg.kind_of() == number_t::kind::real)
 							return static_cast<int>(arg.real());
-						
+
 						throw std::runtime_error("place: the type of the "+ nth +" parameter for collapse should be integer.");
 					};
 

@@ -400,19 +400,21 @@ namespace nana
 		void _m_layout()
 		{
 			place_.bind(*this);
-			place_.div(	"vertical<weight=5>"
-					"<weight=24 path><weight=5>"
-					"<weight=25 new_folder><weight=5>"
-					"<content><weight=8>"
-					"<weight=26<weight=100><vertical weight=60 label><file>><weight=8>"
-					"<weight=26<><buttons weight=208>><weight=14>");
+			place_.div(	"vert"
+					"<weight=34 margin=5 path arrange=[variable,200] gap=5>"
+					"<weight=30 margin=[0,0,5,10] new_folder arrange=[100]>"
+					"<content arrange=[180] gap=[5]><weight=8>"
+					"<weight=26<weight=100><vert weight=60 label margin=[0,0,0,5]>"
+					"<file margin=[0,18,0,5] arrange=[variable,variable,190] gap=[10]>>"
+					"<weight=48 margin=[8,0,14]<>"
+					"<buttons weight=208 margin=[0,18,0] gap=[14]>>");
 
-			place_.field("path")<<5<<path_<<5<<place_.fixed(filter_, 200)<<5;
-			place_.field("new_folder")<<10<<place_.fixed(btn_folder_, 100);
-			place_.field("content")<<place_.fixed(tree_, 180)<<5<<ls_file_;
-			place_.field("label")<<5<<lb_file_;
-			place_.field("file")<<5<<tb_file_<<10<<place_.fixed(cb_types_, 190)<<18;
-			place_.field("buttons")<<btn_ok_<<14<<btn_cancel_<<18;
+			place_.field("path")<<path_<<filter_;
+			place_.field("new_folder")<<btn_folder_;
+			place_.field("content")<<tree_<<ls_file_;
+			place_.field("label")<<lb_file_;
+			place_.field("file")<<tb_file_<<cb_types_;
+			place_.field("buttons")<<btn_ok_<<btn_cancel_;
 			place_.collocate();
 		}
 

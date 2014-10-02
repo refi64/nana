@@ -13,14 +13,15 @@
 #ifndef NANA_GUI_WIDGET_DETAIL_TEXTBASE_HPP
 #define NANA_GUI_WIDGET_DETAIL_TEXTBASE_HPP
 
-#include <deque>
-#include <memory>
-#include <fstream>
 #include <nana/charset.hpp>
 #include <nana/deploy.hpp>
 #include <nana/traits.hpp>
-
 #include "textbase_export_interface.hpp"
+
+#include <deque>
+#include <memory>
+#include <fstream>
+#include <stdexcept>
 
 namespace nana
 {
@@ -511,7 +512,7 @@ namespace skeletons
 			{
 				filename_ = std::move(filename);
 				_m_first_change();
-			} 
+			}
 			else if(changed_)
 				_m_first_change();
 

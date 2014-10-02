@@ -25,7 +25,7 @@ namespace detail
 	class element_store
 	{
 		typedef ::nana::element::element_interface element_interface;
-		typedef pat::cloneable<::nana::element::element_interface> cloneable_element;
+		typedef pat::cloneable< ::nana::element::element_interface> cloneable_element;
 
 		struct data
 		{

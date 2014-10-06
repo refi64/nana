@@ -418,26 +418,25 @@ namespace detail
 
 				nana::pixel_rgb_t * i = pixel_at(pixbuf.raw_ptr(0), pos_beg.y * bytes_pl) + pos_beg.x;
 
-				int dx = pos_end.x - pos_beg.x;
-				int dy = pos_end.y - pos_beg.y;
+				auto delta = pos_end - pos_beg;
 				
 				int step_bytes;
-				if(dy < 0)
+				if(delta.y < 0)
 				{
-					dy = -dy;
+					delta.y = -delta.y;
 					step_bytes = -static_cast<int>(bytes_pl);
 				}
 				else
 					step_bytes = static_cast<int>(bytes_pl);
 
-				if(dx == dy)
+				if(delta.x == delta.y)
 				{
 					step_bytes += sizeof(pixel_rgb_t);
-					++dx;
+					++delta.x;
 
 					if(fade_table)
 					{
-						for(int x = 0; x < dx; ++x)
+						for(int x = 0; x < delta.x; ++x)
 						{
 							*i = detail::fade_color_by_intermedia(*i, rgb_imd, fade_table);
 							i = pixel_at(i, step_bytes);
@@ -445,7 +444,7 @@ namespace detail
 					}
 					else
 					{
-						for(int x = 0; x < dx; ++x)
+						for(int x = 0; x < delta.x; ++x)
 						{
 							i->u.color = color;
 							i = pixel_at(i, step_bytes);
@@ -454,16 +453,16 @@ namespace detail
 				}
 				else
 				{
-					int dx_2 = dx << 1;
-					int dy_2 = dy << 1;
-					if(dx > dy)
+					int dx_2 = delta.x << 1;
+					int dy_2 = delta.y << 1;
+					if(delta.x > delta.y)
 					{
-						int error = dy_2 - dx;
-						++dx;						//Include the end poing
+						int error = dy_2 - delta.x;
+						++delta.x;						//Include the end poing
 
 						if(fade_table)
 						{
-							for(int x = 0; x < dx; ++x)
+							for(int x = 0; x < delta.x; ++x)
 							{
 								*i = detail::fade_color_by_intermedia(*i, rgb_imd, fade_table);
 								if(error >= 0)
@@ -477,7 +476,7 @@ namespace detail
 						}
 						else
 						{
-							for(int x = 0; x < dx; ++x)
+							for(int x = 0; x < delta.x; ++x)
 							{
 								i->u.color = color;
 								if(error >= 0)
@@ -492,12 +491,12 @@ namespace detail
 					}
 					else
 					{
-						int error = dx_2 - dy;
-						++dy;						//Include the end point
+						int error = dx_2 - delta.y;
+						++delta.y;						//Include the end point
 
 						if(fade_table)
 						{
-							for(int y = 0; y < dy; ++y)
+							for (int y = 0; y < delta.y; ++y)
 							{
 								*i = detail::fade_color_by_intermedia(*i, rgb_imd, fade_table);
 								if(error >= 0)
@@ -511,7 +510,7 @@ namespace detail
 						}
 						else
 						{
-							for(int y = 0; y < dy; ++y)
+							for (int y = 0; y < delta.y; ++y)
 							{
 								i->u.color = color;
 								if(error >= 0)

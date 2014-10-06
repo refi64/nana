@@ -969,7 +969,7 @@ namespace detail
 							context.platform.keychar = keychar;
 							if(keychar == keyboard::tab && (false == (msgwnd->flags.tab & detail::tab_type::eating))) //Tab
 							{
-								auto the_next = brock.wd_manager.tabstop_next(msgwnd);
+								auto the_next = brock.wd_manager.tabstop(msgwnd, true);
 								if(the_next)
 								{
 									brock.wd_manager.set_focus(the_next);

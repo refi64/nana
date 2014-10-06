@@ -1,6 +1,7 @@
 /*
  *	Window Manager Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
@@ -108,7 +109,6 @@ namespace detail
 			return _m_attach_signal(wd, new signal_invoker_mf<Concept>(obj, mf));
 		}
 
-		void detach_signal(core_window_t*);
 		void signal_fire_caption(core_window_t*, const nana::char_t*);
 		nana::string signal_fire_caption(core_window_t*);
 		void event_filter(core_window_t*, bool is_make, event_code);
@@ -145,15 +145,12 @@ namespace detail
 		bool move(core_window_t*, int x, int y, bool passive);
 		bool move(core_window_t*, int x, int y, unsigned width, unsigned height);
 
-
 		bool size(core_window_t*, unsigned width, unsigned height, bool passive, bool ask_update);
 
 		core_window_t* root(native_window_type) const;
 
 		//Copy the root buffer that wnd specified into DeviceContext
 		void map(core_window_t*);
-
-		bool belong_to_lazy(core_window_t *) const;
 
 		bool update(core_window_t*, bool redraw, bool force);
 		void refresh_tree(core_window_t*);
@@ -174,9 +171,8 @@ namespace detail
 		core_window_t * capture_window() const;
 		core_window_t* capture_window(core_window_t*, bool value);
 
-		void tabstop(core_window_t*);
-		core_window_t* tabstop_prev(core_window_t*) const;
-		core_window_t* tabstop_next(core_window_t*) const;
+		void enable_tabstop(core_window_t*);
+		core_window_t* tabstop(core_window_t*, bool forward) const;	//forward means move to next in logic.
 
 		void remove_trash_handle(unsigned tid);
 
@@ -195,7 +191,7 @@ namespace detail
 		void _m_attach_signal(core_window_t*, signal_invoker_interface*);
 		void _m_disengage(core_window_t*, core_window_t* for_new);
 		void _m_destroy(core_window_t*);
-		void _m_move_core(core_window_t*, int delta_x, int delta_y);
+		void _m_move_core(core_window_t*, const point& delta);
 		core_window_t* _m_find(core_window_t*, int x, int y);
 		static bool _m_effective(core_window_t*, int root_x, int root_y);
 	private:

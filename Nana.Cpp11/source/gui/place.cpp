@@ -697,14 +697,10 @@ namespace nana
 		class div_grid;
 		class div_splitter;
 
-		window window_handle;
-		event_handle event_size_handle;
+		window window_handle{nullptr};
+		event_handle event_size_handle{nullptr};
 		std::unique_ptr<division> root_division;
 		std::map<std::string, field_impl*> fields;
-
-		implement()
-			: window_handle(nullptr), event_size_handle(nullptr), root_division(nullptr)
-		{}
 
 		//The following functions are defined behind the definition of class division.
 		//because the class division here is an incomplete type.
@@ -967,13 +963,7 @@ namespace nana
 			case number_t::kind::real:
 				return static_cast<unsigned>(number.real());
 			case number_t::kind::percent:
-				{
-					auto fpx = area_px * number.real() + precise_px;
-					auto px = static_cast<unsigned>(fpx);
-					precise_px = fpx - px;
-					return px;
-				}
-				break;
+				adjustable_px = area_px * number.real();
 			case number_t::kind::none:
 				{
 					auto fpx = adjustable_px + precise_px;
@@ -1067,31 +1057,31 @@ namespace nana
 			std::vector<revise_t> revises;
 			for (auto& child : children)
 			{
-				if (child->weight.is_none())
+				if (child->weight.is_not_none())
+					continue;
+
+				double min_px = std::numeric_limits<double>::lowest(), max_px = std::numeric_limits<double>::lowest();
+
+				if (child->min_px.is_not_none())
 				{
-					double min_px = std::numeric_limits<double>::lowest(), max_px = std::numeric_limits<double>::lowest();
-
-					if (child->min_px.is_not_none())
-					{
-						min_px = child->min_px.get_value(static_cast<int>(area_px));
-						sum_min_px += min_px;
-						++min_count;
-					}
-
-					if (child->max_px.is_not_none())
-						max_px = child->max_px.get_value(static_cast<int>(area_px));
-
-					if (min_px >= 0 && max_px >= 0 && min_px > max_px)
-					{
-						if (child->min_px.kind_of() == number_t::kind::percent)
-							min_px = std::numeric_limits<double>::lowest();
-						else if (child->max_px.kind_of() == number_t::kind::percent)
-							max_px = std::numeric_limits<double>::lowest();
-					}
-
-					if (min_px >= 0 || max_px >= 0)
-						revises.push_back({ child.get(), min_px, max_px });
+					min_px = child->min_px.get_value(static_cast<int>(area_px));
+					sum_min_px += min_px;
+					++min_count;
 				}
+
+				if (child->max_px.is_not_none())
+					max_px = child->max_px.get_value(static_cast<int>(area_px));
+
+				if (min_px >= 0 && max_px >= 0 && min_px > max_px)
+				{
+					if (child->min_px.kind_of() == number_t::kind::percent)
+						min_px = std::numeric_limits<double>::lowest();
+					else if (child->max_px.kind_of() == number_t::kind::percent)
+						max_px = std::numeric_limits<double>::lowest();
+				}
+
+				if (min_px >= 0 || max_px >= 0)
+					revises.push_back({ child.get(), min_px, max_px });
 			}
 
 			if (revises.empty())
@@ -1140,8 +1130,6 @@ namespace nana
 			while ((rest_px > 0) && blocks)
 			{
 				auto lowest = find_lowest(level_px);
-
-
 				double fill_px = 0;
 				//blocks may be equal to min_count. E.g, all child divisions have min/max attribute.
 				if (blocks > min_count)
@@ -1190,9 +1178,7 @@ namespace nana
 
 			for (auto i = collapses_.begin(); i != collapses_.end();)
 			{
-				if (i->x >= static_cast<int>(dimension.first))
-					i = collapses_.erase(i);
-				else if (i->y >= static_cast<int>(dimension.second))
+				if (i->x >= static_cast<int>(dimension.first) || i->y >= static_cast<int>(dimension.second))
 					i = collapses_.erase(i);
 				else
 					++i;
@@ -1630,9 +1616,7 @@ namespace nana
 	place::implement::~implement()
 	{
 		API::umake_event(event_size_handle);
-
 		root_division.reset();
-
 		for (auto & pair : fields)
 			delete pair.second;
 	}
@@ -1682,7 +1666,6 @@ namespace nana
 				if (!children.empty() && (division::kind::splitter != children.back()->kind_of_division))
 				{
 					auto splitter = new div_splitter(tknizer.number());
-
 					splitter->leaf_left(children.back().get());
 					children.back()->div_next = splitter;
 					children.emplace_back(splitter);
@@ -1854,16 +1837,10 @@ namespace nana
 			std::unique_ptr<div_grid> p(new div_grid(std::move(name), std::move(arrange), std::move(collapses)));
 
 			if (array.size())
-			{
-				if (array[0].kind_of() != number_t::kind::percent)
-					p->dimension.first = array[0].integer();
-			}
+				p->dimension.first = array[0].integer();
 
 			if (array.size() > 1)
-			{
-				if (array[1].kind_of() != number_t::kind::percent)
-					p->dimension.second = array[1].integer();
-			}
+				p->dimension.second = array[1].integer();
 
 			if (0 == p->dimension.first)
 				p->dimension.first = 1;
@@ -1872,7 +1849,7 @@ namespace nana
 				p->dimension.second = 1;
 
 			p->revise_collapses();
-			div.reset(p.release());
+			div = std::move(p);
 		}
 			break;
 		default:
@@ -1886,8 +1863,8 @@ namespace nana
 		if (max_px.is_negative()) max_px.reset();
 		if (min_px.is_not_none() && max_px.is_not_none() && (min_px.get_value(100) > max_px.get_value(100)))
 		{
-				min_px.reset();
-				max_px.reset();
+			min_px.reset();
+			max_px.reset();
 		}
 
 		//The weight will be ignored if one of min and max is specified.
@@ -2011,7 +1988,7 @@ namespace nana
 			for (auto & field : impl_->fields)
 			{
 				bool is_show = field.second->attached;
-				if (is_show)
+				if (field.second->attached)
 					is_show = (nullptr != implement::search_div_name(impl_->root_division.get(), field.first));
 
 				for (auto & el : field.second->elements)

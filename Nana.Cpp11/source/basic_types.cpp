@@ -56,6 +56,30 @@ namespace nana
 		{
 			return ((y > rhs.y) || (y == rhs.y && x >= rhs.x));
 		}
+
+		point point::operator-(const point& rhs) const
+		{
+			return{x - rhs.x, y - rhs.y};
+		}
+
+		point point::operator+(const point& rhs) const
+		{
+			return{ x + rhs.x, y + rhs.y };
+		}
+
+		point& point::operator-=(const point& rhs)
+		{
+			x -= rhs.x;
+			y -= rhs.y;
+			return *this;
+		}
+
+		point& point::operator+=(const point& rhs)
+		{
+			x += rhs.x;
+			y += rhs.y;
+			return *this;
+		}
 	//end struct point
 
 	//struct upoint

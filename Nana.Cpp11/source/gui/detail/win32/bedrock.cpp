@@ -360,7 +360,8 @@ namespace detail
 
 		++(context->event_pump_ref_count);
 
-		wd_manager.internal_lock().revert();
+		auto & intr_locker = wd_manager.internal_lock();
+		intr_locker.revert();
 
 		try
 		{
@@ -468,7 +469,7 @@ namespace detail
 					interface_type::close_window(i);
 			}
 
-			wd_manager.internal_lock().forward();
+			intr_locker.forward();
 
 			if(0 == --(context->event_pump_ref_count))
 			{
@@ -479,8 +480,7 @@ namespace detail
 			throw;
 		}
 
-		wd_manager.internal_lock().forward();
-
+		intr_locker.forward();
 		if(0 == --(context->event_pump_ref_count))
 		{
 			if((nullptr == modal_window) || (0 == context->window_count))
@@ -491,6 +491,7 @@ namespace detail
 	void assign_arg(nana::arg_mouse& arg, basic_window* wd, unsigned msg, const parameter_decoder& pmdec)
 	{
 		arg.window_handle = reinterpret_cast<window>(wd);
+		//event code
 		switch (msg)
 		{
 		case WM_LBUTTONUP: case WM_RBUTTONUP: case WM_MBUTTONUP:
@@ -504,6 +505,7 @@ namespace detail
 			break;
 		}
 
+		//event arguments
 		switch (msg)
 		{
 		case WM_LBUTTONDOWN: case WM_RBUTTONDOWN: case WM_MBUTTONDOWN:
@@ -548,8 +550,8 @@ namespace detail
 		::ScreenToClient(reinterpret_cast<HWND>(wd->root), &point);
 
 		arg.upwards = (pmdec.mouse.button.wheel_delta >= 0);
-		arg.pos.x = static_cast<short>(point.x - wd->pos_root.x);
-		arg.pos.y = static_cast<short>(point.y - wd->pos_root.y);
+		arg.pos.x = static_cast<int>(point.x) - wd->pos_root.x;
+		arg.pos.y = static_cast<int>(point.y) - wd->pos_root.y;
 		arg.left_button = pmdec.mouse.button.left;
 		arg.mid_button = pmdec.mouse.button.middle;
 		arg.right_button = pmdec.mouse.button.right;
@@ -1308,7 +1310,7 @@ namespace detail
 					{
 						if((wParam == 9) && (false == (msgwnd->flags.tab & tab_type::eating))) //Tab
 						{
-							auto the_next = brock.wd_manager.tabstop_next(msgwnd);
+							auto the_next = brock.wd_manager.tabstop(msgwnd, true);
 							if(the_next)
 							{
 								brock.wd_manager.set_focus(the_next);

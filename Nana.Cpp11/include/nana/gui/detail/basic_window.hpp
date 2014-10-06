@@ -114,6 +114,10 @@ namespace detail
 		void bind_native_window(native_window_type, unsigned width, unsigned height, unsigned extra_width, unsigned extra_height, paint::graphics&);
 
 		void frame_window(native_window_type);
+
+		bool is_ancestor_of(const basic_window* wd) const;
+		bool visible_parents() const;
+		bool belong_to_lazy() const;
 	public:
 		//Override event_holder
 		bool set_events(const std::shared_ptr<general_events>&) override;

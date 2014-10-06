@@ -1,6 +1,7 @@
 /*
  *	Window Manager Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
@@ -114,6 +115,24 @@ namespace detail
 			}
 		//end class revertible_mutex
 
+			//Utilities in this unit.
+			namespace utl
+			{
+				template<typename T>
+				bool erase(std::vector<T>& container, T value)
+				{
+					for (auto i = container.begin(), end = container.end(); i != end; ++i)
+					{
+						if ((*i) == value)
+						{
+							container.erase(i);
+							return true;
+						}
+					}
+					return false;
+				}
+			}
+
 		window_manager::window_manager()
 			: impl_(new wdm_private_impl)
 		{
@@ -148,11 +167,6 @@ namespace detail
 		void window_manager::all_handles(std::vector<core_window_t*> &v) const
 		{
 			impl_->wd_register.all(v);
-		}
-
-		void window_manager::detach_signal(core_window_t* wd)
-		{
-			impl_->signal.umake(wd);
 		}
 
 		void window_manager::signal_fire_caption(core_window_t* wd, const nana::char_t* str)
@@ -256,7 +270,6 @@ namespace detail
 
 		window_manager::core_window_t* window_manager::create_frame(core_window_t* parent, const rectangle& r, widget* wdg)
 		{
-			if(parent == nullptr) return nullptr;
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
@@ -344,7 +357,7 @@ namespace detail
 					//non-existing drawer_trigger which is destroyed by destruction of widget. Crash!
 					wd->drawer.detached();
 					impl_->signal.call_signal(wd, signals::code::destroy, signals_);
-					detach_signal(wd);
+					impl_->signal.umake(wd);
 
 					native_interface::close_window(wd->root);
 				}
@@ -366,10 +379,7 @@ namespace detail
 				if (wd->parent)
 				{
 					parent = wd->parent;
-					auto & children = parent->children;
-					auto i = std::find(children.begin(), children.end(), wd);
-					if(i != children.end())
-						children.erase(i);
+					utl::erase(wd->parent->children, wd);
 				}
 
 				_m_destroy(wd);
@@ -467,12 +477,11 @@ namespace detail
 					//Move child widgets
 					if(x != wd->pos_owner.x || y != wd->pos_owner.y)
 					{
-						int delta_x = x - wd->pos_owner.x;
-						int delta_y = y - wd->pos_owner.y;
+						point delta{ x - wd->pos_owner.x, y - wd->pos_owner.y };
 
 						wd->pos_owner.x = x;
 						wd->pos_owner.y = y;
-						_m_move_core(wd, delta_x, delta_y);
+						_m_move_core(wd, delta);
 
 						if(wd->together.caret && wd->together.caret->visible())
 							wd->together.caret->update();
@@ -508,11 +517,10 @@ namespace detail
 				//Move child widgets
 				if(x != wd->pos_owner.x || y != wd->pos_owner.y)
 				{
-					int delta_x = x - wd->pos_owner.x;
-					int delta_y = y - wd->pos_owner.y;
+					point delta{ x - wd->pos_owner.x, y - wd->pos_owner.y };
 					wd->pos_owner.x = x;
 					wd->pos_owner.y = y;
-					_m_move_core(wd, delta_x, delta_y);
+					_m_move_core(wd, delta);
 					moved = true;
 
 					if(wd->together.caret && wd->together.caret->visible())
@@ -680,16 +688,6 @@ namespace detail
 			}
 		}
 
-		bool window_manager::belong_to_lazy(core_window_t * wd) const
-		{
-			for(; wd; wd = wd->parent)
-			{
-				if(wd->other.upd_state == core_window_t::update_state::refresh)
-					return true;
-			}
-			return false;
-		}
-
 		//update
 		//@brief:	update is used for displaying the screen-off buffer.
 		//			Because of a good efficiency, if it is called in an event procedure and the event procedure window is the
@@ -700,15 +698,9 @@ namespace detail
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 			if (impl_->wd_register.available(wd) == false) return false;
 
-			if(wd->visible)
+			if (wd->visible && wd->visible_parents())
 			{
-				for(core_window_t* pnt = wd->parent ; pnt; pnt = pnt->parent)
-				{
-					if(pnt->visible == false)
-						return true;
-				}
-
-				if(force || (false == belong_to_lazy(wd)))
+				if(force || (false == wd->belong_to_lazy()))
 				{
 					wndlayout_type::paint(wd, redraw, false);
 					this->map(wd);
@@ -729,22 +721,9 @@ namespace detail
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
-			if (impl_->wd_register.available(wd) == false)
-				return;
-
 			//It's not worthy to redraw if visible is false
-			if(wd->visible)
-			{
-				core_window_t* parent = wd->parent;
-				while(parent)
-				{
-					if(parent->visible == false)	break;
-					parent = parent->parent;
-				}
-
-				if(nullptr == parent)
-					wndlayout_type::paint(wd, true, true);
-			}
+			if (impl_->wd_register.available(wd) && wd->visible && wd->visible_parents())
+				wndlayout_type::paint(wd, true, true);
 		}
 
 		//do_lazy_refresh
@@ -756,30 +735,21 @@ namespace detail
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 
 			//It's not worthy to redraw if visible is false
-			if (impl_->wd_register.available(wd) == false)
+			if (false == impl_->wd_register.available(wd))
 				return false;
 
 			if(wd->visible)
 			{
-				core_window_t* parent = wd->parent;
-				while(parent)
+				if (wd->visible_parents())
 				{
-					if(parent->visible == false)	break;
-					parent = parent->parent;
-				}
-
-				if(parent)	//only refreshing if it has an invisible parent
-				{
-					wndlayout_type::paint(wd, true, false);
-				}
-				else
-				{
-					if((wd->other.upd_state == core_window_t::update_state::refresh) || force_copy_to_screen)
+					if ((wd->other.upd_state == core_window_t::update_state::refresh) || force_copy_to_screen)
 					{
 						wndlayout_type::paint(wd, false, false);
 						this->map(wd);
 					}
 				}
+				else
+					wndlayout_type::paint(wd, true, false);	//only refreshing if it has an invisible parent
 			}
 			wd->other.upd_state = core_window_t::update_state::none;
 			return true;
@@ -838,15 +808,9 @@ namespace detail
 
 			if (impl_->wd_register.available(newpa) && (nullptr == wd->owner) && (wd->parent != newpa) && (!wd->flags.modal))
 			{
-				//Check the newpa's parent. If wd is father of newpa, return false.
-				auto check_newpa = newpa->parent;
-				while (check_newpa)
-				{
-					if (check_newpa == wd)
-						return false;
-
-					check_newpa = check_newpa->parent;
-				}
+				//Check the newpa's parent. If wd is ancestor of newpa, return false.
+				if (wd->is_ancestor_of(newpa->parent))
+					return false;
 
 				auto wdpa = wd->parent;
 				this->_m_disengage(wd, newpa);
@@ -902,7 +866,7 @@ namespace detail
 				brock.emit(event_code::focus, wd, arg, true, brock.get_thread_context());
 
 				native_interface::set_focus(root_wd->root);
-				bedrock::instance().set_menubar_taken(wd);
+				brock.set_menubar_taken(wd);
 			}
 			return prev_focus;
 		}
@@ -913,11 +877,8 @@ namespace detail
 			{
 				//Tests if the wd is a child of captured window,
 				//and returns the wd if it is.
-				for(core_window_t * child = wd; child; child = child->parent)
-				{
-					if(child->parent == attr_.capture.window)
-						return wd;
-				}
+				if (attr_.capture.window->is_ancestor_of(wd))
+					return wd;
 			}
 			return attr_.capture.window;
 		}
@@ -968,7 +929,7 @@ namespace detail
 						wd->flags.capture = true;
 						native_interface::capture_window(wd->root, value);
 						auto prev = attr_.capture.window;
-						if(prev && prev != wd)
+						if(prev && (prev != wd))
 							attr_cap.emplace_back(prev, attr_.capture.ignore_children);
 
 						attr_.capture.window = wd;
@@ -1013,70 +974,55 @@ namespace detail
 			return wd;
 		}
 
-		//tabstop
+		//enable_tabstop
 		//@brief: when users press a TAB, the focus should move to the next widget.
 		//	this method insert a window which catchs an user TAB into a TAB window container
 		//	the TAB window container is held by a wd's root widget. Not every widget has a TAB window container,
 		//	the container is created while a first Tab Window is setting
-		void window_manager::tabstop(core_window_t* wd)
+		void window_manager::enable_tabstop(core_window_t* wd)
 		{
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
-			if (impl_->wd_register.available(wd) == false)
-				return;
-
-			if(detail::tab_type::none == wd->flags.tab)
+			if (impl_->wd_register.available(wd) && (detail::tab_type::none == wd->flags.tab))
 			{
 				wd->root_widget->other.attribute.root->tabstop.push_back(wd);
 				wd->flags.tab |= detail::tab_type::tabstop;
 			}
 		}
 
-		window_manager::core_window_t* window_manager::tabstop_prev(core_window_t* wd) const
+		auto window_manager::tabstop(core_window_t* wd, bool forward) const -> core_window_t*
 		{
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
-			if (impl_->wd_register.available(wd))
+			if (!impl_->wd_register.available(wd))
+				return nullptr;
+
+			auto & tabs = wd->root_widget->other.attribute.root->tabstop;
+			if (tabs.size())
 			{
-				auto & tabs = wd->root_widget->other.attribute.root->tabstop;
-				if(tabs.size() > 1)
+				if (forward)	//
+				{
+					if (detail::tab_type::none == wd->flags.tab)
+						return (tabs.front());
+					else if (detail::tab_type::tabstop & wd->flags.tab)
+					{
+						auto end = tabs.cend();
+						auto i = std::find(tabs.cbegin(), end, wd);
+						if (i != end)
+						{
+							++i;
+							core_window_t* ts = (i != end ? (*i) : tabs.front());
+							return (ts != wd ? ts : 0);
+						}
+						else
+							return tabs.front();
+					}
+				}
+				else if (tabs.size() > 1)	//at least 2 elments in tabs is required when moving perviously. 
 				{
 					auto i = std::find(tabs.cbegin(), tabs.cend(), wd);
-					if(i != tabs.cend())
+					if (i != tabs.cend())
 						return (tabs.cbegin() == i ? tabs.back() : *(i - 1));
-				}
-			}
-
-			return nullptr;
-		}
-
-		window_manager::core_window_t* window_manager::tabstop_next(core_window_t* wd) const
-		{
-			//Thread-Safe Required!
-			std::lock_guard<decltype(mutex_)> lock(mutex_);
-			if (impl_->wd_register.available(wd) == false)	return nullptr;
-
-			auto root_attr = wd->root_widget->other.attribute.root;
-			if(detail::tab_type::none == wd->flags.tab)
-			{
-				if(root_attr->tabstop.size())
-					return (root_attr->tabstop[0]);
-			}
-			else if(detail::tab_type::tabstop & wd->flags.tab)
-			{
-				auto & tabs = root_attr->tabstop;
-				if(tabs.size())
-				{
-					auto end = tabs.cend();
-					auto i = std::find(tabs.cbegin(), end, wd);
-					if(i != end)
-					{
-						++i;
-						core_window_t* ts = (i!= end ? (*i) : tabs.front());
-						return (ts != wd ? ts : 0);
-					}
-					else
-						return tabs.front();
 				}
 			}
 			return nullptr;
@@ -1196,6 +1142,17 @@ namespace detail
 			impl_->signal.make(wd, si);
 		}
 
+		bool check_tree(basic_window* wd, basic_window* const cond)
+		{
+			if (wd == cond)	return true;
+			for (auto child : wd->children)
+			{
+				if (check_tree(child, cond))
+					return true;
+			}
+			return false;
+		}
+
 		void window_manager::_m_disengage(core_window_t* wd, core_window_t* for_new)
 		{
 			auto * const wdpa = wd->parent;
@@ -1206,20 +1163,6 @@ namespace detail
 				pa_root_attr = for_new->root_widget->other.attribute.root;
 
 			auto * root_attr = wd->root_widget->other.attribute.root;
-
-			std::function<bool(core_window_t*, core_window_t*)> check_tree;
-			check_tree = [&check_tree](core_window_t* wd, core_window_t* cond)
-			{
-				if (wd == cond)
-					return true;
-
-				for (auto child : wd->children)
-				{
-					if (check_tree(child, cond))
-						return true;
-				}
-				return false;
-			};
 
 			//Holds the shortkeys of wd and its children, and then
 			//register these shortkeys for establishing.
@@ -1267,11 +1210,8 @@ namespace detail
 				if (wd->flags.tab & detail::tab_type::tabstop)
 				{
 					auto & tabstop = root_attr->tabstop;
-					auto i = std::find(tabstop.begin(), tabstop.end(), wd);
-					if (i != tabstop.cend())
+					if (utl::erase(tabstop, wd))
 					{
-						tabstop.erase(i);
-
 						if (established)
 							pa_root_attr->tabstop.push_back(wd);
 					}
@@ -1280,12 +1220,8 @@ namespace detail
 					{
 						for (auto child : wd->children)
 						{
-							auto i = std::find(tabstop.begin(), tabstop.end(), child);
-							if (i != tabstop.cend())
-							{
-								tabstop.erase(i);
+							if(utl::erase(tabstop, child))
 								pa_root_attr->tabstop.push_back(child);
-							}
 						}
 					}
 				}
@@ -1308,22 +1244,10 @@ namespace detail
 			}
 			else if (pa_root_attr != root_attr)
 			{
-				auto condition = [wd](core_window_t* effect_wd)
-				{
-					while (effect_wd->parent)
-					{
-						if (effect_wd->parent == wd)
-							return true;
-
-						effect_wd = effect_wd->parent;
-					}
-					return false;
-				};
-
 				auto & cont = root_attr->effects_edge_nimbus;
 				for (auto i = cont.begin(); i != cont.end();)
 				{
-					if ((i->window == wd) || condition(i->window))
+					if ((i->window == wd) || wd->is_ancestor_of(i->window))
 					{
 						pa_root_attr->effects_edge_nimbus.push_back(*i);
 						i = cont.erase(i);
@@ -1333,12 +1257,13 @@ namespace detail
 				}
 			}
 
-
 			if (wd->parent)
 			{
-				if (wd->parent->children.size() > 1)
+				auto & pa_children = wd->parent->children;
+
+				if (pa_children.size() > 1)
 				{
-					for (auto i = wd->parent->children.cbegin(), end = wd->parent->children.cend(); i != end; ++i)
+					for (auto i = pa_children.cbegin(), end = pa_children.cend(); i != end; ++i)
 					{
 						if (((*i)->index) > (wd->index))
 						{
@@ -1351,9 +1276,7 @@ namespace detail
 
 				if (established)
 				{
-					auto i = std::find(wd->parent->children.begin(), wd->parent->children.end(), wd);
-					wd->parent->children.erase(i);
-
+					utl::erase(pa_children, wd);
 					if (for_new->children.empty())
 						wd->index = 0;
 					else
@@ -1365,10 +1288,7 @@ namespace detail
 			if (wd->other.category == category::frame_tag::value)
 			{
 				//remove the frame handle from the WM frames manager.
-				auto & frames = root_attr->frames;
-				auto i = std::find(frames.begin(), frames.end(), wd);
-				if (i != frames.end())
-					frames.erase(i);
+				utl::erase(root_attr->frames, wd);
 
 				if (established)
 					pa_root_attr->frames.push_back(wd);
@@ -1383,15 +1303,12 @@ namespace detail
 				
 				wd->pos_owner.x = wd->pos_owner.y = 0;
 
-				auto delta_pos = wd->pos_root;
-				delta_pos.x -= for_new->pos_root.x;
-				delta_pos.y -= for_new->pos_root.y;
+				auto delta_pos = wd->pos_root - for_new->pos_root;
 
 				std::function<void(core_window_t*, const nana::point&)> set_pos_root;
 				set_pos_root = [&set_pos_root](core_window_t* wd, const nana::point& delta_pos)
 				{
-					wd->pos_root.x -= delta_pos.x;
-					wd->pos_root.y -= delta_pos.y;
+					wd->pos_root -= delta_pos;
 					for (auto child : wd->children)
 					{
 						child->root = wd->root;
@@ -1424,7 +1341,8 @@ namespace detail
 				wd->together.caret = nullptr;
 			}
 			//Delete the children widgets.
-			std::for_each(wd->children.rbegin(), wd->children.rend(), [this](core_window_t * child){ this->_m_destroy(child);});
+			for (auto i = wd->children.rbegin(), end = wd->children.rend(); i != end; ++i)
+				_m_destroy(*i);
 			wd->children.clear();
 
 			arg_destroy arg;
@@ -1436,7 +1354,7 @@ namespace detail
 
 			wd->drawer.detached();
 			impl_->signal.call_signal(wd, signals::code::destroy, signals_);
-			detach_signal(wd);
+			impl_->signal.umake(wd);
 
 			if(wd->other.category == category::frame_tag::value)
 			{
@@ -1452,17 +1370,16 @@ namespace detail
 				impl_->wd_register.remove(wd);
 		}
 
-		void window_manager::_m_move_core(core_window_t* wd, int delta_x, int delta_y)
+		void window_manager::_m_move_core(core_window_t* wd, const point& delta)
 		{
 			if(wd->other.category != category::root_tag::value)	//A root widget always starts at (0, 0) and its childs are not to be changed
 			{
-				wd->pos_root.x += delta_x;
-				wd->pos_root.y += delta_y;
-
+				wd->pos_root += delta;
 				if(wd->other.category == category::frame_tag::value)
 					native_interface::move_window(wd->other.attribute.frame->container, wd->pos_root.x, wd->pos_root.y);
 
-				std::for_each(wd->children.cbegin(), wd->children.cend(), [this, delta_x, delta_y](core_window_t * child){ this->_m_move_core(child, delta_x, delta_y);});
+				for (auto child : wd->children)
+					_m_move_core(child, delta);
 			}
 		}
 

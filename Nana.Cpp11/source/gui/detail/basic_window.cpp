@@ -267,6 +267,37 @@ namespace nana
 					other.attribute.frame->container = wd;
 			}
 
+			bool basic_window::is_ancestor_of(const basic_window* wd) const
+			{
+				while (wd)
+				{
+					if (this == wd->parent)
+						return true;
+					wd = wd->parent;
+				}
+				return false;
+			}
+
+			bool basic_window::visible_parents() const
+			{
+				for (auto pnt = parent; pnt; pnt = pnt->parent)
+				{
+					if (!pnt->visible)
+						return false;
+				}
+				return true;
+			}
+
+			bool basic_window::belong_to_lazy() const
+			{
+				for (auto wd = this; wd; wd = wd->parent)
+				{
+					if (basic_window::update_state::refresh == wd->other.upd_state)
+						return true;
+				}
+				return false;
+			}
+
 			void basic_window::_m_init_pos_and_size(basic_window* parent, const rectangle& r)
 			{
 				pos_owner = pos_root = r;

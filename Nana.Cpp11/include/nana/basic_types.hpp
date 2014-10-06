@@ -134,6 +134,11 @@ namespace nana
 		bool operator>(const point&) const;
 		bool operator>=(const point&) const;
 
+		point operator-(const point&) const;
+		point operator+(const point&) const;
+		point& operator-=(const point&);
+		point& operator+=(const point&);
+
 		int x;
 		int y;
 	};

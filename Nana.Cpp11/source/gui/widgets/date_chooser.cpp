@@ -181,11 +181,9 @@ namespace nana
 					nana::rectangle r(static_cast<int>(x * dbasis.row_s), static_cast<int>(y * dbasis.line_s),
 						static_cast<int>(dbasis.row_s), static_cast<int>(dbasis.line_s));
 
-					nana::color_t color = color_.normal;
+					nana::color_t color{ color_.normal };
 
-					nana::point tpos = trace_pos_;
-					tpos.x -= dbasis.refpos.x;
-					tpos.y -= dbasis.refpos.y;
+					nana::point tpos{ trace_pos_ - dbasis.refpos };
 
 					if((pos_ == where::textarea)
 						&& (r.x <= tpos.x)
@@ -327,8 +325,7 @@ namespace nana
 
 				bool trigger::_m_get_trace(point pos, int & res)
 				{
-					pos.x -= dbasis_.refpos.x;
-					pos.y -= dbasis_.refpos.y;
+					pos -= dbasis_.refpos;
 
 					int lines = 7, rows = 7;	//defaultly for page::date
 

@@ -138,8 +138,7 @@ namespace nana
 				if(dragging_ && arg.left_button)
 				{
 					nana::point pos = API::cursor_position();
-					pos.x -= origin_.x;
-					pos.y -= origin_.y;
+					pos -= origin_;
 					for(auto & t : targets_)
 					{
 						if(API::is_window_zoomed(t.wd, true) == false)

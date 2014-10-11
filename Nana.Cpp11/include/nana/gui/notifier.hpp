@@ -27,6 +27,8 @@ namespace nana
 		bool	left_button;
 		bool	mid_button;
 		bool	right_button;
+
+		operator arg_mouse() const;
 	};
 
 	namespace detail
@@ -57,6 +59,7 @@ namespace nana
 		void insert_icon(const nana::string& icon_file);
 		void period(unsigned millisecond);
 		detail::notifier_events& events();
+		window handle() const;
 	private:
 		implement * impl_;
 	};

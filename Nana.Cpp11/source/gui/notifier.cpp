@@ -34,6 +34,7 @@ namespace nana
 	{
 		nana::timer	ani_timer;
 		native_window_type	native_handle;
+		window				handle;
 		event_handle		evt_destroy;
 		unsigned short id;
 		detail::notifier_events events;
@@ -63,10 +64,25 @@ namespace nana
 #endif
 	};
 
+	arg_notifier::operator nana::arg_mouse() const
+	{
+		arg_mouse arg;
+		arg.evt_code = evt_code;
+		arg.ctrl = false;
+		arg.shift = false;
+		arg.left_button = left_button;
+		arg.mid_button = mid_button;
+		arg.right_button = right_button;
+		arg.pos = pos;
+		arg.window_handle = (notifier_ptr ? notifier_ptr->handle() : nullptr);
+		return arg;
+	}
+
 	class notifications
 	{
 		struct notifier_data
 		{
+			::nana::notifier * notifier_ptr;
 			detail::notifier_events* evt_ptr;
 		};
 
@@ -81,17 +97,19 @@ namespace nana
 			return obj;
 		}
 
-		unsigned short register_wd(native_window_type wd, detail::notifier_events* evt_ptr)
+		unsigned short register_wd(::nana::notifier* ntf_ptr, native_window_type native_handle, detail::notifier_events* evt_ptr)
 		{
 			lock_guard lock(mutex_);
-			auto i = wd_table_.find(wd);
+			auto i = wd_table_.find(native_handle);
 			if (i == wd_table_.end())
 			{
-				wd_table_[wd].idtable[0].evt_ptr = evt_ptr;
+				auto & data = wd_table_[native_handle].idtable[0];
+				data.notifier_ptr = ntf_ptr;
+				data.evt_ptr = evt_ptr;
 				return 0;
 			}
 
-			auto & idtable = wd_table_[wd].idtable;
+			auto & idtable = i->second.idtable;
 			auto id = static_cast<unsigned short>(idtable.size());
 
 			const auto orig_id = id;
@@ -101,7 +119,9 @@ namespace nana
 					throw std::runtime_error("Full");
 			}
 
-			idtable[id].evt_ptr = evt_ptr;
+			auto & data = idtable[id];
+			data.notifier_ptr = ntf_ptr;
+			data.evt_ptr = evt_ptr;
 			return id;
 		}
 
@@ -122,7 +142,7 @@ namespace nana
 				wd_table_.erase(i_wd);
 		}
 
-		void emit(native_window_type wd, unsigned short id, const arg_notifier& arg)
+		void emit(native_window_type wd, unsigned short id, const arg_notifier& arg_basic)
 		{
 			lock_guard lock(mutex_);
 			auto i_wd = wd_table_.find(wd);
@@ -133,6 +153,10 @@ namespace nana
 			auto i_id = idtable.find(id);
 			if (i_id == idtable.end())
 				return;
+
+			auto arg = arg_basic;
+
+			arg.notifier_ptr = i_id->second.notifier_ptr;
 
 			auto evt_ptr = i_id->second.evt_ptr;
 			switch (arg.evt_code)
@@ -228,13 +252,13 @@ namespace nana
 		});
 
 		auto & brock = bedrock::instance();
-
+		impl_->handle = wd;
 		impl_->native_handle = brock.root(reinterpret_cast<bedrock::core_window_t*>(wd));
 		impl_->evt_destroy = API::events(wd).destroy([this]
 		{
 			close();
 		});
-		impl_->id = notifications::instance().register_wd(impl_->native_handle, &impl_->events);
+		impl_->id = notifications::instance().register_wd(this, impl_->native_handle, &impl_->events);
 	}
 
 	notifier::~notifier()
@@ -326,6 +350,11 @@ namespace nana
 	detail::notifier_events& notifier::events()
 	{
 		return impl_->events;
+	}
+
+	window notifier::handle() const
+	{
+		return impl_->handle;
 	}
 	//end notifier
 }

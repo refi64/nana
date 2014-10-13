@@ -1,39 +1,34 @@
 /*
  *	Nana Calculator
- *	Nana.C++11(0.5) is required.
+ *	Nana 0.8 and C++11 is required.
  *	This is a demo for Nana C++ Library.
  *	It creates an intermediate level graphical calculator with few code.
  */
 
-#include <nana/gui/wvl.hpp>
+#include <nana/gui.hpp>
 #include <nana/gui/widgets/button.hpp>
 #include <nana/gui/widgets/label.hpp>
 #include <nana/gui/place.hpp>
 
-using namespace nana::gui;
+using namespace nana;
 
 struct stateinfo
 {
 	enum class state{init, operated, assigned};
 
-	state		opstate;
-	wchar_t		operation;
-	double		oprand;
-	double		outcome;
-	label &		procedure;
-	label &		result;
+	state	opstate{state::init};
+	wchar_t operation{L'+'};
+	double oprand{0};
+	double outcome{0};
+	label & procedure;
+	label & result;
 
 	stateinfo(label& proc, label& resl)
-		:	opstate  (state::init), 
-			operation('+'), 
-			oprand   (0), 
-			outcome  (0), 
-			procedure(proc), 
-			result   (resl)
+		: procedure(proc), result(resl)
 	{}
 };
 
-void numkey_pressed(stateinfo& state, const eventinfo& ei)
+void numkey_pressed(stateinfo& state, const arg_mouse& arg)
 {
 	if(state.opstate != stateinfo::state::init)
 	{
@@ -45,9 +40,11 @@ void numkey_pressed(stateinfo& state, const eventinfo& ei)
 		state.result.caption(STR(""));
 		state.opstate = stateinfo::state::init;
 	}
+
 	nana::string rstr = state.result.caption();
 	if(rstr == STR("0"))	rstr.clear();
-	wchar_t d = API::window_caption(ei.window)[0];
+
+	wchar_t d = API::window_caption(arg.window_handle)[0];
 	if(d == '.')
 	{
 		if(rstr.find(L'.') == rstr.npos)
@@ -57,9 +54,9 @@ void numkey_pressed(stateinfo& state, const eventinfo& ei)
 		state.result.caption(rstr + d);
 }
 
-void opkey_pressed(stateinfo& state, const eventinfo& ei)
+void opkey_pressed(stateinfo& state, const arg_mouse& arg)
 {
-	wchar_t d = API::window_caption(ei.window)[0];
+	wchar_t d = API::window_caption(arg.window_handle)[0];
 	if('C' == d)
 	{
 		state.result.caption(STR("0"));
@@ -84,6 +81,7 @@ void opkey_pressed(stateinfo& state, const eventinfo& ei)
 				state.outcome = -state.outcome;
 				state.operation = '=';
 			}
+
 			state.result.caption(s);
 			state.opstate = stateinfo::state::init;
 		}
@@ -105,7 +103,6 @@ void opkey_pressed(stateinfo& state, const eventinfo& ei)
 		return;
 
 	nana::string oprandstr = state.result.caption();
-		
 	if(0 == oprandstr.size()) oprandstr = L'0';
 
 	wchar_t pre_operation = state.operation;
@@ -133,6 +130,7 @@ void opkey_pressed(stateinfo& state, const eventinfo& ei)
 	{
 		if(state.opstate == stateinfo::state::init)
 			state.oprand = std::stod(oprandstr);
+
 		state.opstate = stateinfo::state::assigned;
 	}
 
@@ -153,6 +151,7 @@ void opkey_pressed(stateinfo& state, const eventinfo& ei)
 	}
 
 	state.procedure.caption(proc);
+
 	std::wstring outstr = std::to_wstring(state.outcome);
 	while(outstr.size() && ('0' == outstr.back()))
 		outstr.pop_back();
@@ -163,54 +162,49 @@ void opkey_pressed(stateinfo& state, const eventinfo& ei)
 	state.result.caption(outstr);
 }
 
-int main()
+void go()
 {
 	form fm;
 	fm.caption(STR("Calculator"));
-		
+	
 	//Use class place to layout the widgets.
 	place place(fm);
-	place.div(	"vertical<procedure weight=10%><result weight=15%>"
-				"<weight=2><<weight=2><opkeys grid [4, 5] gap=2>>");
+	place.div(	"vert<procedure weight=10%><result weight=15%>"
+		"<weight=2><opkeys margin=2 grid=[4, 5] gap=2 collapse(0,4,2,1)>");
 
 	label procedure(fm), result(fm);
+
 	//Make the label right aligned.
 	procedure.text_align(nana::align::right);
 	result.text_align(nana::align::right);
 	result.typeface(nana::paint::font(nullptr, 14, true));
+
 	place.field("procedure")<<procedure;
 	place.field("result")<<result;
 
 	stateinfo state(procedure, result);
-	std::vector<std::shared_ptr<button>> op_keys;
+	std::vector<std::unique_ptr<nana::button>> op_keys;
 
-	auto & opkeys_field = place.field("opkeys");
 	wchar_t keys[] = L"C\261%/789X456-123+0.=";
 	nana::paint::font keyfont(nullptr, 10, true);
 	for(auto key : keys)
 	{
-		auto p = std::shared_ptr<button>(new button(fm));
-		p->caption(nana::string(1, key));
-		p->typeface(keyfont);
-		op_keys.push_back(p);
+		op_keys.emplace_back(new button(fm));
+		op_keys.back()->caption(string(1, key));
+		op_keys.back()->typeface(keyfont);
 
-		if('0' != key)
+		if('=' == key)
 		{
-			if('=' == key)
-			{
-				p->background(0x7ACC);
-				p->foreground(0xFFFFFF);
-			}
-			opkeys_field<<*p;
+			op_keys.back()->background(0x7ACC);
+			op_keys.back()->foreground(0xFFFFFF);
 		}
-		else
-			opkeys_field<<place.room(*p, 2, 1);
+		place.field("opkeys") << *op_keys.back();
 
 		//Make event answer for keys.
 		if(('0' <= key && key <= '9') || ('.' == key))
-			p->make_event<events::click>(std::bind(numkey_pressed, std::ref(state), std::placeholders::_1));
+			op_keys.back()->events().click.connect(std::bind(numkey_pressed, std::ref(state), std::placeholders::_1));
 		else
-			p->make_event<events::click>(std::bind(opkey_pressed, std::ref(state), std::placeholders::_1));
+			op_keys.back()->events().click.connect(std::bind(opkey_pressed, std::ref(state), std::placeholders::_1));
 	}
 
 	place.collocate();

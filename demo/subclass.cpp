@@ -13,7 +13,7 @@
 #include <functional>
 #include <mutex>
 #include <windows.h>
-#include <nana/gui/wvl.hpp>
+#include <nana/gui.hpp>
 
 class subclass
 {
@@ -25,8 +25,8 @@ class subclass
 
 	typedef std::lock_guard<std::recursive_mutex> lock_guard;
 public:
-	subclass(nana::gui::window wd)
-		:	native_(reinterpret_cast<HWND>(nana::gui::API::root(wd))),
+	subclass(nana::window wd)
+		:	native_(reinterpret_cast<HWND>(nana::API::root(wd))),
 			old_proc_(nullptr)
 	{
 	}
@@ -182,7 +182,7 @@ std::map<HWND, subclass*> subclass::table_;
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, char*, int)
 {
-	using namespace nana::gui;
+	using namespace nana;
 
 	form fm;
 	fm.caption(STR("fm"));

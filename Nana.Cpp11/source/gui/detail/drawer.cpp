@@ -34,29 +34,102 @@ namespace nana
 		void drawer_trigger::typeface_changed(graph_reference){}
 		void drawer_trigger::refresh(graph_reference){}
 
-		void drawer_trigger::resizing(graph_reference, const arg_resizing&){}
+		void drawer_trigger::resizing(graph_reference, const arg_resizing&)
+		{
+			overrided_ = false;
+		}
 
 		void drawer_trigger::resized(graph_reference graph, const arg_resized&)
 		{
+			overrided_ = false;
 			this->refresh(graph);
 			detail::bedrock::instance().thread_context_lazy_refresh();
 		}
 
-		void drawer_trigger::move(graph_reference, const arg_move&){}
-		void drawer_trigger::click(graph_reference, const arg_mouse&){}
-		void drawer_trigger::dbl_click(graph_reference, const arg_mouse&){}
-		void drawer_trigger::mouse_enter(graph_reference, const arg_mouse&){}
-		void drawer_trigger::mouse_move(graph_reference, const arg_mouse&){}
-		void drawer_trigger::mouse_leave(graph_reference, const arg_mouse&){}
-		void drawer_trigger::mouse_down(graph_reference, const arg_mouse&){}
-		void drawer_trigger::mouse_up(graph_reference, const arg_mouse&){}
-		void drawer_trigger::mouse_wheel(graph_reference, const arg_wheel&){}
-		void drawer_trigger::mouse_dropfiles(graph_reference, const arg_dropfiles&){}
-		void drawer_trigger::focus(graph_reference, const arg_focus&){}
-		void drawer_trigger::key_press(graph_reference, const arg_keyboard&){}
-		void drawer_trigger::key_char(graph_reference, const arg_keyboard&){}
-		void drawer_trigger::key_release(graph_reference, const arg_keyboard&){}
-		void drawer_trigger::shortkey(graph_reference, const arg_keyboard&){}
+		void drawer_trigger::move(graph_reference, const arg_move&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::click(graph_reference, const arg_mouse&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::dbl_click(graph_reference, const arg_mouse&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::mouse_enter(graph_reference, const arg_mouse&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::mouse_move(graph_reference, const arg_mouse&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::mouse_leave(graph_reference, const arg_mouse&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::mouse_down(graph_reference, const arg_mouse&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::mouse_up(graph_reference, const arg_mouse&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::mouse_wheel(graph_reference, const arg_wheel&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::mouse_dropfiles(graph_reference, const arg_dropfiles&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::focus(graph_reference, const arg_focus&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::key_press(graph_reference, const arg_keyboard&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::key_char(graph_reference, const arg_keyboard&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::key_release(graph_reference, const arg_keyboard&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::shortkey(graph_reference, const arg_keyboard&)
+		{
+			overrided_ = false;
+		}
+
+		void drawer_trigger::_m_reset_overrided()
+		{
+			overrided_ = true;
+		}
+
+		bool drawer_trigger::_m_overrided() const
+		{
+			return overrided_;
+		}
 
 	//end class drawer_trigger
 
@@ -65,11 +138,6 @@ namespace nana
 		typedef bedrock bedrock_type;
 
 		//class drawer
-		drawer::drawer()
-			:	core_window_(nullptr), realizer_(nullptr), refreshing_(false)
-		{
-		}
-
 		drawer::~drawer()
 		{
 			for(auto p : dynamic_drawing_objects_)
@@ -89,191 +157,89 @@ namespace nana
 				realizer_->typeface_changed(graphics);
 		}
 
-		void drawer::click_arg(const arg_mouse& arg)
+		void drawer::click(const arg_mouse& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->click(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::click, arg, &drawer_trigger::click);
 		}
 
-		void drawer::dbl_click_arg(const arg_mouse& arg)
+		void drawer::dbl_click(const arg_mouse& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->dbl_click(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::dbl_click, arg, &drawer_trigger::dbl_click);
 		}
 
-		void drawer::mouse_enter_arg(const arg_mouse& arg)
+		void drawer::mouse_enter(const arg_mouse& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->mouse_enter(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::mouse_enter, arg, &drawer_trigger::mouse_enter);
 		}
 
-		void drawer::mouse_move_arg(const arg_mouse& arg)
+		void drawer::mouse_move(const arg_mouse& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->mouse_move(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::mouse_move, arg, &drawer_trigger::mouse_move);
 		}
 
-		void drawer::mouse_leave_arg(const arg_mouse& arg)
+		void drawer::mouse_leave(const arg_mouse& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->mouse_leave(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::mouse_leave, arg, &drawer_trigger::mouse_leave);
 		}
 
-		void drawer::mouse_down_arg(const arg_mouse& arg)
+		void drawer::mouse_down(const arg_mouse& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->mouse_down(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::mouse_down, arg, &drawer_trigger::mouse_down);
 		}
 
-		void drawer::mouse_up_arg(const arg_mouse& arg)
+		void drawer::mouse_up(const arg_mouse& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->mouse_up(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::mouse_up, arg, &drawer_trigger::mouse_up);
 		}
 
-		void drawer::mouse_wheel_arg(const arg_wheel& arg)
+		void drawer::mouse_wheel(const arg_wheel& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->mouse_wheel(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::mouse_wheel, arg, &drawer_trigger::mouse_wheel);
 		}
 
 		void drawer::mouse_dropfiles(const arg_dropfiles& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->mouse_dropfiles(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::mouse_drop, arg, &drawer_trigger::mouse_dropfiles);
 		}
 
-		void drawer::resizing_arg(const arg_resizing& arg)
+		void drawer::resizing(const arg_resizing& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->resizing(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::resizing, arg, &drawer_trigger::resizing);
 		}
 
-		void drawer::resized_arg(const arg_resized& arg)
+		void drawer::resized(const arg_resized& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->resized(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::resized, arg, &drawer_trigger::resized);
 		}
 
-		void drawer::move_arg(const arg_move& arg)
+		void drawer::move(const arg_move& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->move(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::move, arg, &drawer_trigger::move);
 		}
 
-		void drawer::focus_arg(const arg_focus& arg)
+		void drawer::focus(const arg_focus& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->focus(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::focus, arg, &drawer_trigger::focus);
 		}
 
-		void drawer::key_press_arg(const arg_keyboard& arg)
+		void drawer::key_press(const arg_keyboard& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->key_press(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::key_press, arg, &drawer_trigger::key_press);
 		}
 
-		void drawer::key_char_arg(const arg_keyboard& arg)
+		void drawer::key_char(const arg_keyboard& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->key_char(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::key_char, arg, &drawer_trigger::key_char);
 		}
 
-		void drawer::key_release_arg(const arg_keyboard& arg)
+		void drawer::key_release(const arg_keyboard& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->key_release(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::key_release, arg, &drawer_trigger::key_release);
 		}
 
-		void drawer::shortkey_arg(const arg_keyboard& arg)
+		void drawer::shortkey(const arg_keyboard& arg)
 		{
-			if (realizer_)
-			{
-				_m_bground_pre();
-				realizer_->shortkey(graphics, arg);
-				_m_draw_dynamic_drawing_object();
-				_m_bground_end();
-			}
+			_m_emit(event_code::shortkey, arg, &drawer_trigger::shortkey);
 		}
 
 		void drawer::map(window wd)	//Copy the root buffer to screen
@@ -337,6 +303,9 @@ namespace nana
 
 		void drawer::attached(widget& wd, drawer_trigger& realizer)
 		{
+			for (auto i = std::begin(mth_state_), end = std::end(mth_state_); i != end; ++i)
+				*i = method_state::unknown;
+
 			realizer_ = &realizer;
 			realizer.attached(wd, graphics);
 		}
@@ -383,8 +352,11 @@ namespace nana
 			if(p)
 			{
 				auto i = std::find(dynamic_drawing_objects_.begin(), dynamic_drawing_objects_.end(), p);
-				if(i != dynamic_drawing_objects_.end())
+				if (i != dynamic_drawing_objects_.end())
+				{
+					delete (*i);
 					dynamic_drawing_objects_.erase(i);
+				}
 			}
 		}
 
@@ -404,6 +376,13 @@ namespace nana
 		{
 			for(auto * dw : dynamic_drawing_objects_)
 				dw->draw(graphics);
+		}
+
+		//If the drawer_trigger didn't declear a lazy refresh, then use the refresh().
+		void drawer::_m_use_refresh()
+		{
+			if (basic_window::update_state::refresh != core_window_->other.upd_state)
+				refresh();
 		}
 	}//end namespace detail
 }//end namespace nana

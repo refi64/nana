@@ -206,7 +206,6 @@ namespace nana
 						beg = beg->parent;
 					}
 
-					//glass_buffer.bitblt(wd->dimension, beg->drawer.graphics, nana::point(wd->pos_root.x - beg->pos_root.x, wd->pos_root.y - beg->pos_root.y));	//deprecated
 					glass_buffer.bitblt(wd->dimension, beg->drawer.graphics, wd->pos_root - beg->pos_root);
 					
 					nana::rectangle r(wd->pos_owner, wd->dimension);

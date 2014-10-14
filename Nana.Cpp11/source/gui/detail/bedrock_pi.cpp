@@ -62,31 +62,31 @@ namespace nana
 				switch (evt_code)
 				{
 				case event_code::click:
-					drawer_event_fn = &drawer::click_arg;
+					drawer_event_fn = &drawer::click;
 					evt_addr = &wd->together.attached_events->click;
 					break;
 				case event_code::dbl_click:
-					drawer_event_fn = &drawer::dbl_click_arg;
+					drawer_event_fn = &drawer::dbl_click;
 					evt_addr = &wd->together.attached_events->dbl_click;
 					break;
 				case event_code::mouse_enter:
-					drawer_event_fn = &drawer::mouse_enter_arg;
+					drawer_event_fn = &drawer::mouse_enter;
 					evt_addr = &wd->together.attached_events->mouse_enter;
 					break;
 				case event_code::mouse_move:
-					drawer_event_fn = &drawer::mouse_move_arg;
+					drawer_event_fn = &drawer::mouse_move;
 					evt_addr = &wd->together.attached_events->mouse_move;
 					break;
 				case event_code::mouse_leave:
-					drawer_event_fn = &drawer::mouse_leave_arg;
+					drawer_event_fn = &drawer::mouse_leave;
 					evt_addr = &wd->together.attached_events->mouse_leave;
 					break;
 				case event_code::mouse_down:
-					drawer_event_fn = &drawer::mouse_down_arg;
+					drawer_event_fn = &drawer::mouse_down;
 					evt_addr = &wd->together.attached_events->mouse_down;
 					break;
 				case event_code::mouse_up:
-					drawer_event_fn = &drawer::mouse_up_arg;
+					drawer_event_fn = &drawer::mouse_up;
 					evt_addr = &wd->together.attached_events->mouse_up;
 					break;
 				default:
@@ -105,7 +105,7 @@ namespace nana
 				if (nullptr == arg)
 					return false;
 
-				wd->drawer.mouse_wheel_arg(*arg);
+				wd->drawer.mouse_wheel(*arg);
 				if (!draw_only)
 					wd->together.attached_events->mouse_wheel.emit(*arg);
 				break;
@@ -125,19 +125,19 @@ namespace nana
 				switch (evt_code)
 				{
 				case event_code::key_press:
-					drawer_event_fn = &drawer::key_press_arg;
+					drawer_event_fn = &drawer::key_press;
 					evt_addr = &wd->together.attached_events->key_press;
 					break;
 				case event_code::key_char:
-					drawer_event_fn = &drawer::key_char_arg;
+					drawer_event_fn = &drawer::key_char;
 					evt_addr = &wd->together.attached_events->key_char;
 					break;
 				case event_code::key_release:
-					drawer_event_fn = &drawer::key_release_arg;
+					drawer_event_fn = &drawer::key_release;
 					evt_addr = &wd->together.attached_events->key_release;
 					break;
 				case event_code::shortkey:
-					drawer_event_fn = &drawer::shortkey_arg;
+					drawer_event_fn = &drawer::shortkey;
 					evt_addr = &wd->together.attached_events->shortkey;
 					break;
 				default:
@@ -164,7 +164,7 @@ namespace nana
 				if (nullptr == arg)
 					return false;
 
-				wd->drawer.focus_arg(*arg);
+				wd->drawer.focus(*arg);
 				if (!draw_only)
 					wd->together.attached_events->focus.emit(*arg);
 				break;
@@ -175,7 +175,7 @@ namespace nana
 				if (nullptr == arg)
 					return false;
 
-				wd->drawer.move_arg(*arg);
+				wd->drawer.move(*arg);
 				if (!draw_only)
 					wd->together.attached_events->move.emit(*arg);
 				break;
@@ -186,7 +186,7 @@ namespace nana
 				if (nullptr == arg)
 					return false;
 
-				wd->drawer.resizing_arg(*arg);
+				wd->drawer.resizing(*arg);
 				if (!draw_only)
 					wd->together.attached_events->resizing.emit(*arg);
 				break;
@@ -197,7 +197,7 @@ namespace nana
 				if (nullptr == arg)
 					return false;
 
-				wd->drawer.resized_arg(*arg);
+				wd->drawer.resized(*arg);
 				if (!draw_only)
 					wd->together.attached_events->resized.emit(*arg);
 				break;

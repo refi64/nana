@@ -1,5 +1,6 @@
 /*
  *	A Drawer Implementation
+ *	Nana C++ Library(http://www.nanapro.org)
  *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0. 
@@ -54,6 +55,11 @@ namespace nana
 		virtual void key_char(graph_reference, const arg_keyboard&);
 		virtual void key_release(graph_reference, const arg_keyboard&);
 		virtual void shortkey(graph_reference, const arg_keyboard&);
+
+		void _m_reset_overrided();
+		bool _m_overrided() const;
+	private:
+		bool overrided_{false};
 	};
 
 	namespace detail
@@ -71,31 +77,39 @@ namespace nana
 		class drawer
 			: nana::noncopyable, nana::nonmovable
 		{
-		public:
+			enum{
+				event_size = static_cast<int>(event_code::end)
+			};
 
-			drawer();
+			enum class method_state
+			{
+				unknown,
+				overrided,
+				not_overrided
+			};
+		public:
 			~drawer();
 
 			void bind(basic_window*);
 
 			void typeface_changed();
-			void click_arg(const arg_mouse&);
-			void dbl_click_arg(const arg_mouse&);
-			void mouse_enter_arg(const arg_mouse&);
-			void mouse_move_arg(const arg_mouse&);
-			void mouse_leave_arg(const arg_mouse&);
-			void mouse_down_arg(const arg_mouse&);
-			void mouse_up_arg(const arg_mouse&);
-			void mouse_wheel_arg(const arg_wheel&);
+			void click(const arg_mouse&);
+			void dbl_click(const arg_mouse&);
+			void mouse_enter(const arg_mouse&);
+			void mouse_move(const arg_mouse&);
+			void mouse_leave(const arg_mouse&);
+			void mouse_down(const arg_mouse&);
+			void mouse_up(const arg_mouse&);
+			void mouse_wheel(const arg_wheel&);
 			void mouse_dropfiles(const arg_dropfiles&);
-			void resizing_arg(const arg_resizing&);
-			void resized_arg(const arg_resized&);
-			void move_arg(const arg_move&);
-			void focus_arg(const arg_focus&);
-			void key_press_arg(const arg_keyboard&);
-			void key_char_arg(const arg_keyboard&);
-			void key_release_arg(const arg_keyboard&);
-			void shortkey_arg(const arg_keyboard&);
+			void resizing(const arg_resizing&);
+			void resized(const arg_resized&);
+			void move(const arg_move&);
+			void focus(const arg_focus&);
+			void key_press(const arg_keyboard&);
+			void key_char(const arg_keyboard&);
+			void key_release(const arg_keyboard&);
+			void shortkey(const arg_keyboard&);
 			void map(window);	//Copy the root buffer to screen
 			void refresh();
 			drawer_trigger* realizer() const;
@@ -109,13 +123,41 @@ namespace nana
 			void _m_bground_pre();
 			void _m_bground_end();
 			void _m_draw_dynamic_drawing_object();
+			void _m_use_refresh();
+
+			template<typename Arg, typename Mfptr>
+			void _m_emit(event_code evt_code, const Arg& arg, Mfptr mfptr)
+			{
+				if (realizer_)
+				{
+					const int pos = static_cast<int>(evt_code);
+					if (method_state::not_overrided != mth_state_[pos])
+					{
+						_m_bground_pre();
+
+						if (method_state::unknown == mth_state_[pos])
+						{
+							realizer_->_m_reset_overrided();
+							(realizer_->*mfptr)(graphics, arg);
+							mth_state_[pos] = (realizer_->_m_overrided() ? method_state::overrided : method_state::not_overrided);
+						}
+						else
+							(realizer_->*mfptr)(graphics, arg);
+
+						_m_use_refresh();
+						_m_draw_dynamic_drawing_object();
+						_m_bground_end();
+					}
+				}
+			}
 		public:
 			nana::paint::graphics graphics;
 		private:
-			basic_window*	core_window_;
-			drawer_trigger*	realizer_;
+			basic_window*	core_window_{nullptr};
+			drawer_trigger*	realizer_{nullptr};
 			std::vector<dynamic_drawing::object*>	dynamic_drawing_objects_;
-			bool refreshing_;
+			bool refreshing_{false};
+			method_state mth_state_[event_size];
 		};
 	}//end namespace detail
 }//end namespace nana

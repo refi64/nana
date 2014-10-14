@@ -24,7 +24,7 @@
 	#if defined(__MINGW32__)
 		#define NANA_MINGW
 		#define STD_CODECVT_NOT_SUPPORTED
-		#define STD_THREAD_NOT_SUPPORTED
+		//#define STD_THREAD_NOT_SUPPORTED	//Use this flag if MinGW version is older than 4.8.1
 	#endif
 #elif (defined(linux) || defined(__linux) || defined(__linux__) || defined(__GNU__) || defined(__GLIBC__)) && !defined(_CRAYC)
 //Linux:

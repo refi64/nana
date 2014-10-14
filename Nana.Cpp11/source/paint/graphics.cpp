@@ -1003,7 +1003,7 @@ namespace paint
 			}
 		}
 
-		void graphics::paste(const graphics& dst, int x, int y) const
+		void graphics::paste(graphics& dst, int x, int y) const
 		{
 			if(handle_ && dst.handle_ && handle_ != dst.handle_)
 			{
@@ -1017,6 +1017,7 @@ namespace paint
 
 				::XFlush(display);
 #endif
+				dst.changed_ = true;
 			}
 		}
 

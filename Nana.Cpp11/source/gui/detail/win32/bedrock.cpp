@@ -947,7 +947,7 @@ namespace detail
 								msgwnd->flags.action = mouse_action::normal;
 
 								arg.evt_code = event_code::mouse_up;
-								emit_drawer(&drawer::mouse_up_arg, msgwnd, arg, &context);
+								emit_drawer(&drawer::mouse_up, msgwnd, arg, &context);
 								brock.wd_manager.do_lazy_refresh(msgwnd, false);
 							}
 						}
@@ -979,7 +979,7 @@ namespace detail
 						{
 							msgwnd->flags.action = mouse_action::over;
 							arg.evt_code = event_code::click;
-							emit_drawer(&drawer::click_arg, msgwnd, arg, &context);
+							emit_drawer(&drawer::click, msgwnd, arg, &context);
 							fire_click = true;
 						}
 					}
@@ -991,7 +991,7 @@ namespace detail
 							msgwnd->flags.action = mouse_action::over;
 
 						arg.evt_code = event_code::mouse_up;
-						emit_drawer(&drawer::mouse_up_arg, msgwnd, arg, &context);
+						emit_drawer(&drawer::mouse_up, msgwnd, arg, &context);
 
 						if (fire_click)
 						{

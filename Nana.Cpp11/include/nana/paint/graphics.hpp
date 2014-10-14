@@ -132,7 +132,7 @@ namespace nana
 
 			void blur(const ::nana::rectangle& r, std::size_t radius);      ///< Blur process.
 
-			void paste(const graphics& dst, int x, int y) const;    ///< Paste the graphics object into the dest at (x, y)
+			void paste(graphics& dst, int x, int y) const;    ///< Paste the graphics object into the dest at (x, y)
 			void paste(native_window_type dst, const ::nana::rectangle&, int sx, int sy) const;  ///< Paste the graphics object into a platform-dependent window at (x, y)
 			void paste(native_window_type dst, int dx, int dy, unsigned width, unsigned height, int sx, int sy) const;
 			void paste(drawable_type dst, int x, int y) const;

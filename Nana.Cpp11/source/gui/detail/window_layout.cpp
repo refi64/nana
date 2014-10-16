@@ -215,7 +215,6 @@ namespace nana
 							continue;
 
 						core_window_t * term = ((i + 1 != layers_rend) ? *(i + 1) : wd);
-						r.set_pos(wd->pos_root - pre->pos_root);
 						r.x = wd->pos_root.x - pre->pos_root.x;
 						r.y = wd->pos_root.y - pre->pos_root.y;
 						for (auto child : pre->children)

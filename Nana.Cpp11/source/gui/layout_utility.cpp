@@ -31,16 +31,17 @@ namespace nana
 	{
 		if(overlap(r1, r2))
 		{
+			auto l1 = static_cast<long long>(r1.x) + r1.width;
+			auto l2 = static_cast<long long>(r2.x) + r2.width;
+
+			auto b1 = static_cast<long long>(r1.y) + r1.height;
+			auto b2 = static_cast<long long>(r2.y) + r2.height;
+
 			r.x = r1.x < r2.x ? r2.x : r1.x;
 			r.y = r1.y < r2.y ? r2.y : r1.y;
 
-			long long li1 = static_cast<long long>(r1.x) + r1.width;
-			long long li2 = static_cast<long long>(r2.x) + r2.width;
-			r.width = static_cast<unsigned>(li1 < li2 ? li1 - r.x: li2 - r.x);
-
-			li1 = static_cast<long long>(r1.y) + r1.height;
-			li2 = static_cast<long long>(r2.y) + r2.height;
-			r.height = static_cast<unsigned>(li1 < li2 ? li1 - r.y: li2 - r.y);
+			r.width = static_cast<unsigned>(l1 < l2 ? l1 - r.x: l2 - r.x);
+			r.height = static_cast<unsigned>(b1 < b2 ? b1 - r.y: b2 - r.y);
 
 			return true;
 		}

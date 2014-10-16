@@ -44,7 +44,7 @@ namespace detail
 	public:
 		static void paint(core_window_t*, bool is_redraw, bool is_child_refreshed);
 
-		static bool maproot(core_window_t*, bool is_child_refreshed);
+		static bool maproot(core_window_t*, bool have_refreshed, bool is_child_refreshed);
 
 		static void paste_children_to_graphics(core_window_t*, nana::paint::graphics& graph);
 
@@ -67,9 +67,9 @@ namespace detail
 
 		//_m_paste_children
 		//@brief:paste children window to the root graphics directly. just paste the visual rectangle
-		static void _m_paste_children(core_window_t*, bool is_child_refreshed, const nana::rectangle& parent_rect, nana::paint::graphics& graph, const nana::point& graph_rpos);
+		static void _m_paste_children(core_window_t*, bool is_child_refreshed, bool have_refreshed, const nana::rectangle& parent_rect, nana::paint::graphics& graph, const nana::point& graph_rpos);
 
-		static void _m_paint_glass_window(core_window_t*, bool is_redraw, bool is_child_refreshed, bool called_by_notify);
+		static void _m_paint_glass_window(core_window_t*, bool is_redraw, bool is_child_refreshed, bool called_by_notify, bool notify_other);
 
 		//_m_notify_glasses
 		//@brief:	Notify the glass windows that are overlapped with the specified vis_rect

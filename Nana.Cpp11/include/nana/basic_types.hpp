@@ -1,6 +1,7 @@
 /*
  *	Basic Types definition
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
@@ -185,8 +186,11 @@ namespace nana
 		bool operator==(const rectangle& rhs) const;
 		bool operator!=(const rectangle& rhs) const;
 
-		rectangle & operator=(const point&);
-		rectangle & operator=(const size&);
+		rectangle& operator=(const point&);
+		rectangle& operator=(const size&);
+
+		rectangle& set_pos(const point&);
+		rectangle& set_size(const size&);
 
 		rectangle& pare_off(int pixels);	 ///<Pares the specified pixels off the rectangle. It's equal to x += pixels; y + pixels; width -= (pixels << 1); height -= (pixels << 1);
 

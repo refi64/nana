@@ -188,6 +188,20 @@ namespace nana
 			return *this;
 		}
 
+		rectangle& rectangle::set_pos(const point& pos)
+		{
+			x = pos.x;
+			y = pos.y;
+			return *this;
+		}
+
+		rectangle& rectangle::set_size(const size& sz)
+		{
+			width = sz.width;
+			height = sz.height;
+			return *this;
+		}
+
 		rectangle& rectangle::pare_off(int pixels)
 		{
 			x += pixels;

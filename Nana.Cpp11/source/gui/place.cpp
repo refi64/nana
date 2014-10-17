@@ -675,6 +675,7 @@ namespace nana
 				}
 				return sp - allstart;
 			}
+			number_.reset();
 			return 0;
 		}
 	private:
@@ -886,8 +887,9 @@ namespace nana
 			double position = area.x();
 			std::vector<division*> delay_collocates;
 			double precise_px = 0;
-			for (auto& child : children)					/// First collocate child div's !!!
+			for (auto& child_ptr : children)					/// First collocate child div's !!!
 			{
+				auto child = child_ptr.get();
 				area_rotator child_area(vert, child->field_area);
 				child_area.x_ref() = static_cast<int>(position);
 				child_area.y_ref() = area.y();
@@ -901,7 +903,7 @@ namespace nana
 					else
 						child_px = adjustable_px;
 
-					child_px = limit_px(child.get(), child_px, area_px);
+					child_px = limit_px(child, child_px, area_px);
 					auto npx = static_cast<unsigned>(child_px);
 					precise_px = child_px - npx;
 					child_px = npx;
@@ -911,7 +913,7 @@ namespace nana
 
 				//Use 'endpos' to calc width is to avoid deviation
 				int endpos = static_cast<int>(position + child_px);
-				if ((!child->is_fixed()) && child->max_px.is_none() && child == children.back() && (endpos != area.right()))
+				if ((!child->is_fixed()) && child->max_px.is_none() && (child_ptr == children.back()) && (endpos != area.right()))
 					endpos = area.right();
 
 				child_area.w_ref() = static_cast<unsigned>(endpos - child_area.x());
@@ -920,7 +922,7 @@ namespace nana
 				position += child_px;
 
 				if (child->kind_of_division == kind::splitter)
-					delay_collocates.emplace_back(child.get());
+					delay_collocates.emplace_back(child);
 				else
 					child->collocate(wd);	/// The child div have full position. Now we can collocate  inside it the child fields and child-div.
 			}

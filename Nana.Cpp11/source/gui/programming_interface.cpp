@@ -1178,10 +1178,13 @@ namespace API
 
 	bool is_window_zoomed(window wd, bool ask_for_max)
 	{
-		internal_scope_guard lock;
 		auto const iwd = reinterpret_cast<restrict::core_window_t*>(wd);
-		if(restrict::window_manager.available(iwd))
-			return ::nana::detail::bedrock::interface_type::is_window_zoomed(iwd->root, ask_for_max);
+		internal_scope_guard lock;
+		if (restrict::window_manager.available(iwd))
+		{
+			if (iwd->other.category == nana::category::flags::root)
+				return ::nana::detail::bedrock::interface_type::is_window_zoomed(iwd->root, ask_for_max);
+		}
 		return false;
 	}
 

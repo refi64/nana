@@ -41,7 +41,7 @@ namespace nana
 
 		void drawer_trigger::resized(graph_reference graph, const arg_resized&)
 		{
-			overrided_ = false;
+			overrided_ = true;
 			this->refresh(graph);
 			detail::bedrock::instance().thread_context_lazy_refresh();
 		}

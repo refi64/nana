@@ -603,25 +603,23 @@ namespace API
 			return false;
 
 		nana::size & ts = (true_for_max ? iwd->max_track_size : iwd->min_track_size);
-		if(!sz.is_zero())
+		if(!sz.empty())
 		{
 			if(true_for_max)
 			{
-				if(iwd->min_track_size.width <= sz.width && iwd->min_track_size.height <= sz.height)
-				{
-					ts = restrict::interface_type::check_track_size(sz, iwd->extra_width, iwd->extra_height, true);
-					return true;
-				}
+				//Make sure the new size is larger than min size
+				if (iwd->min_track_size.width > sz.width || iwd->min_track_size.height > sz.height)
+					return false;
 			}
 			else
 			{
-				if((iwd->max_track_size.width == 0 && iwd->max_track_size.height == 0) || (iwd->max_track_size.width >= sz.width && iwd->max_track_size.height >= sz.height))
-				{
-					ts = restrict::interface_type::check_track_size(sz, iwd->extra_width, iwd->extra_height, false);
-					return true;
-				}
+				//Make sure that the new size is less than max size
+				if ((iwd->max_track_size.width || iwd->max_track_size.height) && (iwd->max_track_size.width < sz.width || iwd->max_track_size.height < sz.height))
+					return false;
 			}
-			return false;
+
+			ts = restrict::interface_type::check_track_size(sz, iwd->extra_width, iwd->extra_height, true_for_max);
+			return true;
 		}
 		else
 			ts.width = ts.height = 0;

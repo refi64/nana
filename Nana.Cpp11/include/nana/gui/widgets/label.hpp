@@ -51,6 +51,8 @@ namespace nana
 	class label
 		: public widget_object<category::widget_tag, drawerbase::label::trigger>
 	{
+		label(const label&) = delete;
+		label(label&&) = delete;
 	public:
 		typedef drawerbase::label::command command;
 		label();

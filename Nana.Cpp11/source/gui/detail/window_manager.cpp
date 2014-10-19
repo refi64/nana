@@ -241,7 +241,7 @@ namespace detail
 					owner = nullptr;
 			}
 
-			native_interface::window_result result = native_interface::create_window(native, nested, r, app);
+			auto result = native_interface::create_window(native, nested, r, app);
 			if(result.native_handle)
 			{
 				core_window_t* wd = new core_window_t(owner, wdg, (category::root_tag**)nullptr);
@@ -459,8 +459,9 @@ namespace detail
 				//Thread-Safe Required!
 				std::lock_guard<decltype(mutex_)> lock(mutex_);
 				auto rrt = root_runtime(root);
-				if(rrt && _m_effective(rrt->window, x, y))
-					return _m_find(rrt->window, x, y);
+				point pos{ x, y };
+				if (rrt && _m_effective(rrt->window, pos))
+					return _m_find(rrt->window, pos);
 			}
 			return attr_.capture.window;
 		}
@@ -793,7 +794,7 @@ namespace detail
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 			if (impl_->wd_register.available(wd))
 				return wd->children;
-			return std::vector<core_window_t*>();
+			return{};
 		}
 
 		bool window_manager::set_parent(core_window_t* wd, core_window_t* newpa)
@@ -892,7 +893,7 @@ namespace detail
 		{
 			if(attr_.capture.window)
 			{
-				bool inside = _m_effective(attr_.capture.window, root_x, root_y);
+				bool inside = _m_effective(attr_.capture.window, point{ root_x, root_y });
 				if(inside != attr_.capture.inside)
 				{
 					prev = attr_.capture.inside;
@@ -935,7 +936,7 @@ namespace detail
 						attr_.capture.window = wd;
 						attr_.capture.ignore_children = true;
 						native_interface::calc_window_point(wd->root, pos);
-						attr_.capture.inside = _m_effective(wd, pos.x, pos.y);
+						attr_.capture.inside = _m_effective(wd, pos);
 						return prev;
 					}
 				}
@@ -955,7 +956,7 @@ namespace detail
 						attr_.capture.ignore_children = last.second;
 						native_interface::capture_window(last.first->root, true);
 						native_interface::calc_window_point(last.first->root, pos);
-						attr_.capture.inside = _m_effective(last.first, pos.x, pos.y);
+						attr_.capture.inside = _m_effective(last.first, pos);
 					}
 				}
 
@@ -1051,8 +1052,7 @@ namespace detail
 			{
 				if(native_interface::calc_window_point(wd->root, pos))
 				{
-					pos.x -= wd->pos_root.x;
-					pos.y -= wd->pos_root.y;
+					pos -= wd->pos_root;
 					return true;
 				}
 			}
@@ -1210,14 +1210,13 @@ namespace detail
 				if (wd->flags.tab & detail::tab_type::tabstop)
 				{
 					auto & tabstop = root_attr->tabstop;
-					if (utl::erase(tabstop, wd))
-					{
-						if (established)
-							pa_root_attr->tabstop.push_back(wd);
-					}
-
+					//remove wd from root_attr, and then add it to pa_root_attr if established.
+					auto wd_removed = utl::erase(tabstop, wd);
 					if (established)
 					{
+						if (wd_removed)
+							pa_root_attr->tabstop.push_back(wd);
+
 						for (auto child : wd->children)
 						{
 							if(utl::erase(tabstop, child))
@@ -1386,7 +1385,7 @@ namespace detail
 		//_m_find
 		//@brief: find a window on root window through a given root coordinate.
 		//		the given root coordinate must be in the rectangle of wnd.
-		window_manager::core_window_t* window_manager::_m_find(core_window_t* wd, int x, int y)
+		window_manager::core_window_t* window_manager::_m_find(core_window_t* wd, const point& pos)
 		{
 			if(!wd->visible)
 				return nullptr;
@@ -1394,9 +1393,9 @@ namespace detail
 			for(auto i = wd->children.rbegin(); i != wd->children.rend(); ++i)
 			{
 				core_window_t* child = *i;
-				if((child->other.category != category::root_tag::value) && _m_effective(child, x, y))
+				if((child->other.category != category::root_tag::value) && _m_effective(child, pos))
 				{
-					child = _m_find(child, x, y);
+					child = _m_find(child, pos);
 					if(child)
 						return child;
 				}
@@ -1405,10 +1404,10 @@ namespace detail
 		}
 
 		//_m_effective, test if the window is a handle of window that specified by (root_x, root_y)
-		bool window_manager::_m_effective(core_window_t* wd, int root_x, int root_y)
+		bool window_manager::_m_effective(core_window_t* wd, const point& root_pos)
 		{
 			if(wd == nullptr || false == wd->visible)	return false;
-			return is_hit_the_rectangle(rectangle{ wd->pos_root, wd->dimension }, root_x, root_y);
+			return rectangle{ wd->pos_root, wd->dimension }.is_hit(root_pos);
 		}
 	//end class window_manager
 }//end namespace detail

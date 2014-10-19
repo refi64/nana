@@ -192,8 +192,8 @@ namespace detail
 		void _m_disengage(core_window_t*, core_window_t* for_new);
 		void _m_destroy(core_window_t*);
 		void _m_move_core(core_window_t*, const point& delta);
-		core_window_t* _m_find(core_window_t*, int x, int y);
-		static bool _m_effective(core_window_t*, int root_x, int root_y);
+		core_window_t* _m_find(core_window_t*, const point&);
+		static bool _m_effective(core_window_t*, const point& root_pos);
 	private:
 		mutable mutex_type mutex_;
 

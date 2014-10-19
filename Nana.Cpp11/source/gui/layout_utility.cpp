@@ -70,19 +70,11 @@ namespace nana
 
 	bool intersection(const rectangle & r, point pos_beg, point pos_end, point& good_pos_beg, point& good_pos_end)
 	{
-		const int right = r.x + static_cast<int>(r.width);
-		const int bottom = r.y + static_cast<int>(r.height);
+		const int right = r.right();
+		const int bottom = r.bottom();
 
 		if(pos_beg.x > pos_end.x)
-		{
-			int t = pos_end.x;
-			pos_end.x = pos_beg.x;
-			pos_beg.x = t;
-
-			t = pos_end.y;
-			pos_end.y = pos_beg.y;
-			pos_beg.y = t;
-		}
+			std::swap(pos_beg, pos_end);
 
 		bool good_beg = (0 <= pos_beg.x && pos_beg.x < right && 0 <= pos_beg.y && pos_beg.y < bottom);
 		bool good_end = (0 <= pos_end.x && pos_end.x < right && 0 <= pos_end.y && pos_end.y < bottom);
@@ -265,15 +257,8 @@ namespace nana
 	bool covered(const rectangle& r1, //Rectangle 1 is must under rectangle 2
 						const rectangle& r2) //Rectangle 2
 	{
-		if(r1.x < r2.x || r1.x + r1.width > r2.x + r2.width) return false;
-		if(r1.y < r2.y || r1.y + r1.height > r2.y + r2.height) return false;
+		if(r1.x < r2.x || r1.right() > r2.right()) return false;
+		if(r1.y < r2.y || r1.bottom() > r2.bottom()) return false;
 		return true;
-	}
-
-	bool is_hit_the_rectangle(const rectangle& r, int x, int y)
-	{
-		return	(r.x <= x) && (x < r.x + static_cast<int>(r.width))
-				&&
-				(r.y <= y) && (y < r.y + static_cast<int>(r.height));
 	}
 }

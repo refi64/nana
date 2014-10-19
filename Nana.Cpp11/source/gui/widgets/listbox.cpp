@@ -43,10 +43,6 @@ namespace nana
 
 				typedef std::vector<column_t> container;
 
-				es_header()
-					:visible_(true)
-				{}
-
 				bool visible() const
 				{
 					return visible_;
@@ -72,7 +68,7 @@ namespace nana
 								return m.weak_ordering;
 						}
 					}
-					return nullptr;
+					return{};
 				}
 
 				void create(const nana::string& text, unsigned pixels)
@@ -149,7 +145,8 @@ namespace nana
 							pixels = m.pixels;
 							return true;
 						}
-						else if(m.visible)
+						
+						if(m.visible)
 							xpos += m.pixels;
 					}
 					return true;
@@ -162,7 +159,8 @@ namespace nana
 					{
 						if(m.index == index)
 							break;
-						else if(m.visible)
+						
+						if(m.visible)
 							x += m.pixels;
 					}
 					return x;
@@ -227,7 +225,7 @@ namespace nana
 					}
 				}
 			private:
-				bool visible_;
+				bool visible_{true};
 				container cont_;
 			};
 
@@ -347,12 +345,6 @@ namespace nana
 								const nana::string&, nana::any*, bool reverse)>(std::size_t) > fetch_ordering_comparer;
 
 				es_lister()
-					:	ess_(nullptr),
-						widget_(nullptr),
-						sorted_index_(npos),
-						resort_(true),
-						sorted_reverse_(false),
-						ordered_categories_(false)
 				{
 					category_t cg;
 					cg.expand = true;
@@ -1167,20 +1159,18 @@ namespace nana
 
 				index_pair last() const
 				{
-					auto & catobj = *list_.rbegin();
-					index_pair i(list_.size() - 1, catobj.items.size());
+					index_pair i{ list_.size() - 1, list_.back().items.size() };
 
-					if(0 == i.cat)
+					if (i.cat)
 					{
-						if(i.item)	--i.item;
-					}
-					else
-					{
-						if(i.item && catobj.expand)
+						if (i.item && list_.back().expand)
 							--i.item;
 						else
 							i.item = npos;
 					}
+					else if (i.item)
+						--i.item;
+
 					return i;
 				}
 
@@ -1189,20 +1179,10 @@ namespace nana
 					return (cat < list_.size());
 				}
 
-				bool good(size_type cat, size_type index) const
+				bool good(const index_pair& pos) const
 				{
-					if(cat < list_.size())
-						return index < size_item(cat);
-					return false;
+					return ((pos.cat < list_.size()) && (pos.item < size_item(pos.cat)));
 				}
-
-				bool good(const index_pair& id) const
-				{
-					if (id.cat < list_.size())
-						return id.item < size_item(id.cat);
-					return false;
-				}
-
 
 				bool good_item(index_pair pos, index_pair& item) const
 				{
@@ -1366,12 +1346,12 @@ namespace nana
 			public:
 				index_pair last_selected;
 			private:
-				essence_t * ess_;
-				nana::listbox * widget_;
-				std::size_t sorted_index_;		///< The index of the column used to sort
-				bool	resort_;
-				bool	sorted_reverse_;
-				bool	ordered_categories_;	//A switch indicates whether the categories are ordered.
+				essence_t * ess_{nullptr};
+				nana::listbox * widget_{nullptr};
+				std::size_t sorted_index_{npos};		///< The index of the column used to sort
+				bool	resort_{true};
+				bool	sorted_reverse_{false};
+				bool	ordered_categories_{false};	//A switch indicates whether the categories are ordered.
 												//The ordered categories always creates a new category at a proper position(before the first one which is larger than it).
 				container list_;
 			};//end class es_lister
@@ -1384,20 +1364,20 @@ namespace nana
 				enum class state_t{normal, highlighted, pressed, grabed, floated};
 				enum class where_t{unknown = -1, header, lister, checker};
 
-				nana::paint::graphics *graph;
-				bool auto_draw;
-				bool checkable;
-				bool if_image;
-				unsigned header_size;
-				unsigned item_size;
-				unsigned text_height;
-				unsigned suspension_width;
+				nana::paint::graphics *graph{nullptr};
+				bool auto_draw{true};
+				bool checkable{false};
+				bool if_image{false};
+				unsigned header_size{25};
+				unsigned item_size{24};
+				unsigned text_height{0};
+				unsigned suspension_width{0};
 
 				es_header header;
 				es_lister lister;  // we have at least one emty cat. the #0
 				nana::any resolver;
 
-				state_t ptr_state;
+				state_t ptr_state{ state_t::normal };
 
 				std::pair<where_t, std::size_t> pointer_where;	//The 'first' stands for which object, such as header and lister, 'second' stands for item
 																//if where == header, 'second' indicates the item
@@ -1415,9 +1395,6 @@ namespace nana
 				}scroll;
 
 				essence_t()
-					:	graph(nullptr), auto_draw(true), checkable(false), if_image(false),
-						header_size(25), item_size(24), text_height(0), suspension_width(0),
-						ptr_state(state_t::normal)
 				{
 					scroll.offset_x = 0;
 					pointer_where.first = where_t::unknown;
@@ -1458,7 +1435,7 @@ namespace nana
 				{
 					selection svec;
 					lister.item_selected(svec);
-					if(0 == svec.size()) return;	//no selected, exit.
+					if(svec.empty()) return;	//no selected, exit.
 
 					auto & item = svec[0];
 					//Same with current scroll offset item.
@@ -1701,7 +1678,7 @@ namespace nana
 						{
 							r = graph->size();
 							r.height = header_size;
-							return !r.empty_size();
+							return !r.empty();
 						}
 
 						const unsigned ex_width = 4 + (scroll.v.empty() ? 0 : scroll.scale - 1);
@@ -2781,7 +2758,6 @@ namespace nana
 					return (ess_->lister.text(cat_, pos_.item, 0) == nana::string(nana::charset(s)));
 				}
 
-
 				item_proxy & item_proxy::operator=(const item_proxy& rhs)
 				{
 					if(this != &rhs)
@@ -2843,10 +2819,8 @@ namespace nana
 					if((ess_ != rhs.ess_) || (cat_ != rhs.cat_))
 						return false;
 
-					if (cat_)	//Not empty
-						return (pos_ == rhs.pos_);
-
-					return true;	//Both are empty
+					//They both are end iterator when cat_ == 0
+					return (!cat_ || (pos_ == rhs.pos_));
 				}
 
 				// Behavior of Iterator

@@ -168,7 +168,9 @@ namespace nana
 		size(const rectangle&);
 
 		size& operator=(const rectangle&);
-		bool is_zero() const;
+
+		bool empty() const;		///< true if width * height == 0
+		bool is_hit(const point&) const;	///< Assume it is a rectangle at (0,0), and check whether a specified position is in the rectange.
 		bool operator==(const size& rhs) const;
 		bool operator!=(const size& rhs) const;
 
@@ -197,7 +199,8 @@ namespace nana
 		int right() const;
 		int bottom() const;
 		bool is_hit(int x, int y) const;
-		bool empty_size() const;
+		bool is_hit(const point& pos) const;
+		bool empty() const;		///< true if width * height == 0
 
 		int x;
 		int y;

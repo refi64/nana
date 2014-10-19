@@ -424,8 +424,8 @@ namespace nana
 					{
 						if(head_)
 						{
-							nana::rectangle r = _m_make_root_rectangle();
-							if(is_hit_the_rectangle(r, x, y))
+							auto r = _m_make_root_rectangle();
+							if (r.is_hit(x, y))
 							{
 								style_.active_item_rectangle = r;
 								if(ui_el_.what == ui_el_.item_root)
@@ -437,7 +437,7 @@ namespace nana
 
 						nana::rectangle r = _m_make_rectangle();
 						std::vector<node_handle> seq;
-						if(is_hit_the_rectangle(r, x, y) && treebase_.seq(head_, seq))
+						if(r.is_hit(x, y) && treebase_.seq(head_, seq))
 						{
 							const int xbase = r.x;
 							const int xend = static_cast<int>(r.width) + r.x;
@@ -457,7 +457,7 @@ namespace nana
 									r.y += r.height;
 								}
 
-								if(is_hit_the_rectangle(r, x, y))
+								if(r.is_hit(x, y))
 								{
 									style_.active_item_rectangle = r;
 									std::size_t index = seq_index + head_;

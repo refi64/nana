@@ -137,7 +137,7 @@ namespace nana
 
 				void draw()
 				{
-					if(other_.graph && !other_.graph->size().is_zero())
+					if(other_.graph && !other_.graph->size().empty())
 					{
 						bool is_transparent = (bground_mode::basic == API::effects_bground_mode(other_.wd));
 						proto_.renderer->background(other_.wd, *other_.graph, is_transparent);
@@ -474,7 +474,7 @@ namespace nana
 					bar.border_size = attr_.border;
 					bar.r = _m_bar_area();
 
-					if (bar.r.empty_size())
+					if (bar.r.empty())
 						return;
 
 					proto_.renderer->bar(other_.wd, *other_.graph, bar);

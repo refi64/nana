@@ -1735,7 +1735,7 @@ namespace nana
 
 					//Check the collapse area.
 					//Ignore this collapse if its area is less than 2(col.width * col.height < 2)
-					if (!col.empty_size() && (col.width > 1 || col.height > 1) && (col.x >= 0 && col.y >= 0))
+					if (!col.empty() && (col.width > 1 || col.height > 1) && (col.x >= 0 && col.y >= 0))
 					{
 						//Overwrite if a exist_col in collapses has same position as the col.
 						bool use_col = true;

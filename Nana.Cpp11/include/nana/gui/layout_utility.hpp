@@ -39,7 +39,5 @@ namespace nana
 	//@brief:	Tests a rectangle whether it is wholly covered by another.
 	bool covered(const rectangle& underlying, //Rectangle 1 is must under rectangle 2
 						const rectangle& cover);
-
-	bool is_hit_the_rectangle(const rectangle& r, int x, int y);
 }//end namespace nana
 #endif

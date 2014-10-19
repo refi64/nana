@@ -970,7 +970,7 @@ namespace detail
 					nana::arg_mouse arg;
 					assign_arg(arg, msgwnd, message, pmdec);
 
-					const bool hit = is_hit_the_rectangle(msgwnd->dimension, arg.pos.x, arg.pos.y);
+					const bool hit = msgwnd->dimension.is_hit(arg.pos);
 
 					bool fire_click = false;
 					if(brock.wd_manager.available(mouse_window) && (msgwnd == mouse_window))

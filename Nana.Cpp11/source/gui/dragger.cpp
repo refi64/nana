@@ -92,7 +92,7 @@ namespace nana
 
 		void _m_destroy(::nana::window wd)
 		{
-			for(auto i = triggers_.begin(); i != triggers_.end(); ++i)
+			for(auto i = triggers_.begin(), end = triggers_.end(); i != end; ++i)
 			{
 				if(i->wd == wd)
 				{
@@ -137,15 +137,15 @@ namespace nana
 			case event_code::mouse_move:
 				if(dragging_ && arg.left_button)
 				{
-					nana::point pos = API::cursor_position();
+					auto pos = API::cursor_position();
 					pos -= origin_;
+
 					for(auto & t : targets_)
 					{
 						if(API::is_window_zoomed(t.wd, true) == false)
 						{
-							window owner = API::get_owner_window(t.wd);
-
-							nana::point wdps = t.origin;
+							auto owner = API::get_owner_window(t.wd);
+							auto wdps = t.origin;
 							if (owner)
 								API::calc_window_point(owner, wdps);
 
@@ -158,12 +158,10 @@ namespace nana
 								wdps.y += pos.y;
 								break;
 							default:
-								wdps.x += pos.x;
-								wdps.y += pos.y;
-								break;
+								wdps += pos;
 							}
 
-							if (!t.restrict_area.empty_size())
+							if (!t.restrict_area.empty())
 								_m_check_restrict_area(wdps, API::window_size(t.wd), t.restrict_area);
 
 							API::move_window(t.wd, wdps.x, wdps.y);

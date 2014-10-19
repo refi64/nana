@@ -434,7 +434,7 @@ namespace nana{	namespace paint
 	bool pixel_buffer::open(drawable_type drawable)
 	{
 		nana::size sz = nana::paint::detail::drawable_size(drawable);
-		if(sz.is_zero()) return false;
+		if(sz.empty()) return false;
 
 #if defined(NANA_WINDOWS)
 		auto * sp = storage_.get();

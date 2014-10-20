@@ -685,6 +685,7 @@ namespace nana
 						want_focus_(nullptr == wd),
 						event_focus_(nullptr)
 				{
+					caption(STR("nana menu window"));
 					get_drawer_trigger().renderer = rdptr;
 					state_.owner_menubar = state_.self_submenu = false;
 					state_.auto_popup_submenu = true;

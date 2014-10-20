@@ -993,14 +993,19 @@ namespace detail
 						arg.evt_code = event_code::mouse_up;
 						emit_drawer(&drawer::mouse_up, msgwnd, arg, &context);
 
+						auto evt_ptr = msgwnd->together.events_ptr;
+
 						if (fire_click)
 						{
 							arg.evt_code = event_code::click;
 							msgwnd->together.attached_events->click.emit(arg);
 						}
 
-						arg.evt_code = event_code::mouse_up;
-						msgwnd->together.attached_events->mouse_up.emit(arg);
+						if (brock.wd_manager.available(msgwnd))
+						{
+							arg.evt_code = event_code::mouse_up;
+							msgwnd->together.attached_events->mouse_up.emit(arg);
+						}
 					}
 					else if (fire_click)
 					{

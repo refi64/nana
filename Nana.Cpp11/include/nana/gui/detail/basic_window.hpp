@@ -170,6 +170,7 @@ namespace detail
 		struct
 		{
 			caret_descriptor* caret;
+			std::shared_ptr<general_events> events_ptr;
 			general_events* attached_events;
 		}together;
 

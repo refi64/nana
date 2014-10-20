@@ -375,7 +375,7 @@ namespace nana
 			{
 				if (together.attached_events)
 					return false;
-
+				together.events_ptr = p;
 				together.attached_events = p.get();
 				return true;
 			}

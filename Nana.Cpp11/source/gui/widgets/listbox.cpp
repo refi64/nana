@@ -321,10 +321,16 @@ namespace nana
 				nana::string text;
 				std::vector<std::size_t> sorted;
 				container items;
-				bool expand;
+				bool expand{true};
 
 				//A cat may have a key object to identify the category
 				std::shared_ptr<nana::detail::key_interface> key_ptr;
+
+				category_t() = default;
+
+				category_t(nana::string&& txt)
+					:text(std::move(txt))
+				{}
 
 				bool selected() const
 				{
@@ -346,9 +352,8 @@ namespace nana
 
 				es_lister()
 				{
-					category_t cg;
-					cg.expand = true;
-					list_.push_back(cg);   // we allwais have cat # 0
+					//#0 is a default category
+					list_.emplace_back();
 				}
 
 				void bind(essence_t* ess, widget& wd)
@@ -500,32 +505,34 @@ namespace nana
 				}
 
 				///Append a new category with a specified name.
-				category_t* create_cat(const nana::string& text)
+				category_t* create_cat(nana::string&& text)
 				{
-					category_t cg;
-					cg.expand = true;
-					cg.text = text;
-					list_.push_back(cg);
+					list_.emplace_back(std::move(text));
 					return &list_.back();
 				}
 
 				category_t* create_cat(std::shared_ptr<nana::detail::key_interface> ptr)
 				{
-					category_t cg;
-					cg.expand = true;
 					for (auto i = list_.begin(); i != list_.end(); ++i)
 					{
 						if (i->key_ptr && i->key_ptr->compare(ptr.get()))
 						{
-							i = list_.insert(i, cg);
+							i = list_.emplace(i);
 							i->key_ptr = ptr;
 							return &(*i);
 						}
 					}
 
-					list_.push_back(cg);
+					list_.emplace_back();
 					list_.back().key_ptr = ptr;
 					return &list_.back();
+				}
+
+				category_t* create_cat(std::size_t pos, nana::string&& text)
+				{
+					auto i = list_.cbegin();
+					std::advance(i, pos);
+					return &(*list_.emplace(i, std::move(text)));
 				}
 
 				/// Insert before item in "pos" a new item with "text" in column 0
@@ -2992,6 +2999,11 @@ namespace nana
 					return ess_->lister.display_order(pos_, pos);
 				}
 
+				size_type cat_proxy::position() const
+				{
+					return pos_;
+				}
+
 				size_type cat_proxy::size() const
 				{
 					return cat_->items.size();
@@ -3119,14 +3131,22 @@ namespace nana
 			ess.update();
 		}
 
-		listbox::cat_proxy listbox::append(const nana::string& s)
+		listbox::cat_proxy listbox::append(nana::string s)
 		{
 			internal_scope_guard lock;
 			auto & ess = get_drawer_trigger().essence();
-			ess.lister.create_cat(s);
+			auto new_cat_ptr = ess.lister.create_cat(std::move(s));
 			ess.update();
 
-			return cat_proxy(&ess, ess.lister.size_categ() - 1);
+			return cat_proxy{ &ess, new_cat_ptr };
+		}
+
+		auto listbox::insert(cat_proxy cat, nana::string str) -> cat_proxy
+		{
+			internal_scope_guard lock;
+			auto & ess = get_drawer_trigger().essence();
+			auto new_cat_ptr = ess.lister.create_cat(cat.position(), std::move(str));
+			return cat_proxy{ &ess, new_cat_ptr };
 		}
 
 		listbox::cat_proxy listbox::at(size_type pos) const
@@ -3388,7 +3408,7 @@ namespace nana
 			}
 			else
 			{
-				cat = ess.lister.create_cat(STR(""));
+				cat = ess.lister.create_cat(nana::string{});
 				cat->key_ptr = ptr;
 			}
 			ess.update();

@@ -328,6 +328,7 @@ namespace nana
 				/// Returns the index of a item by its display pos, the index of the item isn't changed after sorting.
 				size_type index_by_display_order(size_type disp_order) const;
 				size_type display_order(size_type pos) const;
+				size_type position() const;
 
 				/// Returns the number of items
 				size_type size() const;
@@ -421,8 +422,8 @@ By \a clicking on a header the list get \a reordered, first up, and then down al
 
 		void append_header(const nana::string &header_txt, unsigned width = 120);///<Appends a new column with a header text and the specified width at the end
 
-		cat_proxy append(const nana::string& text);          ///<Appends a new category at the end
-		cat_proxy insert(cat_proxy, const nana::string&);
+		cat_proxy append(nana::string);          ///<Appends a new category at the end
+		cat_proxy insert(cat_proxy, nana::string);
 		cat_proxy at(size_type pos) const;
 		listbox& ordered_categories(bool);
 

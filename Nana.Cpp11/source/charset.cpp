@@ -447,7 +447,7 @@ namespace nana
 					unsigned long ch0 = bytes[0] | (bytes[1] << 8);
 					unsigned long ch1 = bytes[2] | (bytes[3] << 8);
 
-					code = (ch0 & 0x3FFF << 10) | (ch1 & 0x3FFF);
+					code = ((ch0 & 0x3FF) << 10) | (ch1 & 0x3FF);
 					bytes += 4;
 				}
 				else if(bytes + 2 <= end)
@@ -468,7 +468,7 @@ namespace nana
 					//32bit encoding
 					unsigned long ch0 = (bytes[0] << 8) | bytes[1];
 					unsigned long ch1 = (bytes[2] << 8) | bytes[3];
-					code = (ch0 & 0x3FFF << 10) | (ch1 & 0x3FFF);
+					code = ((ch0 & 0x3FF) << 10) | (ch1 & 0x3FF);
 					bytes += 4;
 				}
 				else if(bytes + 2 <= end)
@@ -573,13 +573,13 @@ namespace nana
 			{
 				s += static_cast<char>(code & 0xFF);
 				s += static_cast<char>((code & 0xFF00) >> 8);
-				s += static_cast<char>((code & 0xFF0000) >> 18);
+				s += static_cast<char>((code & 0xFF0000) >> 16);
 				s += static_cast<char>((code & 0xFF000000) >> 24);
 			}
 			else
 			{
 				s += static_cast<char>((code & 0xFF000000) >> 24);
-				s += static_cast<char>((code & 0xFF0000) >> 18);
+				s += static_cast<char>((code & 0xFF0000) >> 16);
 				s += static_cast<char>((code & 0xFF00) >> 8);
 				s += static_cast<char>(code & 0xFF);
 			}

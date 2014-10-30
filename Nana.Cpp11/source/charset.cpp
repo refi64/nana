@@ -1,6 +1,7 @@
 /*
  *	A Character Encoding Set Implementation
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0.
  *	(See accompanying file LICENSE_1_0.txt or copy at
@@ -8,6 +9,8 @@
  *
  *	@file: nana/charset.cpp
  *	@brief: A conversion between unicode characters and multi bytes characters
+ *	@contributions:
+ *		UTF16 4-byte decoding issue by Renke Yan.
  */
 
 #include <nana/charset.hpp>
@@ -441,7 +444,7 @@ namespace nana
 			unsigned long code;
 			if(le_or_be)
 			{
-				if((bytes + 4 <= end) && ((bytes[1] & 0xFC) == 0xD8))
+				if((end - bytes >= 4) && ((bytes[1] & 0xFC) == 0xD8))
 				{
 					//32bit encoding
 					unsigned long ch0 = bytes[0] | (bytes[1] << 8);
@@ -450,7 +453,7 @@ namespace nana
 					code = ((ch0 & 0x3FF) << 10) | (ch1 & 0x3FF);
 					bytes += 4;
 				}
-				else if(bytes + 2 <= end)
+				else if(end - bytes >= 2)
 				{
 					code = bytes[0] | (bytes[1] << 8);
 					bytes += 2;
@@ -463,15 +466,15 @@ namespace nana
 			}
 			else
 			{
-				if((bytes + 4 <= end) && ((bytes[0] & 0xFC) == 0xD8))
+				if((end - bytes >= 4) && ((bytes[0] & 0xFC) == 0xD8))
 				{
 					//32bit encoding
 					unsigned long ch0 = (bytes[0] << 8) | bytes[1];
 					unsigned long ch1 = (bytes[2] << 8) | bytes[3];
-					code = ((ch0 & 0x3FF) << 10) | (ch1 & 0x3FF);
+					code = (((ch0 & 0x3FF) << 10) | (ch1 & 0x3FF)) + 0x10000;
 					bytes += 4;
 				}
-				else if(bytes + 2 <= end)
+				else if(end - bytes >= 2)
 				{
 					code = (bytes[0] << 8) | bytes[1];
 					bytes += 2;
@@ -487,7 +490,7 @@ namespace nana
 
 		unsigned long utf32char(const unsigned char* & bytes, const unsigned char* end, bool le_or_be)
 		{
-			if(bytes + 4 <= end)
+			if(end - bytes >= 4)
 			{
 				unsigned long code;
 				if(le_or_be)
@@ -863,7 +866,7 @@ namespace nana
 						}
 						break;
 					}
-					return std::string();
+					return {};
 				}
 				std::string wcstr;
 				if(mb2wc(wcstr, data_.c_str()))
@@ -878,7 +881,7 @@ namespace nana
 						return wcstr;
 					}
 				}
-				return std::string();
+				return {};
 			}
 
 			virtual std::wstring wstr() const
@@ -940,7 +943,7 @@ namespace nana
 					wc2mb(mbstr, data_.c_str());
 					return mbstr;
 				}
-				return std::string();
+				return {};
 			}
 
 			virtual std::string && str_move()
@@ -960,7 +963,7 @@ namespace nana
 				case unicode::utf32:
 					return std::string(reinterpret_cast<const char*>(data_.c_str()), data_.size() * sizeof(wchar_t));
 				}
-				return std::string();
+				return {};
 			}
 
 			virtual std::wstring wstr() const
@@ -1005,7 +1008,7 @@ namespace nana
 			{
 				delete impl_;
 				impl_ = r.impl_;
-				r.impl_ = 0;
+				r.impl_ = nullptr;
 			}
 			return *this;
 		}

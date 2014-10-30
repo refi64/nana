@@ -9,7 +9,7 @@
  *
  *	@file: nana/gui/place.cpp
  *
- *	Contributions:
+ *	@contributions:
  *	min/max and splitter bar initial weight by qPCR4vir.
  */
 

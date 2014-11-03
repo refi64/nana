@@ -71,7 +71,10 @@ namespace detail
 		void event_move(core_window_t*, int x, int y);
 		void thread_context_destroy(core_window_t*);
 		void thread_context_lazy_refresh();
-		void update_cursor(core_window_t *);
+		void update_cursor(core_window_t*);
+		void set_cursor(core_window_t*, nana::cursor, thread_context*);
+		void define_state_cursor(core_window_t*, nana::cursor, thread_context*);
+		void undefine_state_cursor(core_window_t*, thread_context*);
 	public:
 		window_manager_t	wd_manager;
 		events_operation	evt_operation;

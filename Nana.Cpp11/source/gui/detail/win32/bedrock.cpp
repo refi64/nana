@@ -151,13 +151,17 @@ namespace detail
 		struct cursor_tag
 		{
 			core_window_t * window;
+			native_window_type native_handle;
 			nana::cursor	predef_cursor;
+			HCURSOR			handle;
 		}cursor;
 
 		thread_context()
 		{
 			cursor.window = nullptr;
+			cursor.native_handle = nullptr;
 			cursor.predef_cursor = nana::cursor::arrow;
+			cursor.handle = nullptr;
 		}
 	};
 
@@ -654,6 +658,7 @@ namespace detail
 		switch(msg)
 		{
 		case WM_DESTROY:
+		case WM_SHOWWINDOW:
 		case WM_SIZING:
 		case WM_SIZE:
 		case WM_MOVE:
@@ -837,8 +842,15 @@ namespace detail
 						return 0;
 				}
 				break;
+			case WM_SHOWWINDOW:
+				if (msgwnd->visible && (wParam == FALSE))
+					brock.event_expose(msgwnd, false);
+				else if ((!msgwnd->visible) && (wParam != FALSE))
+					brock.event_expose(msgwnd, true);
+				def_window_proc = true;
+				break;
 			case WM_WINDOWPOSCHANGED:
-				if((reinterpret_cast<WINDOWPOS*>(lParam)->flags & SWP_SHOWWINDOW) && (msgwnd->visible == false))
+				if ((reinterpret_cast<WINDOWPOS*>(lParam)->flags & SWP_SHOWWINDOW) && (!msgwnd->visible))
 					brock.event_expose(msgwnd, true);
 				else if((reinterpret_cast<WINDOWPOS*>(lParam)->flags & SWP_HIDEWINDOW) && msgwnd->visible)
 					brock.event_expose(msgwnd, false);
@@ -1710,17 +1722,6 @@ namespace detail
 		return name;
 	}
 
-	void SetCursor(bedrock::core_window_t* wd, cursor cur)
-	{
-#ifdef _WIN64
-			::SetClassLongPtr(reinterpret_cast<HWND>(wd->root), GCLP_HCURSOR,
-					reinterpret_cast<LONG_PTR>(::LoadCursor(0, translate(cur))));
-#else
-			::SetClassLong(reinterpret_cast<HWND>(wd->root), GCL_HCURSOR,
-					static_cast<unsigned long>(reinterpret_cast<size_t>(::LoadCursor(0, translate(cur)))));
-#endif
-	}
-
 	void bedrock::update_cursor(core_window_t * wd)
 	{
 		internal_scope_guard isg;
@@ -1730,64 +1731,126 @@ namespace detail
 			if(nullptr == thrd)
 				return;
 
-			if((wd->predef_cursor == cursor::arrow) && (thrd->cursor.window == wd))
-			{
-				if(thrd->cursor.predef_cursor != cursor::arrow)
-				{
-					SetCursor(wd, cursor::arrow);
-					thrd->cursor.window = nullptr;
-					thrd->cursor.predef_cursor = cursor::arrow;
-				}
-				return;
-			}
-
-			nana::point pos = native_interface::cursor_position();
-			native_window_type native_handle = native_interface::find_window(pos.x, pos.y);
-			if(nullptr == native_handle)
+			auto pos = native_interface::cursor_position();
+			auto native_handle = native_interface::find_window(pos.x, pos.y);
+			if(!native_handle)
 				return;
 
 			native_interface::calc_window_point(native_handle, pos);
 			if(wd != wd_manager.find_window(native_handle, pos.x, pos.y))
 				return;
 
-			if(wd->predef_cursor != thrd->cursor.predef_cursor)
-			{
-				if(thrd->cursor.predef_cursor != cursor::arrow)
-					thrd->cursor.window = nullptr;
-
-				if(wd->predef_cursor != cursor::arrow)
-				{
-					thrd->cursor.window = wd;
-					SetCursor(wd, wd->predef_cursor);
-				}
-				thrd->cursor.predef_cursor = wd->predef_cursor;
-			}
+			set_cursor(wd, wd->predef_cursor, thrd);
 		}
+	}
+
+	//Dynamically set a cursor for a window
+	void bedrock::set_cursor(core_window_t* wd, nana::cursor cur, thread_context* thrd)
+	{
+		if (nullptr == thrd)
+			thrd = get_thread_context(wd->thread_id);
+
+		if ((cursor::arrow == cur) && !thrd->cursor.native_handle)
+			return;
+
+		thrd->cursor.window = wd;
+		if ((thrd->cursor.native_handle == wd->root) && (cur == thrd->cursor.predef_cursor))
+			return;
+
+		thrd->cursor.native_handle = wd->root;
+		if (thrd->cursor.predef_cursor != cur)
+		{
+			thrd->cursor.predef_cursor = cur;
+			thrd->cursor.handle = ::LoadCursor(nullptr, translate(cur));
+		}
+
+		if (wd->root_widget->other.attribute.root->running_cursor != cur)
+		{
+			wd->root_widget->other.attribute.root->running_cursor = cur;
+#ifdef _WIN64
+			::SetClassLongPtr(reinterpret_cast<HWND>(wd->root), GCLP_HCURSOR,
+				reinterpret_cast<LONG_PTR>(thrd->cursor.handle));
+#else
+			::SetClassLong(reinterpret_cast<HWND>(wd->root), GCL_HCURSOR,
+				static_cast<unsigned long>(reinterpret_cast<size_t>(thrd->cursor.handle)));
+#endif
+		}
+		if (cursor::arrow == thrd->cursor.predef_cursor)
+		{
+			thrd->cursor.window = nullptr;
+			thrd->cursor.native_handle = nullptr;
+		}
+	}
+
+	void bedrock::define_state_cursor(core_window_t* wd, nana::cursor cur, thread_context* thrd)
+	{
+		wd->root_widget->other.attribute.root->state_cursor = cur;
+		wd->root_widget->other.attribute.root->state_cursor_window = wd;
+		set_cursor(wd, cur, thrd);
+		auto cur_handle = ::LoadCursor(nullptr, translate(cur));
+		::SetCursor(cur_handle);
+		::ShowCursor(TRUE);
+	}
+
+	void bedrock::undefine_state_cursor(core_window_t * wd, thread_context* thrd)
+	{
+		if (nullptr == thrd)
+			thrd = get_thread_context(wd->thread_id);
+
+		HCURSOR rev_handle = ::LoadCursor(nullptr, IDC_ARROW);
+		if (!wd_manager.available(wd))
+		{
+			::ShowCursor(FALSE);
+			::SetCursor(rev_handle);
+			return;
+		}
+
+		wd->root_widget->other.attribute.root->state_cursor = nana::cursor::arrow;
+		wd->root_widget->other.attribute.root->state_cursor_window = nullptr;
+
+		auto pos = native_interface::cursor_position();
+		auto native_handle = native_interface::find_window(pos.x, pos.y);
+
+		if (!native_handle)
+		{
+			::ShowCursor(FALSE);
+			::SetCursor(rev_handle);
+			return;
+		}
+
+		native_interface::calc_window_point(native_handle, pos);
+		auto rev_wd = wd_manager.find_window(native_handle, pos.x, pos.y);
+		if (rev_wd)
+		{
+			set_cursor(rev_wd, rev_wd->predef_cursor, thrd);
+			rev_handle = thrd->cursor.handle;
+		}
+		::ShowCursor(FALSE);
+		::SetCursor(rev_handle);
 	}
 
 	void bedrock::_m_event_filter(event_code event_id, core_window_t * wd, thread_context * thrd)
 	{
+		auto not_state_cur = (wd->root_widget->other.attribute.root->state_cursor == nana::cursor::arrow);
+
 		switch(event_id)
 		{
 		case event_code::mouse_enter:
-			if(wd->predef_cursor != cursor::arrow)
-			{
-				thrd->cursor.window = wd;
-				if(wd->predef_cursor != thrd->cursor.predef_cursor)
-					thrd->cursor.predef_cursor = wd->predef_cursor;
-				SetCursor(wd, thrd->cursor.predef_cursor);
-			}
+			if (not_state_cur)
+				set_cursor(wd, wd->predef_cursor, thrd);
 			break;
 		case event_code::mouse_leave:
-			if(wd->predef_cursor != cursor::arrow)
-				SetCursor(wd, cursor::arrow);
+			if (not_state_cur && (wd->predef_cursor != cursor::arrow))
+				set_cursor(wd, cursor::arrow, thrd);
 			break;
 		case event_code::destroy:
+			if (wd->root_widget->other.attribute.root->state_cursor_window == wd)
+				undefine_state_cursor(wd, thrd);
+
 			if(wd == thrd->cursor.window)
 			{
-				SetCursor(wd, cursor::arrow);
-				thrd->cursor.predef_cursor = cursor::arrow;
-				thrd->cursor.window = nullptr;
+				set_cursor(wd, cursor::arrow, thrd);
+				wd->root_widget->other.attribute.root->running_cursor = cursor::arrow;
 			}
 			break;
         default:

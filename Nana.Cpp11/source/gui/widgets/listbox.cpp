@@ -530,7 +530,14 @@ namespace nana
 
 				category_t* create_cat(std::size_t pos, nana::string&& text)
 				{
+#if defined(NANA_LINUX)
+					//Call begin instead of cbegin, because the first parameter
+					//of emplace is not const_iterator in GCC's C++ standard
+					//library implementation.
+					auto i = list_.begin();
+#else
 					auto i = list_.cbegin();
+#endif
 					std::advance(i, pos);
 					return &(*list_.emplace(i, std::move(text)));
 				}

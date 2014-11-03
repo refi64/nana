@@ -454,6 +454,9 @@ namespace detail
 
 		window_manager::core_window_t* window_manager::find_window(native_window_type root, int x, int y)
 		{
+			if (nullptr == root)
+				return nullptr;
+
 			if((false == attr_.capture.ignore_children) || (nullptr == attr_.capture.window) || (attr_.capture.window->root != root))
 			{
 				//Thread-Safe Required!

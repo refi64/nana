@@ -285,5 +285,8 @@
     <ClCompile Include="..\..\source\gui\notifier.cpp">
       <Filter>Source Files\nana\gui</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\gui\state_cursor.cpp">
+      <Filter>Source Files\nana\gui</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

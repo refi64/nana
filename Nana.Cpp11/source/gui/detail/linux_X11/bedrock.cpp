@@ -75,6 +75,7 @@ namespace detail
 		struct cursor_tag
 		{
 			core_window_t * window;
+			native_window_type native_handle;
 			nana::cursor predef_cursor;
 			Cursor handle;
 		}cursor;
@@ -82,6 +83,7 @@ namespace detail
 		thread_context()
 		{
 			cursor.window = nullptr;
+			cursor.native_handle = nullptr;
 			cursor.predef_cursor = nana::cursor::arrow;
 			cursor.handle = 0;
 		}
@@ -769,7 +771,7 @@ namespace detail
 							auto events_ptr = msgwnd->together.events_ptr;
 							arg.evt_code = event_code::mouse_up;
 							emit_drawer(&drawer::mouse_up, msgwnd, arg, &context);
-							
+
 							if(fire_click)
 							{
 								arg.evt_code = event_code::click;
@@ -1018,7 +1020,6 @@ namespace detail
 									arg.ignore = false;
 									arg.key = charbuf[i];
 									brock.get_key_state(arg);
-									brock.emit(event_code::key_char, msgwnd, arg, true, &context);
 
 									msgwnd->together.attached_events->key_char.emit(arg);
 									if(arg.ignore == false && brock.wd_manager.available(msgwnd))
@@ -1207,87 +1208,112 @@ namespace detail
 		internal_scope_guard isg;
 		if(wd_manager.available(wd))
 		{
-			thread_context * thrd = get_thread_context(wd->thread_id);
-			if(thrd)
+			auto * thrd = get_thread_context(wd->thread_id);
+			if (!thrd) return;
+
+			auto pos = native_interface::cursor_position();
+			auto native_handle = native_interface::find_window(pos.x, pos.y);
+			if(!native_handle)
+				return;
+			
+			native_interface::calc_window_point(native_handle, pos);
+			if(wd != wd_manager.find_window(native_handle, pos.x, pos.y))
+				return;
+
+			set_cursor(wd, wd->predef_cursor, thrd);
+		}
+	}
+
+	//Dynamically set a cursor for a window
+	void bedrock::set_cursor(core_window_t* wd, nana::cursor cur, thread_context* thrd)
+	{
+		if (nullptr == thrd)
+			thrd = get_thread_context(wd->thread_id);
+
+		if ((cursor::arrow == cur) && !thrd->cursor.native_handle)
+			return;
+
+		thrd->cursor.window = wd;
+		if ((thrd->cursor.native_handle == wd->root) && (cur == thrd->cursor.predef_cursor))
+			return;
+
+		auto & spec = nana::detail::platform_spec::instance();
+		Display * disp = spec.open_display();
+
+		if (thrd->cursor.native_handle && (thrd->cursor.native_handle != wd->root))
+			::XUndefineCursor(disp, reinterpret_cast<Window>(thrd->cursor.native_handle));
+
+		thrd->cursor.native_handle = wd->root;
+		if (thrd->cursor.predef_cursor != cur)
+		{
+			thrd->cursor.predef_cursor = cur;
+			if (thrd->cursor.handle)
 			{
-				Display * disp = nana::detail::platform_spec::instance().open_display();
-
-				if((wd->predef_cursor == cursor::arrow) && (thrd->cursor.window == wd))
-				{
-					if(thrd->cursor.handle)
-					{
-						::XUndefineCursor(disp, reinterpret_cast<Window>(wd->root));
-						::XFreeCursor(disp, thrd->cursor.handle);
-						thrd->cursor.window = nullptr;
-						thrd->cursor.predef_cursor = cursor::arrow;
-						thrd->cursor.handle = 0;
-					}
-					return;
-				}
-
-				auto pos = native_interface::cursor_position();
-				auto native_handle = native_interface::find_window(pos.x, pos.y);
-				if(nullptr == native_handle)
-					return;
-				
-				native_interface::calc_window_point(native_handle, pos);
-				if(wd != wd_manager.find_window(native_handle, pos.x, pos.y))
-					return;
-				
-				if(wd->predef_cursor != thrd->cursor.predef_cursor)
-				{
-					if(thrd->cursor.handle)
-					{
-						::XFreeCursor(disp, thrd->cursor.handle);
-						thrd->cursor.handle = 0;
-						thrd->cursor.window = nullptr;
-					}
-
-					if(wd->predef_cursor != cursor::arrow)
-					{
-						thrd->cursor.handle = ::XCreateFontCursor(disp, static_cast<unsigned>(wd->predef_cursor));
-						thrd->cursor.window = wd;
-						::XDefineCursor(disp, reinterpret_cast<Window>(wd->root), thrd->cursor.handle);
-					}
-					thrd->cursor.predef_cursor = wd->predef_cursor;
-				}
+				::XFreeCursor(disp, thrd->cursor.handle);
+				thrd->cursor.handle = 0;
 			}
 		}
+
+		if (nana::cursor::arrow == cur)
+		{
+			thrd->cursor.native_handle = nullptr;
+			thrd->cursor.window = nullptr;
+			::XUndefineCursor(disp, reinterpret_cast<Window>(wd->root));
+		}
+		else
+		{
+			if (!thrd->cursor.handle)
+				thrd->cursor.handle = ::XCreateFontCursor(disp, static_cast<unsigned>(cur));
+			::XDefineCursor(disp, reinterpret_cast<Window>(wd->root), thrd->cursor.handle);
+		}
+	}
+
+	void bedrock::define_state_cursor(core_window_t* wd, nana::cursor cur, thread_context* thrd)
+	{
+		wd->root_widget->other.attribute.root->state_cursor = cur;
+		wd->root_widget->other.attribute.root->state_cursor_window = wd;
+		set_cursor(wd, cur, thrd);
+	}
+
+	void bedrock::undefine_state_cursor(core_window_t * wd, thread_context* thrd)
+	{
+		if (!wd_manager.available(wd))
+			return;
+	
+		wd->root_widget->other.attribute.root->state_cursor = nana::cursor::arrow;
+		wd->root_widget->other.attribute.root->state_cursor_window = nullptr;
+
+		auto pos = native_interface::cursor_position();
+		auto native_handle = native_interface::find_window(pos.x, pos.y);
+		if (!native_handle)
+			return;
+
+		native_interface::calc_window_point(native_handle, pos);
+		auto rev_wd = wd_manager.find_window(native_handle, pos.x, pos.y);
+		if (rev_wd)
+			set_cursor(rev_wd, rev_wd->predef_cursor, thrd);
 	}
 
 	void bedrock::_m_event_filter(event_code event_id, core_window_t * wd, thread_context * thrd)
 	{
-		auto & spec = nana::detail::platform_spec::instance();
-		Display * disp = spec.open_display();
+		auto not_state_cur = (wd->root_widget->other.attribute.root->state_cursor == nana::cursor::arrow);
+
 		switch(event_id)
 		{
 		case event_code::mouse_enter:
-			if(wd->predef_cursor != cursor::arrow)
-			{
-				thrd->cursor.window = wd;
-				if(wd->predef_cursor != thrd->cursor.predef_cursor)
-				{
-					if(thrd->cursor.handle)
-						::XFreeCursor(disp, thrd->cursor.handle);
-					thrd->cursor.handle = ::XCreateFontCursor(disp, static_cast<unsigned>(wd->predef_cursor));
-					thrd->cursor.predef_cursor = wd->predef_cursor;
-				}
-				::XDefineCursor(disp, reinterpret_cast<Window>(wd->root), thrd->cursor.handle);
-			}
+			if (not_state_cur)
+				set_cursor(wd, wd->predef_cursor, thrd);
 			break;
 		case event_code::mouse_leave:
-			if(wd->predef_cursor != cursor::arrow)
-				::XUndefineCursor(disp, reinterpret_cast<Window>(wd->root));
+			if (not_state_cur && (wd->predef_cursor != cursor::arrow))
+				set_cursor(wd, nana::cursor::arrow, thrd);
 			break;
 		case event_code::destroy:
-			if(thrd->cursor.handle && (wd == thrd->cursor.window))
-			{
-				::XUndefineCursor(disp, reinterpret_cast<Window>(wd->root));
-				::XFreeCursor(disp, thrd->cursor.handle);
-				thrd->cursor.handle = 0;
-				thrd->cursor.predef_cursor = cursor::arrow;
-				thrd->cursor.window = 0;
-			}
+			if (wd->root_widget->other.attribute.root->state_cursor_window == wd)
+				undefine_state_cursor(wd, thrd);
+
+			if(wd == thrd->cursor.window)
+				set_cursor(wd, cursor::arrow, thrd);
 			break;
 		default:
 			break;

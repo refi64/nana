@@ -1,6 +1,7 @@
 /*
  *	A Basic Window Widget Definition
- *	Copyright(C) 2003-2013 Jinhao(cnjinhao@hotmail.com)
+ *	Nana C++ Library(http://www.nanapro.org)
+ *	Copyright(C) 2003-2014 Jinhao(cnjinhao@hotmail.com)
  *
  *	Distributed under the Boost Software License, Version 1.0. 
  *	(See accompanying file LICENSE_1_0.txt or copy at 
@@ -192,7 +193,7 @@ namespace detail
 		{
 			struct	attr_frame_tag
 			{
-				native_window_type container;
+				native_window_type container{nullptr};
 				std::vector<native_window_type> attach;
 			};
 
@@ -201,10 +202,15 @@ namespace detail
 				container	frames;	//initialization is null, it will be created while creating a frame widget. Refer to WindowManager::create_frame
 				container	tabstop;
 				std::vector<edge_nimbus_action> effects_edge_nimbus;
-				basic_window	*focus;
-				basic_window	*menubar;
+				basic_window*	focus{nullptr};
+				basic_window*	menubar{nullptr};
 				root_context	context;
-				bool			ime_enabled;
+				bool			ime_enabled{false};
+#if defined(NANA_WINDOWS)
+				cursor			running_cursor{ nana::cursor::arrow };
+#endif
+				cursor			state_cursor{nana::cursor::arrow};
+				basic_window*	state_cursor_window{ nullptr };
 			};
 
 			const category::flags category;

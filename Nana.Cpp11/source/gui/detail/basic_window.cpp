@@ -197,17 +197,13 @@ namespace nana
 					{
 					case category::root_tag::value:
 						attribute.root = new attr_root_tag;
-						attribute.root->focus	= 0;
-						attribute.root->menubar	= 0;
 						attribute.root->context.focus_changed = false;
-						attribute.root->ime_enabled = false;
 						break;
 					case category::frame_tag::value:
 						attribute.frame = new attr_frame_tag;
-						attribute.frame->container = 0;
 						break;
 					default:
-						attribute.root = 0;
+						attribute.root = nullptr;
 					}
 				}
 

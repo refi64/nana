@@ -60,10 +60,11 @@ namespace detail
 
 	struct bedrock::thread_context
 	{
-		unsigned event_pump_ref_count = 0;
+		unsigned event_pump_ref_count{0};
 
-		int		window_count = 0;	//The number of windows
-		core_window_t* event_window = nullptr;
+		int		window_count{0};	//The number of windows
+		core_window_t* event_window{nullptr};
+		bool	is_alt_pressed{false};
 
 		struct platform_detail_tag
 		{
@@ -632,7 +633,7 @@ namespace detail
 					arg.receiver = native_window;
 					arg.getting = true;
 					if(!brock.emit(event_code::focus, focus, arg, true, &context))
-						brock.wd_manager.set_focus(msgwnd);
+						brock.wd_manager.set_focus(msgwnd, true);
 				}
 				break;
 			case FocusOut:
@@ -692,7 +693,7 @@ namespace detail
 					if(new_focus)
 					{
 						context.event_window = new_focus;
-						auto kill_focus = brock.wd_manager.set_focus(new_focus);
+						auto kill_focus = brock.wd_manager.set_focus(new_focus, false);
 						if(kill_focus != new_focus)
 							brock.wd_manager.do_lazy_refresh(kill_focus, false);
 					}
@@ -950,7 +951,7 @@ namespace detail
 							switch(keysym)
 							{
 							case XK_Alt_L: case XK_Alt_R:
-								keychar = keyboard::alt; break;
+								keychar = keyboard::alt;		break;
 							case XK_BackSpace:
 								keychar = keyboard::backspace;	break;
 							case XK_Tab:
@@ -972,7 +973,7 @@ namespace detail
 							case XK_Delete:
 								keychar = keyboard::os_del; break;
 							default:
-								keychar = 0xFF;
+								keychar = keysym;
 							}
 							context.platform.keychar = keychar;
 							if(keychar == keyboard::tab && (false == (msgwnd->flags.tab & detail::tab_type::eating))) //Tab
@@ -980,19 +981,23 @@ namespace detail
 								auto the_next = brock.wd_manager.tabstop(msgwnd, true);
 								if(the_next)
 								{
-									brock.wd_manager.set_focus(the_next);
+									brock.wd_manager.set_focus(the_next, false);
 									brock.wd_manager.do_lazy_refresh(the_next, true);
 									root_runtime->condition.tabstop_focus_changed = true;
 								}
 							}
-							else if(keychar != 0xFF)
+							else if(keyboard::alt == keychar)
+							{
+								context.is_alt_pressed = true;
+							}
+							else
 							{
 								arg_keyboard arg;
-								arg.evt_code = event_code::key_press;
-								arg.window_handle = reinterpret_cast<window>(msgwnd);
 								arg.ignore = false;
 								arg.key = keychar;
+								arg.evt_code = event_code::key_press;
 								brock.get_key_state(arg);
+								arg.window_handle = reinterpret_cast<window>(msgwnd);
 								brock.emit(event_code::key_press, msgwnd, arg, true, &context);
 							}
 
@@ -1015,16 +1020,33 @@ namespace detail
 								for(int i = 0; i < len; ++i)
 								{
 									arg_keyboard arg;
-									arg.evt_code = event_code::key_char;
-									arg.window_handle = reinterpret_cast<window>(msgwnd);
 									arg.ignore = false;
 									arg.key = charbuf[i];
+
+									if(context.is_alt_pressed)
+									{
+										arg.ctrl = arg.shift = false;
+										arg.evt_code = event_code::shortkey;
+										brock.set_keyboard_shortkey(true);
+										auto shr_wd = brock.wd_manager.find_shortkey(native_window, arg.key);
+										if(shr_wd)
+										{
+											arg.window_handle = reinterpret_cast<window>(shr_wd);
+											brock.emit(event_code::shortkey, shr_wd, arg, true, &context);
+										}
+										continue;
+									}
+									arg.evt_code = event_code::key_char;
+									arg.window_handle = reinterpret_cast<window>(msgwnd);
 									brock.get_key_state(arg);
 
 									msgwnd->together.attached_events->key_char.emit(arg);
 									if(arg.ignore == false && brock.wd_manager.available(msgwnd))
 										brock.emit_drawer(event_code::key_char, msgwnd, arg, &context);
 								}
+
+								if(brock.set_keyboard_shortkey(false))
+									context.is_alt_pressed = false;
 							}
 							break;
 						}
@@ -1051,7 +1073,10 @@ namespace detail
 					}
 				}
 				else
+				{
+					context.is_alt_pressed = false;
 					brock.set_keyboard_shortkey(false);
+				}
 				break;
 			default:
 				if(message == ClientMessage)

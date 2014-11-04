@@ -870,7 +870,7 @@ namespace detail
 					arg_focus arg;
 					assign_arg(arg, focus, native_window, true);
 					if (!brock.emit(event_code::focus, focus, arg, true, &context))
-						brock.wd_manager.set_focus(msgwnd);
+						brock.wd_manager.set_focus(msgwnd, true);
 				}
 				break;
 			case WM_KILLFOCUS:
@@ -902,7 +902,7 @@ namespace detail
 				if(msgwnd && msgwnd->flags.enabled)
 				{
 					if(msgwnd->flags.take_active)
-						brock.wd_manager.set_focus(msgwnd);
+						brock.wd_manager.set_focus(msgwnd, false);
 
 					mouse_window = nullptr;
 					arg_mouse arg;
@@ -934,7 +934,7 @@ namespace detail
 					auto new_focus = (msgwnd->flags.take_active ? msgwnd : msgwnd->other.active_window);
 					if(new_focus)
 					{
-						auto kill_focus = brock.wd_manager.set_focus(new_focus);
+						auto kill_focus = brock.wd_manager.set_focus(new_focus, false);
 						if(kill_focus != new_focus)
 						{
 							brock.wd_manager.do_lazy_refresh(kill_focus, false);
@@ -1287,7 +1287,7 @@ namespace detail
 					msgwnd = msgwnd->root_widget->other.attribute.root->menubar;
 					if(msgwnd)
 					{
-						brock.wd_manager.set_focus(msgwnd);
+						brock.wd_manager.set_focus(msgwnd, false);
 
 						arg_keyboard arg;
 						arg.evt_code = event_code::key_press;
@@ -1330,7 +1330,7 @@ namespace detail
 							auto the_next = brock.wd_manager.tabstop(msgwnd, true);
 							if(the_next)
 							{
-								brock.wd_manager.set_focus(the_next);
+								brock.wd_manager.set_focus(the_next, false);
 								brock.wd_manager.do_lazy_refresh(msgwnd, false);
 								brock.wd_manager.do_lazy_refresh(the_next, true);
 								root_runtime->condition.tabstop_focus_changed = true;

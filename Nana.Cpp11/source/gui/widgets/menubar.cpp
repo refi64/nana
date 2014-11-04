@@ -1,3 +1,15 @@
+/*
+*	A Menubar implementation
+*	Nana C++ Library(http://www.nanapro.org)
+*	Copyright(C) 2009-2014 Jinhao(cnjinhao@hotmail.com)
+*
+*	Distributed under the Boost Software License, Version 1.0.
+*	(See accompanying file LICENSE_1_0.txt or copy at
+*	http://www.boost.org/LICENSE_1_0.txt)
+*
+*	@file: nana/gui/widgets/menubar.cpp
+*/
+
 #include <nana/gui/widgets/menubar.hpp>
 #include <stdexcept>
 
@@ -292,19 +304,17 @@ namespace nana
 							state_.menu->pick();
 							break;
 						default:
+							if(2 != state_.menu->send_shortkey(arg.key))
 							{
-								if(2 != state_.menu->send_shortkey(arg.key))
+								if(state_.active != npos)
 								{
-									if(state_.active != npos)
-									{
-										_m_total_close();
-										if(arg.key == 18) //ALT
-											state_.behavior = state_.behavior_focus;
-									}
+									_m_total_close();
+									if(arg.key == 18) //ALT
+										state_.behavior = state_.behavior_focus;
 								}
-								else
-									state_.menu->goto_submen();
 							}
+							else
+								state_.menu->goto_submen();
 						}
 					}
 					else
@@ -434,7 +444,7 @@ namespace nana
 
 					API::restore_menubar_taken_window();
 
-					nana::point pos = API::cursor_position();
+					auto pos = API::cursor_position();
 					API::calc_window_point(widget_->handle(), pos);
 					state_.active = _m_item_by_pos(pos);
 				}

@@ -1,3 +1,14 @@
+/*
+*	A Menu implementation
+*	Nana C++ Library(http://www.nanapro.org)
+*	Copyright(C) 2009-2014 Jinhao(cnjinhao@hotmail.com)
+*
+*	Distributed under the Boost Software License, Version 1.0.
+*	(See accompanying file LICENSE_1_0.txt or copy at
+*	http://www.boost.org/LICENSE_1_0.txt)
+*
+*	@file: nana/gui/widgets/menu.cpp
+*/
 
 #include <nana/gui/widgets/menu.hpp>
 #include <nana/system/platform.hpp>
@@ -5,6 +16,7 @@
 #include <nana/gui/element.hpp>
 #include <nana/gui/wvl.hpp>
 #include <nana/paint/text_renderer.hpp>
+#include <cctype>	//introduces tolower
 
 namespace nana
 {
@@ -306,6 +318,11 @@ namespace nana
 					detail_.border.x = detail_.border.y = 2;
 				}
 
+				void close_menu_tree(std::function<void()> && fn)
+				{
+					fn_close_tree_ = std::move(fn);
+				}
+
 				void attached(widget_reference widget, graph_reference graph)
 				{
 					graph_ = &graph;
@@ -466,12 +483,13 @@ namespace nana
 				//send_shortkey has 3 states, 0 = UNKNOWN KEY, 1 = ITEM, 2 = GOTO SUBMENU
 				int send_shortkey(nana::char_t key)
 				{
+					key = std::tolower(key);
 					std::size_t index = 0;
 					for(auto & m : menu_->items)
 					{
-						if(m.hotkey == key)
+						if(std::tolower(m.hotkey) == key)
 						{
-							if(m.flags.splitter == false)
+							if(!m.flags.splitter)
 							{
 								if(m.sub_menu)
 								{
@@ -484,6 +502,7 @@ namespace nana
 								}
 								else if(m.flags.enabled)
 								{
+									std::move(fn_close_tree_)();
 									item_proxy ip(index, m);
 									m.functor.operator()(ip);
 									return 1;
@@ -657,6 +676,8 @@ namespace nana
 				paint::graphics	*graph_;
 				menu_type	*menu_;
 
+				std::function<void()> fn_close_tree_;
+
 				struct state
 				{
 					std::size_t		active;
@@ -686,6 +707,7 @@ namespace nana
 						event_focus_(nullptr)
 				{
 					caption(STR("nana menu window"));
+					get_drawer_trigger().close_menu_tree([this]{ this->_m_close_all(); });
 					get_drawer_trigger().renderer = rdptr;
 					state_.owner_menubar = state_.self_submenu = false;
 					state_.auto_popup_submenu = true;

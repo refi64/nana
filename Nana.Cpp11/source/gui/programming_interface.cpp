@@ -743,7 +743,7 @@ namespace API
 
 	void focus_window(window wd)
 	{
-		restrict::window_manager.set_focus(reinterpret_cast<restrict::core_window_t*>(wd));
+		restrict::window_manager.set_focus(reinterpret_cast<restrict::core_window_t*>(wd), false);
 		restrict::window_manager.update(reinterpret_cast<restrict::core_window_t*>(wd), false, false);
 	}
 
@@ -1021,7 +1021,7 @@ namespace API
 	window move_tabstop(window wd, bool next)
 	{
 		restrict::core_window_t* ts_wd = restrict::window_manager.tabstop(reinterpret_cast<restrict::core_window_t*>(wd), next);
-		restrict::window_manager.set_focus(ts_wd);
+		restrict::window_manager.set_focus(ts_wd, false);
 		restrict::window_manager.update(ts_wd, false, false);
 		return reinterpret_cast<window>(ts_wd);
 	}
@@ -1169,7 +1169,7 @@ namespace API
 		if(wd)
 		{
 			internal_scope_guard isg;
-			restrict::window_manager.set_focus(wd);
+			restrict::window_manager.set_focus(wd, false);
 			restrict::window_manager.update(wd, true, false);
 		}
 	}

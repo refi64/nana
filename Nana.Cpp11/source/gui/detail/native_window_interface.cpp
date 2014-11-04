@@ -1251,8 +1251,12 @@ namespace nana{
 					::SetFocus(reinterpret_cast<HWND>(wd));
 			}
 #elif defined(NANA_X11)
-			nana::detail::platform_scope_guard psg;
-			::XSetInputFocus(restrict::spec.open_display(), reinterpret_cast<Window>(wd), RevertToPointerRoot, CurrentTime);
+			nana::detail::platform_scope_guard lock;
+			XWindowAttributes attr;
+			::XGetWindowAttributes(restrict::spec.open_display(), reinterpret_cast<Window>(wd), &attr);
+			//Make sure the window is mapped before setting focus.
+			if(IsViewable == attr.map_state)
+				::XSetInputFocus(restrict::spec.open_display(), reinterpret_cast<Window>(wd), RevertToPointerRoot, CurrentTime);
 #endif
 		}
 

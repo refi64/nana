@@ -827,7 +827,7 @@ namespace detail
 
 		//set_focus
 		//@brief: set a keyboard focus to a window. this may fire a focus event.
-		window_manager::core_window_t* window_manager::set_focus(core_window_t* wd)
+		window_manager::core_window_t* window_manager::set_focus(core_window_t* wd, bool root_has_been_focused)
 		{
 			//Thread-Safe Required!
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
@@ -869,7 +869,9 @@ namespace detail
 				arg.receiver = wd->root;
 				brock.emit(event_code::focus, wd, arg, true, brock.get_thread_context());
 
-				native_interface::set_focus(root_wd->root);
+				if (!root_has_been_focused)
+					native_interface::set_focus(root_wd->root);
+
 				brock.set_menubar_taken(wd);
 			}
 			return prev_focus;

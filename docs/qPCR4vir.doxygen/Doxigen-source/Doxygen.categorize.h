@@ -1,4 +1,4 @@
-/** \class nana::gui::categorize 
+/** \class nana::categorize 
 
 
 1. The definition of ext_event_type
@@ -47,9 +47,9 @@ example
 	#include <nana/gui/wvl.hpp>
 	#include <nana/gui/widgets/categorize.hpp>
 
-	void selected(nana::gui::categorize<int> & categ, int&)
+	void selected(nana::categorize<int> & categ, int&)
 	{
-		nana::gui::msgbox mb(categ, STR("categorize"));
+		nana::msgbox mb(categ, STR("categorize"));
 		mb.icon(mb.icon_information);
 		mb<<STR("The value of selected is ")<<categ.value()<<STR(", caption is \"")
 		<<categ.caption()<<STR("\""); //caption() method, see Note 3.

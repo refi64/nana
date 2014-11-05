@@ -1,4 +1,4 @@
-/** \class nana::gui::textbox
+/** \class nana::textbox
 1. The return type of the `ext_event()` coming with `textbox`, its defined as
 
         struct implement-specifed

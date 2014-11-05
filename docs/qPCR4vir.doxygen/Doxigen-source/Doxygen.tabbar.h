@@ -1,4 +1,4 @@
-/** \class nana::gui::tabbar
+/** \class nana::tabbar
 1. The `button_container` is a member template of `tabbar`. It is used to identify a button in the tabbar. 
 The buttons of toolbox are: *scrolling button*, *list button* and *close button*.
 Only *scrolling button* is enabled by default. Enable the other buttons by employing the `tabbar::toolbox` member function. An example:

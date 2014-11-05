@@ -23,6 +23,7 @@ class click_stat
  private: 
    int n_; 
 }; 
+///   \todo dont compile
 int main() 
 { 
     using namespace nana::gui; 

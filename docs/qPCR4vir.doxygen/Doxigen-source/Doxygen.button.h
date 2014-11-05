@@ -1,4 +1,4 @@
-/*!   \class nana::gui::button
+/*!   \class nana::button
 
 Notes
 
@@ -9,12 +9,12 @@ For example. There is an image of size 520 * 70 pixels, and a button background 
 
 		int main()
 		{
-		  nana::gui::form form;
-		  nana::gui::button btn(form, 5, 5, 94, 23);
+		  nana::form form;
+		  nana::button btn(form, 5, 5, 94, 23);
 		  btn.image(STR("button_image.bmp"));
 		  btn.image_valid_area(nana::arrange::horizontal, nana::rectangle(0, 0, 94 * 5, 23));
 		  form.show();
-		  nana::gui::exec();
+		  nana::exec();
 		}
 
 The button splits the area of image into 5 parts for each state. The order of parts are 

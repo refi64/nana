@@ -175,7 +175,7 @@ For example, answering an event.
 	#include <nana/gui/wvl.hpp>
 	#include <nana/gui/widgets/button.hpp>
 
-	void clicked(const nana::gui::eventinfo&)
+	void clicked(const nana::eventinfo&)
 	{
 		 //When the window  fm  is clicked, this function will be "called".
 	}
@@ -339,7 +339,7 @@ function on `click` event.
 
 A form widget is never visible when you create it. You must call show() to make it visible. 
 
-	nana::gui::exec();
+	nana::exec();
 
 This is where the main() passes the control to Nana.GUI, and exec() will return when the 
 application exists. In exec(), Nana.GUI processes the message loop and passes every event 
@@ -364,12 +364,12 @@ See [Use of std::string with char16_t or char32_t instead nana::string in c++11 
 See ...
 
 
-	btn.make_event<nana::gui::events::click>(nana::gui::API::exit);
+	btn.events().click(nana::API::exit);
 
-What is nana::gui::API::exit? This is an API provided by Nana.GUI. Its prototype is
+What is nana::API::exit? This is an API provided by Nana.GUI. Its prototype is
 void exit(). If exit() is called, Nana.GUI destroy all the windows you've created and 
 the exec() will return. Member make_event() has a template argument. The argument can be a
-function or a functor with a  `const nana::gui::eventinfo&` parameter or not. 
+function or a functor with a  `const nana::eventinfo&` parameter or not. 
 
 Is it right to invoke exit() in an event callback? 
 

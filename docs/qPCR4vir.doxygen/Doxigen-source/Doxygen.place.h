@@ -1,4 +1,4 @@
-/** \class nana::gui::place
+/** \class nana::place
 \brief Layout managment - an object of class place is attached to a widget, and it automatically positions and resizes the children widgets.
 
 A place divids a widget into fields, and then the children widgets are inserted into a specified field for layouting. 
@@ -16,12 +16,12 @@ Grid      | Widgets are laied out like a grid, such as keys on the keyboard.
     {
         public:
         virtual ~field_t() = 0;
-        virtual field_t& operator<<(nana::gui::window) = 0;
+        virtual field_t& operator<<(nana::window) = 0;
         virtual field_t& operator<<(unsigned gap) = 0;
         virtual field_t& operator<<(const implementation-specified-fixed-type&) = 0;
         virtual field_t& operator<<(const implementation-specified-percent-type&) = 0;
         virtual field_t& operator<<(const implementation-specified-room-type&) = 0;
-    virtual field_t& fasten(nana::gui::window) = 0;
+    virtual field_t& fasten(nana::window) = 0;
     };
     \endcode
 

@@ -26,20 +26,20 @@ Let's start with a simple program, we will study it line by line.
 	2 #include <nana/gui/widgets/label.hpp> 
 	3 int main() 
 	4 { 
-	5 	nana::gui::form form; 
-	6 	nana::gui::label label(form, 0, 0, 100, 20); 
+	5 	nana::form form; 
+	6 	nana::label label(form, 0, 0, 100, 20); 
 	7 	label.caption(STR("Hello Nana")); 
 	8 	form.show(); 
-	9 	nana::gui::exec(); 
+	9 	nana::exec(); 
 	  } 
 \endcode
 
 Lines 1 and 2 include the definitions of class `form` and class `label` in namespace nana::gui. 
 Every GUI application written with Nana C++ Library must include the header file nana/gui/wvl.hpp. 
 
-Line 5 defines a nana::gui::form object. It is a window used for placing a label widget in this example. 
+Line 5 defines a nana::form object. It is a window used for placing a label widget in this example. 
 
-Line 6 defines a nana::gui::label object to display a text string. The label object is created in the form. A widget is a visual element in the user interface. 
+Line 6 defines a nana::label object to display a text string. The label object is created in the form. A widget is a visual element in the user interface. 
 
 Line 7 sets the caption of label object. Every widget has a caption for displaying a title. In this line, there is a string within a macro named STR, 
 this macro is a string wrapper used for easy switch the application between UNICODE and ASCII version. 
@@ -47,7 +47,7 @@ this macro is a string wrapper used for easy switch the application between UNIC
 Line 8 makes the form visible. 
 
 Line 9 passes the control of the application on to Nana. At this point, the program enters the event loop for waiting for
-and receiving a user action, such as mouse move, mouse click and keyboard press. The function nana::gui::exec blocks till
+and receiving a user action, such as mouse move, mouse click and keyboard press. The function nana::exec blocks till
 form is destroyed, and the example demonstrate is that program exits when a user closes the window. 
 
 ![Figure 1.1 Hello Nana](HelloNana.jpg)
@@ -135,7 +135,7 @@ class template, we are able to make Nana C++ Library get rid of types that invol
 		std::system("cls"); 
 		std::cout<<"foo"<<std::endl; 
 	} 
-	void foo_with_eventinfo(const nana::gui::eventinfo& ei) 
+	void foo_with_eventinfo(const nana::eventinfo& ei) 
 	{ 
 	  std::cout << "foo_with_eventinfo, mouse pos = ("
 	   << ei.mouse.x  << ", "  <<  ei.mouse.y  << ")" << std::endl; 
@@ -144,7 +144,7 @@ class template, we are able to make Nana C++ Library get rid of types that invol
 	{ public: 
 		click_stat(): n_(0) {} 
 		void respond   ()   { std::cout<<"click_stat = "<<++n_<<std::endl; } 
-		void respond_ei(const nana::gui::eventinfo& ei) 
+		void respond_ei(const nana::eventinfo& ei) 
 		{ 
 			 std::cout << "click_state width eventinfo = " << n_ 
 			<< ", mouse pos = ("  <<ei.mouse.x<<", "<<ei.mouse.y<<")"
@@ -211,7 +211,7 @@ Please include <nana/gui/functional.hpp> before using these function objects.
 \code
 	class destroy 
 	{ public: 
-		destroy(nana::gui::window wd); 
+		destroy(nana::window wd); 
 		void operator()() const; 
 	}; 
 \endcode
@@ -221,7 +221,7 @@ Destroy the window.
 \code
 	class hide 
 	{ public: 
-		hide(nana::gui::window wd); 
+		hide(nana::window wd); 
 		void operator()() const; 
 	}; 
 \endcode
@@ -231,7 +231,7 @@ Hide the window.
 \code
 	class show 
 	{ public: 
-		show(nana::gui::window wd); 
+		show(nana::window wd); 
 		void operator()() const; 
 	}; 
 \endcode
@@ -249,12 +249,12 @@ lambda is to specify a simple action to be performed by some functions. For exam
 	#include <iostream> 
 	int main() 
 	{ 
-		nana::gui::form form; 
-		form.make_event<nana::gui::events::click>( 
+		nana::form form; 
+		form.events().click( 
 			[]{ std::cout<<"form is clicked"<<std::endl; } 
 			); 
 		form.show(); 
-		nana::gui::exec(); 
+		nana::exec(); 
 	} 
 \endcode
 
@@ -268,8 +268,8 @@ function object, and therefore a lambda could be invoked through a function-call
 The use of lambda is creating an anonymous function object and so the arguments should be specified. For example: 
 
 \code
-	form.make_event<nana::gui::events::click>( 
-			[](const nana::gui::eventinfo& ei) 
+	form.events().click( 
+			[](const nana::eventinfo& ei) 
 			{ std::cout<<"mouse pos=("<<ei.mouse.x<<", "<<ei.mouse.y <<std::endl;} 
 		); 
 \endcode
@@ -288,7 +288,7 @@ form at least, as in examples of chapter 1. Many forms are created by creating a
 This way of creating a form is easy, but it will make your program complicated if you want to create a bit larger program.
  
 \subsection der Defining a form through Derivation  
-Nana C++ Library is implemented using Object-oriented methods. We can define an own form by deriving from nana::gui::form. 
+Nana C++ Library is implemented using Object-oriented methods. We can define an own form by deriving from nana::form. 
 
 Our first example is a Monty Hall Problem. This is a game that tests you whether change your choice after you picked a door to win a new Car. 
 
@@ -303,26 +303,26 @@ As we saw in figure 3.1, the application needs a form, a label and three buttons
 	3 #include <nana/gui/widgets/button.hpp> 
 	4 #include <nana/system/platform.hpp> 
 	5 class monty_hall 
-	6       : public nana::gui::form 
+	6       : public nana::form 
 	7 { 
 	8     enum state_t{state_begin, state_picked, state_over}; 
 	9   public: 
 	10    monty_hall(); 
 	11  private: 
-	12    void _m_pick_door  (const nana::gui::eventinfo& ei); 
+	12    void _m_pick_door  (const nana::eventinfo& ei); 
 	13    void _m_play       (int door); 
 	14    void _m_remove_door(int exclude); 
 	15  private: 
 	16    state_t    state_; 
 	17    int        door_has_car_; 
-	18    nana::gui::label  label_; 
-	19    nana::gui::button door_[3]; 
+	18    nana::label  label_; 
+	19    nana::button door_[3]; 
 	20 }; 
 	21 int main() 
 	22 { 
 	23    monty_hall mh; 
 	24    mh.show(); 
-	25    nana::gui::exec(); 
+	25    nana::exec(); 
 	26 } 
 \endcode
 
@@ -331,7 +331,7 @@ The wvl.hpp provides the basis of Nana C++ Library that all GUI program required
 and button.hpp include the definitions of label and button, and we will specify the door which 
 has the new Car randomly by using timestamp()- platform.hpp provides the timestamp() function. 
 
-Lines 5 to 20 define the class monty_hall. The monty_hall is derived from nana::gui::form, 
+Lines 5 to 20 define the class monty_hall. The monty_hall is derived from nana::form, 
 in another word, class monty_hall is defined as a form and we will put all handlers in this 
 class scope to keep program clear. 
 
@@ -352,7 +352,7 @@ Let's implement the default constructor and three private member functions.
 
 \code
 	27 monty_hall() 
-	28        : nana::gui::form(nana::gui::API::make_center(400, 150), 
+	28        : nana::form(nana::API::make_center(400, 150), 
 	29                                                        appear::decorate<appear::taskbar>()) 
 	30         ,state_(state_begin) 
 	31 { 
@@ -371,7 +371,7 @@ Let's implement the default constructor and three private member functions.
 	44    { 
 	45      door_[i].create(*this, 50 + 110 * i, 110, 100, 24); 
 	46      door_[i].caption(door_name[i]); 
-	47      door_[i].make_event<nana::gui::events::click>(*this, 
+	47      door_[i].events().click(*this, 
 	48                                                          &monty_hall::_m_pick_door); 
 	49    } 
 	50 } 
@@ -395,7 +395,7 @@ Line 41 and 42 define a string array which contains the names of three doors.
 Lines 43 to 48 create the buttons in a loop, and set the caption, make a click event for three buttons. 
 
 \code
-	51 void _m_pick_door(const nana::gui::eventinfo& ei) 
+	51 void _m_pick_door(const nana::eventinfo& ei) 
 	52 { 
 	53 	int index = 0; 
 	54 	for(; index < 3; ++index) 
@@ -521,8 +521,8 @@ Nana C++ Library will manage the form objects created by form_loader and destroy
 	} 
 \endcode
 
-nana::gui::form_loader is a template functor class. It creates an object of the template 
-parameter class. nana::gui::form_loader is useful when you create a form and don't want to 
+nana::form_loader is a template functor class. It creates an object of the template 
+parameter class. nana::form_loader is useful when you create a form and don't want to 
 take care about the lifetime of the object. Continuing with the next example, we see a form 
 is created when the button is being clicked. 
 
@@ -570,7 +570,7 @@ execution and wait for a user input. For example:
 	#include <nana/gui/wvl.hpp> 
 	#include <nana/gui/widgets/button.hpp> 
 	#include <iostream> 
-	void foo(const nana::gui::eventinfo& ei) 
+	void foo(const nana::eventinfo& ei) 
 	{ 
 		using namespace nana::gui; 
 		form fm(ei.window, API::make_center(ei.window, 400, 300)); 
@@ -590,7 +590,7 @@ execution and wait for a user input. For example:
 	} 
 \endcode
 
-Call nana::gui::API::modal_window() to enable modal form. Only if an owner is 
+Call nana::API::modal_window() to enable modal form. Only if an owner is 
 specified for the form initialization, will the form enable as modal form. The 
 object fm in function foo() is created and specified ei.window as its owner. The 
 ei.window refers to the form that is defined in function main(), and passed by event argument. 
@@ -601,18 +601,18 @@ ei.window refers to the form that is defined in function main(), and passed by e
 
 \section appear Appearance of Window 
 A window has an appearance. This appearance can be specified when a window is being created. 
-To determine the appearance of a window there is a structure named nana::gui::appearance with 
+To determine the appearance of a window there is a structure named nana::appearance with 
 a bool member for each feature with can be included or excluded in the "apereance" of the windows form. 
-But in practical development is hard to describe the style of the appearance using the struct nana::gui::appearance.
+But in practical development is hard to describe the style of the appearance using the struct nana::appearance.
 If a form would to be defined without min/max button and sizable border, then
 
-    nana::gui::form form(x, y, width, height, nana::gui::appearance(false, false, false, true, false));
+    nana::form form(x, y, width, height, nana::appearance(false, false, false, true, false));
 
-This piece of code may be confused because of the 5th parameter of constructor from `nana::gui::form`. So the library provides a helper 
+This piece of code may be confused because of the 5th parameter of constructor from `nana::form`. So the library provides a helper 
 class for making it easy.  
 For better readability and understandability Nana provides three templates classes to generate an appearance object: 
-nana::gui::appear::decorate, nana::gui::appear::bald and nana::gui::appear::optional. Each provide an operator 
-that return a corresponding nana::gui::appearance with predefined values. 
+nana::appear::decorate, nana::appear::bald and nana::appear::optional. Each provide an operator 
+that return a corresponding nana::appearance with predefined values. 
  
 \code
 namespace nana {namespace gui {
@@ -644,13 +644,13 @@ namespace nana {namespace gui {
 
 These templates generate appearances. Every template receives the template parameters for specifying the attributes of the appearance. 
 
-__template nana::gui::appear::decorate__ is used for creating an appearance of a window with "decoration". 
+__template nana::appear::decorate__ is used for creating an appearance of a window with "decoration". 
 A window decoration in Windows is called the non-client area, such as title bar.
 
 So, we can create a form without min/max button and sizable border like this:  
 \code
-using nana::gui::appear;
-nana::gui::form form(x, y, width, height, appear::decorate<appear::taskbar>());
+using nana::appear;
+nana::form form(x, y, width, height, appear::decorate<appear::taskbar>());
 \endcode
 
 ![Decoration appear::decorate<>() - generating an appearance with a border and titlebar] (Decoration.jpg) 
@@ -660,15 +660,15 @@ If a window needs a minimize button, it should be:
 \code
 appear::decorate<appear::minimize, appear::taskbar>()
 \endcode
-__nana::gui::appear::bald__ is used for creating a window without decoration. 
+__nana::appear::bald__ is used for creating a window without decoration. 
 
 ![No decoration appear::bald<>()](noDecoration.jpg) 
 
-The appearance created by nana::gui::appear::bald<>() has no titlebar and no 3D-look borders. 
+The appearance created by nana::appear::bald<>() has no titlebar and no 3D-look borders. 
 
 The appearances of these figures were created by templates without specifying the template parameters. 
 Each template provides some parameters, and each template parameter name indicates what attribute is supported
-by the template. For example template nana::gui::appear::decorate receives the parameters nana::gui::appear::minimize, appear::maximize, 
+by the template. For example template nana::appear::decorate receives the parameters nana::appear::minimize, appear::maximize, 
 appear::sizable, appear::floating and appear::no_activate. So, creating an appearance with decoration 
 that has a minimize button and maximize button will be: 
 
@@ -686,23 +686,23 @@ that has a minimize button and maximize button will be:
 
 ![Decoration with minimize button and maximize button] (minimize.jpg)
 
-__The nana::gui::appear::optional__ is used to create a window with decoration depending on the first non-type template parameter.
+__The nana::appear::optional__ is used to create a window with decoration depending on the first non-type template parameter.
 
 There is a feature for these templates: the order of template parameters does not affect 
 the order of explicit specifying template parameters, the name of template parameters just 
 tell you which attribute can affect the appearance. For example: 
 
-nana::gui::appear::decorate<appear::minimize, appear::maximize>() creates an appearance that is the same as the result 
-created by nana::gui::appear::decorate<appear::maximize, appear::minimize>().
+nana::appear::decorate<appear::minimize, appear::maximize>() creates an appearance that is the same as the result 
+created by nana::appear::decorate<appear::maximize, appear::minimize>().
  
-nana::gui::appear::decorate<>() creates an appearance that is the same as nana::gui::appear::decorate<int, int, int, int, int>(), 
+nana::appear::decorate<>() creates an appearance that is the same as nana::appear::decorate<int, int, int, int, int>(), 
 because the type of int is not wanted. 
 
-The parameter of class template nana::gui::appear::decorate can be minimize, maximize, sizable, taskbar, floating.
+The parameter of class template nana::appear::decorate can be minimize, maximize, sizable, taskbar, floating.
 
-The parameter of class template nana::gui::appear::bald     can be taskbar, floating.
+The parameter of class template nana::appear::bald     can be taskbar, floating.
 
-The parameter of class template nana::gui::appear::optional can be true, false, taskbar, floating.
+The parameter of class template nana::appear::optional can be true, false, taskbar, floating.
 
 
 \section event Event Handling  
@@ -732,11 +732,11 @@ As shown in above code, the make_event() is a member template of class widget, a
 used for registering an event handler. The above code makes a click event for the `form` object.
 When the user clicks the body of the form, Nana is responsible for invoking the function `foo()` 
 registered as a handler of the specified event. Additionally, the function `foo()` can be 
-specified with a parameter of type `const nana::gui::eventinfo&` to receive the information 
+specified with a parameter of type `const nana::eventinfo&` to receive the information 
 of the event. The details of eventinfo are described in section 6.2. 
 
 The make_event() returns a handle of event handler if the registration is successful. 
-The type of the return value is nana::gui::event_handle. With the handle, we can delete the event handler manually. For example:
+The type of the return value is nana::event_handle. With the handle, we can delete the event handler manually. For example:
 
 	event_handle handle = fm.make_event<events::click>(foo); 
 	fm.umake_event(handle); 
@@ -747,12 +747,12 @@ In most situations, we could not take care of deleting the event handler, becaus
 \subsection eve Events 
 An event type describes a specific event which is generated by Nana. For each event type, 
 a corresponding class is defined by Nana, which is used for referring to an event type. 
-The classes for event types are defined in the namespace nana::gui::events, such as `click`, `mouse_move` and so on. 
+The classes for event types are defined in the namespace nana::events, such as `click`, `mouse_move` and so on. 
 
 Every event contains some information. The information is sent to the application through a (const) reference to an `eventinfo` object in event handler. 
 
 	#include <nana/gui/wvl.hpp> 
-	void foo(const nana::gui::eventinfo& ei) 
+	void foo(const nana::eventinfo& ei) 
 	{ 
 		//Refer to ei for information of event. 
 	} 
@@ -776,13 +776,13 @@ Every widget has an interface for registering an event, named `make_event`.
 
 	  template<typename Event, typename Class, typename Concept>
 	event_handle make_event(Class& object, 
-	   void (Concept::*mf)(const  nana::gui::eventinfo&));
+	   void (Concept::*mf)(const  nana::eventinfo&));
 
 	  template<typename Event, typename Class, typename Concept>
 	event_handle make_event(Class& object, void(Concept::*mf)());
 
 These template function calls explicitly specifies the first template parameter. 
-The Event is a type defined by Nana.GUI in nana::gui::events. The events are:
+The Event is a type defined by Nana.GUI in nana::events. The events are:
 
 Event			|	Description
 ----------------|---------------------------------------
@@ -805,22 +805,22 @@ key_up			| A keyboard is released on a focus widget.
 shortkey		| The widgets received a shortkey message.
 elapse			| A widget received a tick that is sended by timer.
 				
-An user-defined event function may have a parameter of type `const nana::gui::eventinfo&` for queering the event information, such as mouse position.
+An user-defined event function may have a parameter of type `const nana::eventinfo&` for queering the event information, such as mouse position.
 
 	void foo();
-	void foo_with_parameter(const nana::gui::eventinfo&);
+	void foo_with_parameter(const nana::eventinfo&);
 	class user_def_functor
 	{ public:
-	   void operator()(const nana::gui::eventinfo&); 		 //user-defined function must have the parameter.
+	   void operator()(const nana::eventinfo&); 		 //user-defined function must have the parameter.
 	};
-	nana::gui::button().make_event<nana::gui::events::click>(foo);
-	nana::gui::button().make_event<nana::gui::events::click>(foo_with_parameter);
-	nana::gui::button().make_event<nana::gui::events::click>(user_def_functor());
+	nana::button().events().click(foo);
+	nana::button().events().click(foo_with_parameter);
+	nana::button().events().click(user_def_functor());
 
 `make_event` returns a handle for uninstalling the associated user-defined event function and Nana.GUI destroys the 
 user-defined event function automatically when the widget is beginning to destroy.
 
-This just describes these raw events, but some widgets like nana::gui::treebox provides some high-level events, 
+This just describes these raw events, but some widgets like nana::treebox provides some high-level events, 
 such as expanding a node. These details are only described in its reference. 
 
 For different events, the `eventinfo` contains different structures for these event types. The following paragraphs describe the details of eventinfo. 
@@ -858,7 +858,7 @@ The structure of mouse wheel event contains:
 In an event handler function, we can refer to the structure by using eventinfo object. For example: 
 
 \code
-	void foo(const nana::gui::eventinfo& ei) 
+	void foo(const nana::eventinfo& ei) 
 	{ 
 		using namespace nana::gui; 
 		switch(ei.identifier) 
@@ -871,7 +871,7 @@ In an event handler function, we can refer to the structure by using eventinfo o
 	} 
 \endcode
 
-To receive a mouse event, register the event with a specific class which is defined in namespace nana::gui::events. 
+To receive a mouse event, register the event with a specific class which is defined in namespace nana::events. 
 
 	click/dbl_click 
 
@@ -893,7 +893,7 @@ There are three different kinds of keyboard events in Nana C++ Library: key down
 
 A window system usually uses an input focus to represent a window which would receive the keyboard events. 
 In general, a window which user clicks would be set to the input focus widow in Nana C++ Library. 
-Additionally, the program can determinate which window gets the input focus by calling `nana::gui::API::set_focus()` .
+Additionally, the program can determinate which window gets the input focus by calling `nana::API::set_focus()` .
  
 The structure of keyboard event contains:
  
@@ -924,7 +924,7 @@ to receive the number input, the program should test the key in key_char event, 
 Likein the  below code: 
 
 \code
-	void only_digital_allowed(const nana::gui::eventinfo& ei) 
+	void only_digital_allowed(const nana::eventinfo& ei) 
 	{ 
 		ei.ignore = (ei.key < '0' || ei.key > '9'); 
 	}
@@ -990,10 +990,10 @@ Under Linux, modify the makefile and add a "-lpng" for compiler.
 
 \section msg Message box
 
-The `class nana::gui::msgbox` is used for displaying a modal dialog box to prompt a brief message. A brief example.
+The `class nana::msgbox` is used for displaying a modal dialog box to prompt a brief message. A brief example.
 
 \code
-	nana::gui::msgbox m(STR("msgbox example"));
+	nana::msgbox m(STR("msgbox example"));
 	m<<STR("This is a msgbox example.");
 	m();
 \endcode
@@ -1005,9 +1005,9 @@ whose type overloads an operator<<() for std::ostream.
 Sometimes, the application should ask user for a decision, for example, ask user whether to exit.
 
 \code
-	void when_exit(const nana::gui::eventinfo& ei)
+	void when_exit(const nana::eventinfo& ei)
 	{
-		nana::gui::msgbox m(ei.window, STR("msgbox example"), nana::gui::msgbox::yes_no);
+		nana::msgbox m(ei.window, STR("msgbox example"), nana::msgbox::yes_no);
 		m.icon(m.icon_question);
 		m<<STR("Are you sure you want to exit the game?");
 		ei.unload.cancel = (m() != m.pick_yes);
@@ -1026,11 +1026,11 @@ Sometimes, the application should ask user for a decision, for example, ask user
 
 \section icon Window Icon
 There are two interfaces to set an icon for a window which is a root_widget, such as form 
-and nested_form, thay are defined in namespace nana::gui::API.
+and nested_form, thay are defined in namespace nana::API.
 
 \code
 	void window_icon_default(const nana::paint::image&);
-	void window_icon(nana::gui::window, const nana::paint::image&);
+	void window_icon(nana::window, const nana::paint::image&);
 \endcode
 
 window_icon_default() sets a default icon, and after calling it, all windows will set 

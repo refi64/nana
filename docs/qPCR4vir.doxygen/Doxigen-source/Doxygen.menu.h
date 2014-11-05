@@ -1,5 +1,5 @@
 /**
-\class nana::gui::menu
+\class nana::menu
 \brief  a list of items that specify options or group of options for an application.
 
 1. The widget sets the shortkey that is a character behind the first of &-character in text for the item. e.g. "File(&F)" or "&File".
@@ -42,7 +42,7 @@
 		#include <nana/gui/widgets/button.hpp>
 		#include <nana/gui/widgets/menu.hpp>
 
-		void on_menu_item(nana::gui::menu::item_proxy& ip)
+		void on_menu_item(nana::menu::item_proxy& ip)
 		{
 			 std::size_t index = ip.index(); //Get the index of the clicking item.
 		}
@@ -224,7 +224,7 @@ It affects all sub menus and all sub menus of its sub menus.
 		}
 
 
-\see nana::gui::menubar.
+\see nana::menubar.
 \todo doc: create example
 \todo doc: make one directory for nana.Cpp03 demo and example and other for nana.Cpp11, and set it in the Doxygen project. Also, explore conditional doc generation for each variant, and also for user / developers.
 

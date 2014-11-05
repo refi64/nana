@@ -1,4 +1,4 @@
-/** \class nana::gui::listbox
+/** \class nana::listbox
 \brief A rectangle containing a list of strings from which the user can select. This widget contain a list of \a categories, with in turn contain \a items. 
 A category is a text with can be \a selected, \a checked and \a expanded to show the items.
 An item is formed by \a column-fields, each corresponding to one of the \a headers. 
@@ -28,7 +28,7 @@ By \a clicking on a header the list get \a reordered, first up, and then down al
 		   exec();
 		 }
 
-3. nana::gui::listbox creates the category 0 by default. The member functions without the categ parameter operate the items that belong to category 0.
+3. nana::listbox creates the category 0 by default. The member functions without the categ parameter operate the items that belong to category 0.
 
 4. A sort compare is used for sorting the items. It is a strict weak ordering comparer that must meet the requirement:
 
@@ -69,8 +69,8 @@ By \a clicking on a header the list get \a reordered, first up, and then down al
 
 \todo doc: actualize this example listbox.at(0)...
 
-\see nana::gui::drawerbase::listbox::cat_proxy
-\see nana::gui::drawerbase::listbox::item_proxy
+\see nana::drawerbase::listbox::cat_proxy
+\see nana::drawerbase::listbox::item_proxy
 
 \example listbox_Resolver.cpp
 

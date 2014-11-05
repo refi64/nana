@@ -11,7 +11,7 @@ public:
     tsform()
     {
 
-        img_.open(STR("image01.bmp"));    //Open the image file.
+        img_.open(STR("image01.bmp"));    /// \todo Open the image file.
 
         //Copy the image to the window
         nana::size sz = size();

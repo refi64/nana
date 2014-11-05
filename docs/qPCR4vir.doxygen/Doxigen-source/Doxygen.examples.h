@@ -10,7 +10,7 @@ In this tutorial, we will make a GUI calculator with Nana C++ Library. The calcu
 
 ![Screenshot of Calculator](calculator.png)
 
-Using nana::gui::place which is introduced into Nana in the version of 0.5, we can create a such GUI easily.
+Using nana::place which is introduced into Nana in the version of 0.5, we can create a such GUI easily.
 
 Let's start the code.
 
@@ -100,7 +100,7 @@ function on `click` event.
 
 A form widget is never visible when you create it. You must call show() to make it visible. 
 
-	nana::gui::exec();
+	nana::exec();
 
 This is where the main() passes the control to Nana.GUI, and exec() will return when the 
 application exists. In exec(), Nana.GUI processes the message loop and passes every event 
@@ -118,12 +118,12 @@ What is `STR`? `STR` is a macro that transforms a multi-byte string into wide-by
 if `NANA_UNICODE` is defined in *config.hpp*. With `STR` you can easier switch your program 
 between multi-byte and wide-byte. 
 
-	btn.make_event<nana::gui::events::click>(nana::gui::API::exit);
+	btn.events().click(nana::API::exit);
 
-What is nana::gui::API::exit? This is an API provided by Nana.GUI. Its prototype is
+What is nana::API::exit? This is an API provided by Nana.GUI. Its prototype is
 void exit(). If exit() is called, Nana.GUI destroy all the windows you've created and 
 the exec() will return. Member make_event() has a template argument. The argument can be a
-function or a functor with a  `const nana::gui::eventinfo&` parameter or not. 
+function or a functor with a  `const nana::eventinfo&` parameter or not. 
 
 
 */
@@ -225,7 +225,7 @@ and [How to get nana::paint::image from nana::paint::graphics](https://nanapro.c
 
 and [Is it possible to make event inside event handler?](https://nanapro.codeplex.com/discussions/444121)
 
-and [nana::gui::drawing and nana::gui::API::update_window ](https://nanapro.codeplex.com/discussions/445024)
+and [nana::drawing and nana::API::update_window ](https://nanapro.codeplex.com/discussions/445024)
 
 */
 	

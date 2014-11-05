@@ -1,4 +1,4 @@
-/** \class nana::gui::slider
+/** \class nana::slider
 1. Definition of renderer.
 
         class renderer
@@ -27,12 +27,12 @@
                 unsigned vcur_scale; //pixels of vcur scale.
             };
             virtual ~renderer() = 0;
-            virtual void background(nana::gui::window, graph_reference, bool isglass) = 0;
-            virtual void adorn(nana::gui::window, graph_reference, const adorn_t&) = 0;
-            virtual void adorn_textbox(nana::gui::window, graph_reference, 
+            virtual void background(nana::window, graph_reference, bool isglass) = 0;
+            virtual void adorn(nana::window, graph_reference, const adorn_t&) = 0;
+            virtual void adorn_textbox(nana::window, graph_reference, 
                                        const nana::string&, const nana::rectangle&) = 0;
-            virtual void bar(nana::gui::window, graph_reference, const bar_t&) = 0;
-            virtual void slider(nana::gui::window, graph_reference, const slider_t&) = 0;
+            virtual void bar(nana::window, graph_reference, const bar_t&) = 0;
+            virtual void slider(nana::window, graph_reference, const slider_t&) = 0;
         };
 
 2. Definition of provider, it provides a string that used to display a tip label when user move the mouse in a slider.

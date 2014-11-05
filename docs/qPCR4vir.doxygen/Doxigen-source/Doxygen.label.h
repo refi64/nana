@@ -1,5 +1,5 @@
 /**
-\class nana::gui::label
+\class nana::label
 \brief Define a label widget (can dispaly a formated text string and images). Provides the interfaces to be operational.
 
 

@@ -248,29 +248,35 @@ namespace nana{	namespace drawerbase {
 
 		void textbox::load(const nana::char_t* file)
 		{
-			if (nullptr == file)
-				return;
-
-			internal_scope_guard lock;
-			auto editor = get_drawer_trigger().editor();
-			if (editor && editor->load(file))
-				API::update_window(handle());
+			if (file)
+			{
+				internal_scope_guard lock;
+				auto editor = get_drawer_trigger().editor();
+				if (editor && editor->load(file))
+					API::update_window(handle());
+			}
 		}
 
-		void textbox::store(const nana::char_t* file) const
+		void textbox::store(const nana::char_t* file)
 		{
-			internal_scope_guard lock;
-			auto editor = get_drawer_trigger().editor();
-			if(editor && file)
-				editor->textbase().store(file);
+			if (file)
+			{
+				internal_scope_guard lock;
+				auto editor = get_drawer_trigger().editor();
+				if (editor)
+					editor->textbase().store(file);
+			}
 		}
 
-		void textbox::store(const nana::char_t* file, nana::unicode encoding) const
+		void textbox::store(const nana::char_t* file, nana::unicode encoding)
 		{
-			internal_scope_guard lock;
-			auto editor = get_drawer_trigger().editor();
-			if(editor && file)
-				editor->textbase().store(file, encoding);
+			if (file)
+			{
+				internal_scope_guard lock;
+				auto editor = get_drawer_trigger().editor();
+				if (editor)
+					editor->textbase().store(file, encoding);
+			}
 		}
 
 		textbox& textbox::reset(const nana::string& str)
@@ -293,7 +299,7 @@ namespace nana{	namespace drawerbase {
 			if(editor)
 				return editor->textbase().filename();
 
-			return nana::string();
+			return{};
 		}
 
 		bool textbox::edited() const
@@ -305,6 +311,7 @@ namespace nana{	namespace drawerbase {
 
 		textbox& textbox::edited_reset()
 		{
+			internal_scope_guard lock;
 			auto editor = get_drawer_trigger().editor();
 			if (editor)
 				editor->textbase().edited_reset();
@@ -321,12 +328,14 @@ namespace nana{	namespace drawerbase {
 
 		bool textbox::getline(std::size_t line_index, nana::string& text) const
 		{
+			internal_scope_guard lock;
 			auto editor = get_drawer_trigger().editor();
 			return (editor ? editor->getline(line_index, text) : false);
 		}
 
 		textbox& textbox::append(const nana::string& text, bool at_caret)
 		{
+			internal_scope_guard lock;
 			auto editor = get_drawer_trigger().editor();
 			if(editor)
 			{
@@ -342,11 +351,13 @@ namespace nana{	namespace drawerbase {
 		/// Determine wheter the text is auto-line changed.
 		bool textbox::line_wrapped() const
 		{
+			internal_scope_guard lock;
 			return get_drawer_trigger().editor()->line_wrapped();
 		}
 
 		textbox& textbox::line_wrapped(bool autl)
 		{
+			internal_scope_guard lock;
 			auto editor = get_drawer_trigger().editor();
 			if (editor->line_wrapped(autl))
 				editor->render(API::is_focus_window(handle()));
@@ -356,12 +367,14 @@ namespace nana{	namespace drawerbase {
 
 		bool textbox::multi_lines() const
 		{
+			internal_scope_guard lock;
 			auto editor = get_drawer_trigger().editor();
 			return (editor ? editor->attr().multi_lines : false);
 		}
 
 		textbox& textbox::multi_lines(bool ml)
 		{
+			internal_scope_guard lock;
 			auto editor = get_drawer_trigger().editor();
 			if(editor && editor->multi_lines(ml))
 				API::update_window(handle());
@@ -370,12 +383,14 @@ namespace nana{	namespace drawerbase {
 
 		bool textbox::editable() const
 		{
+			internal_scope_guard lock;
 			auto editor = get_drawer_trigger().editor();
 			return (editor ? editor->attr().editable : false);
 		}
 
 		textbox& textbox::editable(bool able)
 		{
+			internal_scope_guard lock;
 			auto editor = get_drawer_trigger().editor();
 			if(editor)
 				editor->editable(able);
@@ -399,6 +414,7 @@ namespace nana{	namespace drawerbase {
 
 		textbox& textbox::mask(nana::char_t ch)
 		{
+			internal_scope_guard lock;
 			auto editor = get_drawer_trigger().editor();
 			if(editor && editor->mask(ch))
 				API::refresh_window(handle());

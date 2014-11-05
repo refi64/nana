@@ -209,10 +209,10 @@ namespace nana
 				item_proxy& check(bool);
 
 				/// Return true when the node is expanded  \todo change to expanded ??
-				bool expended() const;
+				bool expanded() const;
 
-				/// Expend/Shrink children of the node, and returns itself.  \todo change to expand ??
-				item_proxy& expend(bool);
+				/// Expand/Shrink children of the node, and returns itself.  \todo change to expand ??
+				item_proxy& expand(bool);
 
 				/// Return true when the node is selected.
 				bool selected() const;
@@ -254,6 +254,9 @@ namespace nana
 
 				/// An end node.
 				item_proxy end() const;
+
+				/// Makes an action for each sub item recursively, returns the item that stops the action where action returns false.
+				item_proxy visit_recursively(std::function<bool(item_proxy)> action);
 
 				bool operator==(const nana::string& s) const; ///< Compare the text of node with s.
 				bool operator==(const char* s ) const;        ///< Compare the text of node with s.
